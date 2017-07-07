@@ -25,7 +25,9 @@ void WfdbReader::doRead( const std::string& input ) {
         //  const time_t& t, const std::string& d, const std::string& hi,
         // const std::string& lo ) : time( t ), data( d ), high( hi ), low( lo ) {
         DataRow row( 0, std::to_string( v[j] ) );
-        addVital( siginfo[j].desc, row, siginfo[j].units );
+
+        std::string uom = ( NULL == siginfo[j].units ? "Uncalib" : siginfo[j].units );
+        addVital( siginfo[j].desc, row, uom );
       }
 
       code = getvec( v );
