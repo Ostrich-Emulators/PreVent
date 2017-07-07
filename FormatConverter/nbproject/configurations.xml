@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <itemPath>CacheFileReader.h</itemPath>
+      <itemPath>DataRow.h</itemPath>
+      <itemPath>DataSetDataCache.h</itemPath>
+      <itemPath>Formats.h</itemPath>
+      <itemPath>FromReader.h</itemPath>
+      <itemPath>Hdf5Writer.h</itemPath>
+      <itemPath>ToWriter.h</itemPath>
+      <itemPath>WfdbReader.h</itemPath>
+      <itemPath>config.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>CacheFileReader.cpp</itemPath>
+      <itemPath>DataRow.cpp</itemPath>
+      <itemPath>DataSetDataCache.cpp</itemPath>
+      <itemPath>Formats.cpp</itemPath>
+      <itemPath>FromReader.cpp</itemPath>
+      <itemPath>Hdf5Writer.cpp</itemPath>
+      <itemPath>ToWriter.cpp</itemPath>
+      <itemPath>WfdbReader.cpp</itemPath>
+      <itemPath>main.cpp</itemPath>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Release" type="1">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+          <standard>8</standard>
+          <commandlineTool>h5c++</commandlineTool>
+          <commandLine>-Wno-deprecated -O2 `wfdb-config --cflags`</commandLine>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/libsz.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+          </linkerLibItems>
+          <commandLine>`wfdb-config --libs`</commandLine>
+        </linkerTool>
+      </compileType>
+      <item path="CacheFileReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="CacheFileReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataRow.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="DataRow.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataSetDataCache.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="DataSetDataCache.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Formats.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Formats.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="FromReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="FromReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ToWriter.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ToWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Debug" type="1">
+      <toolsSet>
+        <compilerSet>GNU|GNU</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <standard>8</standard>
+          <commandlineTool>h5c++</commandlineTool>
+          <commandLine>-Wno-deprecated -O0 -pg -g `wfdb-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/libsz.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+          </linkerLibItems>
+          <commandLine>`wfdb-config --libs`</commandLine>
+        </linkerTool>
+      </compileType>
+      <item path="CacheFileReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="CacheFileReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataRow.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="DataRow.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataSetDataCache.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="DataSetDataCache.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Formats.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Formats.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="FromReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="FromReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ToWriter.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ToWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Debug-cachefile-text" type="1">
+      <toolsSet>
+        <compilerSet>GNU|GNU</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <standard>8</standard>
+          <commandlineTool>h5c++</commandlineTool>
+          <commandLine>`pkg-config --libs libxml++-2.6` -Wno-deprecated -O0 -pg -g
+</commandLine>
+        </ccTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerOptionItem>`pkg-config --libs libxml++-2.6`</linkerOptionItem>
+          </linkerLibItems>
+          <commandLine>`wfdb-config --libs`</commandLine>
+        </linkerTool>
+      </compileType>
+      <item path="CacheFileReader.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="CacheFileReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataRow.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="DataRow.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataSetDataCache.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="DataSetDataCache.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Formats.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Formats.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="FromReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="FromReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ToWriter.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ToWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+    </conf>
+    <conf name="Release_x64" type="1">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+          <standard>8</standard>
+          <commandlineTool>h5c++</commandlineTool>
+          <commandLine>-Wno-deprecated -O2</commandLine>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <asmTool>
+          <developmentMode>5</developmentMode>
+        </asmTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/libsz.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+          </linkerLibItems>
+          <commandLine>`wfdb-config --libs`</commandLine>
+        </linkerTool>
+      </compileType>
+      <item path="CacheFileReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="CacheFileReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataRow.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="DataRow.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataSetDataCache.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="DataSetDataCache.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Formats.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Formats.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="FromReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="FromReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ToWriter.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ToWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Debug-cachefile-zl-64bit" type="1">
+      <toolsSet>
+        <compilerSet>GNU|GNU</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <standard>8</standard>
+          <commandlineTool>h5c++</commandlineTool>
+          <commandLine>-Wno-deprecated -O0 -pg -g</commandLine>
+        </ccTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/libsz.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+          </linkerLibItems>
+          <commandLine>`wfdb-config --libs`</commandLine>
+        </linkerTool>
+      </compileType>
+      <item path="CacheFileReader.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="CacheFileReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataRow.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="DataRow.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataSetDataCache.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="DataSetDataCache.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Formats.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Formats.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="FromReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="FromReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ToWriter.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ToWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+    </conf>
+    <conf name="Debug-cachefile-zl" type="1">
+      <toolsSet>
+        <compilerSet>GNU|GNU</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <standard>8</standard>
+          <commandlineTool>h5c++</commandlineTool>
+          <commandLine>-Wno-deprecated -O0 -pg -g `wfdb-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
+            <linkerLibFileItem>/usr/lib/i386-linux-gnu/libsz.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/i386-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/i386-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+          </linkerLibItems>
+          <commandLine>`wfdb-config --libs`</commandLine>
+        </linkerTool>
+      </compileType>
+      <item path="CacheFileReader.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="CacheFileReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataRow.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="DataRow.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataSetDataCache.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="DataSetDataCache.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Formats.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Formats.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="FromReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="FromReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ToWriter.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ToWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
