@@ -1,0 +1,8 @@
+nbproject/private
+.dep.inc
+*.dat
+*.hea
+*.ari
+*.atr
+*.ann
+gmon.out
