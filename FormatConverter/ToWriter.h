@@ -7,12 +7,16 @@
 
 #include "Formats.h"
 
+class FromReader;
+
 class ToWriter {
 public:
 	ToWriter( );
 	virtual ~ToWriter( );
 
 	static std::unique_ptr<ToWriter> get( const Format& fmt );
+
+	virtual void write( std::unique_ptr<FromReader>& from ) = 0;
 
 private:
 	ToWriter( const ToWriter& );

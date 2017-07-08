@@ -103,19 +103,7 @@ int main( int argc, char** argv ) {
         << " from " << fromstr
         << " to " << tostr << std::endl;
     from->reset( argv[i] );
-
-    const auto& vs = from->vitals( );
-    for ( const auto& mapit : vs ) {
-      std::cout << mapit.first << std::endl;
-      mapit.second->startPopping( );
-
-      int rows = mapit.second->size( );
-      for ( int i = 0; i < rows; i++ ) {
-        std::unique_ptr<DataRow> row = std::move( mapit.second->pop( ) );
-        std::cout << "\t" << row->time << " " << row->data << " "
-            << mapit.second->uom( ) << std::endl;
-      }
-    }
+    to->write( from );
   }
 
   exit( 0 );

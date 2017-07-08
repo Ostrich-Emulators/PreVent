@@ -3,6 +3,7 @@
 #define FROM_READER_H
 
 #include "Formats.h"
+
 #include <map>
 #include <string>
 #include <memory>
@@ -18,8 +19,8 @@ public:
 	static std::unique_ptr<FromReader> get( const Format& fmt );
 
 	void reset( const std::string& input );
-	const std::map<std::string, std::unique_ptr<DataSetDataCache>>&vitals( );
-	const std::map<std::string, std::unique_ptr<DataSetDataCache>>&waves( );
+	std::map<std::string, std::unique_ptr<DataSetDataCache>>&vitals( );
+	std::map<std::string, std::unique_ptr<DataSetDataCache>>&waves( );
 
 protected:
 	void addVital( const std::string& name, const DataRow& data, const std::string& uom );

@@ -56,10 +56,10 @@ void FromReader::reset( const std::string& input ) {
   doRead( input );
 }
 
-const std::map<std::string, std::unique_ptr<DataSetDataCache>>&FromReader::vitals( ) {
+std::map<std::string, std::unique_ptr<DataSetDataCache>>&FromReader::vitals( ) {
   return vmap;
 }
 
-const std::map<std::string, std::unique_ptr<DataSetDataCache>>&FromReader::waves( ) {
+std::map<std::string, std::unique_ptr<DataSetDataCache>>&FromReader::waves( ) {
   return wmap;
 }

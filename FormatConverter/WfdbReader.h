@@ -15,11 +15,15 @@
 #define WFDBREADER_H
 
 #include "FromReader.h"
+#include <ctime>
 
 class WfdbReader : public FromReader {
-	protected:
-		void doRead( const std::string& input );
-		int getSize( const std::string& input ) const ;
+public:
+	static time_t convert( const char * timestr );
+
+protected:
+	void doRead( const std::string& input );
+	int getSize( const std::string& input ) const;
 };
 
 #endif /* WFDBREADER_H */

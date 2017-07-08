@@ -41,6 +41,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Formats.o \
 	${OBJECTDIR}/FromReader.o \
 	${OBJECTDIR}/Hdf5Writer.o \
+	${OBJECTDIR}/HdfWriter.o \
 	${OBJECTDIR}/ToWriter.o \
 	${OBJECTDIR}/WfdbReader.o \
 	${OBJECTDIR}/main.o
@@ -105,6 +106,11 @@ ${OBJECTDIR}/Hdf5Writer.o: Hdf5Writer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Hdf5Writer.o Hdf5Writer.cpp
+
+${OBJECTDIR}/HdfWriter.o: HdfWriter.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/HdfWriter.o HdfWriter.cpp
 
 ${OBJECTDIR}/ToWriter.o: ToWriter.cpp
 	${MKDIR} -p ${OBJECTDIR}
