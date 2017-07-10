@@ -18,12 +18,12 @@
 #include "DataRow.h"
 #include "Hdf5Writer.h"
 
-#include <zlib.h>
 #include <iostream>
 #include <fstream>
 #include <cassert>
 #include <sstream>
 #include <cstdio>
+#include <sys/stat.h>
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
 #include <fcntl.h>
@@ -39,171 +39,129 @@ const std::string ZlReader::VITAL = "VITAL";
 const std::string ZlReader::WAVE = "WAVE";
 const std::string ZlReader::TIME = "TIME";
 
-ZlReader::ZlReader( const std::string& output,
-        int _compression, bool _bigfile, const std::string& _prefix )
-: outputdir( output ), compression( _compression ), largefile( _bigfile ), ordinal( 1 ),
-prefix( _prefix ), firstheader( true ) {
+ZlReader::ZlReader( ) : firstheader( true ), firstread( true ) {
 }
 
-ZlReader::ZlReader( const ZlReader& orig )
-: outputdir( orig.outputdir ), compression( orig.compression ),
-largefile( orig.largefile ), ordinal( orig.ordinal ), firstheader( orig.firstheader ) {
+ZlReader::ZlReader( const ZlReader& orig ) : firstheader( orig.firstheader ),
+firstread( orig.firstread ) {
 }
 
 ZlReader::~ZlReader( ) {
 }
 
-int ZlReader::convert( const std::string& input ) {
+void ZlReader::finish( ) {
+  stream->close( );
+  stream.release( );
+}
+
+int ZlReader::getSize( const std::string& input ) const {
+  struct stat info;
+
+  if ( stat( input.c_str( ), &info ) < 0 ) {
+    perror( input.c_str( ) );
+    return -1;
+  }
+
+  return info.st_size;
+}
+
+int ZlReader::prepare( const std::string& input, ReadInfo& ) {
+  firstheader = true;
+  firstread = true;
+
   bool usestdin = ( "-" == input || "-zl" == input );
 
   // zlib-compressed (first char='x'). Unfortunately, if we're reading from
-  // stdin, we can't reset the stream back to the start, so we need to account 
-  // for this one extra btye.
+  // stdin, we can't reset the stream back to the start, so we need to trust
+  // that the user used the right switch
   if ( usestdin ) {
-    return convert( std::cin, "-zl" == input );
+    stream.reset( new ZlStream( &( std::cin ), ( "-zl" == input ), true ) );
   }
   else {
     // we need to read the first byte of the input stream to decide if it's 
     unsigned char firstbyte;
-    std::ifstream myfile( input, std::ios::binary );
-    myfile >> firstbyte;
-    myfile.seekg( std::ios::beg ); // seek back to the beginning of the file
-    int ret = convert( myfile, 'x' == firstbyte );
-    myfile.close( );
-    return ret;
+    std::ifstream * myfile = new std::ifstream( input, std::ios::binary );
+    ( *myfile ) >> firstbyte;
+
+    myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
+    stream.reset( new ZlStream( myfile, ( 'x' == firstbyte ), false ) );
   }
-}
-
-int ZlReader::convert( std::istream& stream, bool compressed ) {
-  reset( );
-  firstheader = true;
-
-  if ( compressed ) {
-    return convertcompressed( stream );
-  }
-
-  // if we're not dealing with compressed data, then just read the
-  // bytes (they're text) and handle the strings as they come
-  char in[CHUNKSIZE];
-
-  while ( stream ) {
-    stream.read( in, CHUNKSIZE );
-    int bytesread = stream.gcount( );
-    std::string str( (char *) in, bytesread );
-    handleInputChunk( str );
-  }
-  flush( );
-
   return 0;
 }
 
-int ZlReader::convertcompressed( std::istream& stream ) {
-  int ret;
-  unsigned have;
-  z_stream strm;
-  unsigned char in[CHUNKSIZE];
-  unsigned char out[CHUNKSIZE];
+int ZlReader::readChunk( ReadInfo& info ) {
 
-  strm.zalloc = Z_NULL;
-  strm.zfree = Z_NULL;
-  strm.opaque = Z_NULL;
-  strm.avail_in = 0;
-  strm.next_in = Z_NULL;
-  ret = inflateInit( &strm );
-  if ( ret != Z_OK ) {
-    std::cerr << "zlib error code: " << ret << std::endl;
-    return 1;
+  std::string justread;
+  int retcode = stream->readNextChunk( justread );
+
+  if ( retcode >= 0 ) {
+    // fill in the newly-read data
+    // need to worry about a second HEADER line (which means new patient/day)
+    // and stop filling info if we hit one
+    handleInputChunk( justread, info );
   }
 
-  while ( stream && ret != Z_STREAM_END ) {
-    stream.read( (char *) in, CHUNKSIZE );
-    strm.avail_in = stream.gcount( );
-
-    if ( strm.avail_in == 0 ) {
-      break;
-    }
-
-    strm.next_in = in;
-    do {
-      strm.avail_out = CHUNKSIZE;
-      strm.next_out = out;
-      ret = inflate( &strm, Z_NO_FLUSH );
-      assert( ret != Z_STREAM_ERROR ); /* state not clobbered */
-      switch ( ret ) {
-        case Z_NEED_DICT:
-          ret = Z_DATA_ERROR; /* and fall through */
-        case Z_DATA_ERROR:
-        case Z_MEM_ERROR:
-          (void) inflateEnd( &strm );
-          return -1;
-      }
-      have = CHUNKSIZE - strm.avail_out;
-      // okay, we have some data to look at
-      std::string str( (char *) out, have );
-      handleInputChunk( str );
-    } while ( strm.avail_out == 0 );
-  }
-
-  (void) inflateEnd( &strm );
-
-  flush( );
-  return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
-
+  firstread = false;
+  return retcode;
 }
 
-void ZlReader::handleInputChunk( std::string& chunk ) {
+void ZlReader::handleInputChunk( std::string& chunko, ReadInfo& info ) {
   // we don't know where our chunk ends, so add whatever left-overs we
   // have from the last read to this read, and then process line by line
 
-  // if chunk ends with a newline, we're fine...but if not, split out the
-  // text after the last newline
+  //std::cout << "work: " << workingText << std::endl << "chunk: " << chunko << std::endl;
+  workingText += chunko;
+  bool checkNewLines = true;
 
-  size_t lastnewline = chunk.rfind( '\n' );
-  if ( std::string::npos == lastnewline ) {
-    // no newlines present...so add everything to our working text
-    workingText += chunk;
-    return;
-  }
+  // Check to see if we have a HEADER key somewhere in our new chunk
+  // because we're going to break on HEADERs
+  // start with position 1 because we don't want to hit the same HEADER twice
+  size_t newheader = workingText.find( HEADER + "\n", 1 );
 
   std::string nextworkingtext;
-  if ( chunk.length( ) != lastnewline ) {
-    nextworkingtext = chunk.substr( lastnewline + 1 ); // +1: skip the newline char
-    chunk.erase( lastnewline + 1 );
-  }
-  // else chunk ends with a newline
+  if ( std::string::npos != newheader ) {
+    // we have another HEADER line in there, so chop the current read at that spot
+    nextworkingtext = workingText.substr( newheader );
+    workingText.erase( newheader ); // keep the newline
 
-  std::stringstream ss( workingText + chunk );
+    // no need to check for newlines, because we're guaranteed to end in one now
+    checkNewLines = false;
+  }
+
+  if ( checkNewLines ) {
+    // if chunk ends with a newline, we're fine...but if not, split out the
+    // text after the last newline
+
+    size_t lastnewline = workingText.rfind( '\n' );
+    if ( std::string::npos == lastnewline ) {
+      // no newlines present...so add everything to our working text
+      // (we still don't have anything to process at this point)
+      return;
+    }
+
+    if ( workingText.length( ) != lastnewline ) {
+      nextworkingtext = workingText.substr( lastnewline + 1 ); // +1: skip the newline char
+      workingText.erase( lastnewline + 1 );
+    }
+    // else chunk ends with a newline
+  }
+
+  //std::cout<<workingText<<std::endl;
+  //std::cout<<nextworkingtext<<std::endl;
+
+  std::stringstream ss( workingText );
 
   for ( std::string line; std::getline( ss, line, '\n' ); ) {
-    handleOneLine( line );
+    handleOneLine( line, info );
   }
 
   workingText = nextworkingtext;
 }
 
-void ZlReader::reset( ) {
-  lastTime = 0;
-  firstTime = 2099999999;
-  vitals.clear( );
-  waves.clear( );
-}
-
-void ZlReader::flush( ) {
-//  Hdf5Writer::flush( outputdir, prefix, compression, firstTime, lastTime,
-//          ordinal, datasetattrs, vitals, waves );
-  reset( );
-}
-
-void ZlReader::handleOneLine( const std::string& chunk ) {
+void ZlReader::handleOneLine( const std::string& chunk, ReadInfo& info ) {
   if ( HEADER == chunk ) {
     state = zlReaderState::IN_HEADER;
-    if ( firstheader ) {
-      firstheader = false;
-    }
-    else {
-      flush( );
-      std::cout << "new header found...rolling over" << std::endl;
-    }
+    firstheader = false;
   }
   else {
     const int pos = chunk.find( ' ' );
@@ -224,17 +182,18 @@ void ZlReader::handleOneLine( const std::string& chunk ) {
       std::getline( points, high, '|' );
       std::getline( points, low, '|' );
 
-      if ( 0 == vitals.count( vital ) ) {
-        vitals.insert( std::make_pair( vital,
-                std::unique_ptr<SignalData>( new SignalData( vital, largefile ) ) ) );
+      std::unique_ptr<SignalData>& dataset = info.addVital( vital );
+
+      if ( val.empty( ) ) {
+        std::cout << "empty val? " << chunk << std::endl;
       }
 
       int scale = DataRow::scale( val );
-      if ( scale > vitals[vital]->scale( ) ) {
-        vitals[vital]->setScale( scale );
+      if ( scale > dataset->scale( ) ) {
+        dataset->setScale( scale );
       }
-      vitals[vital]->setUom( uom );
-      vitals[vital]->add( DataRow( currentTime, val, high, low ) );
+      dataset->setUom( uom );
+      dataset->add( DataRow( currentTime, val, high, low ) );
     }
     else if ( WAVE == firstword ) {
       state = zlReaderState::IN_WAVE;
@@ -246,41 +205,117 @@ void ZlReader::handleOneLine( const std::string& chunk ) {
       std::getline( points, uom, '|' );
       std::getline( points, val, '|' );
 
+      std::unique_ptr<SignalData>& dataset = info.addWave( wavename );
       points >> wavename >> uom >> val;
-      if ( 0 == waves.count( wavename ) ) {
-        waves.insert( std::make_pair( wavename,
-                std::unique_ptr<SignalData>( new SignalData( wavename,
-                largefile ) ) ) );
-      }
 
-      waves[wavename]->setUom( uom );
-      waves[wavename]->add( DataRow( currentTime, val ) );
+      dataset->setUom( uom );
+      dataset->add( DataRow( currentTime, val ) );
     }
     else if ( TIME == firstword ) {
       state = zlReaderState::IN_TIME;
       currentTime = std::stoi( chunk.substr( pos + 1 ) );
-
-      if ( currentTime < firstTime ) {
-        firstTime = currentTime;
-      }
-      if ( currentTime > lastTime ) {
-        lastTime = currentTime;
-      }
     }
     else if ( state == zlReaderState::IN_HEADER ) {
       const int epos = chunk.find( '=' );
       std::string key = chunk.substr( 0, epos );
       std::string val = chunk.substr( epos + 1 );
-
-      //check patient names
-      if ( "Patient Name" == key && 0 != datasetattrs.count( key ) ) {
-        if ( datasetattrs[key] != val ) {
-          std::cout << "WARNING: two patients in this datafile" << std::endl;
-          ordinal++;
-        }
-      }
-
-      datasetattrs[key] = val;
+      info.addMeta( key, val );
     }
   }
+}
+
+ZlStream::ZlStream( std::istream * cin, bool compressed, bool isStdin )
+: iscompressed( compressed ), usestdin( isStdin ), stream( cin ) {
+  if ( iscompressed ) {
+    initZlib( );
+  }
+}
+
+ZlStream::~ZlStream( ) {
+  close( );
+}
+
+void ZlStream::initZlib( ) {
+  strm.zalloc = Z_NULL;
+  strm.zfree = Z_NULL;
+  strm.opaque = Z_NULL;
+  strm.avail_in = 0;
+  strm.next_in = Z_NULL;
+  int ret = inflateInit( &strm );
+
+  if ( ret != Z_OK ) {
+    std::cerr << "zlib error code: " << ret << std::endl;
+    exit( 0 );
+  }
+}
+
+void ZlStream::close( ) {
+  if ( !usestdin ) {
+    static_cast<std::ifstream *> ( stream )->close( );
+  }
+}
+
+int cnt = 0;
+
+int ZlStream::readNextChunk( std::string& data ) {
+  if ( iscompressed ) {
+    return readNextCompressedChunk( data );
+  }
+  else {
+    // we're not dealing with compressed data, so just read in the text
+    char in[ZlReader::CHUNKSIZE];
+
+    if ( ( *stream ) ) {
+      stream->read( in, ZlReader::CHUNKSIZE );
+      int bytesread = stream->gcount( );
+      cnt += bytesread;
+      std::cout << "read " << bytesread << " for a total of: " << cnt << std::endl;
+      data += std::string( (char *) in, bytesread );
+      return 1;
+    }
+    return -1;
+  }
+}
+
+int ZlStream::readNextCompressedChunk( std::string& data ) {
+  unsigned char in[ZlReader::CHUNKSIZE];
+  unsigned char out[ZlReader::CHUNKSIZE];
+
+  int retcode = 0;
+  stream->read( (char *) in, ZlReader::CHUNKSIZE );
+  strm.avail_in = stream->gcount( );
+
+  retcode = 1;
+  if ( strm.avail_in == 0 ) {
+    return 0;
+  }
+
+  strm.next_in = in;
+  do {
+    strm.avail_out = ZlReader::CHUNKSIZE;
+    strm.next_out = out;
+    retcode = inflate( &strm, Z_NO_FLUSH );
+    assert( retcode != Z_STREAM_ERROR ); /* state not clobbered */
+    switch ( retcode ) {
+      case Z_NEED_DICT:
+        retcode = Z_DATA_ERROR; /* and fall through */
+      case Z_DATA_ERROR:
+      case Z_MEM_ERROR:
+        retcode = -1;
+    }
+    int have = ZlReader::CHUNKSIZE - strm.avail_out;
+    // okay, we have some data to look at
+    std::string str( (char *) out, have );
+    data += str;
+  }
+  while ( strm.avail_out == 0 );
+
+  if ( retcode == Z_STREAM_END ) {
+    retcode = 0;
+  }
+  else if ( retcode == Z_OK ) {
+    retcode = 1;
+  }
+
+  return retcode;
 }

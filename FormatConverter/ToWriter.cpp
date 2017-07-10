@@ -1,9 +1,10 @@
 
 #include "ToWriter.h"
+#include <sys/stat.h>
+#include <iostream>
 
 #include "Hdf5Writer.h"
 #include "FromReader.h"
-#include <sys/stat.h>
 #include "config.h"
 
 ToWriter::ToWriter( ) {
@@ -48,29 +49,41 @@ void ToWriter::setOutputDir( const std::string& _outdir ) {
 
 std::vector<std::string> ToWriter::write( std::unique_ptr<FromReader>& from,
     ReadInfo& data ) {
-  int retcode = from->next( data );
+  int retcode = from->fill( data );
   std::vector<std::string> list;
 
   initDataSet( outdir + prefix + "-p" + std::to_string( list.size( ) + 1 ),
       compression );
 
   while ( retcode >= -1 ) {
-    writeChunk( data );
+    drain( data );
 
     if ( 0 == retcode ) {
       // end of old patient
-      list.push_back( closeDataSet( ) );
+      std::string file = closeDataSet( );
+      if ( file.empty( ) ) {
+        std::cerr << "refusing to write empty data file!" << std::endl;
+      }
+      else {
+        list.push_back( file );
+      }
       initDataSet( outdir + prefix + "-p" + std::to_string( list.size( ) + 1 ),
           compression );
     }
     else if ( -1 == retcode ) {
       // end of file, so break out of our write
-      list.push_back( closeDataSet( ) );
+      std::string file = closeDataSet( );
+      if ( file.empty( ) ) {
+        std::cerr << "refusing to write empty data file!" << std::endl;
+      }
+      else {
+        list.push_back( file );
+      }
       break;
     }
 
     // carry on with next data chunk
-    retcode = from->next( data );
+    retcode = from->fill( data );
   }
 
   return list;

@@ -242,34 +242,13 @@ void Hdf5Writer::initDataSet( const std::string& newfile, int compression ) {
   this->compression = compression;
 }
 
-int Hdf5Writer::writeChunk( ReadInfo& info ) {
-  for ( auto& vitmap : info.vitals( ) ) {
-    std::unique_ptr<SignalData>& mine = data.addVital( vitmap.first );
-    std::unique_ptr<SignalData>& theirs = vitmap.second;
-
-    if ( theirs->startTime( ) < firstTime ) {
-      firstTime = theirs->startTime( );
-    }
-    if ( theirs->endTime( ) > lastTime ) {
-      lastTime = theirs->endTime( );
-    }
-
-    // copy any new metadata 
-    data.metadata( ).insert( info.metadata( ).begin( ), info.metadata( ).end( ) );
-
-    theirs->startPopping( );
-    int count = theirs->size( );
-    for ( int i = 0; i < count; i++ ) {
-      std::unique_ptr<DataRow> row = std::move( theirs->pop( ) );
-      DataRow newrow( *row.get( ) );
-      mine->add( newrow );
-    }
-  }
-
+int Hdf5Writer::drain( ReadInfo& info ) {
+  // dataptr = &info;
   return 0;
 }
 
 std::string Hdf5Writer::closeDataSet( ) {
+  ReadInfo& data = *dataptr;
   tm * time = gmtime( &firstTime );
   char buf[sizeof "-YYYYMMDD.hdf5"];
   strftime( buf, sizeof buf, "-%Y%m%d.hdf5", time );
@@ -310,7 +289,7 @@ std::string Hdf5Writer::closeDataSet( ) {
   grp = file.createGroup( "Waveforms" );
   std::cout << "Writing " << data.waves( ).size( ) << " Waveforms" << std::endl;
   for ( auto& wavs : data.waves( ) ) {
-    std::cout << "Writing Vital: " << wavs.first << std::endl;
+    std::cout << "Writing Vital: " << wavs.first;
     int hz = getHertz( wavs.first );
     auto st = std::chrono::high_resolution_clock::now( );
 

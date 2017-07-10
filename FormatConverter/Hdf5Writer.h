@@ -42,7 +42,7 @@ public:
 protected:
 	void initDataSet( const std::string& newfile, int compression );
 	std::string closeDataSet( );
-	int writeChunk( ReadInfo& );
+	int drain( ReadInfo& );
 
 private:
 
@@ -73,7 +73,7 @@ private:
 	time_t firstTime;
 	time_t lastTime;
 	int compression;
-	ReadInfo data;
+	ReadInfo * dataptr;
 };
 
 #endif /* HDF5WRITER_H */

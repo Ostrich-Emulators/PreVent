@@ -11,65 +11,81 @@
  * Created on August 26, 2016, 12:55 PM
  */
 
-#ifndef CACHEFILEHDF5WRITER_H
-#define CACHEFILEHDF5WRITER_H
+#ifndef ZLREADER_H
+#define ZLREADER_H
 
+#include "FromReader.h"
 #include <map>
 #include <string>
 #include <memory>
 #include <istream>
-
-#include "FromReader.h"
+#include <zlib.h>
 
 class SignalData;
+class ZlStream;
 
-
-enum zlReaderState { IN_HEADER, IN_VITAL, IN_WAVE, IN_TIME };
-class ZlReader {
-public:
-  ZlReader( const std::string& outputdir, int compression, bool bigfile,
-			const std::string& prefix );
-  virtual ~ZlReader( );
-
-  int convert( const std::string& input );
-  int convert( std::istream&, bool compressed=false );
-
-protected:
-	int readChunk( const std::string& input );
-	int getSize( const std::string& input );
-
-private:
-  static const int CHUNKSIZE;
-
-  ZlReader( const ZlReader& orig );
-
-  const std::string outputdir;
-  const bool largefile;
-  const std::string prefix;
-  bool firstheader;
-  std::string workingText;
-  int compression;
-  time_t currentTime;
-  time_t firstTime;
-  time_t lastTime;
-  int ordinal;
-  zlReaderState state;
-
-  std::map<std::string, std::string> datasetattrs;
-  std::map<std::string, std::unique_ptr<SignalData>> vitals;
-  std::map<std::string, std::unique_ptr<SignalData>> waves;
-  
-  void handleInputChunk( std::string& chunk );
-  void handleOneLine( const std::string& chunk );
-  void reset();
-  void flush();
-  int convertcompressed( std::istream& );
-  
-  static const std::string HEADER;
-  static const std::string VITAL;
-  static const std::string WAVE;
-  static const std::string TIME;  
+enum zlReaderState {
+	IN_HEADER, IN_VITAL, IN_WAVE, IN_TIME
 };
 
-#endif /* CACHEFILEHDF5WRITER_H */
+class ZlReader : public FromReader {
+public:
+	static const int CHUNKSIZE;
+
+	ZlReader( );
+	virtual ~ZlReader( );
+
+	int convert( const std::string& input );
+	int convert( std::istream&, bool compressed = false );
+
+protected:
+	int readChunk( ReadInfo& );
+	int getSize( const std::string& input ) const;
+
+	int prepare( const std::string& input, ReadInfo& info );
+	void finish( );
+
+private:
+
+	ZlReader( const ZlReader& orig );
+
+	bool firstread;
+	bool firstheader;
+	std::string workingText;
+	time_t currentTime;
+	zlReaderState state;
+	std::unique_ptr<ZlStream> stream;
+
+	void handleInputChunk( std::string& chunk, ReadInfo& info );
+	void handleOneLine( const std::string& chunk, ReadInfo& info );
+
+	static const std::string HEADER;
+	static const std::string VITAL;
+	static const std::string WAVE;
+	static const std::string TIME;
+};
+
+class ZlStream {
+public:
+	ZlStream( std::istream * input, bool compressed, bool isStdin );
+
+	virtual ~ZlStream( );
+	void close( );
+
+	int readNextChunk( std::string& );
+
+private:
+	int readNextCompressedChunk( std::string& );
+	void initZlib( );
+
+	bool iscompressed;
+	bool usestdin;
+
+	std::istream * stream;
+
+	// zlib-only var
+	z_stream strm;
+};
+
+#endif /* ZLREADER_H */
 

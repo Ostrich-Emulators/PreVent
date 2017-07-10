@@ -183,5 +183,68 @@
       <item path="main.cpp" ex="false" tool="1" flavor2="0">
       </item>
     </conf>
+    <conf name="Debug-zl-to-hdf5" type="1">
+      <toolsSet>
+        <compilerSet>GNU|GNU</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <standard>8</standard>
+          <commandlineTool>h5c++</commandlineTool>
+          <commandLine>-Wno-deprecated -O0 -pg -g `wfdb-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/libsz.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+          </linkerLibItems>
+          <commandLine>`wfdb-config --libs`</commandLine>
+        </linkerTool>
+      </compileType>
+      <item path="DataRow.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="DataRow.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Formats.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Formats.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="FromReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="FromReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ReadInfo.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ReadInfo.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalData.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalData.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ToWriter.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ToWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ZlReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ZlReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+    </conf>
   </confs>
 </configurationDescriptor>

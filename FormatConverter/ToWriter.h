@@ -41,7 +41,7 @@ protected:
 	 * @return 
 	 */
 	virtual std::string closeDataSet( ) = 0;
-	virtual int writeChunk( ReadInfo& ) = 0;
+	virtual int drain( ReadInfo& ) = 0;
 
 private:
 	ToWriter( const ToWriter& );

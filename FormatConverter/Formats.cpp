@@ -27,5 +27,8 @@ Format Formats::getValue( const std::string& fmt ) {
   if ( "stpxml" == fmt ) {
     return STPXML;
   }
+  if ( "zl" == fmt ) {
+    return DSZL;
+  }
   return UNRECOGNIZED;
 }

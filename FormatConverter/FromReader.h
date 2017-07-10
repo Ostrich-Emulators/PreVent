@@ -34,7 +34,7 @@ public:
 	 * @param read the data structure to populate with the newly-read data
 	 * @return 0 (End of Patient), -1 (EOF), or -2 (error), >0 "normal" read
 	 */
-	int next( ReadInfo& read );
+	int fill( ReadInfo& read );
 
 protected:
 

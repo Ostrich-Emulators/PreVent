@@ -2,6 +2,7 @@
 #include "FromReader.h"
 #include "SignalData.h"
 #include "WfdbReader.h"
+#include "ZlReader.h"
 
 FromReader::FromReader( ) : largefile( false ) {
 }
@@ -17,6 +18,8 @@ std::unique_ptr<FromReader> FromReader::get( const Format& fmt ) {
   switch ( fmt ) {
     case WFDB:
       return std::unique_ptr<FromReader>( new WfdbReader( ) );
+    case DSZL:
+      return std::unique_ptr<FromReader>( new ZlReader() );
   }
 }
 
@@ -42,7 +45,7 @@ int FromReader::reset( const std::string& input, ReadInfo& info ) {
   return 0;
 }
 
-int FromReader::next( ReadInfo& read ) {
+int FromReader::fill( ReadInfo& read ) {
   return readChunk( read );
 }
 

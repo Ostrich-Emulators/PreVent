@@ -38,7 +38,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-o or --outdir <output directory>"
       << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
       << std::endl << "\t-p or --prefix <output file prefix>"
-      << std::endl << "\tValid formats: wfdb, hdf5, stpxml"
+      << std::endl << "\tValid formats: wfdb, hdf5, stpxml, zl"
       << std::endl << "\tIf file is -, stdin is read for input, and the format is assumed to be our zl format, regardless of --from option"
       << std::endl << std::endl;
   exit( 1 );
@@ -133,131 +133,37 @@ int main( int argc, char** argv ) {
     }
   }
 
-  exit( 0 );
-
-
-
-
-  int i;
-  WFDB_Sample v[500];
-  WFDB_Siginfo s[500];
-
-  const char * recname = "./Site01_0204_vitals";
-  if ( isigopen( (char *) recname, s, 500 ) < 1 ) {
-    exit( 1 );
-  }
-  for ( i = 0; i < 10; i++ ) {
-    if ( getvec( v ) < 0 )
-      break;
-    printf( "%d\t%d\n", v[0], v[1] );
-  }
-
-  wfdbquit( );
-
-
-
-  if ( argc < 5 ) {
-    helpAndExit( argv[0] );
-  }
-
-  std::string xmlpath( argv[1] );
-  std::string hdf5path( argv[2] );
-
-  bool rollover = true;
-  //int compression = 6;
-  //std::string prefix = "";
-  std::string usecache( "auto" );
-
-  for ( int i = 3; i < argc; i++ ) {
-    std::string arg( argv[i] );
-    if ( "--no-rollover" == arg ) {
-      rollover = false;
-    }
-    else {
-      if ( argc <= i + 1 ) {
-        helpAndExit( argv[0], "missing required argument for " + arg );
-      }
-      std::string argval( argv[++i] );
-
-      if ( "--compression" == arg ) {
-        compression = std::stoi( argval );
-      }
-      else if ( "--use-caches" == arg ) {
-        usecache = argval;
-      }
-      else if ( "--prefix" == arg ) {
-        prefix = argval;
-      }
-      else {
-        helpAndExit( argv[0], "Unknown option: " + arg );
-      }
-    }
-  }
-
-  struct stat xmlstat;
-  if ( "-" == xmlpath || "-zl" == xmlpath ) {
-    xmlstat.st_size = 0;
-    usecache = ( rollover ? "false" : "true" );
-  }
-  else {
-#ifdef __linux__
-    if ( stat( xmlpath.c_str( ), &xmlstat ) < 0 ) {
-      perror( xmlpath.c_str( ) );
-      exit( EXIT_FAILURE );
-    }
-#else
-    // can't get stat to work with windows's \\ separator
-    xmlstat.st_size = 0;
-    usecache = ( rollover ? "false" : "true" );
-#endif
-  }
-
-  // if we're given a big file, and we're not rolling over on days, then
-  // worry about using temp files instead of memory caches while parsing
-  // (750M file is arbitrarily considered big)
-  bool bigfile;
-  if ( "auto" == usecache ) {
-    bigfile = !rollover && ( xmlstat.st_size > 1024 * 1024 * 750 );
-  }
-  else {
-    bigfile = ( "true" == usecache );
-  }
-
-  if ( bigfile ) {
-    std::cout << "using disk caches" << std::endl;
-  }
-
-  H5::Exception::dontPrint( );
-
-  try {
-    ZlReader writer( hdf5path, compression, bigfile, prefix );
-    writer.convert( xmlpath );
-  }
-  catch ( FileIException error ) {
-    std::cerr << "could not open output file" << std::endl;
-    error.printError( );
-    return 1;
-  }// catch failure caused by the DataSet operations
-  catch ( DataSetIException error ) {
-    error.printError( );
-    return 2;
-  }// catch failure caused by the DataSpace operations
-  catch ( DataSpaceIException error ) {
-    error.printError( );
-    return 3;
-  }// catch failure caused by the DataSpace operations
-  catch ( DataTypeIException error ) {
-    error.printError( );
-    return 4;
-  }
-  catch ( const std::exception& ex ) {
-    std::cerr << "unhandled exception " << ex.what( ) << std::endl;
-    return 5;
-  }
-  catch ( const std::string& ex ) {
-    std::cerr << "unhandled exception " << ex << std::endl;
-    return 6;
-  }
+//  H5::Exception::dontPrint( );
+//
+//  try {
+//    ZlReader writer( hdf5path, compression, bigfile, prefix );
+//    writer.convert( xmlpath );
+//  }
+//  catch ( FileIException error ) {
+//    std::cerr << "could not open output file" << std::endl;
+//    error.printError( );
+//    return 1;
+//  }// catch failure caused by the DataSet operations
+//  catch ( DataSetIException error ) {
+//    error.printError( );
+//    return 2;
+//  }// catch failure caused by the DataSpace operations
+//  catch ( DataSpaceIException error ) {
+//    error.printError( );
+//    return 3;
+//  }// catch failure caused by the DataSpace operations
+//  catch ( DataTypeIException error ) {
+//    error.printError( );
+//    return 4;
+//  }
+//  catch ( const std::exception& ex ) {
+//    std::cerr << "unhandled exception " << ex.what( ) << std::endl;
+//    return 5;
+//  }
+//  catch ( const std::string& ex ) {
+//    std::cerr << "unhandled exception " << ex << std::endl;
+//    return 6;
+//  }
 
   return 0;
 }
