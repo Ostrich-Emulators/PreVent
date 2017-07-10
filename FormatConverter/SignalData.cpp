@@ -11,7 +11,7 @@
  * Created on August 3, 2016, 7:47 AM
  */
 
-#include "DataSetDataCache.h"
+#include "SignalData.h"
 #include "DataRow.h"
 
 #include <string>
@@ -20,15 +20,15 @@
 #include <fstream>
 #include <cstdio>
 
-const int DataSetDataCache::CACHE_LIMIT = 15000;
+const int SignalData::CACHE_LIMIT = 15000;
 
-DataSetDataCache::DataSetDataCache( const std::string& name, bool largefile )
+SignalData::SignalData( const std::string& name, bool largefile )
 : label( name ), _uom( "Uncalib" ), firstdata( 2099999999 ), lastdata( 0 ),
 datacount( 0 ), _scale( 1 ) {
   file = ( largefile ? std::tmpfile( ) : NULL );
 }
 
-DataSetDataCache::DataSetDataCache( const DataSetDataCache& orig ) : label( orig.label ),
+SignalData::SignalData( const SignalData& orig ) : label( orig.label ),
 _uom( orig._uom ), firstdata( orig.firstdata ), lastdata( orig.lastdata ),
 datacount( orig.datacount ), _scale( orig._scale ) {
   for ( auto const& i : orig.data ) {
@@ -36,15 +36,15 @@ datacount( orig.datacount ), _scale( orig._scale ) {
   }
 }
 
-const time_t& DataSetDataCache::startTime( ) const {
+const time_t& SignalData::startTime( ) const {
   return firstdata;
 }
 
-const time_t& DataSetDataCache::endTime( ) const {
+const time_t& SignalData::endTime( ) const {
   return lastdata;
 }
 
-std::unique_ptr<DataRow> DataSetDataCache::pop( ) {
+std::unique_ptr<DataRow> SignalData::pop( ) {
   datacount--;
   if ( NULL != file && data.empty( ) ) {
     int lines = uncache( );
@@ -59,37 +59,37 @@ std::unique_ptr<DataRow> DataSetDataCache::pop( ) {
   return row;
 }
 
-DataSetDataCache::~DataSetDataCache( ) {
+SignalData::~SignalData( ) {
   data.clear( );
   if ( NULL != file ) {
     std::fclose( file );
   }
 }
 
-void DataSetDataCache::setUom( const std::string& u ) {
+void SignalData::setUom( const std::string& u ) {
   _uom = u;
 }
 
-int DataSetDataCache::size( ) const {
+int SignalData::size( ) const {
   return datacount;
 }
 
-const std::string& DataSetDataCache::name( ) const {
+const std::string& SignalData::name( ) const {
   return label;
 }
 
-const std::string& DataSetDataCache::uom( ) const {
+const std::string& SignalData::uom( ) const {
   return _uom;
 }
 
-void DataSetDataCache::startPopping( ) {
+void SignalData::startPopping( ) {
   if ( NULL != file ) {
     cache( ); // copy any extra rows to disk
     std::rewind( file );
   }
 }
 
-void DataSetDataCache::cache( ) {
+void SignalData::cache( ) {
   while ( !data.empty( ) ) {
     std::unique_ptr<DataRow> a = std::move( data.front( ) );
     data.pop_front( );
@@ -99,7 +99,7 @@ void DataSetDataCache::cache( ) {
   }
 }
 
-void DataSetDataCache::add( const DataRow& row ) {
+void SignalData::add( const DataRow& row ) {
   datacount++;
 
   if ( NULL != file && data.size( ) >= CACHE_LIMIT ) {
@@ -117,7 +117,7 @@ void DataSetDataCache::add( const DataRow& row ) {
   }
 }
 
-int DataSetDataCache::uncache( int max ) {
+int SignalData::uncache( int max ) {
   int loop = 0;
   const int BUFFSZ = 4096;
   char buff[BUFFSZ];
@@ -148,10 +148,10 @@ int DataSetDataCache::uncache( int max ) {
   return loop;
 }
 
-int DataSetDataCache::scale( ) const {
+int SignalData::scale( ) const {
   return _scale;
 }
 
-void DataSetDataCache::setScale( int x ) {
+void SignalData::setScale( int x ) {
   _scale = x;
 }

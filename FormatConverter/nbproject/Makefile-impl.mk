@@ -31,7 +31,7 @@ DEFAULTCONF=Release
 CONF=${DEFAULTCONF}
 
 # All Configurations
-ALLCONFS=Release Debug Debug-cachefile-text Release_x64 Debug-cachefile-zl-64bit Debug-cachefile-zl 
+ALLCONFS=Release Debug 
 
 
 # build

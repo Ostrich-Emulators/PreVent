@@ -16,14 +16,23 @@
 
 #include "FromReader.h"
 #include <ctime>
+#include <wfdb/wfdb.h>
 
 class WfdbReader : public FromReader {
 public:
 	static time_t convert( const char * timestr );
 
 protected:
-	void doRead( const std::string& input );
+	int prepare( const std::string& input, ReadInfo& info );
+	void finish();
+	
+	int readChunk( ReadInfo& data );
 	int getSize( const std::string& input ) const;
+
+private:
+	int sigcount;
+	WFDB_Siginfo * siginfo;
+
 };
 
 #endif /* WFDBREADER_H */

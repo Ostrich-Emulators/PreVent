@@ -21,10 +21,10 @@
 
 class DataRow;
 
-class DataSetDataCache {
+class SignalData {
 public:
-  DataSetDataCache( const std::string& name, bool largefilesupport );
-  virtual ~DataSetDataCache( );
+  SignalData( const std::string& name, bool largefilesupport );
+  virtual ~SignalData( );
 
   void add( const DataRow& row );
   void setUom( const std::string& u );
@@ -40,7 +40,7 @@ public:
   std::unique_ptr<DataRow> pop( );
 
 private:
-  DataSetDataCache( const DataSetDataCache& orig );
+  SignalData( const SignalData& orig );
   /**
    * copy rows from the cache file to the data list.  
    * @param count the desired elements to uncache

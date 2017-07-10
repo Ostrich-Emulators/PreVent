@@ -13,8 +13,8 @@
  * Almost all the zlib code was taken from http://www.zlib.net/zlib_how.html
  */
 
-#include "CacheFileReader.h"
-#include "DataSetDataCache.h"
+#include "ZlReader.h"
+#include "SignalData.h"
 #include "DataRow.h"
 #include "Hdf5Writer.h"
 
@@ -33,27 +33,27 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-const int CacheFileReader::CHUNKSIZE = 16384 * 16;
-const std::string CacheFileReader::HEADER = "HEADER";
-const std::string CacheFileReader::VITAL = "VITAL";
-const std::string CacheFileReader::WAVE = "WAVE";
-const std::string CacheFileReader::TIME = "TIME";
+const int ZlReader::CHUNKSIZE = 16384 * 16;
+const std::string ZlReader::HEADER = "HEADER";
+const std::string ZlReader::VITAL = "VITAL";
+const std::string ZlReader::WAVE = "WAVE";
+const std::string ZlReader::TIME = "TIME";
 
-CacheFileReader::CacheFileReader( const std::string& output,
+ZlReader::ZlReader( const std::string& output,
         int _compression, bool _bigfile, const std::string& _prefix )
 : outputdir( output ), compression( _compression ), largefile( _bigfile ), ordinal( 1 ),
 prefix( _prefix ), firstheader( true ) {
 }
 
-CacheFileReader::CacheFileReader( const CacheFileReader& orig )
+ZlReader::ZlReader( const ZlReader& orig )
 : outputdir( orig.outputdir ), compression( orig.compression ),
 largefile( orig.largefile ), ordinal( orig.ordinal ), firstheader( orig.firstheader ) {
 }
 
-CacheFileReader::~CacheFileReader( ) {
+ZlReader::~ZlReader( ) {
 }
 
-int CacheFileReader::convert( const std::string& input ) {
+int ZlReader::convert( const std::string& input ) {
   bool usestdin = ( "-" == input || "-zl" == input );
 
   // zlib-compressed (first char='x'). Unfortunately, if we're reading from
@@ -74,7 +74,7 @@ int CacheFileReader::convert( const std::string& input ) {
   }
 }
 
-int CacheFileReader::convert( std::istream& stream, bool compressed ) {
+int ZlReader::convert( std::istream& stream, bool compressed ) {
   reset( );
   firstheader = true;
 
@@ -97,7 +97,7 @@ int CacheFileReader::convert( std::istream& stream, bool compressed ) {
   return 0;
 }
 
-int CacheFileReader::convertcompressed( std::istream& stream ) {
+int ZlReader::convertcompressed( std::istream& stream ) {
   int ret;
   unsigned have;
   z_stream strm;
@@ -151,7 +151,7 @@ int CacheFileReader::convertcompressed( std::istream& stream ) {
 
 }
 
-void CacheFileReader::handleInputChunk( std::string& chunk ) {
+void ZlReader::handleInputChunk( std::string& chunk ) {
   // we don't know where our chunk ends, so add whatever left-overs we
   // have from the last read to this read, and then process line by line
 
@@ -181,20 +181,20 @@ void CacheFileReader::handleInputChunk( std::string& chunk ) {
   workingText = nextworkingtext;
 }
 
-void CacheFileReader::reset( ) {
+void ZlReader::reset( ) {
   lastTime = 0;
   firstTime = 2099999999;
   vitals.clear( );
   waves.clear( );
 }
 
-void CacheFileReader::flush( ) {
-  Hdf5Writer::flush( outputdir, prefix, compression, firstTime, lastTime,
-          ordinal, datasetattrs, vitals, waves );
+void ZlReader::flush( ) {
+//  Hdf5Writer::flush( outputdir, prefix, compression, firstTime, lastTime,
+//          ordinal, datasetattrs, vitals, waves );
   reset( );
 }
 
-void CacheFileReader::handleOneLine( const std::string& chunk ) {
+void ZlReader::handleOneLine( const std::string& chunk ) {
   if ( HEADER == chunk ) {
     state = zlReaderState::IN_HEADER;
     if ( firstheader ) {
@@ -226,8 +226,7 @@ void CacheFileReader::handleOneLine( const std::string& chunk ) {
 
       if ( 0 == vitals.count( vital ) ) {
         vitals.insert( std::make_pair( vital,
-                std::unique_ptr<DataSetDataCache>( new DataSetDataCache( vital,
-                largefile ) ) ) );
+                std::unique_ptr<SignalData>( new SignalData( vital, largefile ) ) ) );
       }
 
       int scale = DataRow::scale( val );
@@ -250,7 +249,7 @@ void CacheFileReader::handleOneLine( const std::string& chunk ) {
       points >> wavename >> uom >> val;
       if ( 0 == waves.count( wavename ) ) {
         waves.insert( std::make_pair( wavename,
-                std::unique_ptr<DataSetDataCache>( new DataSetDataCache( wavename,
+                std::unique_ptr<SignalData>( new SignalData( wavename,
                 largefile ) ) ) );
       }
 

@@ -16,12 +16,13 @@
 
 #include "H5Cpp.h"
 
-#include "CacheFileReader.h"
+#include "ZlReader.h"
 #include "FromReader.h"
 #include "ToWriter.h"
 #include "Formats.h"
-#include "DataSetDataCache.h"
+#include "SignalData.h"
 #include "DataRow.h"
+#include "ReadInfo.h"
 
 #ifndef H5_NO_NAMESPACE
 using namespace H5;
@@ -34,6 +35,9 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << "Syntax: " << progname << " --from <format> --to <format> <file>..."
       << std::endl << "\t-f or --from <input format>"
       << std::endl << "\t-t or --to <output format>"
+      << std::endl << "\t-o or --outdir <output directory>"
+      << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
+      << std::endl << "\t-p or --prefix <output file prefix>"
       << std::endl << "\tValid formats: wfdb, hdf5, stpxml"
       << std::endl << "\tIf file is -, stdin is read for input, and the format is assumed to be our zl format, regardless of --from option"
       << std::endl << std::endl;
@@ -43,6 +47,9 @@ void helpAndExit( char * progname, std::string msg = "" ) {
 struct option longopts[] = {
   { "from", required_argument, NULL, 'f' },
   { "to", required_argument, NULL, 't' },
+  { "outdir", required_argument, NULL, 'o' },
+  { "compression", required_argument, NULL, 'z' },
+  { "prefix", required_argument, NULL, 'p' },
   { 0, 0, 0, 0 }
 };
 
@@ -52,14 +59,26 @@ int main( int argc, char** argv ) {
   extern char * optarg;
   std::string fromstr = "";
   std::string tostr = "";
+  std::string outdir = ".";
+  std::string prefix = "";
+  int compression = 6;
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:ozp", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
         break;
       case 't':
         tostr = optarg;
+        break;
+      case 'o':
+        outdir = optarg;
+        break;
+      case 'p':
+        prefix = optarg;
+        break;
+      case 'z':
+        compression = std::atoi( optarg );
         break;
       case '?':
       default:
@@ -99,11 +118,19 @@ int main( int argc, char** argv ) {
 
   // send the files through
   for ( int i = optind; i < argc; i++ ) {
+    ReadInfo data;
     std::cout << "converting " << argv[i]
         << " from " << fromstr
         << " to " << tostr << std::endl;
-    from->reset( argv[i] );
-    to->write( from );
+    from->reset( argv[i], data );
+    to->setOutputDir( outdir );
+    to->setCompression( compression );
+    to->setOutputPrefix( prefix );
+    std::vector<std::string> files = to->write( from, data );
+
+    for ( const auto& f : files ) {
+      std::cout << " written to " << f << std::endl;
+    }
   }
 
   exit( 0 );
@@ -137,8 +164,8 @@ int main( int argc, char** argv ) {
   std::string hdf5path( argv[2] );
 
   bool rollover = true;
-  int compression = 6;
-  std::string prefix = "";
+  //int compression = 6;
+  //std::string prefix = "";
   std::string usecache( "auto" );
 
   for ( int i = 3; i < argc; i++ ) {
@@ -203,7 +230,7 @@ int main( int argc, char** argv ) {
   H5::Exception::dontPrint( );
 
   try {
-    CacheFileReader writer( hdf5path, compression, bigfile, prefix );
+    ZlReader writer( hdf5path, compression, bigfile, prefix );
     writer.convert( xmlpath );
   }
   catch ( FileIException error ) {

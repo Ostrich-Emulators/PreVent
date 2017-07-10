@@ -1,6 +1,6 @@
 
 #include "FromReader.h"
-#include "DataSetDataCache.h"
+#include "SignalData.h"
 #include "WfdbReader.h"
 
 FromReader::FromReader( ) : largefile( false ) {
@@ -20,46 +20,36 @@ std::unique_ptr<FromReader> FromReader::get( const Format& fmt ) {
   }
 }
 
-void FromReader::addVital( const std::string& name, const DataRow& data, const std::string& uom ) {
-  if ( 0 == vmap.count( name ) ) {
-    vmap.insert( std::make_pair( name,
-        std::unique_ptr<DataSetDataCache>( new DataSetDataCache( name,
-        largefile ) ) ) );
-    vmap[name]->setUom( uom );
-  }
+int FromReader::reset( const std::string& input, ReadInfo& info ) {
+  info.reset( false );
 
-  vmap[name]->add( data );
-}
-
-void FromReader::addWave( const std::string& name, const DataRow& data, const std::string& uom ) {
-  if ( 0 == wmap.count( name ) ) {
-    wmap.insert( std::make_pair( name,
-        std::unique_ptr<DataSetDataCache>( new DataSetDataCache( name,
-        largefile ) ) ) );
-  }
-
-  wmap[name]->add( data );
-}
-
-void FromReader::reset( const std::string& input ) {
   if ( "-" == input || "-zl" == input ) {
     largefile = false;
   }
   else {
     // arbitrary: "large file" is anything over 750M
-    largefile = ( getSize( input ) > 1024 * 1024 * 750 );
+    int sz = getSize( input );
+    if ( sz < 0 ) {
+      return -1;
+    }
+
+    largefile = ( sz > 1024 * 1024 * 750 );
   }
 
-  vmap.clear( );
-  wmap.clear( );
-
-  doRead( input );
+  info.setFileSupport( largefile );
+  prepare( input, info );
+  
+  return 0;
 }
 
-std::map<std::string, std::unique_ptr<DataSetDataCache>>&FromReader::vitals( ) {
-  return vmap;
+int FromReader::next( ReadInfo& read ) {
+  return readChunk( read );
 }
 
-std::map<std::string, std::unique_ptr<DataSetDataCache>>&FromReader::waves( ) {
-  return wmap;
+int FromReader::prepare( const std::string& input, ReadInfo& ){
+  return 0;
+}
+
+void FromReader::finish(){
+
 }

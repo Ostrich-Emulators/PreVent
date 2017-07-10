@@ -35,15 +35,15 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/CacheFileReader.o \
 	${OBJECTDIR}/DataRow.o \
-	${OBJECTDIR}/DataSetDataCache.o \
 	${OBJECTDIR}/Formats.o \
 	${OBJECTDIR}/FromReader.o \
 	${OBJECTDIR}/Hdf5Writer.o \
-	${OBJECTDIR}/HdfWriter.o \
+	${OBJECTDIR}/ReadInfo.o \
+	${OBJECTDIR}/SignalData.o \
 	${OBJECTDIR}/ToWriter.o \
 	${OBJECTDIR}/WfdbReader.o \
+	${OBJECTDIR}/ZlReader.o \
 	${OBJECTDIR}/main.o
 
 
@@ -77,20 +77,10 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter ${OBJECTFILES} ${LDLIBSOPTIONS} `wfdb-config --libs`
 
-${OBJECTDIR}/CacheFileReader.o: CacheFileReader.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/CacheFileReader.o CacheFileReader.cpp
-
 ${OBJECTDIR}/DataRow.o: DataRow.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DataRow.o DataRow.cpp
-
-${OBJECTDIR}/DataSetDataCache.o: DataSetDataCache.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DataSetDataCache.o DataSetDataCache.cpp
 
 ${OBJECTDIR}/Formats.o: Formats.cpp
 	${MKDIR} -p ${OBJECTDIR}
@@ -107,10 +97,15 @@ ${OBJECTDIR}/Hdf5Writer.o: Hdf5Writer.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Hdf5Writer.o Hdf5Writer.cpp
 
-${OBJECTDIR}/HdfWriter.o: HdfWriter.cpp
+${OBJECTDIR}/ReadInfo.o: ReadInfo.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/HdfWriter.o HdfWriter.cpp
+	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ReadInfo.o ReadInfo.cpp
+
+${OBJECTDIR}/SignalData.o: SignalData.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SignalData.o SignalData.cpp
 
 ${OBJECTDIR}/ToWriter.o: ToWriter.cpp
 	${MKDIR} -p ${OBJECTDIR}
@@ -121,6 +116,11 @@ ${OBJECTDIR}/WfdbReader.o: WfdbReader.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/WfdbReader.o WfdbReader.cpp
+
+${OBJECTDIR}/ZlReader.o: ZlReader.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ZlReader.o ZlReader.cpp
 
 ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}

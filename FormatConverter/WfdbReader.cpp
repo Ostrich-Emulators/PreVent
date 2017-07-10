@@ -6,6 +6,7 @@
 
 #include "WfdbReader.h"
 #include "DataRow.h"
+#include "SignalData.h"
 
 #include <wfdb/wfdb.h>
 #include <iostream>
@@ -51,53 +52,70 @@ time_t WfdbReader::convert( const char * timestr ) {
   return timegm( &timeDate );
 }
 
-void WfdbReader::doRead( const std::string& input ) {
-  int nsig = isigopen( (char *) ( input.c_str( ) ), NULL, 0 );
-  if ( nsig > 0 ) {
-    WFDB_Siginfo * siginfo = new WFDB_Siginfo[nsig];
+int WfdbReader::prepare( const std::string& recordset, ReadInfo& info ) {
+  sigcount = isigopen( (char *) ( recordset.c_str( ) ), NULL, 0 );
+  if ( sigcount > 0 ) {
+    siginfo = new WFDB_Siginfo[sigcount];
 
-    nsig = isigopen( (char *) ( input.c_str( ) ), siginfo, nsig );
-    WFDB_Sample * v = new WFDB_Sample[nsig];
+    sigcount = isigopen( (char *) ( recordset.c_str( ) ), siginfo, sigcount );
 
-    int code = getvec( v );
-    int sampleno = 0;
+    for ( int i = 0; i < sigcount; i++ ) {
+      std::unique_ptr<SignalData>& dataset = info.addVital( siginfo[i].desc );
 
-    while ( code > 0 ) {
-      for ( int j = 0; j < nsig; j++ ) {
-        char * timer = timstr( sampleno );
-        time_t timet = convert( timer );
-        // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
-        // for what timer is
+      if ( NULL != siginfo[i].units ) {
+        dataset->setUom( siginfo[i].units );
+      }
+    }
+  }
 
-        WFDB_Frequency freqhz = getifreq( );
-        if ( freqhz > 1 ) {
-          // we have a waveform, so worry about sample numbers
+  return ( sigcount > 0 ? 0 : -1 );
+}
 
-          // WARNING: also, WFDB can specify sample rate, so we can't rely on
-          // it being always a multiple of 60
-        }
+void WfdbReader::finish( ) {
+  delete [] siginfo;
+  wfdbquit( );
+}
 
-        DataRow row( timet, std::to_string( v[j] ) );
+int WfdbReader::readChunk( ReadInfo& info ) {
 
-        std::string uom = ( NULL == siginfo[j].units ? "Uncalib" : siginfo[j].units );
-        addVital( siginfo[j].desc, row, uom );
+  WFDB_Sample * v = new WFDB_Sample[sigcount];
+  int retcode = getvec( v );
+  int sampleno = 0;
+
+  while ( retcode > 0 ) {
+    for ( int j = 0; j < sigcount; j++ ) {
+      char * timer = timstr( sampleno );
+      time_t timet = convert( timer );
+      // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
+      // for what timer is
+
+      WFDB_Frequency freqhz = getifreq( );
+      if ( freqhz > 1 ) {
+        // we have a waveform, so worry about sample numbers
+
+        // WARNING: also, WFDB can specify sample rate, so we can't rely on
+        // it being always a multiple of 60
       }
 
-      code = getvec( v );
-      sampleno++;
+      DataRow row( timet, std::to_string( v[j] ) );
+
+      std::unique_ptr<SignalData>& dataset = info.addVital( siginfo[j].desc );
+      dataset->add( row );
     }
 
-    if ( -3 == code ) {
-      std::cerr << "unexpected end of file" << std::endl;
-    }
-    else if ( -4 == code ) {
-      std::cerr << "invalid checksum" << std::endl;
-    }
-
-
-    delete [] v;
-    delete [] siginfo;
+    retcode = getvec( v );
+    sampleno++;
   }
+
+  if ( -3 == retcode ) {
+    std::cerr << "unexpected end of file" << std::endl;
+  }
+  else if ( -4 == retcode ) {
+    std::cerr << "invalid checksum" << std::endl;
+  }
+
+  delete [] v;
+  return retcode;
 }
 
 int WfdbReader::getSize( const std::string& input ) const {

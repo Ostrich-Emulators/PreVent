@@ -19,22 +19,6 @@
                     <name>Debug</name>
                     <type>1</type>
                 </confElem>
-                <confElem>
-                    <name>Debug-cachefile-text</name>
-                    <type>1</type>
-                </confElem>
-                <confElem>
-                    <name>Release_x64</name>
-                    <type>1</type>
-                </confElem>
-                <confElem>
-                    <name>Debug-cachefile-zl-64bit</name>
-                    <type>1</type>
-                </confElem>
-                <confElem>
-                    <name>Debug-cachefile-zl</name>
-                    <type>1</type>
-                </confElem>
             </confList>
             <formatting>
                 <project-formatting-style>false</project-formatting-style>

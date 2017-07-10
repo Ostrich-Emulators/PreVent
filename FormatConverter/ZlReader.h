@@ -19,21 +19,29 @@
 #include <memory>
 #include <istream>
 
-class DataSetDataCache;
+#include "FromReader.h"
+
+class SignalData;
 
 
 enum zlReaderState { IN_HEADER, IN_VITAL, IN_WAVE, IN_TIME };
-class CacheFileReader {
+class ZlReader {
 public:
-  CacheFileReader( const std::string& outputdir, int compression, bool bigfile, const std::string& prefix );
-  virtual ~CacheFileReader( );
+  ZlReader( const std::string& outputdir, int compression, bool bigfile,
+			const std::string& prefix );
+  virtual ~ZlReader( );
 
   int convert( const std::string& input );
   int convert( std::istream&, bool compressed=false );
+
+protected:
+	int readChunk( const std::string& input );
+	int getSize( const std::string& input );
+
 private:
   static const int CHUNKSIZE;
 
-  CacheFileReader( const CacheFileReader& orig );
+  ZlReader( const ZlReader& orig );
 
   const std::string outputdir;
   const bool largefile;
@@ -48,8 +56,8 @@ private:
   zlReaderState state;
 
   std::map<std::string, std::string> datasetattrs;
-  std::map<std::string, std::unique_ptr<DataSetDataCache>> vitals;
-  std::map<std::string, std::unique_ptr<DataSetDataCache>> waves;
+  std::map<std::string, std::unique_ptr<SignalData>> vitals;
+  std::map<std::string, std::unique_ptr<SignalData>> waves;
   
   void handleInputChunk( std::string& chunk );
   void handleOneLine( const std::string& chunk );
