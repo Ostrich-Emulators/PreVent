@@ -357,49 +357,49 @@
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
       </compileType>
-      <item path="DataRow.cpp" ex="false" tool="1" flavor2="0">
+      <item path="DataRow.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="DataRow.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Formats.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Formats.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="Formats.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="ReadInfo.cpp" ex="false" tool="1" flavor2="0">
+      <item path="ReadInfo.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="ReadInfo.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Reader.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Reader.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="Reader.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="SignalData.cpp" ex="false" tool="1" flavor2="0">
+      <item path="SignalData.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
+      <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="WfdbWriter.cpp" ex="false" tool="1" flavor2="0">
+      <item path="WfdbWriter.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="WfdbWriter.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="Writer.cpp" ex="false" tool="1" flavor2="0">
+      <item path="Writer.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="Writer.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="ZlReader.cpp" ex="false" tool="1" flavor2="0">
+      <item path="ZlReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="ZlReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="main.cpp" ex="false" tool="1" flavor2="0">
+      <item path="main.cpp" ex="false" tool="1" flavor2="8">
       </item>
     </conf>
   </confs>

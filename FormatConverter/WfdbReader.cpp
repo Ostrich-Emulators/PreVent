@@ -104,7 +104,6 @@ ReadResult WfdbReader::readChunk( ReadInfo& info ) {
 
     retcode = getvec( v );
     sampleno++;
-    std::cout << sampleno << std::endl;
   }
 
   if ( -3 == retcode ) {

@@ -52,13 +52,18 @@ void Writer::setOutputDir( const std::string& _outdir ) {
 
 std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     ReadInfo& data ) {
-  ReadResult retcode = from->fill( data );
-  std::vector<std::string> list;
-
   std::string lastPatientName = "";
   int patientno = 1;
 
-  initDataSet( outdir + prefix + "-p" + std::to_string( patientno ), compression );
+  int initrslt = initDataSet( outdir + prefix + "-p" + std::to_string( patientno ), compression );
+  if ( initrslt < 0 ) {
+    cerr << "cannot init dataset: " + outdir + prefix + "-p"
+        + std::to_string( patientno ) << std::endl;
+    return "";
+  }
+
+  ReadResult retcode = from->fill( data );
+  std::vector<std::string> list;
 
   while ( retcode != ReadResult::ERROR ) {
     drain( data );

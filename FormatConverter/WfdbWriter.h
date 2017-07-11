@@ -23,7 +23,7 @@ public:
 	virtual ~WfdbWriter( );
 
 protected:
-	void initDataSet( const std::string& newfile, int compression );
+	int initDataSet( const std::string& newfile, int compression );
 	std::string closeDataSet( );
 	int drain( ReadInfo& );
 

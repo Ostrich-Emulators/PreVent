@@ -36,6 +36,10 @@ datacount( orig.datacount ), _scale( orig._scale ) {
   }
 }
 
+std::map<std::string, std::string>& SignalData::metas( ) const {
+  return metadata;
+}
+
 const time_t& SignalData::startTime( ) const {
   return firstdata;
 }

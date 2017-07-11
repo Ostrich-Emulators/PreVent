@@ -7,6 +7,8 @@
 #include "WfdbWriter.h"
 #include "ReadInfo.h"
 
+#include <wfdb/wfdb.h>
+
 WfdbWriter::WfdbWriter( ) {
 }
 
@@ -16,14 +18,18 @@ WfdbWriter::WfdbWriter( const WfdbWriter& ) {
 WfdbWriter::~WfdbWriter( ) {
 }
 
-void WfdbWriter::initDataSet( const std::string& newfile, int compression ) {
-  
+int WfdbWriter::initDataSet( const std::string& newfile, int compression ) {
+  return newheader( newfile.c_str( ) ); // check that our header file is valid
 }
 
 std::string WfdbWriter::closeDataSet( ) {
 
 }
 
-int WfdbWriter::drain( ReadInfo& ) {
+int WfdbWriter::drain( ReadInfo& info ) {
+  
+
+
+
   return 0;
 }

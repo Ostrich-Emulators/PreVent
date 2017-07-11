@@ -235,11 +235,12 @@ void Hdf5Writer::autochunk( hsize_t* dims, int rank, hsize_t* rslts ) {
   rslts[1] = ( rslts[0] < 1000 ? 2 : 1 );
 }
 
-void Hdf5Writer::initDataSet( const std::string& newfile, int compression ) {
+int Hdf5Writer::initDataSet( const std::string& newfile, int compression ) {
   tempfileloc = newfile;
   lastTime = 0;
   firstTime = 2099999999;
   this->compression = compression;
+  return 0;
 }
 
 int Hdf5Writer::drain( ReadInfo& info ) {

@@ -34,7 +34,7 @@ public:
 	static const int MISSING_VALUE;
 
 protected:
-	void initDataSet( const std::string& newfile, int compression );
+	int initDataSet( const std::string& newfile, int compression );
 	std::string closeDataSet( );
 	int drain( ReadInfo& );
 

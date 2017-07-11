@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <time.h>
+#include <map>
 
 class DataRow;
 
@@ -39,6 +40,8 @@ public:
   void startPopping();
   std::unique_ptr<DataRow> pop( );
 
+	std::map<std::string, std::string>& metas() const;
+
 private:
   SignalData( const SignalData& orig );
   /**
@@ -56,6 +59,7 @@ private:
   int datacount;
   int _scale;
   std::list<std::unique_ptr<DataRow>> data;
+	std::map<std::string, std::string> metadata;
   std::FILE * file;
 
   static const int CACHE_LIMIT;

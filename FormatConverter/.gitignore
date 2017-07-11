@@ -1,4 +1,5 @@
 nbproject/private
+core
 .dep.inc
 *.dat
 *.hea
@@ -6,3 +7,4 @@ nbproject/private
 *.atr
 *.ann
 gmon.out
+test.zl*
