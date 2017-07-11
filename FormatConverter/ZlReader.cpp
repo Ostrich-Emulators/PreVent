@@ -252,8 +252,6 @@ void ZlStream::close( ) {
   }
 }
 
-int cnt = 0;
-
 std::string ZlStream::readNextChunk( ) {
   if ( iscompressed ) {
     return readNextCompressedChunk( );
@@ -261,16 +259,13 @@ std::string ZlStream::readNextChunk( ) {
   else {
     // we're not dealing with compressed data, so just read in the text
 
-    std::cout << "g: " << stream->good( )
-        << " b: " << stream->bad( )
-        << " e: " << stream->eof( )
-        << " f: " << stream->fail( ) << std::endl;
-
+    //    std::cout << "g: " << stream->good( )
+    //        << " b: " << stream->bad( )
+    //        << " e: " << stream->eof( )
+    //        << " f: " << stream->fail( ) << std::endl;
     if ( stream->good( ) ) {
       stream->read( (char *) in, ZlReader::CHUNKSIZE );
       int bytesread = stream->gcount( );
-      cnt += bytesread;
-      std::cout << "read " << bytesread << " for a total of: " << cnt << std::endl;
       return std::string( (char *) in, bytesread );
     }
     rr = ReadResult::END_OF_FILE;

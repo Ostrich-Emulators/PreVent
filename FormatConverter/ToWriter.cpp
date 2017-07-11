@@ -52,15 +52,15 @@ std::vector<std::string> ToWriter::write( std::unique_ptr<FromReader>& from,
   ReadResult retcode = from->fill( data );
   std::vector<std::string> list;
 
-  initDataSet( outdir + prefix + "-p" + std::to_string( list.size( ) + 1 ),
-      compression );
+  std::string lastPatientName = "";
+  int patientno = 1;
+
+  initDataSet( outdir + prefix + "-p" + std::to_string( patientno ), compression );
 
   while ( retcode != ReadResult::ERROR ) {
     drain( data );
-    std::cout << "here I am 0" << std::endl;
     if ( ReadResult::END_OF_PATIENT == retcode ) {
       // end of old patient
-      std::cout << "here I am 1" << std::endl;
       std::string file = closeDataSet( );
       if ( file.empty( ) ) {
         std::cerr << "refusing to write empty data file!" << std::endl;
@@ -68,13 +68,19 @@ std::vector<std::string> ToWriter::write( std::unique_ptr<FromReader>& from,
       else {
         list.push_back( file );
       }
-      initDataSet( outdir + prefix + "-p" + std::to_string( list.size( ) + 1 ),
-          compression );
+
+      // if our patient name changed, increment our patient number
+      if ( 0 != data.metadata( ).count( "Patient Name" ) &&
+          data.metadata( )["Patient Name"] != lastPatientName ) {
+        patientno++;
+        lastPatientName = data.metadata( )["Patient Name"];
+      }
+
       data.reset( false );
+      initDataSet( outdir + prefix + "-p" + std::to_string( patientno ), compression );
     }
     else if ( ReadResult::END_OF_FILE == retcode ) {
       // end of file, so break out of our write
-      std::cout << "here I am 2" << std::endl;
 
       std::string file = closeDataSet( );
       if ( file.empty( ) ) {
@@ -85,8 +91,6 @@ std::vector<std::string> ToWriter::write( std::unique_ptr<FromReader>& from,
       }
       break;
     }
-
-    std::cout << "here I am 4" << std::endl;
 
     // carry on with next data chunk
     retcode = from->fill( data );
