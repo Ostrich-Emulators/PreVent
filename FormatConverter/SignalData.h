@@ -40,7 +40,7 @@ public:
   void startPopping();
   std::unique_ptr<DataRow> pop( );
 
-	std::map<std::string, std::string>& metas() const;
+	std::map<std::string, std::string>& metas();
 
 private:
   SignalData( const SignalData& orig );

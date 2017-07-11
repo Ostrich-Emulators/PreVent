@@ -56,14 +56,14 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
   int patientno = 1;
 
   int initrslt = initDataSet( outdir + prefix + "-p" + std::to_string( patientno ), compression );
+  std::vector<std::string> list;
   if ( initrslt < 0 ) {
-    cerr << "cannot init dataset: " + outdir + prefix + "-p"
+    std::cerr << "cannot init dataset: " + outdir + prefix + "-p"
         + std::to_string( patientno ) << std::endl;
-    return "";
+    return list;
   }
 
   ReadResult retcode = from->fill( data );
-  std::vector<std::string> list;
 
   while ( retcode != ReadResult::ERROR ) {
     drain( data );

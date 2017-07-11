@@ -36,7 +36,7 @@ datacount( orig.datacount ), _scale( orig._scale ) {
   }
 }
 
-std::map<std::string, std::string>& SignalData::metas( ) const {
+std::map<std::string, std::string>& SignalData::metas( ) {
   return metadata;
 }
 
