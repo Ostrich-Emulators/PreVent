@@ -41,7 +41,14 @@ protected:
 	 * @return 
 	 */
 	virtual std::string closeDataSet( ) = 0;
-	virtual int drain( ReadInfo& ) = 0;
+	
+	/**
+	 * Drains the give ReadInfo's data. This function can be used for incrementally
+	 * writing input data, or essentially ignored until closeDataSet is called.
+	 * @param info The data to drain
+	 * @return 0 (success) -1 (error)
+	 */
+	virtual int drain( ReadInfo& info ) = 0;
 
 private:
 	Writer( const Writer& );

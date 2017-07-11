@@ -23,6 +23,14 @@
                     <name>Debug-zl-to-hdf5</name>
                     <type>1</type>
                 </confElem>
+                <confElem>
+                    <name>Debug-zl-to-wfdb</name>
+                    <type>1</type>
+                </confElem>
+                <confElem>
+                    <name>Debug-wfdb-to-hdf5</name>
+                    <type>1</type>
+                </confElem>
             </confList>
             <formatting>
                 <project-formatting-style>false</project-formatting-style>

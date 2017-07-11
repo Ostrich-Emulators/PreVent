@@ -42,6 +42,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Reader.o \
 	${OBJECTDIR}/SignalData.o \
 	${OBJECTDIR}/WfdbReader.o \
+	${OBJECTDIR}/WfdbWriter.o \
 	${OBJECTDIR}/Writer.o \
 	${OBJECTDIR}/ZlReader.o \
 	${OBJECTDIR}/main.o
@@ -111,6 +112,11 @@ ${OBJECTDIR}/WfdbReader.o: WfdbReader.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/WfdbReader.o WfdbReader.cpp
+
+${OBJECTDIR}/WfdbWriter.o: WfdbWriter.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/WfdbWriter.o WfdbWriter.cpp
 
 ${OBJECTDIR}/Writer.o: Writer.cpp
 	${MKDIR} -p ${OBJECTDIR}

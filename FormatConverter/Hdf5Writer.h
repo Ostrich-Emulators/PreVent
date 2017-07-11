@@ -31,12 +31,6 @@ public:
 	Hdf5Writer( );
 	virtual ~Hdf5Writer( );
 
-	static int flush( const std::string& outputdir, const std::string& prefix, int compression,
-			const time_t& firstTime, const time_t& lastTime, int ordinal,
-			const std::map<std::string, std::string>& datasetattrs,
-			std::map<std::string, std::unique_ptr<SignalData>>&vitals,
-			std::map<std::string, std::unique_ptr<SignalData>>&waves );
-
 	static const int MISSING_VALUE;
 
 protected:

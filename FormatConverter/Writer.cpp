@@ -3,9 +3,10 @@
 #include <sys/stat.h>
 #include <iostream>
 
-#include "Hdf5Writer.h"
 #include "Reader.h"
 #include "config.h"
+#include "Hdf5Writer.h"
+#include "WfdbWriter.h"
 
 Writer::Writer( ) {
 }
@@ -21,6 +22,8 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
   switch ( fmt ) {
     case HDF5:
       return std::unique_ptr<Writer>( new Hdf5Writer( ) );
+    case WFDB:
+      return std::unique_ptr<Writer>( new WfdbWriter( ) );
   }
 }
 

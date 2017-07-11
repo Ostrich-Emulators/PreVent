@@ -77,8 +77,7 @@ void WfdbReader::finish( ) {
 }
 
 ReadResult WfdbReader::readChunk( ReadInfo& info ) {
-
-  WFDB_Sample * v = new WFDB_Sample[sigcount];
+  WFDB_Sample v[sigcount];
   int retcode = getvec( v );
   int sampleno = 0;
 
@@ -105,6 +104,7 @@ ReadResult WfdbReader::readChunk( ReadInfo& info ) {
 
     retcode = getvec( v );
     sampleno++;
+    std::cout << sampleno << std::endl;
   }
 
   if ( -3 == retcode ) {
@@ -114,9 +114,11 @@ ReadResult WfdbReader::readChunk( ReadInfo& info ) {
     std::cerr << "invalid checksum" << std::endl;
   }
 
-  delete [] v;
+  if ( -1 == retcode ) {
+    return ReadResult::END_OF_FILE;
+  }
 
-  return ( 0 == retcode ? ReadResult::NORMAL : ReadResult::ERROR );
+  return ( 0 <= retcode ? ReadResult::NORMAL : ReadResult::ERROR );
 }
 
 int WfdbReader::getSize( const std::string& input ) const {
