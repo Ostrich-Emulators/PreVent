@@ -37,7 +37,7 @@ int WfdbWriter::initDataSet( const std::string& newfile, int compression ) {
 
 std::string WfdbWriter::closeDataSet( ) {
   wfdbquit( );
-  return fileloc;
+  return fileloc+".hea";
 }
 
 int WfdbWriter::drain( ReadInfo& info ) {
@@ -87,8 +87,8 @@ int WfdbWriter::drain( ReadInfo& info ) {
   return 0;
 }
 
-std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string, std::unique_ptr<SignalData>>&data,
-    std::vector<std::string>& labels, time_t& earliest ) {
+std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
+    std::unique_ptr<SignalData>>&data, std::vector<std::string>& labels, time_t& earliest ) {
   earliest = std::numeric_limits<time_t>::max( );
 
   int rows = 0;
@@ -99,8 +99,6 @@ std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string, st
     if ( sz > rows ) {
       rows = sz;
     }
-
-    map.second->startPopping( );
   }
 
   // WARNING: this logic assumes the largest signal data starts earliest
@@ -129,6 +127,8 @@ std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string, st
   int firsttimes[cols];
   for ( int col = 0; col < cols; col++ ) {
     std::string name = labels[col];
+
+    data[name]->startPopping( );
     if ( data[name]->size( ) > 0 ) {
       const auto& row = data[name]->pop( );
       firsttimes[col] = row->time;
