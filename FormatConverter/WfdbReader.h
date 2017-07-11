@@ -26,7 +26,7 @@ protected:
 	int prepare( const std::string& input, ReadInfo& info );
 	void finish();
 	
-	int readChunk( ReadInfo& data );
+	ReadResult readChunk( ReadInfo& data );
 	int getSize( const std::string& input ) const;
 
 private:

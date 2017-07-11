@@ -73,7 +73,7 @@ private:
 	time_t firstTime;
 	time_t lastTime;
 	int compression;
-	ReadInfo * dataptr;
+	ReadInfo data;
 };
 
 #endif /* HDF5WRITER_H */

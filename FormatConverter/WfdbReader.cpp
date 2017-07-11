@@ -76,7 +76,7 @@ void WfdbReader::finish( ) {
   wfdbquit( );
 }
 
-int WfdbReader::readChunk( ReadInfo& info ) {
+ReadResult WfdbReader::readChunk( ReadInfo& info ) {
 
   WFDB_Sample * v = new WFDB_Sample[sigcount];
   int retcode = getvec( v );
@@ -115,7 +115,8 @@ int WfdbReader::readChunk( ReadInfo& info ) {
   }
 
   delete [] v;
-  return retcode;
+
+  return ( 0 == retcode ? ReadResult::NORMAL : ReadResult::ERROR );
 }
 
 int WfdbReader::getSize( const std::string& input ) const {

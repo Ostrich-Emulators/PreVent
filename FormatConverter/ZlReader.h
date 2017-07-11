@@ -39,7 +39,7 @@ public:
 	int convert( std::istream&, bool compressed = false );
 
 protected:
-	int readChunk( ReadInfo& );
+	ReadResult readChunk( ReadInfo& );
 	int getSize( const std::string& input ) const;
 
 	int prepare( const std::string& input, ReadInfo& info );
@@ -50,8 +50,7 @@ private:
 	ZlReader( const ZlReader& orig );
 
 	bool firstread;
-	bool firstheader;
-	std::string workingText;
+	std::string leftoverText;
 	time_t currentTime;
 	zlReaderState state;
 	std::unique_ptr<ZlStream> stream;
@@ -72,10 +71,12 @@ public:
 	virtual ~ZlStream( );
 	void close( );
 
-	int readNextChunk( std::string& );
+	std::string readNextChunk( );
+	ReadResult getCode( );
 
+	ReadResult rr;
 private:
-	int readNextCompressedChunk( std::string& );
+	std::string readNextCompressedChunk( );
 	void initZlib( );
 
 	bool iscompressed;
@@ -85,6 +86,8 @@ private:
 
 	// zlib-only var
 	z_stream strm;
+	unsigned char in[16384 * 16];
+
 };
 
 #endif /* ZLREADER_H */

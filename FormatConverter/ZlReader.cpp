@@ -39,11 +39,10 @@ const std::string ZlReader::VITAL = "VITAL";
 const std::string ZlReader::WAVE = "WAVE";
 const std::string ZlReader::TIME = "TIME";
 
-ZlReader::ZlReader( ) : firstheader( true ), firstread( true ) {
+ZlReader::ZlReader( ) : firstread( true ) {
 }
 
-ZlReader::ZlReader( const ZlReader& orig ) : firstheader( orig.firstheader ),
-firstread( orig.firstread ) {
+ZlReader::ZlReader( const ZlReader& orig ) : firstread( orig.firstread ) {
 }
 
 ZlReader::~ZlReader( ) {
@@ -66,7 +65,6 @@ int ZlReader::getSize( const std::string& input ) const {
 }
 
 int ZlReader::prepare( const std::string& input, ReadInfo& ) {
-  firstheader = true;
   firstread = true;
 
   bool usestdin = ( "-" == input || "-zl" == input );
@@ -89,79 +87,71 @@ int ZlReader::prepare( const std::string& input, ReadInfo& ) {
   return 0;
 }
 
-int ZlReader::readChunk( ReadInfo& info ) {
+ReadResult ZlReader::readChunk( ReadInfo& info ) {
+  // for this class we say a chunk is a full data set for one patient,
+  // so read until we see another HEADER line in the text
+  std::string onepatientdata = leftoverText + stream->readNextChunk( );
+  ReadResult retcode = stream->rr;
 
-  std::string justread;
-  int retcode = stream->readNextChunk( justread );
+  if ( ReadResult::ERROR == retcode ) {
+    return retcode;
+  }
 
-  if ( retcode >= 0 ) {
-    // fill in the newly-read data
-    // need to worry about a second HEADER line (which means new patient/day)
-    // and stop filling info if we hit one
-    handleInputChunk( justread, info );
+  if ( ReadResult::NORMAL != retcode ) {
+    // we read all the patient data we have, so process the results
+    std::stringstream ss( onepatientdata );
+
+    for ( std::string line; std::getline( ss, line, '\n' ); ) {
+      handleOneLine( line, info );
+    }
+    leftoverText.clear( );
+
+    return retcode;
+  }
+
+  size_t pos = onepatientdata.find( HEADER, HEADER.size( ) );
+  firstread = false;
+  while ( std::string::npos == pos ) {
+    // no new HEADER line, so read some more
+    std::string justread = stream->readNextChunk( );
+    pos = onepatientdata.size( );
+    onepatientdata += justread;
+    retcode = stream->rr;
+
+    if ( ReadResult::END_OF_FILE == retcode ) {
+      break;
+    }
+    if ( ReadResult::ERROR == retcode ) {
+      return retcode;
+    }
+
+    pos = onepatientdata.find( HEADER, pos );
+  }
+
+  // we either ran out of file, or we hit a HEADER line...figure out which
+  if ( ReadResult::NORMAL == retcode ) {
+    // we hit a new HEADER
+    retcode = ReadResult::END_OF_PATIENT;
+  }
+
+
+  if ( retcode != ReadResult::ERROR ) {
+    std::stringstream ss( onepatientdata.substr( 0, pos ) );
+
+    for ( std::string line; std::getline( ss, line, '\n' ); ) {
+      handleOneLine( line, info );
+    }
+
+    leftoverText = onepatientdata.substr( pos );
   }
 
   firstread = false;
   return retcode;
 }
 
-void ZlReader::handleInputChunk( std::string& chunko, ReadInfo& info ) {
-  // we don't know where our chunk ends, so add whatever left-overs we
-  // have from the last read to this read, and then process line by line
-
-  //std::cout << "work: " << workingText << std::endl << "chunk: " << chunko << std::endl;
-  workingText += chunko;
-  bool checkNewLines = true;
-
-  // Check to see if we have a HEADER key somewhere in our new chunk
-  // because we're going to break on HEADERs
-  // start with position 1 because we don't want to hit the same HEADER twice
-  size_t newheader = workingText.find( HEADER + "\n", 1 );
-
-  std::string nextworkingtext;
-  if ( std::string::npos != newheader ) {
-    // we have another HEADER line in there, so chop the current read at that spot
-    nextworkingtext = workingText.substr( newheader );
-    workingText.erase( newheader ); // keep the newline
-
-    // no need to check for newlines, because we're guaranteed to end in one now
-    checkNewLines = false;
-  }
-
-  if ( checkNewLines ) {
-    // if chunk ends with a newline, we're fine...but if not, split out the
-    // text after the last newline
-
-    size_t lastnewline = workingText.rfind( '\n' );
-    if ( std::string::npos == lastnewline ) {
-      // no newlines present...so add everything to our working text
-      // (we still don't have anything to process at this point)
-      return;
-    }
-
-    if ( workingText.length( ) != lastnewline ) {
-      nextworkingtext = workingText.substr( lastnewline + 1 ); // +1: skip the newline char
-      workingText.erase( lastnewline + 1 );
-    }
-    // else chunk ends with a newline
-  }
-
-  //std::cout<<workingText<<std::endl;
-  //std::cout<<nextworkingtext<<std::endl;
-
-  std::stringstream ss( workingText );
-
-  for ( std::string line; std::getline( ss, line, '\n' ); ) {
-    handleOneLine( line, info );
-  }
-
-  workingText = nextworkingtext;
-}
-
 void ZlReader::handleOneLine( const std::string& chunk, ReadInfo& info ) {
   if ( HEADER == chunk ) {
     state = zlReaderState::IN_HEADER;
-    firstheader = false;
   }
   else {
     const int pos = chunk.find( ' ' );
@@ -225,7 +215,7 @@ void ZlReader::handleOneLine( const std::string& chunk, ReadInfo& info ) {
 }
 
 ZlStream::ZlStream( std::istream * cin, bool compressed, bool isStdin )
-: iscompressed( compressed ), usestdin( isStdin ), stream( cin ) {
+: iscompressed( compressed ), usestdin( isStdin ), stream( cin ), rr( ReadResult::NORMAL ) {
   if ( iscompressed ) {
     initZlib( );
   }
@@ -250,44 +240,56 @@ void ZlStream::initZlib( ) {
 }
 
 void ZlStream::close( ) {
+  if ( iscompressed ) {
+    inflateEnd( &strm );
+  }
+
   if ( !usestdin ) {
-    static_cast<std::ifstream *> ( stream )->close( );
+    std::ifstream * str = static_cast<std::ifstream *> ( stream );
+    if ( str->is_open( ) ) {
+      str->close( );
+    }
   }
 }
 
 int cnt = 0;
 
-int ZlStream::readNextChunk( std::string& data ) {
+std::string ZlStream::readNextChunk( ) {
   if ( iscompressed ) {
-    return readNextCompressedChunk( data );
+    return readNextCompressedChunk( );
   }
   else {
     // we're not dealing with compressed data, so just read in the text
-    char in[ZlReader::CHUNKSIZE];
 
-    if ( ( *stream ) ) {
-      stream->read( in, ZlReader::CHUNKSIZE );
+    std::cout << "g: " << stream->good( )
+        << " b: " << stream->bad( )
+        << " e: " << stream->eof( )
+        << " f: " << stream->fail( ) << std::endl;
+
+    if ( stream->good( ) ) {
+      stream->read( (char *) in, ZlReader::CHUNKSIZE );
       int bytesread = stream->gcount( );
       cnt += bytesread;
       std::cout << "read " << bytesread << " for a total of: " << cnt << std::endl;
-      data += std::string( (char *) in, bytesread );
-      return 1;
+      return std::string( (char *) in, bytesread );
     }
-    return -1;
+    rr = ReadResult::END_OF_FILE;
+    return "";
   }
 }
 
-int ZlStream::readNextCompressedChunk( std::string& data ) {
-  unsigned char in[ZlReader::CHUNKSIZE];
+std::string ZlStream::readNextCompressedChunk( ) {
   unsigned char out[ZlReader::CHUNKSIZE];
 
+  std::string data;
   int retcode = 0;
   stream->read( (char *) in, ZlReader::CHUNKSIZE );
   strm.avail_in = stream->gcount( );
 
   retcode = 1;
   if ( strm.avail_in == 0 ) {
-    return 0;
+    rr = ReadResult::END_OF_FILE;
+    return "";
   }
 
   strm.next_in = in;
@@ -302,6 +304,8 @@ int ZlStream::readNextCompressedChunk( std::string& data ) {
       case Z_DATA_ERROR:
       case Z_MEM_ERROR:
         retcode = -1;
+        rr = ReadResult::ERROR;
+        inflateEnd( &strm );
     }
     int have = ZlReader::CHUNKSIZE - strm.avail_out;
     // okay, we have some data to look at
@@ -311,11 +315,11 @@ int ZlStream::readNextCompressedChunk( std::string& data ) {
   while ( strm.avail_out == 0 );
 
   if ( retcode == Z_STREAM_END ) {
-    retcode = 0;
+    rr = ReadResult::END_OF_FILE;
   }
   else if ( retcode == Z_OK ) {
-    retcode = 1;
+    rr = ReadResult::NORMAL;
   }
 
-  return retcode;
+  return data;
 }

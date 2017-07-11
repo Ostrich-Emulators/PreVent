@@ -13,6 +13,8 @@
 class SignalData;
 class DataRow;
 
+enum ReadResult { NORMAL, END_OF_PATIENT, END_OF_FILE, ERROR };
+
 class FromReader {
 public:
 	FromReader( );
@@ -32,18 +34,18 @@ public:
 	 * "chunk" is left to the reader, but at a minimum, only one patient's data
 	 * will ever be returned by a single call.
 	 * @param read the data structure to populate with the newly-read data
-	 * @return 0 (End of Patient), -1 (EOF), or -2 (error), >0 "normal" read
+	 * @return the result code
 	 */
-	int fill( ReadInfo& read );
+	ReadResult fill( ReadInfo& read );
 
 protected:
 
 	/**
 	 * Reads the next bit of input and appends the data to the ReadInfo object.
 	 * @param input where to store the new data
-	 * @return 0 (End of Patient), -1 (EOF), or -2 (error), >0 "normal" read
+	 * @return the result code
 	 */
-	virtual int readChunk( ReadInfo& ) = 0;
+	virtual ReadResult readChunk( ReadInfo& ) = 0;
 
 	/**
 	 * Gets a size calculation for this input

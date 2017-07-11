@@ -45,7 +45,7 @@ int FromReader::reset( const std::string& input, ReadInfo& info ) {
   return 0;
 }
 
-int FromReader::fill( ReadInfo& read ) {
+ReadResult FromReader::fill( ReadInfo& read ) {
   return readChunk( read );
 }
 

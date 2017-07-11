@@ -49,17 +49,18 @@ void ToWriter::setOutputDir( const std::string& _outdir ) {
 
 std::vector<std::string> ToWriter::write( std::unique_ptr<FromReader>& from,
     ReadInfo& data ) {
-  int retcode = from->fill( data );
+  ReadResult retcode = from->fill( data );
   std::vector<std::string> list;
 
   initDataSet( outdir + prefix + "-p" + std::to_string( list.size( ) + 1 ),
       compression );
 
-  while ( retcode >= -1 ) {
+  while ( retcode != ReadResult::ERROR ) {
     drain( data );
-
-    if ( 0 == retcode ) {
+    std::cout << "here I am 0" << std::endl;
+    if ( ReadResult::END_OF_PATIENT == retcode ) {
       // end of old patient
+      std::cout << "here I am 1" << std::endl;
       std::string file = closeDataSet( );
       if ( file.empty( ) ) {
         std::cerr << "refusing to write empty data file!" << std::endl;
@@ -69,9 +70,12 @@ std::vector<std::string> ToWriter::write( std::unique_ptr<FromReader>& from,
       }
       initDataSet( outdir + prefix + "-p" + std::to_string( list.size( ) + 1 ),
           compression );
+      data.reset( false );
     }
-    else if ( -1 == retcode ) {
+    else if ( ReadResult::END_OF_FILE == retcode ) {
       // end of file, so break out of our write
+      std::cout << "here I am 2" << std::endl;
+
       std::string file = closeDataSet( );
       if ( file.empty( ) ) {
         std::cerr << "refusing to write empty data file!" << std::endl;
@@ -81,6 +85,8 @@ std::vector<std::string> ToWriter::write( std::unique_ptr<FromReader>& from,
       }
       break;
     }
+
+    std::cout << "here I am 4" << std::endl;
 
     // carry on with next data chunk
     retcode = from->fill( data );
