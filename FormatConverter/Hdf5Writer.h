@@ -21,12 +21,12 @@
 #include <string>
 #include <memory>
 #include <ctime>
-#include "ToWriter.h"
+#include "Writer.h"
 
 
 class SignalData;
 
-class Hdf5Writer : public ToWriter {
+class Hdf5Writer : public Writer {
 public:
 	Hdf5Writer( );
 	virtual ~Hdf5Writer( );

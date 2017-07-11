@@ -1,6 +1,6 @@
 
-#ifndef TO_WRITER_H
-#define TO_WRITER_H
+#ifndef WRITER_H
+#define WRITER_H
 
 #include <utility>
 #include <memory>
@@ -9,20 +9,20 @@
 #include "Formats.h"
 #include "ReadInfo.h"
 
-class FromReader;
+class Reader;
 
-class ToWriter {
+class Writer {
 public:
-	ToWriter( );
-	virtual ~ToWriter( );
+	Writer( );
+	virtual ~Writer( );
 
-	static std::unique_ptr<ToWriter> get( const Format& fmt );
+	static std::unique_ptr<Writer> get( const Format& fmt );
 
 	void setOutputDir( const std::string& outdir );
 	void setOutputPrefix( const std::string& pre );
 	void setCompression( int lev );
 
-	virtual std::vector<std::string> write( std::unique_ptr<FromReader>& from,
+	virtual std::vector<std::string> write( std::unique_ptr<Reader>& from,
 			ReadInfo& data );
 
 protected:
@@ -44,11 +44,11 @@ protected:
 	virtual int drain( ReadInfo& ) = 0;
 
 private:
-	ToWriter( const ToWriter& );
+	Writer( const Writer& );
 
 	std::string outdir;
 	std::string prefix;
 	int compression;
 };
 
-#endif /* TO_WRITER_H */
+#endif /* WRITER_H */

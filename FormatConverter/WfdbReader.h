@@ -14,11 +14,11 @@
 #ifndef WFDBREADER_H
 #define WFDBREADER_H
 
-#include "FromReader.h"
+#include "Reader.h"
 #include <ctime>
 #include <wfdb/wfdb.h>
 
-class WfdbReader : public FromReader {
+class WfdbReader : public Reader {
 public:
 	static time_t convert( const char * timestr );
 

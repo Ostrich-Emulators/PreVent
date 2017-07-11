@@ -4,15 +4,20 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <logicalFolder name="f1" displayName="Readers" projectFiles="true">
+        <itemPath>WfdbReader.h</itemPath>
+        <itemPath>ZlReader.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f2" displayName="Writers" projectFiles="true">
+        <itemPath>Hdf5Writer.h</itemPath>
+        <itemPath>WfdbWriter.h</itemPath>
+      </logicalFolder>
       <itemPath>DataRow.h</itemPath>
       <itemPath>Formats.h</itemPath>
-      <itemPath>FromReader.h</itemPath>
-      <itemPath>Hdf5Writer.h</itemPath>
       <itemPath>ReadInfo.h</itemPath>
+      <itemPath>Reader.h</itemPath>
       <itemPath>SignalData.h</itemPath>
-      <itemPath>ToWriter.h</itemPath>
-      <itemPath>WfdbReader.h</itemPath>
-      <itemPath>ZlReader.h</itemPath>
+      <itemPath>Writer.h</itemPath>
       <itemPath>config.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
@@ -22,15 +27,19 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <logicalFolder name="f1" displayName="Readers" projectFiles="true">
+        <itemPath>WfdbReader.cpp</itemPath>
+        <itemPath>ZlReader.cpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f2" displayName="Writers" projectFiles="true">
+        <itemPath>Hdf5Writer.cpp</itemPath>
+      </logicalFolder>
       <itemPath>DataRow.cpp</itemPath>
       <itemPath>Formats.cpp</itemPath>
-      <itemPath>FromReader.cpp</itemPath>
-      <itemPath>Hdf5Writer.cpp</itemPath>
       <itemPath>ReadInfo.cpp</itemPath>
+      <itemPath>Reader.cpp</itemPath>
       <itemPath>SignalData.cpp</itemPath>
-      <itemPath>ToWriter.cpp</itemPath>
-      <itemPath>WfdbReader.cpp</itemPath>
-      <itemPath>ZlReader.cpp</itemPath>
+      <itemPath>Writer.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -87,10 +96,6 @@
       </item>
       <item path="Formats.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="FromReader.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="FromReader.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
@@ -99,17 +104,23 @@
       </item>
       <item path="ReadInfo.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="Reader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Reader.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="SignalData.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="ToWriter.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="ToWriter.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Writer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Writer.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -150,10 +161,6 @@
       </item>
       <item path="Formats.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="FromReader.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="FromReader.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
@@ -162,17 +169,23 @@
       </item>
       <item path="ReadInfo.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="Reader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Reader.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="SignalData.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="ToWriter.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="ToWriter.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Writer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Writer.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -213,10 +226,6 @@
       </item>
       <item path="Formats.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="FromReader.cpp" ex="false" tool="1" flavor2="8">
-      </item>
-      <item path="FromReader.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
@@ -225,17 +234,23 @@
       </item>
       <item path="ReadInfo.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="Reader.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="Reader.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="SignalData.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="ToWriter.cpp" ex="false" tool="1" flavor2="8">
-      </item>
-      <item path="ToWriter.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Writer.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="Writer.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="8">
       </item>

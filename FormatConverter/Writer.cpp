@@ -1,38 +1,38 @@
 
-#include "ToWriter.h"
+#include "Writer.h"
 #include <sys/stat.h>
 #include <iostream>
 
 #include "Hdf5Writer.h"
-#include "FromReader.h"
+#include "Reader.h"
 #include "config.h"
 
-ToWriter::ToWriter( ) {
+Writer::Writer( ) {
 }
 
-ToWriter::ToWriter( const ToWriter& ) {
+Writer::Writer( const Writer& ) {
 
 }
 
-ToWriter::~ToWriter( ) {
+Writer::~Writer( ) {
 }
 
-std::unique_ptr<ToWriter> ToWriter::get( const Format& fmt ) {
+std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
   switch ( fmt ) {
     case HDF5:
-      return std::unique_ptr<ToWriter>( new Hdf5Writer( ) );
+      return std::unique_ptr<Writer>( new Hdf5Writer( ) );
   }
 }
 
-void ToWriter::setOutputPrefix( const std::string& pre ) {
+void Writer::setOutputPrefix( const std::string& pre ) {
   prefix = pre;
 }
 
-void ToWriter::setCompression( int lev ) {
+void Writer::setCompression( int lev ) {
   compression = lev;
 }
 
-void ToWriter::setOutputDir( const std::string& _outdir ) {
+void Writer::setOutputDir( const std::string& _outdir ) {
   outdir = _outdir;
 
   struct stat info;
@@ -47,7 +47,7 @@ void ToWriter::setOutputDir( const std::string& _outdir ) {
   }
 }
 
-std::vector<std::string> ToWriter::write( std::unique_ptr<FromReader>& from,
+std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     ReadInfo& data ) {
   ReadResult retcode = from->fill( data );
   std::vector<std::string> list;

@@ -14,7 +14,7 @@
 #ifndef ZLREADER_H
 #define ZLREADER_H
 
-#include "FromReader.h"
+#include "Reader.h"
 #include <map>
 #include <string>
 #include <memory>
@@ -28,7 +28,7 @@ enum zlReaderState {
 	IN_HEADER, IN_VITAL, IN_WAVE, IN_TIME
 };
 
-class ZlReader : public FromReader {
+class ZlReader : public Reader {
 public:
 	static const int CHUNKSIZE;
 

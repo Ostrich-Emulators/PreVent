@@ -1,6 +1,6 @@
 
-#ifndef FROM_READER_H
-#define FROM_READER_H
+#ifndef READER_H
+#define READER_H
 
 #include "Formats.h"
 
@@ -15,12 +15,12 @@ class DataRow;
 
 enum ReadResult { NORMAL, END_OF_PATIENT, END_OF_FILE, ERROR };
 
-class FromReader {
+class Reader {
 public:
-	FromReader( );
-	virtual ~FromReader( );
+	Reader( );
+	virtual ~Reader( );
 
-	static std::unique_ptr<FromReader> get( const Format& fmt );
+	static std::unique_ptr<Reader> get( const Format& fmt );
 
 	/**
 	 * Prepares for reading a new input file
@@ -70,9 +70,9 @@ protected:
 	virtual void finish( );
 
 private:
-	FromReader( const FromReader& );
+	Reader( const Reader& );
 	
 	bool largefile;
 };
 
-#endif /* FROM_READER_H */
+#endif /* READER_H */

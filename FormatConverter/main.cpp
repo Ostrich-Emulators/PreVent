@@ -17,8 +17,8 @@
 #include "H5Cpp.h"
 
 #include "ZlReader.h"
-#include "FromReader.h"
-#include "ToWriter.h"
+#include "Reader.h"
+#include "Writer.h"
 #include "Formats.h"
 #include "SignalData.h"
 #include "DataRow.h"
@@ -113,8 +113,8 @@ int main( int argc, char** argv ) {
   }
 
 
-  std::unique_ptr<FromReader> from = FromReader::get( fromfmt );
-  std::unique_ptr<ToWriter> to = ToWriter::get( tofmt );
+  std::unique_ptr<Reader> from = Reader::get( fromfmt );
+  std::unique_ptr<Writer> to = Writer::get( tofmt );
 
   // send the files through
   for ( int i = optind; i < argc; i++ ) {

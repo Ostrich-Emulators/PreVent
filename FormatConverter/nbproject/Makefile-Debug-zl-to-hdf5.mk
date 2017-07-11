@@ -37,12 +37,12 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/DataRow.o \
 	${OBJECTDIR}/Formats.o \
-	${OBJECTDIR}/FromReader.o \
 	${OBJECTDIR}/Hdf5Writer.o \
 	${OBJECTDIR}/ReadInfo.o \
+	${OBJECTDIR}/Reader.o \
 	${OBJECTDIR}/SignalData.o \
-	${OBJECTDIR}/ToWriter.o \
 	${OBJECTDIR}/WfdbReader.o \
+	${OBJECTDIR}/Writer.o \
 	${OBJECTDIR}/ZlReader.o \
 	${OBJECTDIR}/main.o
 
@@ -87,11 +87,6 @@ ${OBJECTDIR}/Formats.o: Formats.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Formats.o Formats.cpp
 
-${OBJECTDIR}/FromReader.o: FromReader.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/FromReader.o FromReader.cpp
-
 ${OBJECTDIR}/Hdf5Writer.o: Hdf5Writer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -102,20 +97,25 @@ ${OBJECTDIR}/ReadInfo.o: ReadInfo.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ReadInfo.o ReadInfo.cpp
 
+${OBJECTDIR}/Reader.o: Reader.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Reader.o Reader.cpp
+
 ${OBJECTDIR}/SignalData.o: SignalData.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SignalData.o SignalData.cpp
 
-${OBJECTDIR}/ToWriter.o: ToWriter.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ToWriter.o ToWriter.cpp
-
 ${OBJECTDIR}/WfdbReader.o: WfdbReader.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/WfdbReader.o WfdbReader.cpp
+
+${OBJECTDIR}/Writer.o: Writer.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Writer.o Writer.cpp
 
 ${OBJECTDIR}/ZlReader.o: ZlReader.cpp
 	${MKDIR} -p ${OBJECTDIR}

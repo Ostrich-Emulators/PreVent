@@ -1,29 +1,29 @@
 
-#include "FromReader.h"
+#include "Reader.h"
 #include "SignalData.h"
 #include "WfdbReader.h"
 #include "ZlReader.h"
 
-FromReader::FromReader( ) : largefile( false ) {
+Reader::Reader( ) : largefile( false ) {
 }
 
-FromReader::FromReader( const FromReader& ) {
+Reader::Reader( const Reader& ) {
 
 }
 
-FromReader::~FromReader( ) {
+Reader::~Reader( ) {
 }
 
-std::unique_ptr<FromReader> FromReader::get( const Format& fmt ) {
+std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
   switch ( fmt ) {
     case WFDB:
-      return std::unique_ptr<FromReader>( new WfdbReader( ) );
+      return std::unique_ptr<Reader>( new WfdbReader( ) );
     case DSZL:
-      return std::unique_ptr<FromReader>( new ZlReader() );
+      return std::unique_ptr<Reader>( new ZlReader() );
   }
 }
 
-int FromReader::reset( const std::string& input, ReadInfo& info ) {
+int Reader::reset( const std::string& input, ReadInfo& info ) {
   info.reset( false );
 
   if ( "-" == input || "-zl" == input ) {
@@ -45,14 +45,14 @@ int FromReader::reset( const std::string& input, ReadInfo& info ) {
   return 0;
 }
 
-ReadResult FromReader::fill( ReadInfo& read ) {
+ReadResult Reader::fill( ReadInfo& read ) {
   return readChunk( read );
 }
 
-int FromReader::prepare( const std::string& input, ReadInfo& ){
+int Reader::prepare( const std::string& input, ReadInfo& ){
   return 0;
 }
 
-void FromReader::finish(){
+void Reader::finish(){
 
 }
