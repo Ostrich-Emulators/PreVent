@@ -11,8 +11,8 @@
  * Created on August 26, 2016, 12:55 PM
  */
 
-#ifndef ZLREADER_H
-#define ZLREADER_H
+#ifndef STPXMLREADER_H
+#define STPXMLREADER_H
 
 #include "Reader.h"
 #include <map>
@@ -22,18 +22,13 @@
 #include <zlib.h>
 
 class SignalData;
-class StreamChunkReader;
 
-enum zlReaderState {
-	IN_HEADER, IN_VITAL, IN_WAVE, IN_TIME
-};
-
-class ZlReader : public Reader {
+class StpXmlReader : public Reader {
 public:
 	static const int CHUNKSIZE;
 
-	ZlReader( );
-	virtual ~ZlReader( );
+	StpXmlReader( );
+	virtual ~StpXmlReader( );
 
 protected:
 	ReadResult readChunk( ReadInfo& );
@@ -44,22 +39,9 @@ protected:
 
 private:
 
-	ZlReader( const ZlReader& orig );
+	StpXmlReader( const StpXmlReader& orig );
 
-	bool firstread;
 	std::string leftoverText;
-	time_t currentTime;
-	zlReaderState state;
-	std::unique_ptr<StreamChunkReader> stream;
-
-	void handleInputChunk( std::string& chunk, ReadInfo& info );
-	void handleOneLine( const std::string& chunk, ReadInfo& info );
-
-	static const std::string HEADER;
-	static const std::string VITAL;
-	static const std::string WAVE;
-	static const std::string TIME;
 };
-
-#endif /* ZLREADER_H */
+#endif /* STPXMLREADER_H */
 

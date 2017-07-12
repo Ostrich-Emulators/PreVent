@@ -5,6 +5,8 @@
                    displayName="Header Files"
                    projectFiles="true">
       <logicalFolder name="f1" displayName="Readers" projectFiles="true">
+        <itemPath>StpXmlReader.h</itemPath>
+        <itemPath>StreamChunkReader.h</itemPath>
         <itemPath>WfdbReader.h</itemPath>
         <itemPath>ZlReader.h</itemPath>
       </logicalFolder>
@@ -28,6 +30,8 @@
                    displayName="Source Files"
                    projectFiles="true">
       <logicalFolder name="f1" displayName="Readers" projectFiles="true">
+        <itemPath>StpXmlReader.cpp</itemPath>
+        <itemPath>StreamChunkReader.cpp</itemPath>
         <itemPath>WfdbReader.cpp</itemPath>
         <itemPath>ZlReader.cpp</itemPath>
       </logicalFolder>
@@ -85,6 +89,7 @@
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/libsz.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+            <linkerOptionItem>`pkg-config --libs libxml-2.0`</linkerOptionItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
@@ -112,6 +117,14 @@
       <item path="SignalData.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StreamChunkReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="StreamChunkReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -152,6 +165,7 @@
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/libsz.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+            <linkerOptionItem>`pkg-config --libs libxml-2.0`</linkerOptionItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
@@ -179,6 +193,14 @@
       <item path="SignalData.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StreamChunkReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="StreamChunkReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -219,6 +241,7 @@
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/libsz.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+            <linkerOptionItem>`pkg-config --libs libxml-2.0`</linkerOptionItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
@@ -246,6 +269,14 @@
       <item path="SignalData.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StreamChunkReader.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="StreamChunkReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
@@ -286,6 +317,7 @@
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/libsz.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+            <linkerOptionItem>`pkg-config --libs libxml-2.0`</linkerOptionItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
@@ -313,6 +345,14 @@
       <item path="SignalData.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StreamChunkReader.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="StreamChunkReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
@@ -353,6 +393,7 @@
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/libsz.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+            <linkerOptionItem>`pkg-config --libs libxml-2.0`</linkerOptionItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
@@ -380,6 +421,14 @@
       <item path="SignalData.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StreamChunkReader.cpp" ex="false" tool="1" flavor2="8">
+      </item>
+      <item path="StreamChunkReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="8">
       </item>

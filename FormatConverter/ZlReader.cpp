@@ -17,12 +17,13 @@
 #include "SignalData.h"
 #include "DataRow.h"
 #include "Hdf5Writer.h"
+#include "StreamChunkReader.h"
 
 #include <iostream>
 #include <fstream>
-#include <cassert>
+//#include <cassert>
 #include <sstream>
-#include <cstdio>
+//#include <cstdio>
 #include <sys/stat.h>
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
@@ -33,7 +34,6 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-const int ZlReader::CHUNKSIZE = 16384 * 16;
 const std::string ZlReader::HEADER = "HEADER";
 const std::string ZlReader::VITAL = "VITAL";
 const std::string ZlReader::WAVE = "WAVE";
@@ -73,7 +73,7 @@ int ZlReader::prepare( const std::string& input, ReadInfo& ) {
   // stdin, we can't reset the stream back to the start, so we need to trust
   // that the user used the right switch
   if ( usestdin ) {
-    stream.reset( new ZlStream( &( std::cin ), ( "-zl" == input ), true ) );
+    stream.reset( new StreamChunkReader( &( std::cin ), ( "-zl" == input ), true ) );
   }
   else {
     // we need to read the first byte of the input stream to decide if it's 
@@ -82,7 +82,7 @@ int ZlReader::prepare( const std::string& input, ReadInfo& ) {
     ( *myfile ) >> firstbyte;
 
     myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
-    stream.reset( new ZlStream( myfile, ( 'x' == firstbyte ), false ) );
+    stream.reset( new StreamChunkReader( myfile, ( 'x' == firstbyte ), false ) );
   }
   return 0;
 }
@@ -212,109 +212,4 @@ void ZlReader::handleOneLine( const std::string& chunk, ReadInfo& info ) {
       info.addMeta( key, val );
     }
   }
-}
-
-ZlStream::ZlStream( std::istream * cin, bool compressed, bool isStdin )
-: iscompressed( compressed ), usestdin( isStdin ), stream( cin ), rr( ReadResult::NORMAL ) {
-  if ( iscompressed ) {
-    initZlib( );
-  }
-}
-
-ZlStream::~ZlStream( ) {
-  close( );
-}
-
-void ZlStream::initZlib( ) {
-  strm.zalloc = Z_NULL;
-  strm.zfree = Z_NULL;
-  strm.opaque = Z_NULL;
-  strm.avail_in = 0;
-  strm.next_in = Z_NULL;
-  int ret = inflateInit( &strm );
-
-  if ( ret != Z_OK ) {
-    std::cerr << "zlib error code: " << ret << std::endl;
-    exit( 0 );
-  }
-}
-
-void ZlStream::close( ) {
-  if ( iscompressed ) {
-    inflateEnd( &strm );
-  }
-
-  if ( !usestdin ) {
-    std::ifstream * str = static_cast<std::ifstream *> ( stream );
-    if ( str->is_open( ) ) {
-      str->close( );
-    }
-  }
-}
-
-std::string ZlStream::readNextChunk( ) {
-  if ( iscompressed ) {
-    return readNextCompressedChunk( );
-  }
-  else {
-    // we're not dealing with compressed data, so just read in the text
-
-    //    std::cout << "g: " << stream->good( )
-    //        << " b: " << stream->bad( )
-    //        << " e: " << stream->eof( )
-    //        << " f: " << stream->fail( ) << std::endl;
-    if ( stream->good( ) ) {
-      stream->read( (char *) in, ZlReader::CHUNKSIZE );
-      int bytesread = stream->gcount( );
-      return std::string( (char *) in, bytesread );
-    }
-    rr = ReadResult::END_OF_FILE;
-    return "";
-  }
-}
-
-std::string ZlStream::readNextCompressedChunk( ) {
-  unsigned char out[ZlReader::CHUNKSIZE];
-
-  std::string data;
-  int retcode = 0;
-  stream->read( (char *) in, ZlReader::CHUNKSIZE );
-  strm.avail_in = stream->gcount( );
-
-  retcode = 1;
-  if ( strm.avail_in == 0 ) {
-    rr = ReadResult::END_OF_FILE;
-    return "";
-  }
-
-  strm.next_in = in;
-  do {
-    strm.avail_out = ZlReader::CHUNKSIZE;
-    strm.next_out = out;
-    retcode = inflate( &strm, Z_NO_FLUSH );
-    assert( retcode != Z_STREAM_ERROR ); /* state not clobbered */
-    switch ( retcode ) {
-      case Z_NEED_DICT:
-        retcode = Z_DATA_ERROR; /* and fall through */
-      case Z_DATA_ERROR:
-      case Z_MEM_ERROR:
-        retcode = -1;
-        rr = ReadResult::ERROR;
-        inflateEnd( &strm );
-    }
-    int have = ZlReader::CHUNKSIZE - strm.avail_out;
-    // okay, we have some data to look at
-    std::string str( (char *) out, have );
-    data += str;
-  }
-  while ( strm.avail_out == 0 );
-
-  if ( retcode == Z_STREAM_END ) {
-    rr = ReadResult::END_OF_FILE;
-  }
-  else if ( retcode == Z_OK ) {
-    rr = ReadResult::NORMAL;
-  }
-
-  return data;
 }
