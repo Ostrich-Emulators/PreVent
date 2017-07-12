@@ -133,7 +133,7 @@ void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace& space,
   int scale = data.scale( );
   data.startPopping( );
   for ( int i = 0; i < rows; i++ ) {
-    std::unique_ptr<DataRow> row = std::move( data.pop( ) );
+    const std::unique_ptr<DataRow>& row = std::move( data.pop( ) );
     int idx = i * 4;
     buffer[idx] = (int) ( row->time );
     buffer[idx + 1] = (int) ( std::stof( row->data ) * scale );
@@ -235,8 +235,9 @@ void Hdf5Writer::autochunk( hsize_t* dims, int rank, hsize_t* rslts ) {
   rslts[1] = ( rslts[0] < 1000 ? 2 : 1 );
 }
 
-int Hdf5Writer::initDataSet( const std::string& newfile, int compression ) {
-  tempfileloc = newfile;
+int Hdf5Writer::initDataSet( const std::string& directory, const std::string& namestart,
+    int compression ) {
+  tempfileloc = directory + namestart;
   lastTime = 0;
   firstTime = 2099999999;
   this->compression = compression;

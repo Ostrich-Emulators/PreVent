@@ -26,7 +26,8 @@ public:
 	virtual ~WfdbWriter( );
 
 protected:
-	int initDataSet( const std::string& newfile, int compression );
+	int initDataSet( const std::string& outdir, const std::string& namestart,
+			int compression );
 	std::string closeDataSet( );
 	int drain( ReadInfo& );
 
@@ -37,6 +38,7 @@ private:
 	int rowForTime( time_t starttime, time_t mytime, float timestep ) const;
 
 	std::string fileloc;
+	std::string currdir;
 	std::map<std::string, WFDB_Siginfo> sigmap;
 	time_t firstTime;
 

@@ -55,7 +55,10 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
   std::string lastPatientName = "";
   int patientno = 1;
 
-  int initrslt = initDataSet( outdir + prefix + "-p" + std::to_string( patientno ), compression );
+  std::string namestart = ( "" == prefix ? prefix + "-p" : "p" );
+
+  int initrslt = initDataSet( outdir, namestart + std::to_string( patientno ),
+      compression );
   std::vector<std::string> list;
   if ( initrslt < 0 ) {
     std::cerr << "cannot init dataset: " + outdir + prefix + "-p"
@@ -85,7 +88,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
       }
 
       data.reset( false );
-      initDataSet( outdir + prefix + "-p" + std::to_string( patientno ), compression );
+      initDataSet( outdir, namestart + std::to_string( patientno ), compression );
     }
     else if ( ReadResult::END_OF_FILE == retcode ) {
       // end of file, so break out of our write

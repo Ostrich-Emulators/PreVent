@@ -7,6 +7,9 @@
 #include "WfdbWriter.h"
 #include <limits>
 #include <cstdio>
+#include <iostream>
+#include <set>
+#include <unistd.h>
 
 #include "ReadInfo.h"
 #include "SignalData.h"
@@ -20,24 +23,28 @@ WfdbWriter::WfdbWriter( const WfdbWriter& ) {
 WfdbWriter::~WfdbWriter( ) {
 }
 
-int WfdbWriter::initDataSet( const std::string& newfile, int compression ) {
-  fileloc = newfile;
+int WfdbWriter::initDataSet( const std::string& directory, const std::string& namestart, int ) {
+  currdir = getcwd( NULL, 0 );
+  chdir( directory.c_str( ) );
+
   sigmap.clear( );
   firstTime = std::numeric_limits<time_t>::max( );
 
-  std::string rectest = fileloc + "-20170101"; // we're going to replace the date
+  fileloc = namestart;
+  std::string rectest = namestart + "-20170101"; // we're going to replace the date
   int headerok = newheader( (char *) rectest.c_str( ) ); // check that our header file is valid
   if ( 0 == headerok ) {
     // remove the file
-    std::string header = rectest + ".hea";
+    std::string header = directory + rectest + ".hea";
     remove( header.c_str( ) );
   }
   return headerok;
 }
 
 std::string WfdbWriter::closeDataSet( ) {
+  chdir( currdir.c_str( ) );
   wfdbquit( );
-  return fileloc+".hea";
+  return fileloc + ".hea";
 }
 
 int WfdbWriter::drain( ReadInfo& info ) {
@@ -74,6 +81,7 @@ int WfdbWriter::drain( ReadInfo& info ) {
   if ( osigfopen( sigs, sigmap.size( ) ) < sigmap.size( ) ) {
     return -1;
   }
+  setsampfreq( 2 );
 
   char timestr[sizeof "01:01:01"];
   strftime( timestr, sizeof timestr, "%T", gmtime( &firstTime ) );
@@ -91,26 +99,30 @@ std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
     std::unique_ptr<SignalData>>&data, std::vector<std::string>& labels, time_t& earliest ) {
   earliest = std::numeric_limits<time_t>::max( );
 
-  int rows = 0;
+  time_t latest = 0;
   for ( auto& map : data ) {
     labels.push_back( map.first );
 
-    int sz = map.second->size( );
-    if ( sz > rows ) {
-      rows = sz;
+    if ( map.second->startTime( ) < earliest ) {
+      earliest = map.second->startTime( );
+    }
+    if ( map.second->endTime( ) > latest ) {
+      latest = map.second->endTime( );
     }
   }
+
+  const int cols = data.size( );
+  int rows = rowForTime( earliest, latest, 2 ) + 1; // +1 for latest time
 
   // WARNING: this logic assumes the largest signal data starts earliest
   // and ends latest. This isn't necessarily try, as one signal might
   // start very early, and a different one might end very late, resulting
   // in more indicies for empty data points
 
-
   // we'll make a 1D array, but treat it like a 2D array. 
   // We'll convert to the vectors at the end.
-  const int cols = data.size( );
   const int buffsz = rows * cols;
+  std::cout << "data buffer is " << rows << "*" << cols << "=" << buffsz << std::endl;
   int buffer[buffsz];
 
   for ( int i = 0; i < buffsz; i++ ) {
@@ -121,7 +133,10 @@ std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
   // our strategy is to pop from all signals at the same time, and figure out
   // which array index the time corresponds to.
   int emptycnt = 0;
-
+  int empties[cols];
+  for ( int col = 0; col < cols; col++ ) {
+    empties[col] = 0;
+  }
   // run through one time to figure out our earliest time
   int firstvals[cols];
   int firsttimes[cols];
@@ -139,28 +154,45 @@ std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
       }
     }
     else {
-      emptycnt++;
+      if ( 0 != empties[col] ) {
+        empties[col]++;
+        emptycnt++;
+      }
+      std::cout << std::endl;
     }
   }
 
   for ( int col = 0; col < cols; col++ ) {
     int row4time = rowForTime( earliest, firsttimes[col], 2 );
-    buffer[row4time + col] = firstvals[col];
+    int index = ( row4time * cols ) + col;
+    std::cout << labels[col] << "[" << index << "] " << firsttimes[col] << ": " << firstvals[col] << std::endl;
+    buffer[index] = firstvals[col];
   }
 
   while ( emptycnt < cols ) {
     for ( int col = 0; col < cols; col++ ) {
       std::string name = labels[col];
+      std::cout << name << " " << data[name]->size( );
       if ( data[name]->size( ) > 0 ) {
         const auto& row = data[name]->pop( );
         time_t t = row->time;
         int v = std::stoi( row->data );
 
         int row4time = rowForTime( earliest, t, 2 );
-        buffer[row4time + col] = v;
+        int index = ( row4time * cols ) + col;
+
+        std::cout << " is idx[" << index << "] " << t << ": " << v << std::endl;
+        if ( index > buffsz ) {
+          std::cerr << "here!" << std::endl;
+        }
+        buffer[index] = v;
       }
       else {
-        emptycnt++;
+        if ( 0 == empties[col] ) {
+          empties[col]++;
+          emptycnt++;
+        }
+        std::cout << std::endl;
       }
     }
   }

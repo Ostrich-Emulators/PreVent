@@ -32,7 +32,8 @@ protected:
 	 * @param compression
 	 * @return 0 (Success), -1 (Error)
 	 */
-	virtual int initDataSet( const std::string& newfile, int compression ) = 0;
+	virtual int initDataSet( const std::string& outdir, const std::string& prefix,
+			int compression ) = 0;
 
 	/**
 	 * Closes the current data file, and provides the final name for it. Datafiles
