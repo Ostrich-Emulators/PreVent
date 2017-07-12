@@ -17,7 +17,6 @@
 #include "SignalData.h"
 
 #include <iostream>
-#include <libxml/parser.h>
 #include <sys/stat.h>
 
 typedef void (StpXmlReader::*VoidFnc )(void *);
@@ -45,43 +44,13 @@ int StpXmlReader::getSize( const std::string& input ) const {
   return info.st_size;
 }
 
-void startDoc( void * user_data ){
-  ((StpXmlReader *)user_data )->start();
-}
-
-void endDoc( void * user_data ){
-  ((StpXmlReader *)user_data )->end();
-}
-
 int StpXmlReader::prepare( const std::string& input, ReadInfo& info ) {
-  xmlSAXHandler handler;
-  handler.internalSubset = NULL;
-  handler.isStandalone = NULL;
-  handler.hasInternalSubset = NULL;
-  handler.hasExternalSubset = NULL;
-  handler.resolveEntity = NULL;
-  handler.getEntity = NULL;
-  handler.entityDecl = NULL;
-  handler.notationDecl = NULL;
-  handler.attributeDecl = NULL;
-  handler.elementDecl = NULL;
-  handler.unparsedEntityDecl = NULL;
-  handler.setDocumentLocator = NULL;
-  handler.startDocument = &startDoc;
-  handler.endDocument = &endDoc;
-  handler.startElement = NULL;
-  handler.endElement = NULL;
-  handler.reference = NULL;
-  handler.characters = NULL;
-  handler.ignorableWhitespace = NULL;
-  handler.processingInstruction = NULL;
-  handler.comment = NULL;
-  handler.warning = NULL;
-  handler.error = NULL;
-  handler.fatalError = NULL;
-
-
-  
+  xmlSAXHandler handler = { NULL };
+  handler.startDocument = &StpXmlReader::start;
+  handler.endDocument = &StpXmlReader::finish;
+  handler.startElement = &StpXmlReader::startElement;
+  handler.endElement = &StpXmlReader::endElement;
+  handler.characters = &StpXmlReader::chars;
 
   if ( xmlSAXUserParseFile( &handler, this, "ZUMPO_736E-1459787794.xml" ) < 0 ) {
     std::cerr << "got here?" << std::endl;
@@ -94,10 +63,53 @@ ReadResult StpXmlReader::readChunk( ReadInfo & info ) {
   return ReadResult::ERROR;
 }
 
-void StpXmlReader::start() {
-  std::cout << "into start doc" << std::endl;
+void StpXmlReader::start( void * ) {
+  std::cout << "into start do2c" << std::endl;
 }
 
-void StpXmlReader::end() {
-  std::cout << "into end doc" << std::endl;
+void StpXmlReader::finish( void * ) {
+  std::cout << "into end do2c" << std::endl;
+}
+
+void StpXmlReader::chars( void * user_data, const xmlChar * ch, int len ) {
+  std::cout << "->" << std::string( (char *) ch, len ) << "<-" << std::endl;
+  ( (StpXmlReader *) user_data )->append( std::string( (char *) ch, len ) );
+}
+
+void StpXmlReader::append( const std::string& s ) {
+  leftoverText += s;
+  std::cout << "working text: " << leftoverText << std::endl;
+}
+
+void StpXmlReader::startElement( void * user_data, const xmlChar * name, const xmlChar ** attrs ) {
+  std::map<std::string, std::string> attrmap;
+  int idx = 0;
+  if ( NULL != attrs ) {
+    char * key = (char *) attrs[idx];
+    while ( NULL != key ) {
+      std::string val( (char *) attrs[++idx] );
+      attrmap[std::string( key )] = val;
+      key = (char *) attrs[++idx];
+    }
+  }
+
+  ( (StpXmlReader *) user_data )->setElement( std::string( (char *) name ), attrmap );
+}
+
+void StpXmlReader::setElement( const std::string& name, std::map<std::string, std::string>& attrs ) {
+  std::cout << "start " << name << std::endl;
+  element = name;
+  for ( auto m : attrs ) {
+    std::cout << "  " << m.first << ": " << m.second << std::endl;
+  }
+}
+
+void StpXmlReader::endElement( void * user_data, const xmlChar * name ) {
+  std::cout << "end " << name << std::endl;
+  ( (StpXmlReader *) user_data )->reset( );
+}
+
+void StpXmlReader::reset( ) {
+  std::cout << "  cleared text " << std::endl;
+  leftoverText.clear( );
 }

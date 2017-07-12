@@ -17,6 +17,7 @@
 #include "Reader.h"
 #include <string>
 #include <zlib.h>
+#include <libxml/parser.h>
 
 #include "DataRow.h"
 
@@ -29,9 +30,19 @@ public:
 	StpXmlReader( );
 	virtual ~StpXmlReader( );
 
-	void start();
-	void end();
+	static void start( void * user_data );
+	static void finish( void * user_data );
+	static void chars( void * user_data, const xmlChar * ch, int len );
+	static void startElement( void * user_data, const xmlChar * name, const xmlChar ** attrs );
+	static void endElement( void * user_data, const xmlChar * name );
 
+	void append( const std::string& );
+	void reset();
+	void setElement( const std::string& element, std::map<std::string, std::string>& map );
+	const std::string& getElement();
+
+	//ReadInfo& data;
+	DataRow current;
 protected:
 	ReadResult readChunk( ReadInfo& );
 	int getSize( const std::string& input ) const;
@@ -43,9 +54,9 @@ private:
 
 	StpXmlReader( const StpXmlReader& orig );
 
-	DataRow current;
-
 	std::string leftoverText;
+	std::string element;
+	std::map<std::string, std::string> attrs;
 };
 
 #endif /* STPXMLREADER_H */
