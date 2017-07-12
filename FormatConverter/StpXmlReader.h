@@ -15,11 +15,10 @@
 #define STPXMLREADER_H
 
 #include "Reader.h"
-#include <map>
 #include <string>
-#include <memory>
-#include <istream>
 #include <zlib.h>
+
+#include "DataRow.h"
 
 class SignalData;
 
@@ -29,6 +28,9 @@ public:
 
 	StpXmlReader( );
 	virtual ~StpXmlReader( );
+
+	void start();
+	void end();
 
 protected:
 	ReadResult readChunk( ReadInfo& );
@@ -41,7 +43,10 @@ private:
 
 	StpXmlReader( const StpXmlReader& orig );
 
+	DataRow current;
+
 	std::string leftoverText;
 };
+
 #endif /* STPXMLREADER_H */
 
