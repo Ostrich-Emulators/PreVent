@@ -81,7 +81,7 @@ int WfdbWriter::drain( ReadInfo& info ) {
   if ( osigfopen( sigs, sigmap.size( ) ) < sigmap.size( ) ) {
     return -1;
   }
-  setsampfreq( 2 );
+  setsampfreq( 0.5 );
 
   char timestr[sizeof "01:01:01"];
   strftime( timestr, sizeof timestr, "%T", gmtime( &firstTime ) );
@@ -112,7 +112,7 @@ std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
   }
 
   const int cols = data.size( );
-  int rows = rowForTime( earliest, latest, 2 ) + 1; // +1 for latest time
+  int rows = rowForTime( earliest, latest, 2 ) + 1; // +1 for last time
 
   // WARNING: this logic assumes the largest signal data starts earliest
   // and ends latest. This isn't necessarily try, as one signal might
@@ -122,7 +122,7 @@ std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
   // we'll make a 1D array, but treat it like a 2D array. 
   // We'll convert to the vectors at the end.
   const int buffsz = rows * cols;
-  std::cout << "data buffer is " << rows << "*" << cols << "=" << buffsz << std::endl;
+  //  std::cout << "data buffer is " << rows << "*" << cols << "=" << buffsz << std::endl;
   int buffer[buffsz];
 
   for ( int i = 0; i < buffsz; i++ ) {
@@ -158,21 +158,21 @@ std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
         empties[col]++;
         emptycnt++;
       }
-      std::cout << std::endl;
+      //      std::cout << std::endl;
     }
   }
 
   for ( int col = 0; col < cols; col++ ) {
     int row4time = rowForTime( earliest, firsttimes[col], 2 );
     int index = ( row4time * cols ) + col;
-    std::cout << labels[col] << "[" << index << "] " << firsttimes[col] << ": " << firstvals[col] << std::endl;
+    //    std::cout << labels[col] << "[" << index << "] " << firsttimes[col] << ": " << firstvals[col] << std::endl;
     buffer[index] = firstvals[col];
   }
 
   while ( emptycnt < cols ) {
     for ( int col = 0; col < cols; col++ ) {
       std::string name = labels[col];
-      std::cout << name << " " << data[name]->size( );
+      //      std::cout << name << " " << data[name]->size( );
       if ( data[name]->size( ) > 0 ) {
         const auto& row = data[name]->pop( );
         time_t t = row->time;
@@ -181,10 +181,10 @@ std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
         int row4time = rowForTime( earliest, t, 2 );
         int index = ( row4time * cols ) + col;
 
-        std::cout << " is idx[" << index << "] " << t << ": " << v << std::endl;
-        if ( index > buffsz ) {
-          std::cerr << "here!" << std::endl;
-        }
+        //        std::cout << " is idx[" << index << "] " << t << ": " << v << std::endl;
+        //        if ( index > buffsz ) {
+        //          std::cerr << "here!" << std::endl;
+        //        }
         buffer[index] = v;
       }
       else {
@@ -192,7 +192,7 @@ std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
           empties[col]++;
           emptycnt++;
         }
-        std::cout << std::endl;
+        //        std::cout << std::endl;
       }
     }
   }
