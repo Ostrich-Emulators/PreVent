@@ -20,13 +20,14 @@
 #include <libxml/parser.h>
 
 #include "DataRow.h"
+#include "StreamChunkReader.h"
 
 class SignalData;
 
+enum StpXmlReaderState { OTHER, HEADER, VITAL, WAVE };
+
 class StpXmlReader : public Reader {
 public:
-	static const int CHUNKSIZE;
-
 	StpXmlReader( );
 	virtual ~StpXmlReader( );
 
@@ -35,28 +36,34 @@ public:
 	static void chars( void * user_data, const xmlChar * ch, int len );
 	static void startElement( void * user_data, const xmlChar * name, const xmlChar ** attrs );
 	static void endElement( void * user_data, const xmlChar * name );
+	static void error( void *user_data, const char *msg, ... );
 
-	void append( const std::string& );
-	void reset();
-	void setElement( const std::string& element, std::map<std::string, std::string>& map );
-	const std::string& getElement();
-
-	//ReadInfo& data;
-	DataRow current;
 protected:
 	ReadResult readChunk( ReadInfo& );
 	int getSize( const std::string& input ) const;
-
 	int prepare( const std::string& input, ReadInfo& info );
 	void finish( );
 
 private:
-
 	StpXmlReader( const StpXmlReader& orig );
 
-	std::string leftoverText;
-	std::string element;
-	std::map<std::string, std::string> attrs;
+	std::unique_ptr<StreamChunkReader> stream;
+	xmlParserCtxtPtr context;
+	static ReadInfo& convertUserDataToReadInfo( void * data );
+
+	static ReadResult handleVital( const std::string& element, ReadInfo& );
+	static ReadResult handleWave( const std::string& element, ReadInfo& );
+
+	static const std::string MISSING_VALUESTR;
+
+	static std::string workingText;
+	static std::string element;
+	static std::string last; // some sort of data we'll need later in the parsing
+	static std::map<std::string, std::string> attrs;
+	static ReadResult rslt;
+	static DataRow current;
+	static StpXmlReaderState state;
+	static time_t firsttime;
 };
 
 #endif /* STPXMLREADER_H */

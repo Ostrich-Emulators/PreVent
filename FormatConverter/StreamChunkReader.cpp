@@ -29,11 +29,11 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-const int StreamChunkReader::CHUNKSIZE = 16384 * 16;
+const int StreamChunkReader::DEFAULT_CHUNKSIZE = 16384 * 16;
 
 StreamChunkReader::StreamChunkReader( std::istream * cin, bool compressed, bool isStdin,
     int chunks ) : iscompressed( compressed ), usestdin( isStdin ), stream( cin ),
-    rr( ReadResult::NORMAL ), chunksize(chunks) {
+rr( ReadResult::NORMAL ), chunksize( chunks ) {
   if ( iscompressed ) {
     initZlib( );
   }
@@ -71,18 +71,22 @@ void StreamChunkReader::close( ) {
 }
 
 std::string StreamChunkReader::readNextChunk( ) {
+  return read( chunksize );
+}
+
+std::string StreamChunkReader::read( int bufsz ) {
   if ( iscompressed ) {
-    return readNextCompressedChunk( );
+    return readNextCompressedChunk( bufsz );
   }
   else {
     // we're not dealing with compressed data, so just read in the text
-    char * in[CHUNKSIZE];
+    char * in[chunksize];
     //    std::cout << "g: " << stream->good( )
     //        << " b: " << stream->bad( )
     //        << " e: " << stream->eof( )
     //        << " f: " << stream->fail( ) << std::endl;
     if ( stream->good( ) ) {
-      stream->read( (char *) in, CHUNKSIZE );
+      stream->read( (char *) in, bufsz );
       int bytesread = stream->gcount( );
       return std::string( (char *) in, bytesread );
     }
@@ -91,13 +95,13 @@ std::string StreamChunkReader::readNextChunk( ) {
   }
 }
 
-std::string StreamChunkReader::readNextCompressedChunk( ) {
-  unsigned char in[CHUNKSIZE];
-  unsigned char out[CHUNKSIZE];
+std::string StreamChunkReader::readNextCompressedChunk( int bufsz ) {
+  unsigned char in[bufsz];
+  unsigned char out[bufsz];
 
   std::string data;
   int retcode = 0;
-  stream->read( (char *) in, CHUNKSIZE );
+  stream->read( (char *) in, bufsz );
   strm.avail_in = stream->gcount( );
 
   retcode = 1;
@@ -108,7 +112,7 @@ std::string StreamChunkReader::readNextCompressedChunk( ) {
 
   strm.next_in = in;
   do {
-    strm.avail_out = CHUNKSIZE;
+    strm.avail_out = bufsz;
     strm.next_out = out;
     retcode = inflate( &strm, Z_NO_FLUSH );
     assert( retcode != Z_STREAM_ERROR ); /* state not clobbered */
@@ -121,7 +125,7 @@ std::string StreamChunkReader::readNextCompressedChunk( ) {
         rr = ReadResult::ERROR;
         inflateEnd( &strm );
     }
-    int have = CHUNKSIZE - strm.avail_out;
+    int have = bufsz - strm.avail_out;
     // okay, we have some data to look at
     std::string str( (char *) out, have );
     data += str;

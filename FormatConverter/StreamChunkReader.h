@@ -23,20 +23,21 @@
 
 class StreamChunkReader {
 public:
-	static const int CHUNKSIZE;
-
 	StreamChunkReader( std::istream * input, bool compressed, bool isStdin,
-			int chunksize = CHUNKSIZE );
+			int chunksize = DEFAULT_CHUNKSIZE );
 
 	virtual ~StreamChunkReader( );
 	void close( );
 
 	std::string readNextChunk( );
 	ReadResult getCode( );
+	std::string read( int numbytes );
 
 	ReadResult rr;
 private:
-	std::string readNextCompressedChunk( );
+	static const int DEFAULT_CHUNKSIZE;
+
+	std::string readNextCompressedChunk( int numbytes );
 	void initZlib( );
 
 	bool iscompressed;

@@ -21,9 +21,7 @@
 
 #include <iostream>
 #include <fstream>
-//#include <cassert>
 #include <sstream>
-//#include <cstdio>
 #include <sys/stat.h>
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)

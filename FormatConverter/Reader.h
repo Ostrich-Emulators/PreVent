@@ -13,7 +13,9 @@
 class SignalData;
 class DataRow;
 
-enum ReadResult { NORMAL, END_OF_PATIENT, END_OF_FILE, ERROR };
+enum ReadResult {
+	NORMAL, END_OF_PATIENT, END_OF_DAY, END_OF_FILE, ERROR
+};
 
 class Reader {
 public:
@@ -31,7 +33,7 @@ public:
 
 	/**
 	 * Reads the next chunk of data from the input file. The definition of
-	 * "chunk" is left to the reader, but at a minimum, only one patient's data
+	 * "chunk" is left to the reader, but at a minimum, only one patient day data
 	 * will ever be returned by a single call.
 	 * @param read the data structure to populate with the newly-read data
 	 * @return the result code
@@ -42,6 +44,7 @@ protected:
 
 	/**
 	 * Reads the next bit of input and appends the data to the ReadInfo object.
+	 * This function is called from {@link #fill}
 	 * @param input where to store the new data
 	 * @return the result code
 	 */
@@ -56,7 +59,7 @@ protected:
 
 	/**
 	 * Prepares for reading a new file/stream. Most users will not need to call
-	 * this function, as it is called from reset(). By defatul, does nothing
+	 * this function, as it is called from reset(). By default, does nothing
 	 * @param input
 	 * @param info the info object to prepare
 	 * @return 0 (success), -1 (error), -2 (fatal)
@@ -71,7 +74,7 @@ protected:
 
 private:
 	Reader( const Reader& );
-	
+
 	bool largefile;
 };
 
