@@ -57,6 +57,10 @@ void StreamChunkReader::initZlib( ) {
   }
 }
 
+void StreamChunkReader::setChunkSize( int size ) {
+  chunksize = size;
+}
+
 void StreamChunkReader::close( ) {
   if ( iscompressed ) {
     inflateEnd( &strm );

@@ -32,9 +32,8 @@ public:
 	virtual int reset( const std::string& input, ReadInfo& info );
 
 	/**
-	 * Reads the next chunk of data from the input file. The definition of
-	 * "chunk" is left to the reader, but at a minimum, only one patient day data
-	 * will ever be returned by a single call.
+	 * Fills the given ReadInfo with the next chunk of data from the input.
+	 * A chunk is defined as one patient-day.
 	 * @param read the data structure to populate with the newly-read data
 	 * @return the result code
 	 */

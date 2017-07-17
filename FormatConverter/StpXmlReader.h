@@ -16,27 +16,24 @@
 
 #include "Reader.h"
 #include <string>
+#include <list>
 #include <zlib.h>
 #include <libxml/parser.h>
 
 #include "DataRow.h"
 #include "StreamChunkReader.h"
+#include <libxml/xmlreader.h>
 
 class SignalData;
 
-enum StpXmlReaderState { OTHER, HEADER, VITAL, WAVE };
+enum StpXmlReaderState {
+	OTHER, HEADER, SEGMENT, VITAL, WAVE
+};
 
 class StpXmlReader : public Reader {
 public:
 	StpXmlReader( );
 	virtual ~StpXmlReader( );
-
-	static void start( void * user_data );
-	static void finish( void * user_data );
-	static void chars( void * user_data, const xmlChar * ch, int len );
-	static void startElement( void * user_data, const xmlChar * name, const xmlChar ** attrs );
-	static void endElement( void * user_data, const xmlChar * name );
-	static void error( void *user_data, const char *msg, ... );
 
 protected:
 	ReadResult readChunk( ReadInfo& );
@@ -47,23 +44,47 @@ protected:
 private:
 	StpXmlReader( const StpXmlReader& orig );
 
-	std::unique_ptr<StreamChunkReader> stream;
-	xmlParserCtxtPtr context;
-	static ReadInfo& convertUserDataToReadInfo( void * data );
+	ReadResult processNode( xmlTextReaderPtr reader, ReadInfo& info );
 
-	static ReadResult handleVital( const std::string& element, ReadInfo& );
-	static ReadResult handleWave( const std::string& element, ReadInfo& );
+	/**
+	 * Gets the next text element from the reader, when you've already opened the
+	 * element, and you know it has no other children
+	 * @param
+	 * @return
+	 */
+	std::string text( xmlTextReaderPtr reader ) const;
+
+	/**
+	 * Gets a DataRow from the VS element
+	 * @param reader
+	 * @return
+	 */
+	DataRow getVital( xmlTextReaderPtr reader ) const;
+	std::map<std::string, std::string> getAttrs( xmlTextReaderPtr reader ) const;
+	std::map<std::string, std::string> getHeaders( xmlNodePtr node ) const;
+	/**
+	 * Trims the given string in-place. Also returns that same string
+	 * @param totrim
+	 * @return the argument
+	 */
+	std::string trim( std::string& totrim ) const;
+
+	/**
+	 * Reads the next element, discarding any junk whitespace before it
+	 * @param reader
+	 * @return 
+	 */
+	std::string nextelement( xmlTextReaderPtr reader ) const;
+	std::string stringAndFree( xmlChar * chars ) const;
 
 	static const std::string MISSING_VALUESTR;
 
-	static std::string workingText;
-	static std::string element;
-	static std::string last; // some sort of data we'll need later in the parsing
-	static std::map<std::string, std::string> attrs;
-	static ReadResult rslt;
-	static DataRow current;
-	static StpXmlReaderState state;
-	static time_t firsttime;
+	xmlTextReaderPtr reader;
+	DataRow current;
+	time_t firsttime;
+	time_t prevtime;
+	StpXmlReaderState state;
+
 };
 
 #endif /* STPXMLREADER_H */
