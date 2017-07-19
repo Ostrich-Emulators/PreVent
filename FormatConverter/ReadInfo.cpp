@@ -39,21 +39,31 @@ void ReadInfo::addMeta( const std::string& key, const std::string& val ) {
   metamap[key] = val;
 }
 
-std::unique_ptr<SignalData>& ReadInfo::addVital( const std::string& name ) {
-  if ( 0 == vmap.count( name ) ) {
+std::unique_ptr<SignalData>& ReadInfo::addVital( const std::string& name, bool * added ) {
+  int cnt = vmap.count( name );
+  if ( 0 == cnt ) {
     vmap.insert( std::make_pair( name,
         std::unique_ptr<SignalData>( new SignalData( name,
         largefile ) ) ) );
   }
 
+  if ( NULL != added ) {
+    *added = ( 0 == cnt );
+  }
+
   return vmap[name];
 }
 
-std::unique_ptr<SignalData>& ReadInfo::addWave( const std::string& name ) {
-  if ( 0 == wmap.count( name ) ) {
+std::unique_ptr<SignalData>& ReadInfo::addWave( const std::string& name, bool * added ) {
+  int cnt = wmap.count( name );
+  if ( 0 == cnt ) {
     wmap.insert( std::make_pair( name,
         std::unique_ptr<SignalData>( new SignalData( name,
         largefile ) ) ) );
+  }
+
+  if ( NULL != added ) {
+    *added = ( 0 == cnt );
   }
 
   return wmap[name];

@@ -24,45 +24,54 @@ class DataRow;
 
 class SignalData {
 public:
-  SignalData( const std::string& name, bool largefilesupport );
-  virtual ~SignalData( );
+	static const std::string HERTZ;
+	static const std::string SCALE;
+	static const std::string UOM;
+	static const std::string MSM;
+	static const std::string TIMEZONE;
 
-  void add( const DataRow& row );
-  void setUom( const std::string& u );
-  const std::string& uom( ) const;
-  int scale( ) const;
-  void setScale( int x );
-  int size( ) const;
-  const time_t& startTime( ) const;
-  const time_t& endTime( ) const;
-  const std::string& name( ) const;
 
-  void startPopping();
-  std::unique_ptr<DataRow> pop( );
+	SignalData( const std::string& name, bool largefilesupport );
+	virtual ~SignalData( );
 
-	std::map<std::string, std::string>& metas();
+	void add( const DataRow& row );
+	void setUom( const std::string& u );
+	const std::string& uom( ) const;
+	int scale( ) const;
+	void setScale( int x );
+	int size( ) const;
+	const time_t& startTime( ) const;
+	const time_t& endTime( ) const;
+	const std::string& name( ) const;
+
+	void startPopping( );
+	std::unique_ptr<DataRow> pop( );
+
+	std::map<std::string, std::string>& metas( );
+	std::map<std::string, int>& metai( );
+	std::map<std::string, double>& metad( );
 
 private:
-  SignalData( const SignalData& orig );
-  /**
-   * copy rows from the cache file to the data list.  
-   * @param count the desired elements to uncache
-   * @return the number uncached, or 0 if there is no cache, or it's empty
-   */
-  int uncache( int count = CACHE_LIMIT );
-  void cache();
+	SignalData( const SignalData& orig );
+	/**
+	 * copy rows from the cache file to the data list.
+	 * @param count the desired elements to uncache
+	 * @return the number uncached, or 0 if there is no cache, or it's empty
+	 */
+	int uncache( int count = CACHE_LIMIT );
+	void cache( );
 
-  const std::string label;
-  std::string _uom;
-  time_t firstdata;
-  time_t lastdata;
-  int datacount;
-  int _scale;
-  std::list<std::unique_ptr<DataRow>> data;
-	std::map<std::string, std::string> metadata;
-  std::FILE * file;
+	const std::string label;
+	time_t firstdata;
+	time_t lastdata;
+	int datacount;
+	std::list<std::unique_ptr<DataRow>> data;
+	std::map<std::string, std::string> metadatas;
+	std::map<std::string, int> metadatai;
+	std::map<std::string, double> metadatad;
+	std::FILE * file;
 
-  static const int CACHE_LIMIT;
+	static const int CACHE_LIMIT;
 };
 
 #endif /* DATASETDATACACHE_H */

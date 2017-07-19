@@ -44,7 +44,7 @@ protected:
 private:
 	StpXmlReader( const StpXmlReader& orig );
 
-	ReadResult processNode( xmlTextReaderPtr reader, ReadInfo& info );
+	ReadResult processNode( ReadInfo& info );
 
 	/**
 	 * Gets the next text element from the reader, when you've already opened the
@@ -52,16 +52,44 @@ private:
 	 * @param
 	 * @return
 	 */
-	std::string text( xmlTextReaderPtr reader ) const;
+	std::string text( );
 
 	/**
-	 * Gets a DataRow from the VS element
+	 * Handles a set of vitals. The Reader is expected to be at a VitalSigns element
+	 * @param info where to save the data
+	 */
+	void handleVitalsSet( ReadInfo& info );
+
+	void handleWaveformSet( ReadInfo& info );
+
+	DataRow handleOneVs( std::string& param, std::string& uom );
+
+	ReadResult handleSegmentPatientName( ReadInfo& info );
+
+	/**
+	 * Checks if we should rollover given a VitalSigns or Waveforms element. As
+	 * a side-effect, sets currtime, and possibly firsttime
 	 * @param reader
+	 * @return true, if we should rollover
+	 */
+	bool isRollover( );
+
+	std::map<std::string, std::string> getAttrs( );
+	std::map<std::string, std::string> getHeaders();
+
+	/**
+	 * Gets the next text content of the node and moves the reader to the close tag
 	 * @return
 	 */
-	DataRow getVital( xmlTextReaderPtr reader ) const;
-	std::map<std::string, std::string> getAttrs( xmlTextReaderPtr reader ) const;
-	std::map<std::string, std::string> getHeaders( xmlNodePtr node ) const;
+	std::string textAndClose( );
+
+	/**
+	 * Gets the text and any attributes from this node. Assumes the reader is
+	 * on the opening element
+	 * @param attrs
+	 * @return
+	 */
+	std::string textAndAttrsToClose( std::map<std::string, std::string>& attrs );
 	/**
 	 * Trims the given string in-place. Also returns that same string
 	 * @param totrim
@@ -74,8 +102,9 @@ private:
 	 * @param reader
 	 * @return 
 	 */
-	std::string nextelement( xmlTextReaderPtr reader ) const;
+	std::string nextelement( );
 	std::string stringAndFree( xmlChar * chars ) const;
+	int next();
 
 	static const std::string MISSING_VALUESTR;
 
@@ -83,8 +112,8 @@ private:
 	DataRow current;
 	time_t firsttime;
 	time_t prevtime;
+	time_t currtime;
 	StpXmlReaderState state;
-
 };
 
 #endif /* STPXMLREADER_H */

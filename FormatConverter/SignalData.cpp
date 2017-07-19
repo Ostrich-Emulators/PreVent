@@ -22,22 +22,39 @@
 
 const int SignalData::CACHE_LIMIT = 15000;
 
+const std::string SignalData::HERTZ = "Sample Frequency (Hz)";
+const std::string SignalData::SCALE = "Scale";
+const std::string SignalData::UOM = "Unit of Measure";
+const std::string SignalData::MSM = "Missing Value Marker";
+const std::string SignalData::TIMEZONE = "Timezone";
+
 SignalData::SignalData( const std::string& name, bool largefile )
-: label( name ), _uom( "Uncalib" ), firstdata( 2099999999 ), lastdata( 0 ),
-datacount( 0 ), _scale( 1 ) {
+: label( name ), firstdata( 2099999999 ), lastdata( 0 ),
+datacount( 0 ) {
   file = ( largefile ? std::tmpfile( ) : NULL );
+  setScale( 1 );
+  setUom( "Uncalib" );
 }
 
 SignalData::SignalData( const SignalData& orig ) : label( orig.label ),
-_uom( orig._uom ), firstdata( orig.firstdata ), lastdata( orig.lastdata ),
-datacount( orig.datacount ), _scale( orig._scale ) {
+firstdata( orig.firstdata ), lastdata( orig.lastdata ),
+datacount( orig.datacount ), metadatas( orig.metadatas ),
+metadatai( orig.metadatai ), metadatad( orig.metadatad ) {
   for ( auto const& i : orig.data ) {
     data.push_front( std::unique_ptr<DataRow>( new DataRow( *i ) ) );
   }
 }
 
 std::map<std::string, std::string>& SignalData::metas( ) {
-  return metadata;
+  return metadatas;
+}
+
+std::map<std::string, int>& SignalData::metai( ) {
+  return metadatai;
+}
+
+std::map<std::string, double>& SignalData::metad( ) {
+  return metadatad;
 }
 
 const time_t& SignalData::startTime( ) const {
@@ -71,7 +88,7 @@ SignalData::~SignalData( ) {
 }
 
 void SignalData::setUom( const std::string& u ) {
-  _uom = u;
+  metadatas[UOM] = u;
 }
 
 int SignalData::size( ) const {
@@ -83,7 +100,7 @@ const std::string& SignalData::name( ) const {
 }
 
 const std::string& SignalData::uom( ) const {
-  return _uom;
+  return metadatas.at( UOM );
 }
 
 void SignalData::startPopping( ) {
@@ -153,9 +170,9 @@ int SignalData::uncache( int max ) {
 }
 
 int SignalData::scale( ) const {
-  return _scale;
+  return metadatai.at( SCALE );
 }
 
 void SignalData::setScale( int x ) {
-  _scale = x;
+  metadatai.insert( std::make_pair( SCALE, x ) );
 }

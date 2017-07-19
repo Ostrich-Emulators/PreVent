@@ -33,16 +33,20 @@ public:
 	 * Adds a new vital sign if it has not already been added. If it already
 	 * exists, the old dataset is returned
 	 * @param name
+	 * @param if not NULL, will be set to true if this is the first time this function
+	 *  has been called for this vital
 	 * @return 
 	 */
-	std::unique_ptr<SignalData>& addVital( const std::string& name );
+	std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = NULL );
 	/**
 	 * Adds a new waveform if it has not already been added. If it already
 	 * exists, the old dataset is returned
 	 * @param name
+	 * @param if not NULL, will be set to true if this is the first time this function
+	 *  has been called for this vital
 	 * @return
 	 */
-	std::unique_ptr<SignalData>& addWave( const std::string& name );
+	std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = NULL );
 	void addMeta( const std::string& key, const std::string& val );
 	void reset( bool signalDataOnly = true );
 	void setFileSupport( bool );
