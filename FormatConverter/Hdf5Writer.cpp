@@ -172,7 +172,6 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
 
     // convert the data to a vector of ints
     std::stringstream stream( row->data );
-    std::vector<int> samples;
     int hzcount = 0;
     for ( std::string each; std::getline( stream, each, ',' ); ){
       int val = std::stoi( each );

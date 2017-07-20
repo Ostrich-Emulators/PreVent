@@ -38,7 +38,6 @@ public:
 	void setUom( const std::string& u );
 	const std::string& uom( ) const;
 	int scale( ) const;
-	void setScale( int x );
 	int size( ) const;
 	const time_t& startTime( ) const;
 	const time_t& endTime( ) const;
@@ -60,6 +59,8 @@ private:
 	 */
 	int uncache( int count = CACHE_LIMIT );
 	void cache( );
+	void setScale( int x );
+
 
 	const std::string label;
 	time_t firstdata;

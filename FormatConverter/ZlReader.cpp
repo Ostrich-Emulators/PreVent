@@ -181,10 +181,6 @@ void ZlReader::handleOneLine( const std::string& chunk, ReadInfo& info ) {
         std::cout << "empty val? " << chunk << std::endl;
       }
 
-      int scale = DataRow::scale( val );
-      if ( scale > dataset->scale( ) ) {
-        dataset->setScale( scale );
-      }
       dataset->setUom( uom );
       dataset->add( DataRow( currentTime, val, high, low ) );
     }

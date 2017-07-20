@@ -128,6 +128,11 @@ void SignalData::add( const DataRow& row ) {
     cache( );
   }
 
+  int rowscale = DataRow::scale( row.data );
+  if ( rowscale > scale( ) ) {
+    setScale( rowscale );
+  }
+
   data.push_back( std::unique_ptr<DataRow>( new DataRow( row ) ) );
 
   if ( row.time > lastdata ) {
@@ -174,5 +179,5 @@ int SignalData::scale( ) const {
 }
 
 void SignalData::setScale( int x ) {
-  metadatai.insert( std::make_pair( SCALE, x ) );
+  metadatai[SCALE] = x;
 }
