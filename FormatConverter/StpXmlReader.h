@@ -108,6 +108,8 @@ private:
 	std::string stringAndFree( xmlChar * chars ) const;
 	int next( );
 
+	static bool waveIsOk( const std::string& wavedata );
+
 	static const std::string MISSING_VALUESTR;
 
 	xmlTextReaderPtr reader;

@@ -219,30 +219,33 @@ void StpXmlReader::handleWaveformSet( ReadInfo& info ) {
     std::map<std::string, std::string> map;
     std::string vals = textAndAttrsToClose( map );
 
-    bool first;
-    std::unique_ptr<SignalData>& sig = info.addWave( map["Channel"], &first );
-    if ( first ) {
-      sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
-      sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
-
-      if ( 0 != map.count( "UOM" ) ) {
-        sig->setUom( map["UOM"] );
-      }
-    }
-
+    const std::string& wave = map["Channel"];
     // reverse the oversampling (if any) and set the true Hz
     int hz = 240;
-    if ( 0 != Hz60.count( map["Channel"] ) ) {
+    if ( 0 != Hz60.count( wave ) ) {
       vals = resample( vals, 60 );
       hz = 60;
     }
-    else if ( 0 != Hz120.count( map["Channel"] ) ) {
+    else if ( 0 != Hz120.count( wave ) ) {
       vals = resample( vals, 120 );
       hz = 120;
     }
 
-    sig->metad( ).insert( std::make_pair( SignalData::HERTZ, hz ) );
-    sig->add( DataRow( currtime, vals ) );
+    if ( waveIsOk( vals ) ) {
+      bool first;
+      std::unique_ptr<SignalData>& sig = info.addWave( map["Channel"], &first );
+      if ( first ) {
+        sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
+        sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
+
+        if ( 0 != map.count( "UOM" ) ) {
+          sig->setUom( map["UOM"] );
+        }
+      }
+
+      sig->metad( ).insert( std::make_pair( SignalData::HERTZ, hz ) );
+      sig->add( DataRow( currtime, vals ) );
+    }
 
     next( );
     element = stringAndFree( xmlTextReaderName( reader ) );
@@ -480,4 +483,16 @@ std::string StpXmlReader::resample( const std::string& data, int hz ) {
   }
 
   return newvals;
+}
+
+bool StpXmlReader::waveIsOk( const std::string& wavedata ) {
+  // if all the values are -32768 or -32753, this isn't a valid reading
+  bool oneok = false;
+  std::stringstream stream( wavedata );
+  for ( std::string each; std::getline( stream, each, ',' ); ) {
+    if ( !( "-32768" == each || "-32753" == each ) ) {
+      return true;
+    }
+  }
+  return false;
 }

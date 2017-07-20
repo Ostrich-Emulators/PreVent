@@ -19,8 +19,8 @@
 
 class DataRow {
 public:
-  DataRow( const time_t& time, const std::string& data, const std::string& high = "",
-          const std::string& low = "" );
+  DataRow( const time_t& time, const std::string& data, 
+			const std::string& high = "", const std::string& low = "" );
   DataRow();
   DataRow( const DataRow& orig );
   DataRow& operator=(const DataRow& orig );
@@ -30,7 +30,6 @@ public:
   virtual ~DataRow( );
   
   static int scale( const std::string& val );
-
 
   std::string data;
   std::string high;
