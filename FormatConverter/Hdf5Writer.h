@@ -58,11 +58,6 @@ private:
 	static void writeVital( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
 	static void writeWave( H5::DataSet& ds, H5::DataSpace& space, SignalData& data, int hz );
 	static void autochunk( hsize_t* dims, int rank, hsize_t* rslts );
-	static int getHertz( const std::string& wavename );
-	static std::unique_ptr<std::vector<int>> resample( const std::string& data, int hz );
-
-	static const std::set<std::string> Hz60;
-	static const std::set<std::string> Hz120;
 
 	std::string tempfileloc;
 	time_t firstTime;

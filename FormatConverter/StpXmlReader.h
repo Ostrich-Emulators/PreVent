@@ -17,6 +17,7 @@
 #include "Reader.h"
 #include <string>
 #include <list>
+#include <set>
 #include <zlib.h>
 #include <libxml/parser.h>
 
@@ -26,12 +27,11 @@
 
 class SignalData;
 
-enum StpXmlReaderState {
-	OTHER, HEADER, SEGMENT, VITAL, WAVE
-};
-
 class StpXmlReader : public Reader {
 public:
+	static const std::set<std::string> Hz60;
+	static const std::set<std::string> Hz120;
+
 	StpXmlReader( );
 	virtual ~StpXmlReader( );
 
@@ -45,6 +45,8 @@ private:
 	StpXmlReader( const StpXmlReader& orig );
 
 	ReadResult processNode( ReadInfo& info );
+
+	static std::string resample( const std::string& data, int hz );
 
 	/**
 	 * Gets the next text element from the reader, when you've already opened the
@@ -111,7 +113,6 @@ private:
 	xmlTextReaderPtr reader;
 	time_t prevtime;
 	time_t currtime;
-	StpXmlReaderState state;
 	std::map<std::string, std::string> savedmeta;
 };
 

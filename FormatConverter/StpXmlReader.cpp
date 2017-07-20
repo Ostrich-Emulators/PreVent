@@ -21,9 +21,12 @@
 #include <sys/stat.h>
 #include <algorithm>
 #include <functional>
+#include <sstream>
 #include <map>
 
 const std::string StpXmlReader::MISSING_VALUESTR( "-32768" );
+const std::set<std::string> StpXmlReader::Hz60({ "RR", "VNT_PRES", "VNT_FLOW" } );
+const std::set<std::string> StpXmlReader::Hz120({ "ICP1", "ICP2", "ICP4", "LA4" } );
 
 StpXmlReader::StpXmlReader( ) {
   LIBXML_TEST_VERSION
@@ -67,7 +70,7 @@ int StpXmlReader::prepare( const std::string& input, ReadInfo& info ) {
 
 ReadResult StpXmlReader::fill( ReadInfo & info, const ReadResult& lastfill ) {
   if ( ReadResult::END_OF_DAY == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
-    info.metadata().insert(savedmeta.begin(), savedmeta.end() );
+    info.metadata( ).insert( savedmeta.begin( ), savedmeta.end( ) );
   }
 
   ReadResult rslt = ReadResult::NORMAL;
@@ -227,9 +230,18 @@ void StpXmlReader::handleWaveformSet( ReadInfo& info ) {
       }
     }
 
-    // FIXME: reverse the oversampling (if any) and set the true Hz
-    sig->metad( ).insert( std::make_pair( SignalData::HERTZ, 1 / 240 ) );
+    // reverse the oversampling (if any) and set the true Hz
+    int hz = 240;
+    if ( 0 != Hz60.count( map["Channel"] ) ) {
+      vals = resample( vals, 60 );
+      hz = 60;
+    }
+    else if ( 0 != Hz120.count( map["Channel"] ) ) {
+      vals = resample( vals, 120 );
+      hz = 120;
+    }
 
+    sig->metad( ).insert( std::make_pair( SignalData::HERTZ, hz ) );
     sig->add( DataRow( currtime, vals ) );
 
     next( );
@@ -426,4 +438,46 @@ std::string StpXmlReader::nextelement( ) {
   }
 
   return stringAndFree( xmlTextReaderName( reader ) );
+}
+
+std::string StpXmlReader::resample( const std::string& data, int hz ) {
+  /**
+  The data arg is always sampled at 240 Hz and is in a 2-second block (480 vals)
+  However, the actual wave sampling rate may be less (will always be a multiple of 60Hz)
+  so we need to remove the extra values if the values are up-sampled
+   **/
+
+  if ( !( 60 == hz || 120 == hz ) ) {
+    return data;
+  }
+
+
+  std::vector<std::string> valvec;
+  valvec.reserve( hz * 2 );
+
+  std::stringstream stream( data );
+  if ( 120 == hz ) {
+    // remove every other value
+    for ( std::string each; std::getline( stream, each, ',' ); valvec.push_back( each ) ) {
+      std::getline( stream, each, ',' );
+    }
+  }
+  else if ( 60 == hz ) {
+    // keep one val, skip the next 3
+    for ( std::string each; std::getline( stream, each, ',' ); valvec.push_back( each ) ) {
+      std::getline( stream, each, ',' );
+      std::getline( stream, each, ',' );
+      std::getline( stream, each, ',' );
+    }
+  }
+
+  std::string newvals;
+  for ( auto s : valvec ) {
+    if ( !newvals.empty( ) ) {
+      newvals.append( "," );
+    }
+    newvals.append( s );
+  }
+
+  return newvals;
 }

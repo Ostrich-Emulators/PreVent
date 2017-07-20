@@ -23,8 +23,6 @@
 #include "DataRow.h"
 
 const int Hdf5Writer::MISSING_VALUE = -32768;
-const std::set<std::string> Hdf5Writer::Hz60({ "RR", "VNT_PRES", "VNT_FLOW" } );
-const std::set<std::string> Hdf5Writer::Hz120({ "ICP1", "ICP2", "ICP4", "LA4" } );
 
 Hdf5Writer::Hdf5Writer( ) {
 }
@@ -171,10 +169,14 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
   data.startPopping( );
   for ( int i = 0; i < rows; i++ ) {
     std::unique_ptr<DataRow> row = data.pop( );
-    std::unique_ptr<std::vector<int>> lst = resample( row->data, hz );
 
+    // convert the data to a vector of ints
+    std::stringstream stream( row->data );
+    std::vector<int> samples;
     int hzcount = 0;
-    for ( int val : *lst ) {
+    for ( std::string each; std::getline( stream, each, ',' ); ){
+      int val = std::stoi( each );
+
       long pos = idx * 3;
       // after hz values, increment the time by one second
       buffer[pos] = (long) ( hzcount++ >= hz ? row->time + 1 : row->time );
@@ -311,8 +313,8 @@ std::string Hdf5Writer::closeDataSet( ) {
   grp = file.createGroup( "Waveforms" );
   std::cout << "Writing " << data.waves( ).size( ) << " Waveforms" << std::endl;
   for ( auto& wavs : data.waves( ) ) {
-    std::cout << "Writing Vital: " << wavs.first;
-    int hz = getHertz( wavs.first );
+    std::cout << "Writing Wave: " << wavs.first;
+    int hz = wavs.second->metad().at( SignalData::HERTZ );
     auto st = std::chrono::high_resolution_clock::now( );
 
     hsize_t sz = wavs.second->size( );
@@ -337,48 +339,4 @@ std::string Hdf5Writer::closeDataSet( ) {
     std::cout << " (complete in " << dur.count( ) << "ms)" << std::endl;
   }
   return output;
-}
-
-int Hdf5Writer::getHertz( const std::string& wavename ) {
-  if ( 0 != Hz60.count( wavename ) ) {
-    return 60;
-  }
-
-  if ( 0 != Hz120.count( wavename ) ) {
-    return 120;
-  }
-
-  return 240;
-}
-
-std::unique_ptr<std::vector<int>> Hdf5Writer::resample( const std::string& data, int hz ) {
-  /**
-  The data arg is always sampled at 240 Hz and is in a 2-second block (480 vals)
-  However, the actual wave sampling rate may be less (will always be a multiple of 60Hz)
-  so we need to remove the extra values if the values are up-sampled
-   **/
-
-  std::unique_ptr<std::vector<int>> samples( new std::vector<int> );
-  samples->reserve( 2 * hz );
-  std::stringstream stream( data );
-  if ( 240 == hz ) {
-    // we need every value
-    //std::cout<<"480 vals extracted (240hz)"<<std::endl;
-    for ( std::string each; std::getline( stream, each, ',' ); samples->push_back( std::stoi( each ) ) );
-  }
-  else if ( 120 == hz ) {
-    // remove every other value
-    for ( std::string each; std::getline( stream, each, ',' ); samples->push_back( std::stoi( each ) ) ) {
-      std::getline( stream, each, ',' );
-    }
-  }
-  else if ( 60 == hz ) {
-    // keep one val, skip the next 3
-    for ( std::string each; std::getline( stream, each, ',' ); samples->push_back( std::stoi( each ) ) ) {
-      int offset = each.length( )*3 + 3; // +3 for the commas
-      stream.seekg( offset, std::ios_base::cur );
-    }
-  }
-
-  return samples;
 }
