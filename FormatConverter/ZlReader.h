@@ -36,11 +36,11 @@ public:
 	virtual ~ZlReader( );
 
 protected:
-	ReadResult readChunk( ReadInfo& );
-	int getSize( const std::string& input ) const;
+	ReadResult fill( ReadInfo&, const ReadResult& lastfill ) override;
+	int getSize( const std::string& input ) const override;
 
-	int prepare( const std::string& input, ReadInfo& info );
-	void finish( );
+	int prepare( const std::string& input, ReadInfo& info ) override;
+	void finish( ) override;
 
 private:
 

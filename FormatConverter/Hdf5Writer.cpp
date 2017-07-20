@@ -133,7 +133,7 @@ void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace& space,
   int scale = data.scale( );
   data.startPopping( );
   for ( int i = 0; i < rows; i++ ) {
-    const std::unique_ptr<DataRow>& row = std::move( data.pop( ) );
+    const std::unique_ptr<DataRow>& row = data.pop( );
     int idx = i * 4;
     buffer[idx] = (int) ( row->time );
     buffer[idx + 1] = (int) ( std::stof( row->data ) * scale );
@@ -246,47 +246,22 @@ int Hdf5Writer::initDataSet( const std::string& directory, const std::string& na
 
 int Hdf5Writer::drain( ReadInfo& info ) {
   // copy any new metadata
-  data.metadata( ).insert( info.metadata( ).begin( ), info.metadata( ).end( ) );
+  dataptr = &info;
 
-  for ( auto& vitmap : info.vitals( ) ) {
-    std::unique_ptr<SignalData>& mine = data.addVital( vitmap.first );
-    std::unique_ptr<SignalData>& theirs = vitmap.second;
-
-    if ( theirs->startTime( ) < firstTime ) {
-      firstTime = theirs->startTime( );
+  for ( auto& m : info.vitals( ) ) {
+    if ( m.second->startTime( ) < firstTime ) {
+      firstTime = m.second->startTime( );
     }
-    if ( theirs->endTime( ) > lastTime ) {
-      lastTime = theirs->endTime( );
-    }
-
-    theirs->startPopping( );
-    int count = theirs->size( );
-    for ( int i = 0; i < count; i++ ) {
-      std::unique_ptr<DataRow> row = std::move( theirs->pop( ) );
-      DataRow newrow( *row.get( ) );
-      mine->add( newrow );
+    if ( m.second->endTime( ) > lastTime ) {
+      lastTime = m.second->endTime( );
     }
   }
-  for ( auto& vitmap : info.waves( ) ) {
-    std::unique_ptr<SignalData>& mine = data.addWave( vitmap.first );
-    std::unique_ptr<SignalData>& theirs = vitmap.second;
-
-    if ( theirs->startTime( ) < firstTime ) {
-      firstTime = theirs->startTime( );
+  for ( auto& m : info.waves( ) ) {
+    if ( m.second->startTime( ) < firstTime ) {
+      firstTime = m.second->startTime( );
     }
-    if ( theirs->endTime( ) > lastTime ) {
-      lastTime = theirs->endTime( );
-    }
-
-    // copy any new metadata
-    data.metadata( ).insert( info.metadata( ).begin( ), info.metadata( ).end( ) );
-
-    theirs->startPopping( );
-    int count = theirs->size( );
-    for ( int i = 0; i < count; i++ ) {
-      std::unique_ptr<DataRow> row = std::move( theirs->pop( ) );
-      DataRow newrow( *row.get( ) );
-      mine->add( newrow );
+    if ( m.second->endTime( ) > lastTime ) {
+      lastTime = m.second->endTime( );
     }
   }
 
@@ -294,6 +269,8 @@ int Hdf5Writer::drain( ReadInfo& info ) {
 }
 
 std::string Hdf5Writer::closeDataSet( ) {
+  ReadInfo& data = *dataptr;
+
   tm * time = gmtime( &firstTime );
   char buf[sizeof "-YYYYMMDD.hdf5"];
   strftime( buf, sizeof buf, "-%Y%m%d.hdf5", time );

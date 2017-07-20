@@ -31,7 +31,7 @@ DEFAULTCONF=Release
 CONF=${DEFAULTCONF}
 
 # All Configurations
-ALLCONFS=Release Debug Debug-zl-to-hdf5 Debug-zl-to-wfdb Debug-wfdb-to-hdf5 Debug-xml-to-zl 
+ALLCONFS=Release Debug Debug-zl-to-hdf5 Debug-zl-to-wfdb Debug-wfdb-to-hdf5 Debug-xml-to-hdf5 
 
 
 # build

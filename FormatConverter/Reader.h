@@ -25,42 +25,9 @@ public:
 	static std::unique_ptr<Reader> get( const Format& fmt );
 
 	/**
-	 * Prepares for reading a new input file
+	 * Prepares for reading a new input file/stream.
 	 * @param input the file
 	 * @param data reset this ReadInfo as well
-	 */
-	virtual int reset( const std::string& input, ReadInfo& info );
-
-	/**
-	 * Fills the given ReadInfo with the next chunk of data from the input.
-	 * A chunk is defined as one patient-day.
-	 * @param read the data structure to populate with the newly-read data
-	 * @return the result code
-	 */
-	ReadResult fill( ReadInfo& read );
-
-protected:
-
-	/**
-	 * Reads the next bit of input and appends the data to the ReadInfo object.
-	 * This function is called from {@link #fill}
-	 * @param input where to store the new data
-	 * @return the result code
-	 */
-	virtual ReadResult readChunk( ReadInfo& ) = 0;
-
-	/**
-	 * Gets a size calculation for this input
-	 * @param input the input to size
-	 * @return size for the input, or -1 for error
-	 */
-	virtual int getSize( const std::string& input ) const = 0;
-
-	/**
-	 * Prepares for reading a new file/stream. Most users will not need to call
-	 * this function, as it is called from reset(). By default, does nothing
-	 * @param input
-	 * @param info the info object to prepare
 	 * @return 0 (success), -1 (error), -2 (fatal)
 	 */
 	virtual int prepare( const std::string& input, ReadInfo& info );
@@ -70,6 +37,25 @@ protected:
 	 * the caller is finished with a file
 	 */
 	virtual void finish( );
+
+	/**
+	 * Fills the given ReadInfo with the next chunk of data from the input.
+	 * A chunk is defined as one patient-day.
+	 * @param read the data structure to populate with the newly-read data
+	 * @param lastresult the outcome of the previous call to fill()
+	 * @return the result code
+	 */
+	virtual ReadResult fill( ReadInfo& read,
+			const ReadResult& lastresult = ReadResult::NORMAL ) = 0;
+
+protected:
+
+	/**
+	 * Gets a size calculation for this input
+	 * @param input the input to size
+	 * @return size for the input, or -1 for error
+	 */
+	virtual int getSize( const std::string& input ) const = 0;
 
 private:
 	Reader( const Reader& );

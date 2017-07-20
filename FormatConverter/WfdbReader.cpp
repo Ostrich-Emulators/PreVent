@@ -53,6 +53,11 @@ time_t WfdbReader::convert( const char * timestr ) {
 }
 
 int WfdbReader::prepare( const std::string& recordset, ReadInfo& info ) {
+  int rslt = Reader::prepare( recordset, info );
+  if ( 0 != rslt ) {
+    return rslt;
+  }
+
   sigcount = isigopen( (char *) ( recordset.c_str( ) ), NULL, 0 );
   if ( sigcount > 0 ) {
     siginfo = new WFDB_Siginfo[sigcount];
@@ -76,7 +81,7 @@ void WfdbReader::finish( ) {
   wfdbquit( );
 }
 
-ReadResult WfdbReader::readChunk( ReadInfo& info ) {
+ReadResult WfdbReader::fill( ReadInfo& info, const ReadResult& ) {
   WFDB_Sample v[sigcount];
   int retcode = getvec( v );
   int sampleno = 0;

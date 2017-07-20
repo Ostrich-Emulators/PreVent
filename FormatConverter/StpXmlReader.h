@@ -36,10 +36,10 @@ public:
 	virtual ~StpXmlReader( );
 
 protected:
-	ReadResult readChunk( ReadInfo& );
-	int getSize( const std::string& input ) const;
-	int prepare( const std::string& input, ReadInfo& info );
-	void finish( );
+	ReadResult fill( ReadInfo&, const ReadResult& lastfill ) override;
+	int getSize( const std::string& input ) const override;
+	int prepare( const std::string& input, ReadInfo& info ) override;
+	void finish( ) override;
 
 private:
 	StpXmlReader( const StpXmlReader& orig );
@@ -75,7 +75,7 @@ private:
 	bool isRollover( );
 
 	std::map<std::string, std::string> getAttrs( );
-	std::map<std::string, std::string> getHeaders();
+	std::map<std::string, std::string> getHeaders( );
 
 	/**
 	 * Gets the next text content of the node and moves the reader to the close tag
@@ -104,16 +104,15 @@ private:
 	 */
 	std::string nextelement( );
 	std::string stringAndFree( xmlChar * chars ) const;
-	int next();
+	int next( );
 
 	static const std::string MISSING_VALUESTR;
 
 	xmlTextReaderPtr reader;
-	DataRow current;
-	time_t firsttime;
 	time_t prevtime;
 	time_t currtime;
 	StpXmlReaderState state;
+	std::map<std::string, std::string> savedmeta;
 };
 
 #endif /* STPXMLREADER_H */

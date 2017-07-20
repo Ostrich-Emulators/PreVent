@@ -26,7 +26,7 @@ std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
   }
 }
 
-int Reader::reset( const std::string& input, ReadInfo& info ) {
+int Reader::prepare( const std::string& input, ReadInfo& info ) {
   info.reset( false );
 
   if ( "-" == input || "-zl" == input ) {
@@ -43,16 +43,7 @@ int Reader::reset( const std::string& input, ReadInfo& info ) {
   }
 
   info.setFileSupport( largefile );
-  prepare( input, info );
 
-  return 0;
-}
-
-ReadResult Reader::fill( ReadInfo& read ) {
-  return readChunk( read );
-}
-
-int Reader::prepare( const std::string& input, ReadInfo& ) {
   return 0;
 }
 

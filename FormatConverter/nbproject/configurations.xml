@@ -451,7 +451,7 @@
       <item path="main.cpp" ex="false" tool="1" flavor2="8">
       </item>
     </conf>
-    <conf name="Debug-xml-to-zl" type="1">
+    <conf name="Debug-xml-to-hdf5" type="1">
       <toolsSet>
         <compilerSet>GNU|GNU</compilerSet>
         <dependencyChecking>true</dependencyChecking>

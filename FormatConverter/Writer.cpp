@@ -70,8 +70,8 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
 
   while ( retcode != ReadResult::ERROR ) {
     drain( data );
-    if ( ReadResult::END_OF_PATIENT == retcode ) {
-      // end of old patient
+
+    if ( ReadResult::END_OF_DAY == retcode || ReadResult::END_OF_PATIENT == retcode ) {
       std::string file = closeDataSet( );
       if ( file.empty( ) ) {
         std::cerr << "refusing to write empty data file!" << std::endl;
@@ -104,7 +104,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     }
 
     // carry on with next data chunk
-    retcode = from->fill( data );
+    retcode = from->fill( data, retcode );
   }
 
   return list;

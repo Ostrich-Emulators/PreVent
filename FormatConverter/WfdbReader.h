@@ -23,11 +23,11 @@ public:
 	static time_t convert( const char * timestr );
 
 protected:
-	int prepare( const std::string& input, ReadInfo& info );
-	void finish();
-	
-	ReadResult readChunk( ReadInfo& data );
-	int getSize( const std::string& input ) const;
+	int prepare( const std::string& input, ReadInfo& info ) override;
+	void finish( ) override;
+
+	ReadResult fill( ReadInfo& data, const ReadResult& lastfill ) override;
+	int getSize( const std::string& input ) const override;
 
 private:
 	int sigcount;

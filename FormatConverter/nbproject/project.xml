@@ -32,7 +32,7 @@
                     <type>1</type>
                 </confElem>
                 <confElem>
-                    <name>Debug-xml-to-zl</name>
+                    <name>Debug-xml-to-hdf5</name>
                     <type>1</type>
                 </confElem>
             </confList>

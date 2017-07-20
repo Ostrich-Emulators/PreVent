@@ -122,11 +122,12 @@ int main( int argc, char** argv ) {
     std::cout << "converting " << argv[i]
         << " from " << fromstr
         << " to " << tostr << std::endl;
-    from->reset( argv[i], data );
+    from->prepare( argv[i], data );
     to->setOutputDir( outdir );
     to->setCompression( compression );
     to->setOutputPrefix( prefix );
     std::vector<std::string> files = to->write( from, data );
+    from->finish();
 
     for ( const auto& f : files ) {
       std::cout << " written to " << f << std::endl;

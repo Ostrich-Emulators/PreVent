@@ -54,13 +54,22 @@ int StpXmlReader::getSize( const std::string& input ) const {
 }
 
 int StpXmlReader::prepare( const std::string& input, ReadInfo& info ) {
-  if ( NULL == reader ) {
-    reader = xmlNewTextReaderFilename( input.c_str( ) );
+  int rslt = Reader::prepare( input, info );
+  if ( 0 == rslt ) {
+    if ( NULL == reader ) {
+      reader = xmlNewTextReaderFilename( input.c_str( ) );
+    }
+
+    return ( NULL == reader ? -1 : 0 );
   }
-  return ( NULL == reader ? -1 : 0 );
+  return rslt;
 }
 
-ReadResult StpXmlReader::readChunk( ReadInfo & info ) {
+ReadResult StpXmlReader::fill( ReadInfo & info, const ReadResult& lastfill ) {
+  if ( ReadResult::END_OF_DAY == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
+    info.metadata().insert(savedmeta.begin(), savedmeta.end() );
+  }
+
   ReadResult rslt = ReadResult::NORMAL;
   do {
     rslt = processNode( info );
@@ -88,10 +97,10 @@ ReadResult StpXmlReader::processNode( ReadInfo& info ) {
     if ( 1 == depth ) {
       // only FileInfo, Segment_*, and (sometimes) PatientName elements at level 1
       if ( "FileInfo" == element ) {
-        auto m = getHeaders( );
+        savedmeta = getHeaders( );
 
-        m.erase( "Size" ); // Size is meaningless for us
-        info.metadata( ).insert( m.begin( ), m.end( ) );
+        savedmeta.erase( "Size" ); // Size is meaningless for us
+        info.metadata( ).insert( savedmeta.begin( ), savedmeta.end( ) );
 
         //for ( auto mx : m ) {
         //  std::cout << mx.first << ": " << mx.second << std::endl;
@@ -160,6 +169,7 @@ ReadResult StpXmlReader::processNode( ReadInfo& info ) {
 
 ReadResult StpXmlReader::handleSegmentPatientName( ReadInfo& info ) {
   std::string patientname = textAndClose( );
+  savedmeta["Patient Name"] = patientname;
 
   // we have a new patient name, so see if it's the same as our last one
   if ( 0 == prevtime ) {
@@ -175,22 +185,8 @@ ReadResult StpXmlReader::handleSegmentPatientName( ReadInfo& info ) {
     return ReadResult::END_OF_PATIENT;
   }
 
-  std::cout << "patient name is " << patientname << std::endl;
+  // std::cout << "patient name is " << patientname << std::endl;
   return ReadResult::NORMAL;
-}
-
-std::string StpXmlReader::textAndClose( ) {
-  std::string ret = text( );
-  int nodetype = xmlTextReaderNodeType( reader );
-  const int MYDEPTH = xmlTextReaderDepth( reader );
-  do {
-    nodetype = next( );
-    // ignore everything until the next start element
-  }
-  while ( xmlTextReaderDepth( reader ) > MYDEPTH
-      && xmlReaderTypes::XML_READER_TYPE_END_ELEMENT != nodetype );
-
-  return ret;
 }
 
 bool StpXmlReader::isRollover( ) {
@@ -199,12 +195,13 @@ bool StpXmlReader::isRollover( ) {
   currtime = std::stol( map["Time"] );
 
   if ( 0 == prevtime ) {
-    firsttime = currtime;
+    prevtime = currtime;
   }
   else {
     const int cdoy = gmtime( &currtime )->tm_yday;
     const int pdoy = gmtime( &prevtime )->tm_yday;
     if ( cdoy != pdoy ) {
+      prevtime = currtime;
       return true;
     }
   }
@@ -234,6 +231,32 @@ void StpXmlReader::handleWaveformSet( ReadInfo& info ) {
     sig->metad( ).insert( std::make_pair( SignalData::HERTZ, 1 / 240 ) );
 
     sig->add( DataRow( currtime, vals ) );
+
+    next( );
+    element = stringAndFree( xmlTextReaderName( reader ) );
+  }
+}
+
+void StpXmlReader::handleVitalsSet( ReadInfo & info ) {
+  next( );
+  std::string element = stringAndFree( xmlTextReaderName( reader ) );
+  while ( "VS" == element ) {
+    std::string param;
+    std::string uom;
+    DataRow row = handleOneVs( param, uom );
+
+    bool first;
+    std::unique_ptr<SignalData>& sig = info.addVital( param, &first );
+    if ( first ) {
+      sig->metad( ).insert( std::make_pair( SignalData::HERTZ, 0.5 ) );
+      sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
+      sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
+
+      if ( !uom.empty( ) ) {
+        sig->setUom( uom );
+      }
+    }
+    sig->add( row );
 
     next( );
     element = stringAndFree( xmlTextReaderName( reader ) );
@@ -274,94 +297,6 @@ DataRow StpXmlReader::handleOneVs( std::string& param, std::string& uom ) {
   return DataRow( currtime, val, hi, lo );
 }
 
-int StpXmlReader::next( ) {
-  int ret = xmlTextReaderRead( reader );
-  if ( ret != 1 ) {
-    if( ret < 0 ){
-      std::cerr << "error reading stream!" << std::endl;
-    }
-    return ret; // FIXME: this is confusing for the caller
-  }
-
-  int type = xmlTextReaderNodeType( reader );
-
-  if ( xmlReaderTypes::XML_READER_TYPE_SIGNIFICANT_WHITESPACE == type ) {
-    //std::cout << "skipping whitespace" << std::endl;
-    return next( );
-  }
-
-  int depth = xmlTextReaderDepth( reader );
-  //std::cout << depth << ":";
-  for ( int i = 0; i < depth; i++ ) {
-    //std::cout << "  ";
-  }
-
-  std::map<int, std::string> typelkp;
-  typelkp[xmlReaderTypes::XML_READER_TYPE_ELEMENT] = "open";
-  typelkp[xmlReaderTypes::XML_READER_TYPE_END_ELEMENT] = "close";
-  typelkp[xmlReaderTypes::XML_READER_TYPE_SIGNIFICANT_WHITESPACE] = "sig white";
-  typelkp[xmlReaderTypes::XML_READER_TYPE_TEXT] = "text";
-  typelkp[xmlReaderTypes::XML_READER_TYPE_ATTRIBUTE] = "attr";
-  //typelkp[xmlReaderTypes]="";
-
-  //  std::cout << stringAndFree( xmlTextReaderName( reader ) )
-  //      << ": ->" << stringAndFree( xmlTextReaderValue( reader ) ) << "<-"
-  //      << "(" << ( 0 == typelkp.count( type )
-  //      ? "type " + std::to_string( type )
-  //      : typelkp[type] )
-  //      << ")" << std::endl;
-  return type;
-}
-
-std::string StpXmlReader::textAndAttrsToClose( std::map<std::string, std::string>& attrs ) {
-  if ( xmlReaderTypes::XML_READER_TYPE_ELEMENT == xmlTextReaderNodeType( reader ) ) {
-    attrs = getAttrs( );
-  }
-  else {
-    std::cerr << "cannot read attributes from non-opening element" << std::endl;
-  }
-
-  return textAndClose( );
-}
-
-void StpXmlReader::handleVitalsSet( ReadInfo & info ) {
-  next( );
-  std::string element = stringAndFree( xmlTextReaderName( reader ) );
-  while ( "VS" == element ) {
-    std::string param;
-    std::string uom;
-    DataRow row = handleOneVs( param, uom );
-
-    bool first;
-    std::unique_ptr<SignalData>& sig = info.addVital( param, &first );
-    if ( first ) {
-      sig->metad( ).insert( std::make_pair( SignalData::HERTZ, 0.5 ) );
-      sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
-      sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
-
-      if ( !uom.empty( ) ) {
-        sig->setUom( uom );
-      }
-    }
-    sig->add( row );
-
-    next( );
-    element = stringAndFree( xmlTextReaderName( reader ) );
-  }
-}
-
-std::string StpXmlReader::trim( std::string & totrim ) const {
-  // ltrim
-  totrim.erase( totrim.begin( ), std::find_if( totrim.begin( ), totrim.end( ),
-      std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
-
-  // rtrim
-  totrim.erase( std::find_if( totrim.rbegin( ), totrim.rend( ),
-      std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
-
-  return totrim;
-}
-
 std::map<std::string, std::string> StpXmlReader::getHeaders( ) {
   std::map<std::string, std::string> map;
 
@@ -380,13 +315,28 @@ std::map<std::string, std::string> StpXmlReader::getHeaders( ) {
   return map;
 }
 
-std::string StpXmlReader::nextelement( ) {
-  // ignore everything until the next start element
-  while ( xmlReaderTypes::XML_READER_TYPE_ELEMENT != next( ) ) {
-    // nothing to do in the loop...the next() does it all
+std::map<std::string, std::string> StpXmlReader::getAttrs( ) {
+  std::map<std::string, std::string> map;
+  if ( xmlTextReaderHasAttributes( reader ) ) {
+    while ( xmlTextReaderMoveToNextAttribute( reader ) ) {
+      std::string key = stringAndFree( xmlTextReaderName( reader ) );
+      std::string val = stringAndFree( xmlTextReaderValue( reader ) );
+      map[key] = val;
+    }
   }
+  return map;
+}
 
-  return stringAndFree( xmlTextReaderName( reader ) );
+std::string StpXmlReader::trim( std::string & totrim ) const {
+  // ltrim
+  totrim.erase( totrim.begin( ), std::find_if( totrim.begin( ), totrim.end( ),
+      std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
+
+  // rtrim
+  totrim.erase( std::find_if( totrim.rbegin( ), totrim.rend( ),
+      std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
+
+  return totrim;
 }
 
 std::string StpXmlReader::text( ) {
@@ -394,6 +344,31 @@ std::string StpXmlReader::text( ) {
   std::string value = stringAndFree( xmlTextReaderValue( reader ) );
 
   return trim( value );
+}
+
+std::string StpXmlReader::textAndClose( ) {
+  std::string ret = text( );
+  int nodetype = xmlTextReaderNodeType( reader );
+  const int MYDEPTH = xmlTextReaderDepth( reader );
+  do {
+    nodetype = next( );
+    // ignore everything until the next start element
+  }
+  while ( xmlTextReaderDepth( reader ) > MYDEPTH
+      && xmlReaderTypes::XML_READER_TYPE_END_ELEMENT != nodetype );
+
+  return ret;
+}
+
+std::string StpXmlReader::textAndAttrsToClose( std::map<std::string, std::string>& attrs ) {
+  if ( xmlReaderTypes::XML_READER_TYPE_ELEMENT == xmlTextReaderNodeType( reader ) ) {
+    attrs = getAttrs( );
+  }
+  else {
+    std::cerr << "cannot read attributes from non-opening element" << std::endl;
+  }
+
+  return textAndClose( );
 }
 
 std::string StpXmlReader::stringAndFree( xmlChar * chars ) const {
@@ -405,14 +380,50 @@ std::string StpXmlReader::stringAndFree( xmlChar * chars ) const {
   return ret;
 }
 
-std::map<std::string, std::string> StpXmlReader::getAttrs( ) {
-  std::map<std::string, std::string> map;
-  if ( xmlTextReaderHasAttributes( reader ) ) {
-    while ( xmlTextReaderMoveToNextAttribute( reader ) ) {
-      std::string key = stringAndFree( xmlTextReaderName( reader ) );
-      std::string val = stringAndFree( xmlTextReaderValue( reader ) );
-      map[key] = val;
+int StpXmlReader::next( ) {
+  int ret = xmlTextReaderRead( reader );
+  if ( ret != 1 ) {
+    if ( ret < 0 ) {
+      std::cerr << "error reading stream!" << std::endl;
     }
+    return ret; // FIXME: this is confusing for the caller
   }
-  return map;
+
+  int type = xmlTextReaderNodeType( reader );
+
+  if ( xmlReaderTypes::XML_READER_TYPE_SIGNIFICANT_WHITESPACE == type ) {
+    //std::cout << "skipping whitespace" << std::endl;
+    return next( );
+  }
+
+  //  int depth = xmlTextReaderDepth( reader );
+  //  std::cout << depth << ":";
+  //  for ( int i = 0; i < depth; i++ ) {
+  //    std::cout << "  ";
+  //  }
+  //
+  //  std::map<int, std::string> typelkp;
+  //  typelkp[xmlReaderTypes::XML_READER_TYPE_ELEMENT] = "open";
+  //  typelkp[xmlReaderTypes::XML_READER_TYPE_END_ELEMENT] = "close";
+  //  typelkp[xmlReaderTypes::XML_READER_TYPE_SIGNIFICANT_WHITESPACE] = "sig white";
+  //  typelkp[xmlReaderTypes::XML_READER_TYPE_TEXT] = "text";
+  //  typelkp[xmlReaderTypes::XML_READER_TYPE_ATTRIBUTE] = "attr";
+  //  // typelkp[xmlReaderTypes] = "";
+  //
+  //  std::cout << stringAndFree( xmlTextReaderName( reader ) )
+  //      << ": ->" << stringAndFree( xmlTextReaderValue( reader ) ) << "<-"
+  //      << "(" << ( 0 == typelkp.count( type )
+  //      ? "type " + std::to_string( type )
+  //      : typelkp[type] )
+  //      << ")" << std::endl;
+  return type;
+}
+
+std::string StpXmlReader::nextelement( ) {
+  // ignore everything until the next start element
+  while ( xmlReaderTypes::XML_READER_TYPE_ELEMENT != next( ) ) {
+    // nothing to do in the loop...the next() does it all
+  }
+
+  return stringAndFree( xmlTextReaderName( reader ) );
 }
