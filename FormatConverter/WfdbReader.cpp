@@ -93,17 +93,19 @@ ReadResult WfdbReader::fill( ReadInfo& info, const ReadResult& ) {
       // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
       // for what timer is
 
-      WFDB_Frequency freqhz = getifreq( );
-      if ( freqhz > 1 ) {
-        // we have a waveform, so worry about sample numbers
-
-        // WARNING: also, WFDB can specify sample rate, so we can't rely on
-        // it being always a multiple of 60
+      bool first;
+      std::unique_ptr<SignalData>& dataset = info.addWave( siginfo[j].desc, &first );
+      if ( first ) {
+        dataset->metad( )[SignalData::HERTZ] = freqhz;
       }
 
-      DataRow row( timet, std::to_string( v[j] ) );
+      WFDB_Frequency freqhz = getifreq( );
+      // FIXME: we need to string together freqhz values into a string for timet
 
-      std::unique_ptr<SignalData>& dataset = info.addVital( siginfo[j].desc );
+
+
+
+      DataRow row( timet, std::to_string( v[j] ) );
       dataset->add( row );
     }
 
