@@ -60,12 +60,18 @@ int WfdbReader::prepare( const std::string& recordset, ReadInfo& info ) {
 
   sigcount = isigopen( (char *) ( recordset.c_str( ) ), NULL, 0 );
   if ( sigcount > 0 ) {
+    WFDB_Frequency freqhz = getifreq( );
+    bool iswave = ( freqhz > 1 );
     siginfo = new WFDB_Siginfo[sigcount];
 
     sigcount = isigopen( (char *) ( recordset.c_str( ) ), siginfo, sigcount );
 
     for ( int i = 0; i < sigcount; i++ ) {
-      std::unique_ptr<SignalData>& dataset = info.addVital( siginfo[i].desc );
+      std::unique_ptr<SignalData>& dataset = ( iswave
+          ? info.addWave( siginfo[i].desc )
+          : info.addVital( siginfo[i].desc ) );
+
+      dataset->metad( )[SignalData::HERTZ] = freqhz;
 
       if ( NULL != siginfo[i].units ) {
         dataset->setUom( siginfo[i].units );
@@ -86,6 +92,12 @@ ReadResult WfdbReader::fill( ReadInfo& info, const ReadResult& ) {
   int retcode = getvec( v );
   int sampleno = 0;
 
+  WFDB_Frequency freqhz = getifreq( );
+  int timecount = 0; // how many times have we seen the same time? (we should see it freqhz times, no?)
+  time_t lasttime = -1;
+  DataRow currents[sigcount];
+  bool iswave = ( freqhz > 1 );
+
   while ( retcode > 0 ) {
     for ( int j = 0; j < sigcount; j++ ) {
       char * timer = timstr( sampleno );
@@ -93,25 +105,47 @@ ReadResult WfdbReader::fill( ReadInfo& info, const ReadResult& ) {
       // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
       // for what timer is
 
-      bool first;
-      std::unique_ptr<SignalData>& dataset = info.addWave( siginfo[j].desc, &first );
-      if ( first ) {
-        dataset->metad( )[SignalData::HERTZ] = freqhz;
+      if ( timet == lasttime ) {
+        timecount++;
+      }
+      else {
+        timecount = 0;
+        lasttime = timet;
+
+        std::unique_ptr<SignalData>& dataset = ( iswave
+            ? info.addWave( siginfo[j].desc )
+            : info.addVital( siginfo[j].desc ) );
+
+        if ( !currents[j].data.empty( ) ) {
+          // don't add a row on the very first loop through
+          dataset->add( currents[j] );
+        }
+
+        currents[j].time = timet;
+        currents[j].data.clear( );
       }
 
-      WFDB_Frequency freqhz = getifreq( );
+      if ( !currents[j].data.empty( ) ) {
+        currents[j].data.append( "," );
+      }
+      currents[j].data.append( std::to_string( v[j] ) );
       // FIXME: we need to string together freqhz values into a string for timet
-
-
-
-
-      DataRow row( timet, std::to_string( v[j] ) );
-      dataset->add( row );
     }
 
     retcode = getvec( v );
     sampleno++;
   }
+
+  // now add our last data point
+  for ( int j = 0; j < sigcount; j++ ) {
+    std::unique_ptr<SignalData>& dataset = ( iswave
+        ? info.addWave( siginfo[j].desc )
+        : info.addVital( siginfo[j].desc ) );
+
+    currents[j].time = lasttime;
+    dataset->add( currents[j] );
+  }
+
 
   if ( -3 == retcode ) {
     std::cerr << "unexpected end of file" << std::endl;
