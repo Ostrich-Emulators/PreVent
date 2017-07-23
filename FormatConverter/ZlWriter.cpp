@@ -10,6 +10,7 @@
 #include <ctime>
 #include <limits>
 #include <fstream>
+#include <set>
 
 #include "ReadInfo.h"
 #include "SignalData.h"
@@ -54,9 +55,9 @@ int ZlWriter::drain( ReadInfo& info ) {
 
   int widx = 0;
   for ( auto& map : info.waves( ) ) {
-    vls.push_back( map.first );
+    ws.push_back( map.first );
     map.second->startPopping( );
-    vits[widx++] = std::move( map.second->pop( ) );
+    wavs[widx++] = std::move( map.second->pop( ) );
 
     if ( map.second->startTime( ) < firsttime ) {
       firsttime = map.second->startTime( );
@@ -65,7 +66,7 @@ int ZlWriter::drain( ReadInfo& info ) {
 
   char recsuffix[sizeof "-YYYYMMDD"];
   std::strftime( recsuffix, sizeof recsuffix, "-%Y%m%d", gmtime( &firsttime ) );
-  filename = filestart + recsuffix;
+  filename = filestart + recsuffix + ".zl";
 
   std::ofstream out( filename );
   out << "HEADER" << std::endl;
@@ -73,12 +74,57 @@ int ZlWriter::drain( ReadInfo& info ) {
     out << m.first << "=" << m.second << std::endl;
   }
 
-  //for ( auto& m : info.vitals( ) ) {
+  int sigcount = info.vitals( ).size( ) + info.waves( ).size( );
+  std::set<std::string> empties;
+  while ( empties.size( ) < sigcount ) {
+    time_t nextearliesttime = std::numeric_limits<time_t>::max( );
 
-  //}
+    out << "TIME " << firsttime << std::endl;
+    for ( int i = 0; i < info.vitals( ).size( ); i++ ) {
+      std::string& label = vls[i];
+
+      if ( vits[i]->time == firsttime ) {
+        out << "VITAL " << label
+            << "|" << info.vitals( )[label]->metas( )[SignalData::UOM]
+            << "|" << vits[i]->data
+            << "|" << vits[i]->high
+            << "|" << vits[i]->low
+            << std::endl;
+        if ( 0 == info.vitals( )[label]->size( ) ) {
+          empties.insert( label );
+        }
+        else {
+          vits[i] = std::move( info.vitals( )[label]->pop( ) );
+          if ( vits[i]->time < nextearliesttime ) {
+            nextearliesttime = vits[i]->time;
+          }
+        }
+      }
+    }
+    for ( int i = 0; i < info.waves( ).size( ); i++ ) {
+      std::string& label = ws[i];
+
+      if ( wavs[i]->time == firsttime ) {
+        out << "WAVE " << label
+            << "|" << info.waves( )[label]->metas( )[SignalData::UOM]
+            << "|" << wavs[i]->data
+            << std::endl;
+        if ( 0 == info.waves( )[label]->size( ) ) {
+          empties.insert( label );
+        }
+        else {
+          wavs[i] = std::move( info.waves( )[label]->pop( ) );
+          if ( wavs[i]->time < nextearliesttime ) {
+            nextearliesttime = wavs[i]->time;
+          }
+        }
+      }
+    }
+
+    firsttime = nextearliesttime;
+  }
 
   out.close( );
-
 
   return 0;
 }
