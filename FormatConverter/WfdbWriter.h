@@ -33,6 +33,8 @@ protected:
 
 private:
 	WfdbWriter( const WfdbWriter& orig );
+
+	int write( std::map<std::string, std::unique_ptr<SignalData>>&data );
 	std::vector<std::vector<WFDB_Sample>> sync( std::map<std::string, std::unique_ptr<SignalData>>&data,
 			std::vector<std::string>& labels, time_t& earliest );
 	int rowForTime( time_t starttime, time_t mytime, float timestep ) const;
@@ -40,8 +42,6 @@ private:
 	std::string fileloc;
 	std::string currdir;
 	std::map<std::string, WFDB_Siginfo> sigmap;
-	time_t firstTime;
-
 };
 
 

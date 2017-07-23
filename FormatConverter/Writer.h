@@ -19,7 +19,7 @@ public:
 	static std::unique_ptr<Writer> get( const Format& fmt );
 
 	void setOutputDir( const std::string& outdir );
-	void setOutputPrefix( const std::string& pre );
+	void setOutputPrefix( const std::string& pres );
 	void setCompression( int lev );
 
 	virtual std::vector<std::string> write( std::unique_ptr<Reader>& from,

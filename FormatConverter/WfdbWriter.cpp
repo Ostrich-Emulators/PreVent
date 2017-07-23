@@ -10,6 +10,7 @@
 #include <iostream>
 #include <set>
 #include <unistd.h>
+#include <ctime>
 
 #include "ReadInfo.h"
 #include "SignalData.h"
@@ -28,7 +29,6 @@ int WfdbWriter::initDataSet( const std::string& directory, const std::string& na
   chdir( directory.c_str( ) );
 
   sigmap.clear( );
-  firstTime = std::numeric_limits<time_t>::max( );
 
   fileloc = namestart;
   std::string rectest = namestart + "-20170101"; // we're going to replace the date
@@ -50,22 +50,33 @@ std::string WfdbWriter::closeDataSet( ) {
 int WfdbWriter::drain( ReadInfo& info ) {
   auto& vitals = info.vitals( );
   auto& waves = info.waves( );
-  auto& metas = info.metadata( );
 
-  for ( auto& vit : vitals ) {
+  return ( vitals.empty( )
+      ? write( waves )
+      : write( vitals ) );
+}
+
+int WfdbWriter::write( std::map<std::string, std::unique_ptr<SignalData>>&data ) {
+  for ( auto& vit : data ) {
     if ( 0 == sigmap.count( vit.first ) ) {
       sigmap[vit.first].units = (char *) vit.second->uom( ).c_str( );
       sigmap[vit.first].group = 0;
       sigmap[vit.first].desc = (char *) vit.first.c_str( );
       sigmap[vit.first].fmt = 16;
+
+      if ( 0 != vit.second->metad( ).count( SignalData::HERTZ ) ) {
+        setsampfreq( vit.second->metad( )[SignalData::HERTZ] );
+      }
     }
   }
 
+  time_t firstTime = std::numeric_limits<time_t>::max( );
+
   std::vector<std::string> labels;
-  auto synco = sync( vitals, labels, firstTime );
+  auto synco = sync( data, labels, firstTime );
 
   char recsuffix[sizeof "-YYYYMMDD"];
-  strftime( recsuffix, sizeof recsuffix, "-%Y%m%d", gmtime( &firstTime ) );
+  std::strftime( recsuffix, sizeof recsuffix, "-%Y%m%d", gmtime( &firstTime ) );
   fileloc += recsuffix;
   std::string output = fileloc + ".dat";
 
@@ -81,11 +92,13 @@ int WfdbWriter::drain( ReadInfo& info ) {
   if ( osigfopen( sigs, sigmap.size( ) ) < sigmap.size( ) ) {
     return -1;
   }
-  setsampfreq( 0.5 );
 
-  char timestr[sizeof "01:01:01"];
-  strftime( timestr, sizeof timestr, "%T", gmtime( &firstTime ) );
-  setbasetime( timestr );
+  tm * t = gmtime( &firstTime );
+  if ( 0 != ( t->tm_hour + t->tm_min + t->tm_sec ) ) { // not 00:00:00 (midnight)?
+    char timestr[sizeof "00:00:00"];
+    std::strftime( timestr, sizeof timestr, "%T", t );
+    setbasetime( timestr );
+  }
 
   for ( const auto& vec : synco ) {
     putvec( (WFDB_Sample *) ( &vec[0] ) );

@@ -47,6 +47,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/WfdbWriter.o \
 	${OBJECTDIR}/Writer.o \
 	${OBJECTDIR}/ZlReader.o \
+	${OBJECTDIR}/ZlWriter.o \
 	${OBJECTDIR}/main.o
 
 
@@ -139,6 +140,11 @@ ${OBJECTDIR}/ZlReader.o: ZlReader.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ZlReader.o ZlReader.cpp
+
+${OBJECTDIR}/ZlWriter.o: ZlWriter.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ZlWriter.o ZlWriter.cpp
 
 ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}

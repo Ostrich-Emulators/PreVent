@@ -7,6 +7,7 @@
 #include "config.h"
 #include "Hdf5Writer.h"
 #include "WfdbWriter.h"
+#include "ZlWriter.h"
 
 Writer::Writer( ) {
 }
@@ -24,6 +25,10 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
       return std::unique_ptr<Writer>( new Hdf5Writer( ) );
     case WFDB:
       return std::unique_ptr<Writer>( new WfdbWriter( ) );
+    case DSZL:
+      return std::unique_ptr<Writer>( new ZlWriter( ) );
+    default:
+      throw "writer not yet implemented";
   }
 }
 
@@ -55,7 +60,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
   std::string lastPatientName = "";
   int patientno = 1;
 
-  std::string namestart = ( "" == prefix ? prefix + "-p" : "p" );
+  std::string namestart = ( "" == prefix ? "p" : prefix + "-p" );
 
   int initrslt = initDataSet( outdir, namestart + std::to_string( patientno ),
       compression );
