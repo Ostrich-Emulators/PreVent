@@ -37,6 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/DataRow.o \
 	${OBJECTDIR}/Formats.o \
+	${OBJECTDIR}/Hdf5Reader.o \
 	${OBJECTDIR}/Hdf5Writer.o \
 	${OBJECTDIR}/ReadInfo.o \
 	${OBJECTDIR}/Reader.o \
@@ -90,6 +91,11 @@ ${OBJECTDIR}/Formats.o: Formats.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Formats.o Formats.cpp
+
+${OBJECTDIR}/Hdf5Reader.o: Hdf5Reader.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Hdf5Reader.o Hdf5Reader.cpp
 
 ${OBJECTDIR}/Hdf5Writer.o: Hdf5Writer.cpp
 	${MKDIR} -p ${OBJECTDIR}

@@ -62,6 +62,14 @@ CND_ARTIFACT_PATH_Debug-xml-to-zl=dist/Debug-xml-to-zl/GNU-Linux/formatconverter
 CND_PACKAGE_DIR_Debug-xml-to-zl=dist/Debug-xml-to-zl/GNU-Linux/package
 CND_PACKAGE_NAME_Debug-xml-to-zl=formatconverter.tar
 CND_PACKAGE_PATH_Debug-xml-to-zl=dist/Debug-xml-to-zl/GNU-Linux/package/formatconverter.tar
+# Debug-hdf5-to-wfdb configuration
+CND_PLATFORM_Debug-hdf5-to-wfdb=GNU-Linux
+CND_ARTIFACT_DIR_Debug-hdf5-to-wfdb=dist/Debug-hdf5-to-wfdb/GNU-Linux
+CND_ARTIFACT_NAME_Debug-hdf5-to-wfdb=formatconverter
+CND_ARTIFACT_PATH_Debug-hdf5-to-wfdb=dist/Debug-hdf5-to-wfdb/GNU-Linux/formatconverter
+CND_PACKAGE_DIR_Debug-hdf5-to-wfdb=dist/Debug-hdf5-to-wfdb/GNU-Linux/package
+CND_PACKAGE_NAME_Debug-hdf5-to-wfdb=formatconverter.tar
+CND_PACKAGE_PATH_Debug-hdf5-to-wfdb=dist/Debug-hdf5-to-wfdb/GNU-Linux/package/formatconverter.tar
 #
 # include compiler specific variables
 #

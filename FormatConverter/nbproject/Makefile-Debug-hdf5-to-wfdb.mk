@@ -23,7 +23,7 @@ AS=as
 # Macros
 CND_PLATFORM=GNU-Linux
 CND_DLIB_EXT=so
-CND_CONF=Debug-zl-to-wfdb
+CND_CONF=Debug-hdf5-to-wfdb
 CND_DISTDIR=dist
 CND_BUILDDIR=build
 

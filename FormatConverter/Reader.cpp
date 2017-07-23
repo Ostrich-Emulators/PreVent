@@ -3,6 +3,7 @@
 #include "SignalData.h"
 #include "WfdbReader.h"
 #include "ZlReader.h"
+#include "Hdf5Reader.h"
 #include "StpXmlReader.h"
 
 Reader::Reader( ) : largefile( false ) {
@@ -23,6 +24,10 @@ std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
       return std::unique_ptr<Reader>( new ZlReader( ) );
     case STPXML:
       return std::unique_ptr<Reader>( new StpXmlReader( ) );
+    case HDF5:
+      return std::unique_ptr<Reader>( new Hdf5Reader() );
+    default:
+      throw "reader not yet implemented";
   }
 }
 

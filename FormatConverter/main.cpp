@@ -112,61 +112,43 @@ int main( int argc, char** argv ) {
     helpAndExit( argv[0], "--to format not recognized" );
   }
 
+  std::unique_ptr<Reader> from;
+  std::unique_ptr<Writer> to;
+  try {
+    from = Reader::get( fromfmt );
+    to = Writer::get( tofmt );
+  }
+  catch ( std::string x ) {
+    std::cerr << x << std::endl;
+  }
 
-  std::unique_ptr<Reader> from = Reader::get( fromfmt );
-  std::unique_ptr<Writer> to = Writer::get( tofmt );
-
+  int returncode = 0;
   // send the files through
   for ( int i = optind; i < argc; i++ ) {
     ReadInfo data;
     std::cout << "converting " << argv[i]
         << " from " << fromstr
         << " to " << tostr << std::endl;
-    from->prepare( argv[i], data );
     to->setOutputDir( outdir );
     to->setCompression( compression );
     to->setOutputPrefix( prefix );
-    std::vector<std::string> files = to->write( from, data );
-    from->finish();
+    
+    if ( from->prepare( argv[i], data ) < 0 ) {
+      std::cerr << "could not prepare file for reading" << std::endl;
+      returncode = -1;
+      continue;
+    }
+    else {
+      std::vector<std::string> files = to->write( from, data );
+      from->finish( );
 
-    for ( const auto& f : files ) {
-      std::cout << " written to " << f << std::endl;
+      for ( const auto& f : files ) {
+        std::cout << " written to " << f << std::endl;
+      }
     }
   }
 
-//  H5::Exception::dontPrint( );
-//
-//  try {
-//    ZlReader writer( hdf5path, compression, bigfile, prefix );
-//    writer.convert( xmlpath );
-//  }
-//  catch ( FileIException error ) {
-//    std::cerr << "could not open output file" << std::endl;
-//    error.printError( );
-//    return 1;
-//  }// catch failure caused by the DataSet operations
-//  catch ( DataSetIException error ) {
-//    error.printError( );
-//    return 2;
-//  }// catch failure caused by the DataSpace operations
-//  catch ( DataSpaceIException error ) {
-//    error.printError( );
-//    return 3;
-//  }// catch failure caused by the DataSpace operations
-//  catch ( DataTypeIException error ) {
-//    error.printError( );
-//    return 4;
-//  }
-//  catch ( const std::exception& ex ) {
-//    std::cerr << "unhandled exception " << ex.what( ) << std::endl;
-//    return 5;
-//  }
-//  catch ( const std::string& ex ) {
-//    std::cerr << "unhandled exception " << ex << std::endl;
-//    return 6;
-//  }
-
-  return 0;
+  return returncode;
 }
 
 
