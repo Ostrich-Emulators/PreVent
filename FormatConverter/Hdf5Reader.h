@@ -15,7 +15,9 @@
 #define HDF5READER_H
 
 #include "Reader.h"
-#include <ctime>
+
+#include <H5Cpp.h>
+#include <map>
 
 class Hdf5Reader : public Reader {
 public:
@@ -32,6 +34,14 @@ protected:
 private:
 	Hdf5Reader( const Hdf5Reader& );
 
+	std::string metastr( const H5::Attribute& attr ) const;
+	void copymetas( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
+	void fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
+	void readDataSet( H5::Group& group, const std::string& name, const bool& iswave,
+			ReadInfo& info ) const;
+	std::string upgradeMetaKey( const std::string& oldkey )const;
+
+	H5::H5File file;
 };
 
 #endif /* HDF5READER_H */

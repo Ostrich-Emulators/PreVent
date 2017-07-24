@@ -11,7 +11,6 @@
  * Created on August 26, 2016, 12:58 PM
  */
 
-#include <hdf5.h>
 #include <iostream>
 #include <utility>
 #include <chrono>
@@ -145,12 +144,6 @@ void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace& space,
 
 void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
     SignalData& data, int hz ) {
-
-  // WARNING: --------------------------------------------------------- //
-  // WARNING: the data in the DataSetCache is always sampled at 240Hz - //
-  // WARNING: but some waves are up-sampled, so we must fix the       - //
-  // WARNING: sampling rate here before writing the data to the file  - //
-  // WARNING: --------------------------------------------------------- //
 
   int rows = data.size( );
   const hsize_t maxslabcnt = 40960;

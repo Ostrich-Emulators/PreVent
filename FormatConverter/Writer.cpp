@@ -112,6 +112,10 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     retcode = from->fill( data, retcode );
   }
 
+  if ( ReadResult::ERROR == retcode ) {
+    std::cerr << "error reading file" << std::endl;
+  }
+  
   return list;
 }
 
