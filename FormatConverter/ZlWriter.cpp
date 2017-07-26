@@ -12,7 +12,7 @@
 #include <fstream>
 #include <set>
 
-#include "ReadInfo.h"
+#include "SignalSet.h"
 #include "SignalData.h"
 
 ZlWriter::ZlWriter( ) {
@@ -34,7 +34,7 @@ std::string ZlWriter::closeDataSet( ) {
   return filename;
 }
 
-int ZlWriter::drain( ReadInfo& info ) {
+int ZlWriter::drain( SignalSet& info ) {
   time_t firsttime = std::numeric_limits<time_t>::max( );
 
   std::unique_ptr<DataRow> vits[info.vitals( ).size( )];

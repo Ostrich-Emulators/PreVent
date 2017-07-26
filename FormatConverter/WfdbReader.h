@@ -23,10 +23,10 @@ public:
 	static time_t convert( const char * timestr );
 
 protected:
-	int prepare( const std::string& input, ReadInfo& info ) override;
+	int prepare( const std::string& input, SignalSet& info ) override;
 	void finish( ) override;
 
-	ReadResult fill( ReadInfo& data, const ReadResult& lastfill ) override;
+	ReadResult fill( SignalSet& data, const ReadResult& lastfill ) override;
 	int getSize( const std::string& input ) const override;
 
 private:

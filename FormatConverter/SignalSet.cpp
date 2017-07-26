@@ -4,42 +4,42 @@
  * and open the template in the editor.
  */
 
-#include "ReadInfo.h"
+#include "SignalSet.h"
 #include "SignalData.h"
 
-ReadInfo::ReadInfo( ) : largefile( false ) {
+SignalSet::SignalSet( ) : largefile( false ) {
 }
 
-ReadInfo::~ReadInfo( ) {
+SignalSet::~SignalSet( ) {
 }
 
-ReadInfo::ReadInfo( const ReadInfo& ) {
+SignalSet::SignalSet( const SignalSet& ) {
 }
 
-ReadInfo ReadInfo::operator=(const ReadInfo&) {
+SignalSet SignalSet::operator=(const SignalSet&) {
 }
 
-void ReadInfo::setFileSupport( bool b ) {
+void SignalSet::setFileSupport( bool b ) {
   largefile = b;
 }
 
-std::map<std::string, std::unique_ptr<SignalData>>&ReadInfo::vitals( ) {
+std::map<std::string, std::unique_ptr<SignalData>>&SignalSet::vitals( ) {
   return vmap;
 }
 
-std::map<std::string, std::unique_ptr<SignalData>>&ReadInfo::waves( ) {
+std::map<std::string, std::unique_ptr<SignalData>>&SignalSet::waves( ) {
   return wmap;
 }
 
-std::map<std::string, std::string>& ReadInfo::metadata( ) {
+std::map<std::string, std::string>& SignalSet::metadata( ) {
   return metamap;
 }
 
-void ReadInfo::addMeta( const std::string& key, const std::string& val ) {
+void SignalSet::addMeta( const std::string& key, const std::string& val ) {
   metamap[key] = val;
 }
 
-std::unique_ptr<SignalData>& ReadInfo::addVital( const std::string& name, bool * added ) {
+std::unique_ptr<SignalData>& SignalSet::addVital( const std::string& name, bool * added ) {
   int cnt = vmap.count( name );
   if ( 0 == cnt ) {
     vmap.insert( std::make_pair( name,
@@ -54,7 +54,7 @@ std::unique_ptr<SignalData>& ReadInfo::addVital( const std::string& name, bool *
   return vmap[name];
 }
 
-std::unique_ptr<SignalData>& ReadInfo::addWave( const std::string& name, bool * added ) {
+std::unique_ptr<SignalData>& SignalSet::addWave( const std::string& name, bool * added ) {
   int cnt = wmap.count( name );
   if ( 0 == cnt ) {
     wmap.insert( std::make_pair( name,
@@ -69,7 +69,7 @@ std::unique_ptr<SignalData>& ReadInfo::addWave( const std::string& name, bool * 
   return wmap[name];
 }
 
-void ReadInfo::reset( bool signalDataOnly ) {
+void SignalSet::reset( bool signalDataOnly ) {
   vmap.clear( );
   wmap.clear( );
 

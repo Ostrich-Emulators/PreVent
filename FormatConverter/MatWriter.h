@@ -20,7 +20,7 @@
 #include <ctime>
 
 class SignalData;
-class ReadInfo;
+class SignalSet;
 
 class MatWriter : public Writer {
 public:
@@ -31,7 +31,7 @@ protected:
 	int initDataSet( const std::string& outdir, const std::string& namestart,
 			int compression );
 	std::string closeDataSet( );
-	int drain( ReadInfo& );
+	int drain( SignalSet& );
 
 private:
 	MatWriter( const MatWriter& orig );
@@ -43,7 +43,7 @@ private:
 	std::string fileloc;
 	std::ofstream out;
 	time_t firsttime;
-	ReadInfo * dataptr;
+	SignalSet * dataptr;
 };
 
 

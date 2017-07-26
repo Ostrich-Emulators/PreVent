@@ -40,9 +40,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/Hdf5Reader.o \
 	${OBJECTDIR}/Hdf5Writer.o \
 	${OBJECTDIR}/MatWriter.o \
-	${OBJECTDIR}/ReadInfo.o \
 	${OBJECTDIR}/Reader.o \
 	${OBJECTDIR}/SignalData.o \
+	${OBJECTDIR}/SignalSet.o \
 	${OBJECTDIR}/StpXmlReader.o \
 	${OBJECTDIR}/StreamChunkReader.o \
 	${OBJECTDIR}/WfdbReader.o \
@@ -108,11 +108,6 @@ ${OBJECTDIR}/MatWriter.o: MatWriter.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/MatWriter.o MatWriter.cpp
 
-${OBJECTDIR}/ReadInfo.o: ReadInfo.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ReadInfo.o ReadInfo.cpp
-
 ${OBJECTDIR}/Reader.o: Reader.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -122,6 +117,11 @@ ${OBJECTDIR}/SignalData.o: SignalData.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SignalData.o SignalData.cpp
+
+${OBJECTDIR}/SignalSet.o: SignalSet.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SignalSet.o SignalSet.cpp
 
 ${OBJECTDIR}/StpXmlReader.o: StpXmlReader.cpp
 	${MKDIR} -p ${OBJECTDIR}

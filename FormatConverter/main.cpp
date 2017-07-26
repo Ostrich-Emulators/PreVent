@@ -22,7 +22,7 @@
 #include "Formats.h"
 #include "SignalData.h"
 #include "DataRow.h"
-#include "ReadInfo.h"
+#include "SignalSet.h"
 
 #ifndef H5_NO_NAMESPACE
 using namespace H5;
@@ -125,7 +125,7 @@ int main( int argc, char** argv ) {
   int returncode = 0;
   // send the files through
   for ( int i = optind; i < argc; i++ ) {
-    ReadInfo data;
+    SignalSet data;
     std::cout << "converting " << argv[i]
         << " from " << fromstr
         << " to " << tostr << std::endl;

@@ -36,15 +36,15 @@ public:
 	virtual ~StpXmlReader( );
 
 protected:
-	ReadResult fill( ReadInfo&, const ReadResult& lastfill ) override;
+	ReadResult fill( SignalSet&, const ReadResult& lastfill ) override;
 	int getSize( const std::string& input ) const override;
-	int prepare( const std::string& input, ReadInfo& info ) override;
+	int prepare( const std::string& input, SignalSet& info ) override;
 	void finish( ) override;
 
 private:
 	StpXmlReader( const StpXmlReader& orig );
 
-	ReadResult processNode( ReadInfo& info );
+	ReadResult processNode( SignalSet& info );
 
 	static std::string resample( const std::string& data, int hz );
 
@@ -60,13 +60,13 @@ private:
 	 * Handles a set of vitals. The Reader is expected to be at a VitalSigns element
 	 * @param info where to save the data
 	 */
-	void handleVitalsSet( ReadInfo& info );
+	void handleVitalsSet( SignalSet& info );
 
-	void handleWaveformSet( ReadInfo& info );
+	void handleWaveformSet( SignalSet& info );
 
 	DataRow handleOneVs( std::string& param, std::string& uom );
 
-	ReadResult handleSegmentPatientName( ReadInfo& info );
+	ReadResult handleSegmentPatientName( SignalSet& info );
 
 	/**
 	 * Checks if we should rollover given a VitalSigns or Waveforms element. As

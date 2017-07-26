@@ -28,7 +28,7 @@ protected:
 	int initDataSet( const std::string& outdir, const std::string& namestart,
 			int compression );
 	std::string closeDataSet( );
-	int drain( ReadInfo& );
+	int drain( SignalSet& );
 
 private:
 	ZlWriter( const ZlWriter& orig );

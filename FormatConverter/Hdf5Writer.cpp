@@ -238,7 +238,7 @@ int Hdf5Writer::initDataSet( const std::string& directory, const std::string& na
   return 0;
 }
 
-int Hdf5Writer::drain( ReadInfo& info ) {
+int Hdf5Writer::drain( SignalSet& info ) {
   // copy any new metadata
   dataptr = &info;
 
@@ -263,7 +263,7 @@ int Hdf5Writer::drain( ReadInfo& info ) {
 }
 
 std::string Hdf5Writer::closeDataSet( ) {
-  ReadInfo& data = *dataptr;
+  SignalSet& data = *dataptr;
 
   tm * time = gmtime( &firstTime );
   char buf[sizeof "-YYYYMMDD.hdf5"];

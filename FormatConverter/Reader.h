@@ -8,7 +8,7 @@
 #include <string>
 #include <memory>
 
-#include "ReadInfo.h"
+#include "SignalSet.h"
 
 class SignalData;
 class DataRow;
@@ -30,7 +30,7 @@ public:
 	 * @param data reset this ReadInfo as well
 	 * @return 0 (success), -1 (error), -2 (fatal)
 	 */
-	virtual int prepare( const std::string& input, ReadInfo& info );
+	virtual int prepare( const std::string& input, SignalSet& info );
 
 	/**
 	 * Closes the current file/stream. This function must be called when
@@ -45,7 +45,7 @@ public:
 	 * @param lastresult the outcome of the previous call to fill()
 	 * @return the result code
 	 */
-	virtual ReadResult fill( ReadInfo& read,
+	virtual ReadResult fill( SignalSet& read,
 			const ReadResult& lastresult = ReadResult::NORMAL ) = 0;
 
 protected:

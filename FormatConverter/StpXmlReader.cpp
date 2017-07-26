@@ -56,7 +56,7 @@ int StpXmlReader::getSize( const std::string& input ) const {
   return info.st_size;
 }
 
-int StpXmlReader::prepare( const std::string& input, ReadInfo& info ) {
+int StpXmlReader::prepare( const std::string& input, SignalSet& info ) {
   int rslt = Reader::prepare( input, info );
   if ( 0 == rslt ) {
     if ( NULL == reader ) {
@@ -68,7 +68,7 @@ int StpXmlReader::prepare( const std::string& input, ReadInfo& info ) {
   return rslt;
 }
 
-ReadResult StpXmlReader::fill( ReadInfo & info, const ReadResult& lastfill ) {
+ReadResult StpXmlReader::fill( SignalSet & info, const ReadResult& lastfill ) {
   if ( ReadResult::END_OF_DAY == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
     info.metadata( ).insert( savedmeta.begin( ), savedmeta.end( ) );
   }
@@ -82,7 +82,7 @@ ReadResult StpXmlReader::fill( ReadInfo & info, const ReadResult& lastfill ) {
   return rslt;
 }
 
-ReadResult StpXmlReader::processNode( ReadInfo& info ) {
+ReadResult StpXmlReader::processNode( SignalSet& info ) {
   int ret = next( );
   if ( ret < 0 ) {
     return ReadResult::ERROR;
@@ -170,7 +170,7 @@ ReadResult StpXmlReader::processNode( ReadInfo& info ) {
   return ReadResult::NORMAL;
 }
 
-ReadResult StpXmlReader::handleSegmentPatientName( ReadInfo& info ) {
+ReadResult StpXmlReader::handleSegmentPatientName( SignalSet& info ) {
   std::string patientname = textAndClose( );
   savedmeta["Patient Name"] = patientname;
 
@@ -212,7 +212,7 @@ bool StpXmlReader::isRollover( ) {
   return false;
 }
 
-void StpXmlReader::handleWaveformSet( ReadInfo& info ) {
+void StpXmlReader::handleWaveformSet( SignalSet& info ) {
   next( );
   std::string element = stringAndFree( xmlTextReaderName( reader ) );
   while ( "WaveformData" == element ) {
@@ -252,7 +252,7 @@ void StpXmlReader::handleWaveformSet( ReadInfo& info ) {
   }
 }
 
-void StpXmlReader::handleVitalsSet( ReadInfo & info ) {
+void StpXmlReader::handleVitalsSet( SignalSet & info ) {
   next( );
   std::string element = stringAndFree( xmlTextReaderName( reader ) );
   while ( "VS" == element ) {

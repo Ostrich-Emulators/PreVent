@@ -65,7 +65,7 @@ void Writer::setOutputDir( const std::string& _outdir ) {
 }
 
 std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
-    ReadInfo& data ) {
+    SignalSet& data ) {
   std::string lastPatientName = "";
   int patientno = 1;
 

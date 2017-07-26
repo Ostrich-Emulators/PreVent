@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "Formats.h"
-#include "ReadInfo.h"
+#include "SignalSet.h"
 
 class Reader;
 
@@ -23,7 +23,7 @@ public:
 	void setCompression( int lev );
 
 	virtual std::vector<std::string> write( std::unique_ptr<Reader>& from,
-			ReadInfo& data );
+			SignalSet& data );
 
 protected:
 	static std::string getDateSuffix( const time_t& date );
@@ -51,7 +51,7 @@ protected:
 	 * @param info The data to drain
 	 * @return 0 (success) -1 (error)
 	 */
-	virtual int drain( ReadInfo& info ) = 0;
+	virtual int drain( SignalSet& info ) = 0;
 
 private:
 	Writer( const Writer& );

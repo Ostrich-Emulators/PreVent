@@ -25,10 +25,10 @@ public:
 	virtual ~Hdf5Reader( );
 
 protected:
-	int prepare( const std::string& input, ReadInfo& info ) override;
+	int prepare( const std::string& input, SignalSet& info ) override;
 	void finish( ) override;
 
-	ReadResult fill( ReadInfo& data, const ReadResult& lastfill ) override;
+	ReadResult fill( SignalSet& data, const ReadResult& lastfill ) override;
 	int getSize( const std::string& input ) const override;
 
 private:
@@ -38,7 +38,7 @@ private:
 	void copymetas( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
 	void fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
 	void readDataSet( H5::Group& group, const std::string& name, const bool& iswave,
-			ReadInfo& info ) const;
+			SignalSet& info ) const;
 	std::string upgradeMetaKey( const std::string& oldkey )const;
 
 	H5::H5File file;

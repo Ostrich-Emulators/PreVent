@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <ctime>
 
-#include "ReadInfo.h"
+#include "SignalSet.h"
 #include "SignalData.h"
 
 WfdbWriter::WfdbWriter( ) {
@@ -47,7 +47,7 @@ std::string WfdbWriter::closeDataSet( ) {
   return fileloc + ".hea";
 }
 
-int WfdbWriter::drain( ReadInfo& info ) {
+int WfdbWriter::drain( SignalSet& info ) {
   auto& vitals = info.vitals( );
   auto& waves = info.waves( );
 

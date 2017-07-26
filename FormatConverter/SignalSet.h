@@ -11,8 +11,8 @@
  * Created on July 10, 2017, 8:02 AM
  */
 
-#ifndef READINFO_H
-#define READINFO_H
+#ifndef SIGNALSET_H
+#define SIGNALSET_H
 
 #include "DataRow.h"
 #include <memory>
@@ -21,10 +21,10 @@
 
 class SignalData;
 
-class ReadInfo {
+class SignalSet {
 public:
-	ReadInfo( );
-	virtual ~ReadInfo( );
+	SignalSet( );
+	virtual ~SignalSet( );
 	std::map<std::string, std::unique_ptr<SignalData>>&vitals( );
 	std::map<std::string, std::unique_ptr<SignalData>>&waves( );
 	std::map<std::string, std::string>& metadata( );
@@ -52,8 +52,8 @@ public:
 	void setFileSupport( bool );
 
 private:
-	ReadInfo( const ReadInfo& );
-	ReadInfo operator=(const ReadInfo&);
+	SignalSet( const SignalSet& );
+	SignalSet operator=(const SignalSet&);
 
 	std::map<std::string, std::unique_ptr<SignalData>> vmap;
 	std::map<std::string, std::unique_ptr<SignalData>> wmap;
@@ -62,5 +62,5 @@ private:
 };
 
 
-#endif /* READINFO_H */
+#endif /* SIGNALSET_H */
 

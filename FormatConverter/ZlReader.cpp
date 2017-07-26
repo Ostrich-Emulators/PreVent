@@ -62,7 +62,7 @@ int ZlReader::getSize( const std::string& input ) const {
   return info.st_size;
 }
 
-int ZlReader::prepare( const std::string& input, ReadInfo& info ) {
+int ZlReader::prepare( const std::string& input, SignalSet& info ) {
   int rslt = Reader::prepare( input, info );
   if ( 0 != rslt ) {
     return rslt;
@@ -90,7 +90,7 @@ int ZlReader::prepare( const std::string& input, ReadInfo& info ) {
   return 0;
 }
 
-ReadResult ZlReader::fill( ReadInfo& info, const ReadResult& ) {
+ReadResult ZlReader::fill( SignalSet& info, const ReadResult& ) {
   // for this class we say a chunk is a full data set for one patient,
   // so read until we see another HEADER line in the text
   std::string onepatientdata = leftoverText + stream->readNextChunk( );
@@ -152,7 +152,7 @@ ReadResult ZlReader::fill( ReadInfo& info, const ReadResult& ) {
   return retcode;
 }
 
-void ZlReader::handleOneLine( const std::string& chunk, ReadInfo& info ) {
+void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
   if ( HEADER == chunk ) {
     state = zlReaderState::IN_HEADER;
   }

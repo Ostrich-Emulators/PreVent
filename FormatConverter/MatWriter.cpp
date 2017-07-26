@@ -13,7 +13,7 @@
 #include <bitset>
 
 #include "config.h"
-#include "ReadInfo.h"
+#include "SignalSet.h"
 #include "SignalData.h"
 
 MatWriter::MatWriter( ) {
@@ -84,7 +84,7 @@ std::string MatWriter::closeDataSet( ) {
   return matfile;
 }
 
-int MatWriter::drain( ReadInfo& info ) {
+int MatWriter::drain( SignalSet& info ) {
   dataptr = &info;
   for ( auto& m : info.vitals( ) ) {
     time_t t = m.second->startTime( );
@@ -103,7 +103,6 @@ int MatWriter::drain( ReadInfo& info ) {
 }
 
 int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&data ) {
-  //std::bitset header(32);
   std::stringstream dt;
   dt << 3;
 

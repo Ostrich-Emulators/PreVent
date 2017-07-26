@@ -22,7 +22,7 @@ Hdf5Reader::Hdf5Reader( const Hdf5Reader& ) {
 Hdf5Reader::~Hdf5Reader( ) {
 }
 
-int Hdf5Reader::prepare( const std::string& filename, ReadInfo& info ) {
+int Hdf5Reader::prepare( const std::string& filename, SignalSet& info ) {
   file = H5::H5File( filename, H5F_ACC_RDONLY );
   return 0;
 }
@@ -31,7 +31,7 @@ void Hdf5Reader::finish( ) {
   file.close( );
 }
 
-ReadResult Hdf5Reader::fill( ReadInfo& info, const ReadResult& ) {
+ReadResult Hdf5Reader::fill( SignalSet& info, const ReadResult& ) {
   H5::Group root = file.openGroup( "/" );
   for ( int i = 0; i < root.getNumAttrs( ); i++ ) {
     H5::Attribute a = root.openAttribute( i );
@@ -62,7 +62,7 @@ int Hdf5Reader::getSize( const std::string& input ) const {
 }
 
 void Hdf5Reader::readDataSet( H5::Group& group, const std::string& name,
-    const bool& iswave, ReadInfo& info ) const {
+    const bool& iswave, SignalSet& info ) const {
   std::unique_ptr<SignalData>& signal = info.addVital( name );
   H5::DataSet dataset = group.openDataSet( name );
   copymetas( signal, dataset );

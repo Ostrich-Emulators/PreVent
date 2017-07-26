@@ -36,10 +36,10 @@ public:
 	virtual ~ZlReader( );
 
 protected:
-	ReadResult fill( ReadInfo&, const ReadResult& lastfill ) override;
+	ReadResult fill( SignalSet&, const ReadResult& lastfill ) override;
 	int getSize( const std::string& input ) const override;
 
-	int prepare( const std::string& input, ReadInfo& info ) override;
+	int prepare( const std::string& input, SignalSet& info ) override;
 	void finish( ) override;
 
 private:
@@ -52,8 +52,8 @@ private:
 	zlReaderState state;
 	std::unique_ptr<StreamChunkReader> stream;
 
-	void handleInputChunk( std::string& chunk, ReadInfo& info );
-	void handleOneLine( const std::string& chunk, ReadInfo& info );
+	void handleInputChunk( std::string& chunk, SignalSet& info );
+	void handleOneLine( const std::string& chunk, SignalSet& info );
 
 	static const std::string HEADER;
 	static const std::string VITAL;
