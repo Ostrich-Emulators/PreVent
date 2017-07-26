@@ -26,6 +26,8 @@ public:
 			ReadInfo& data );
 
 protected:
+	static std::string getDateSuffix( const time_t& date );
+
 	/**
 	 * Initializes a new (possibly temporary) data file
 	 * @param newfile

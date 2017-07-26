@@ -8,6 +8,7 @@
 #include "Hdf5Writer.h"
 #include "WfdbWriter.h"
 #include "ZlWriter.h"
+#include "MatWriter.h"
 
 Writer::Writer( ) {
 }
@@ -27,9 +28,17 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
       return std::unique_ptr<Writer>( new WfdbWriter( ) );
     case DSZL:
       return std::unique_ptr<Writer>( new ZlWriter( ) );
+    case MAT:
+      return std::unique_ptr<Writer>( new MatWriter( ) );
     default:
       throw "writer not yet implemented";
   }
+}
+
+std::string Writer::getDateSuffix( const time_t& date ){
+  char recsuffix[sizeof "-YYYYMMDD"];
+  std::strftime( recsuffix, sizeof recsuffix, "-%Y%m%d", gmtime( &date ) );
+  return std::string( recsuffix );
 }
 
 void Writer::setOutputPrefix( const std::string& pre ) {

@@ -43,6 +43,10 @@
                     <name>Debug-hdf5-to-wfdb</name>
                     <type>1</type>
                 </confElem>
+                <confElem>
+                    <name>Debug-xml-to-mat</name>
+                    <type>1</type>
+                </confElem>
             </confList>
             <formatting>
                 <project-formatting-style>false</project-formatting-style>

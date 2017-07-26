@@ -27,8 +27,11 @@ Format Formats::getValue( const std::string& fmt ) {
   if ( "stpxml" == fmt ) {
     return STPXML;
   }
-  if ( "zl" == fmt ) {
+  if ( "zl" == fmt || "dszl" == fmt ) {
     return DSZL;
+  }
+  if ( "mat" == fmt || "matlab" == fmt ) {
+    return MAT;
   }
   return UNRECOGNIZED;
 }

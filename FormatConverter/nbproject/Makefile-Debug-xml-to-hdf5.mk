@@ -39,6 +39,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Formats.o \
 	${OBJECTDIR}/Hdf5Reader.o \
 	${OBJECTDIR}/Hdf5Writer.o \
+	${OBJECTDIR}/MatWriter.o \
 	${OBJECTDIR}/ReadInfo.o \
 	${OBJECTDIR}/Reader.o \
 	${OBJECTDIR}/SignalData.o \
@@ -101,6 +102,11 @@ ${OBJECTDIR}/Hdf5Writer.o: Hdf5Writer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Hdf5Writer.o Hdf5Writer.cpp
+
+${OBJECTDIR}/MatWriter.o: MatWriter.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/MatWriter.o MatWriter.cpp
 
 ${OBJECTDIR}/ReadInfo.o: ReadInfo.cpp
 	${MKDIR} -p ${OBJECTDIR}

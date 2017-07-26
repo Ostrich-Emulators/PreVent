@@ -16,9 +16,26 @@
 
 const char dirsep =
 #ifdef __linux__
-        '/';
+		'/';
 #else
-        '\\';
+		'\\';
+#endif
+
+const std::string osname =
+#ifdef _WIN32
+		"Windows 32-bit";
+#elif _WIN64
+		"Windows 64-bit";
+#elif __unix || __unix__
+		"Unix";
+#elif __APPLE__ || __MACH__
+		"Mac OSX";
+#elif __linux__
+		"Linux";
+#elif __FreeBSD__
+		"FreeBSD";
+#else
+		"Other";
 #endif
 
 #endif /* CONFIG_H */
