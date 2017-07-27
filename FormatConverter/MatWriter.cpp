@@ -106,15 +106,33 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&d
 
   // header bytes 1-4 (Array tag)
   header.put( 0x00 );
+  header.put( 0x00 );
+  header.put( 0x00 );
   header.put( 0x0E );
 
   // 4 bytes for size
   header.put( 0x00 );
   header.put( 0x00 );
-
-  // array flags
   header.put( 0x00 );
-  header.put( 0x4A ); // global data, int16 types
+  header.put( 0x38 );
+
+  // array flags (tag) -- these values never change?
+  header.put( 0x00 );
+  header.put( 0x00 );
+  header.put( 0x00 );
+  header.put( 0x06 );
+  header.put( 0x00 );
+  header.put( 0x00 );
+  header.put( 0x00 );
+  header.put( 0x08 );
+
+  // array flags (values)
+  header.put( 0x00 );
+  header.put( 0x00 );
+  header.put( 0x00 ); // can be array flags
+  header.put( 0x0A ); // int16 types
+  header.put( 0x00 );
+  header.put( 0x00 );
   header.put( 0x00 );
   header.put( 0x00 );
 
@@ -128,27 +146,46 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&d
   header.put( 0x00 );
   header.put( 0x08 ); // bytes used in  rows + cols ints (always 8 for 2D arrays)
   header.put( 0x00 );
+  header.put( 0x00 );
+  header.put( 0x00 );
   header.put( 0x02 ); // matrix rows (2)
+  header.put( 0x00 );
+  header.put( 0x00 );
   header.put( 0x00 );
   header.put( 0x02 ); // matrix cols (2)
 
   // array name tag
   header.put( 0x00 );
   header.put( 0x01 );
+  //header.put( 0x00 );
+  //header.put( 0x00 );
   header.put( 0x00 );
-  header.put( 0x08 ); // # chars in name
-  header << "my_arrAy";
+  header.put( 0x04 ); // # chars in name
+  header << "my_a";
 
   // data tag
   header.put( 0x00 ); // data type (3 == int16)
+  header.put( 0x00 );
+  header.put( 0x00 );
   header.put( 0x03 );
-  header.put( 0x00 ); // size of element data
-  header.put( 0x08 ); // 8 == 2x2 array
+  header.put( 0x00 ); // size of matrix data
+  header.put( 0x00 ); // 8 == 2x2 array of int16s
+  header.put( 0x00 );
+  header.put( 0x08 ); 
 
+  // matrix values
+  header.put( 0x00 );
+  header.put( 0x01 );
 
+  header.put( 0x00 );
+  header.put( 0x02 );
 
+  header.put( 0x00 );
+  header.put( 0x06 );
 
-
+  header.put( 0x00 );
+  header.put( 0x07 );
+  
   out << header.str( );
 
   return 0;
