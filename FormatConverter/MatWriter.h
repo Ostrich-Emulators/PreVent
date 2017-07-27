@@ -17,7 +17,9 @@
 #include "Writer.h"
 #include <iostream>
 #include <fstream>
+
 #include <ctime>
+#include <matio.h>
 
 class SignalData;
 class SignalSet;
@@ -38,12 +40,12 @@ private:
 
 	int writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&data );
 	int writeWaves( std::map<std::string, std::unique_ptr<SignalData>>&data );
-	void writeheader( );
 
 	std::string fileloc;
-	std::ofstream out;
+	mat_t * matfile;
 	time_t firsttime;
 	SignalSet * dataptr;
+	matio_compression compression;
 };
 
 

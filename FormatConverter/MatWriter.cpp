@@ -25,50 +25,31 @@ MatWriter::MatWriter( const MatWriter& ) {
 MatWriter::~MatWriter( ) {
 }
 
-int MatWriter::initDataSet( const std::string& directory, const std::string& namestart, int ) {
+int MatWriter::initDataSet( const std::string& directory, const std::string& namestart, int comp ) {
   firsttime = std::numeric_limits<time_t>::max( );
   fileloc = directory + namestart;
-  out.open( fileloc, std::ios::out | std::ios::trunc | std::ios::binary );
+  compression = ( 0 == comp ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
 
-  writeheader( );
-
-  return 0;
-}
-
-void MatWriter::writeheader( ) {
   char fulldatetime[sizeof "Thu Nov 31 10:10:27 1997"];
   time_t now;
   time( &now );
   std::strftime( fulldatetime, sizeof fulldatetime, "%c", gmtime( &now ) );
 
-  std::stringstream ss;
-  ss << "MATLAB 5.0 MAT-file, Platform: " << osname
+  std::stringstream header;
+  header << "MATLAB 5.0 MAT-file, Platform: " << osname
       << ", Created by: fmtcnv (rpb6eg@virginia.edu) on: "
       << fulldatetime;
-  std::string str( ss.str( ) );
 
-  char header[124];
-  int sz = str.copy( header, 116 );
-  if ( sz > 115 ) {
-    sz = 115;
-  }
-  header[sz] = '\0';
+  matfile = Mat_CreateVer( fileloc.c_str(), header.str().c_str(), MAT_FT_MAT5 );
 
-  out << header;
-  for ( int i = sz + 1; i < 125; i++ ) {
-    out << ' ';
-  }
-
-  out.put( 0x01 );
-  out.put( 0x00 );
-  out << 'M' << 'I';
+  return !( matfile );
 }
 
 std::string MatWriter::closeDataSet( ) {
   writeVitals( dataptr->vitals( ) );
   writeWaves( dataptr->waves( ) );
 
-  out.close( );
+  Mat_Close( matfile );
 
   std::ifstream src( fileloc, std::ios::binary );
   std::string matfile = fileloc + getDateSuffix( firsttime ) + ".mat";
@@ -102,91 +83,18 @@ int MatWriter::drain( SignalSet& info ) {
 }
 
 int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&data ) {
-  std::stringstream header;
+  for ( auto& map : data ) {
+    std::string vital( map.first );
+    std::unique_ptr<SignalData>& data = map.second;
 
-  // header bytes 1-4 (Array tag)
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x0E );
+    short a[4] = { 1, 2, 6, 7 };
+    size_t dims[2] = { 1, 4 };
 
-  // 4 bytes for size
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x38 );
+    matvar_t * var = Mat_VarCreate( vital.c_str( ), MAT_C_INT16, MAT_T_INT16, 2, dims, a, 0 );
+    Mat_VarWrite( matfile, var, compression );
+    Mat_VarFree( var );
+  }
 
-  // array flags (tag) -- these values never change?
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x06 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x08 );
-
-  // array flags (values)
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x00 ); // can be array flags
-  header.put( 0x0A ); // int16 types
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-
-  // dimensions
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x05 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x08 ); // bytes used in  rows + cols ints (always 8 for 2D arrays)
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x02 ); // matrix rows (2)
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x02 ); // matrix cols (2)
-
-  // array name tag
-  header.put( 0x00 );
-  header.put( 0x01 );
-  //header.put( 0x00 );
-  //header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x04 ); // # chars in name
-  header << "my_a";
-
-  // data tag
-  header.put( 0x00 ); // data type (3 == int16)
-  header.put( 0x00 );
-  header.put( 0x00 );
-  header.put( 0x03 );
-  header.put( 0x00 ); // size of matrix data
-  header.put( 0x00 ); // 8 == 2x2 array of int16s
-  header.put( 0x00 );
-  header.put( 0x08 ); 
-
-  // matrix values
-  header.put( 0x00 );
-  header.put( 0x01 );
-
-  header.put( 0x00 );
-  header.put( 0x02 );
-
-  header.put( 0x00 );
-  header.put( 0x06 );
-
-  header.put( 0x00 );
-  header.put( 0x07 );
-  
-  out << header.str( );
 
   return 0;
 }
