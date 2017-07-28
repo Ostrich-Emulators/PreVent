@@ -43,6 +43,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Reader.o \
 	${OBJECTDIR}/SignalData.o \
 	${OBJECTDIR}/SignalSet.o \
+	${OBJECTDIR}/SignalUtils.o \
 	${OBJECTDIR}/StpXmlReader.o \
 	${OBJECTDIR}/StreamChunkReader.o \
 	${OBJECTDIR}/WfdbReader.o \
@@ -122,6 +123,11 @@ ${OBJECTDIR}/SignalSet.o: SignalSet.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` `pkg-config --cflags matio` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SignalSet.o SignalSet.cpp
+
+${OBJECTDIR}/SignalUtils.o: SignalUtils.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` `pkg-config --cflags matio` -std=c++11  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SignalUtils.o SignalUtils.cpp
 
 ${OBJECTDIR}/StpXmlReader.o: StpXmlReader.cpp
 	${MKDIR} -p ${OBJECTDIR}

@@ -243,8 +243,23 @@ void StpXmlReader::handleWaveformSet( SignalSet& info ) {
         }
       }
 
-      sig->metad( ).insert( std::make_pair( SignalData::HERTZ, hz ) );
-      sig->add( DataRow( currtime, vals ) );
+      sig->metad( )[SignalData::HERTZ] = hz;
+
+      // Split the vals in half, and make two 1-second DataRows
+      int hz = hz / 2;
+      std::stringstream lines( vals );
+      std::string firstvals;
+      for ( int i = 0; i < hz / 2; i++ ) {
+        std::string each;
+        std::getline( lines, each, ',' );
+        if ( !firstvals.empty( ) ) {
+          firstvals.append( "," );
+        }
+        firstvals.append( each );
+      }
+      std::string secondvals = vals.substr( firstvals.size( ) );
+      sig->add( DataRow( currtime, firstvals ) );
+      sig->add( DataRow( currtime + 1, secondvals ) );
     }
 
     next( );

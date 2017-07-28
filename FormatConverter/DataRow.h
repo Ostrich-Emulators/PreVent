@@ -14,7 +14,7 @@
 #ifndef DATAROW_H
 #define DATAROW_H
 
-#include <time.h>
+#include <ctime>
 #include <string>
 
 class DataRow {

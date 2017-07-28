@@ -31,6 +31,7 @@ class StpXmlReader : public Reader {
 public:
 	static const std::set<std::string> Hz60;
 	static const std::set<std::string> Hz120;
+	static const std::string MISSING_VALUESTR;
 
 	StpXmlReader( );
 	virtual ~StpXmlReader( );
@@ -109,8 +110,6 @@ private:
 	int next( );
 
 	static bool waveIsOk( const std::string& wavedata );
-
-	static const std::string MISSING_VALUESTR;
 
 	xmlTextReaderPtr reader;
 	time_t prevtime;

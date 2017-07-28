@@ -29,8 +29,7 @@ const std::string SignalData::MSM = "Missing Value Marker";
 const std::string SignalData::TIMEZONE = "Timezone";
 
 SignalData::SignalData( const std::string& name, bool largefile )
-: label( name ), firstdata( 2099999999 ), lastdata( 0 ),
-datacount( 0 ) {
+: label( name ), firstdata( 2099999999 ), lastdata( 0 ), datacount( 0 ) {
   file = ( largefile ? std::tmpfile( ) : NULL );
   setScale( 1 );
   setUom( "Uncalib" );
@@ -43,6 +42,15 @@ metadatai( orig.metadatai ), metadatad( orig.metadatad ) {
   for ( auto const& i : orig.data ) {
     data.push_front( std::unique_ptr<DataRow>( new DataRow( *i ) ) );
   }
+}
+
+std::unique_ptr<SignalData> SignalData::shallowcopy( ) {
+  std::unique_ptr<SignalData> copy( new SignalData( label, ( NULL != file ) ) );
+
+  copy->metad( ).insert( metadatad.begin( ), metadatad.end( ) );
+  copy->metai( ).insert( metadatai.begin( ), metadatai.end( ) );
+  copy->metas( ).insert( metadatas.begin( ), metadatas.end( ) );
+  return copy;
 }
 
 std::map<std::string, std::string>& SignalData::metas( ) {

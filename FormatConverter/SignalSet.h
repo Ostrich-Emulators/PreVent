@@ -21,6 +21,10 @@
 
 class SignalData;
 
+enum TimeCounter {
+	VITAL, WAVE, EITHER
+};
+
 class SignalSet {
 public:
 	SignalSet( );
@@ -50,6 +54,8 @@ public:
 	void addMeta( const std::string& key, const std::string& val );
 	void reset( bool signalDataOnly = true );
 	void setFileSupport( bool );
+	time_t earliest( const TimeCounter& tc = EITHER ) const;
+	time_t latest( const TimeCounter& tc = EITHER ) const;
 
 private:
 	SignalSet( const SignalSet& );

@@ -6,6 +6,9 @@
 
 #include "SignalSet.h"
 #include "SignalData.h"
+#include "SignalUtils.h"
+
+#include <limits>
 
 SignalSet::SignalSet( ) : largefile( false ) {
 }
@@ -31,11 +34,45 @@ std::map<std::string, std::unique_ptr<SignalData>>&SignalSet::waves( ) {
   return wmap;
 }
 
+time_t SignalSet::earliest( const TimeCounter& type ) const {
+  time_t early = std::numeric_limits<time_t>::max( );
+
+  if ( TimeCounter::VITAL == type || TimeCounter::EITHER == type ) {
+    early = SignalUtils::firstlast( vmap );
+  }
+  if ( TimeCounter::WAVE == type || TimeCounter::EITHER == type ) {
+    time_t w = SignalUtils::firstlast( wmap );
+    if ( w < early ) {
+      early = w;
+    }
+  }
+
+  return early;
+}
+
+time_t SignalSet::latest( const TimeCounter& type ) const {
+  time_t last = 0;
+
+  if ( TimeCounter::VITAL == type || TimeCounter::EITHER == type ) {
+    SignalUtils::firstlast( vmap, nullptr, &last );
+  }
+
+  if ( TimeCounter::WAVE == type || TimeCounter::EITHER == type ) {
+    time_t w;
+    SignalUtils::firstlast( wmap, nullptr, &w );
+    if ( w > last ) {
+      last = w;
+    }
+  }
+
+  return last;
+}
+
 std::map<std::string, std::string>& SignalSet::metadata( ) {
   return metamap;
 }
 
-void SignalSet::addMeta( const std::string& key, const std::string& val ) {
+void SignalSet::addMeta( const std::string& key, const std::string & val ) {
   metamap[key] = val;
 }
 
@@ -48,6 +85,7 @@ std::unique_ptr<SignalData>& SignalSet::addVital( const std::string& name, bool 
   }
 
   if ( NULL != added ) {
+
     *added = ( 0 == cnt );
   }
 
@@ -63,6 +101,7 @@ std::unique_ptr<SignalData>& SignalSet::addWave( const std::string& name, bool *
   }
 
   if ( NULL != added ) {
+
     *added = ( 0 == cnt );
   }
 

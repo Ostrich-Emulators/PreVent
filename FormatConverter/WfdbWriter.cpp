@@ -14,6 +14,7 @@
 
 #include "SignalSet.h"
 #include "SignalData.h"
+#include "SignalUtils.h"
 
 WfdbWriter::WfdbWriter( ) {
 }
@@ -75,11 +76,8 @@ int WfdbWriter::write( std::map<std::string, std::unique_ptr<SignalData>>&data )
   std::vector<std::string> labels;
   auto synco = sync( data, labels, firstTime );
 
-  char recsuffix[sizeof "-YYYYMMDD"];
-  std::strftime( recsuffix, sizeof recsuffix, "-%Y%m%d", gmtime( &firstTime ) );
-  fileloc += recsuffix;
+  fileloc += getDateSuffix( firstTime );
   std::string output = fileloc + ".dat";
-
 
   WFDB_Siginfo sigs[sigmap.size( )];
   int i = 0;
@@ -128,7 +126,7 @@ std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
   int rows = rowForTime( earliest, latest, 2 ) + 1; // +1 for last time
 
   // WARNING: this logic assumes the largest signal data starts earliest
-  // and ends latest. This isn't necessarily try, as one signal might
+  // and ends latest. This isn't necessarily so, as one signal might
   // start very early, and a different one might end very late, resulting
   // in more indicies for empty data points
 

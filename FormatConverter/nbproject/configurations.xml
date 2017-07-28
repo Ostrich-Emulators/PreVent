@@ -22,6 +22,7 @@
       <itemPath>Reader.h</itemPath>
       <itemPath>SignalData.h</itemPath>
       <itemPath>SignalSet.h</itemPath>
+      <itemPath>SignalUtils.h</itemPath>
       <itemPath>Writer.h</itemPath>
       <itemPath>config.h</itemPath>
     </logicalFolder>
@@ -50,6 +51,7 @@
       <itemPath>Reader.cpp</itemPath>
       <itemPath>SignalData.cpp</itemPath>
       <itemPath>SignalSet.cpp</itemPath>
+      <itemPath>SignalUtils.cpp</itemPath>
       <itemPath>Writer.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
     </logicalFolder>
@@ -132,6 +134,10 @@
       <item path="SignalSet.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -222,6 +228,10 @@
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
@@ -310,6 +320,10 @@
       <item path="SignalSet.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
@@ -400,6 +414,10 @@
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
@@ -488,6 +506,10 @@
       <item path="SignalSet.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
@@ -578,6 +600,10 @@
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
@@ -666,6 +692,10 @@
       <item path="SignalSet.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
@@ -756,6 +786,10 @@
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
@@ -844,6 +878,10 @@
       <item path="SignalSet.cpp" ex="false" tool="1" flavor2="8">
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="8">
       </item>
