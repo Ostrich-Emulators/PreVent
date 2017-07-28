@@ -88,6 +88,7 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&m
   time_t latest;
   SignalUtils::firstlast( map, &earliest, &latest );
   std::vector<std::string> labels;
+  int maxlabelsize = 0;
 
   float freq = map.begin( )->second->metad( ).at( SignalData::HERTZ );
   const int timestep = ( freq < 1 ? 1 / freq : 1 );
@@ -96,6 +97,9 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&m
   for ( auto& m : map ) {
     labels.push_back( m.first );
     scales[m.first] = m.second->scale( );
+    if ( m.first.size( ) > maxlabelsize ) {
+      maxlabelsize = m.first.size( );
+    }
   }
 
   std::vector<std::vector < std::string>> syncd = SignalUtils::syncDatas( map );
@@ -103,8 +107,10 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&m
 
   const int rows = syncd.size( );
   const int cols = map.size( );
+  int timestamps[rows] = { 0 };
   short vitals[rows * cols];
   int row = 0;
+  timestamps[0] = earliest;
   for ( std::vector<std::string> rowcols : syncd ) {
     int col = 0;
     for ( std::string valstr : rowcols ) {
@@ -118,6 +124,7 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&m
       col++;
     }
     row++;
+    timestamps[row] = timestamps[row - 1] + timestep;
   }
 
   matvar_t * var = Mat_VarCreate( "vitals", MAT_C_INT16, MAT_T_INT16, 2, dims,
@@ -126,7 +133,36 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&m
   Mat_VarWrite( matfile, var, compression );
   Mat_VarFree( var );
 
-  // FIXME: add variables for timestamps, vital names, vital scales
+  // timestamps
+  dims[0] = rows;
+  dims[1] = 1;
+
+  var = Mat_VarCreate( "vt", MAT_C_INT32, MAT_T_INT32, 2, dims, timestamps, 0 );
+  Mat_VarWrite( matfile, var, compression );
+  Mat_VarFree( var );
+
+  // scales
+  dims[0] = 1;
+  dims[1] = cols;
+  short scalesarr[cols];
+  for ( int i = 0; i < cols; i++ ) {
+    scalesarr[i] = scales[labels[i]];
+  }
+  var = Mat_VarCreate( "vscales", MAT_C_INT16, MAT_T_INT16, 2, dims, scalesarr, 0 );
+  Mat_VarWrite( matfile, var, compression );
+  Mat_VarFree( var );
+
+  // FIXME: labels (and metadata?)
+  //  dims[0] = 2;
+  //  dims[1] = 2;
+  //  char * vlabels[2] = { "x1", "y2" };
+  //  //  for ( int i = 0; i < labels.size( ); i++ ) {
+  //  //    vlabels[i] = labels[i].c_str( );
+  //  //  }
+  //  var = Mat_VarCreate( "vlabels", MAT_C_CHAR, MAT_T_UTF8, 2, dims, vlabels, 0 );
+  //  int x = Mat_VarWrite( matfile, var, compression );
+  //
+  //  Mat_VarFree( var );
 
   return 0;
 }
