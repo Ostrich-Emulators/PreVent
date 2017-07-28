@@ -41,7 +41,7 @@ int MatWriter::initDataSet( const std::string& directory, const std::string& nam
       << ", Created by: fmtcnv (rpb6eg@virginia.edu) on: "
       << fulldatetime;
 
-  matfile = Mat_CreateVer( fileloc.c_str(), header.str().c_str(), MAT_FT_MAT5 );
+  matfile = Mat_CreateVer( fileloc.c_str( ), header.str( ).c_str( ), MAT_FT_MAT5 );
 
   return !( matfile );
 }
@@ -84,18 +84,49 @@ int MatWriter::drain( SignalSet& info ) {
 }
 
 int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&map ) {
-  std::map<std::string, std::unique_ptr<SignalData>> data = SignalUtils::sync(map);
+  time_t earliest;
+  time_t latest;
+  SignalUtils::firstlast( map, &earliest, &latest );
+  std::vector<std::string> labels;
 
-  for ( auto& map : data ) {
-    std::string vital( map.first );
+  float freq = map.begin( )->second->metad( ).at( SignalData::HERTZ );
+  const int timestep = ( freq < 1 ? 1 / freq : 1 );
 
-    short a[4] = { 1, 2, 6, 7 };
-    size_t dims[2] = { 1, 4 };
-
-    matvar_t * var = Mat_VarCreate( vital.c_str( ), MAT_C_INT16, MAT_T_INT16, 2, dims, a, 0 );
-    Mat_VarWrite( matfile, var, compression );
-    Mat_VarFree( var );
+  std::map<std::string, int> scales;
+  for ( auto& m : map ) {
+    labels.push_back( m.first );
+    scales[m.first] = m.second->scale( );
   }
+
+  std::vector<std::vector < std::string>> syncd = SignalUtils::syncDatas( map );
+  size_t dims[2] = { syncd.size( ), map.size( ) };
+
+  const int rows = syncd.size( );
+  const int cols = map.size( );
+  short vitals[rows * cols];
+  int row = 0;
+  for ( std::vector<std::string> rowcols : syncd ) {
+    int col = 0;
+    for ( std::string valstr : rowcols ) {
+      short val = ( scales[labels[col]] > 1
+          ? short( std::stof( valstr ) * scales[labels[col]] )
+          : short( std::stoi( valstr ) ) );
+
+      // WARNING: we're transposing these values
+      // (because that's how matio wants them)!
+      vitals[col * rows + row] = val;
+      col++;
+    }
+    row++;
+  }
+
+  matvar_t * var = Mat_VarCreate( "vitals", MAT_C_INT16, MAT_T_INT16, 2, dims,
+      vitals, 0 );
+
+  Mat_VarWrite( matfile, var, compression );
+  Mat_VarFree( var );
+
+  // FIXME: add variables for timestamps, vital names, vital scales
 
   return 0;
 }
