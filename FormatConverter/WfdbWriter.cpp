@@ -71,10 +71,10 @@ int WfdbWriter::write( std::map<std::string, std::unique_ptr<SignalData>>&data )
     }
   }
 
-  time_t firstTime = std::numeric_limits<time_t>::max( );
+  time_t firstTime = SignalUtils::firstlast(data);
 
   std::vector<std::string> labels;
-  auto synco = sync( data, labels, firstTime );
+  auto synco = sync( data, labels );
 
   fileloc += getDateSuffix( firstTime );
   std::string output = fileloc + ".dat";
@@ -107,120 +107,23 @@ int WfdbWriter::write( std::map<std::string, std::unique_ptr<SignalData>>&data )
 }
 
 std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
-    std::unique_ptr<SignalData>>&data, std::vector<std::string>& labels, time_t& earliest ) {
-  earliest = std::numeric_limits<time_t>::max( );
+    std::unique_ptr<SignalData>>&olddata, std::vector<std::string>& labels ) {
 
-  time_t latest = 0;
-  for ( auto& map : data ) {
+  std::vector<std::vector < std::string>> data = SignalUtils::syncDatas( olddata );
+
+  for ( const auto& map : olddata ) {
     labels.push_back( map.first );
-
-    if ( map.second->startTime( ) < earliest ) {
-      earliest = map.second->startTime( );
-    }
-    if ( map.second->endTime( ) > latest ) {
-      latest = map.second->endTime( );
-    }
-  }
-
-  const int cols = data.size( );
-  int rows = rowForTime( earliest, latest, 2 ) + 1; // +1 for last time
-
-  // WARNING: this logic assumes the largest signal data starts earliest
-  // and ends latest. This isn't necessarily so, as one signal might
-  // start very early, and a different one might end very late, resulting
-  // in more indicies for empty data points
-
-  // we'll make a 1D array, but treat it like a 2D array. 
-  // We'll convert to the vectors at the end.
-  const int buffsz = rows * cols;
-  //  std::cout << "data buffer is " << rows << "*" << cols << "=" << buffsz << std::endl;
-  int buffer[buffsz];
-
-  for ( int i = 0; i < buffsz; i++ ) {
-    buffer[i] = -32768;
-  }
-
-  // start a-poppin'!
-  // our strategy is to pop from all signals at the same time, and figure out
-  // which array index the time corresponds to.
-  int emptycnt = 0;
-  int empties[cols];
-  for ( int col = 0; col < cols; col++ ) {
-    empties[col] = 0;
-  }
-  // run through one time to figure out our earliest time
-  int firstvals[cols];
-  int firsttimes[cols];
-  for ( int col = 0; col < cols; col++ ) {
-    std::string name = labels[col];
-
-    data[name]->startPopping( );
-    if ( data[name]->size( ) > 0 ) {
-      const auto& row = data[name]->pop( );
-      firsttimes[col] = row->time;
-      firstvals[col] = std::stoi( row->data );
-
-      if ( firsttimes[col] < earliest ) {
-        earliest = firsttimes[col];
-      }
-    }
-    else {
-      if ( 0 != empties[col] ) {
-        empties[col]++;
-        emptycnt++;
-      }
-      //      std::cout << std::endl;
-    }
-  }
-
-  for ( int col = 0; col < cols; col++ ) {
-    int row4time = rowForTime( earliest, firsttimes[col], 2 );
-    int index = ( row4time * cols ) + col;
-    //    std::cout << labels[col] << "[" << index << "] " << firsttimes[col] << ": " << firstvals[col] << std::endl;
-    buffer[index] = firstvals[col];
-  }
-
-  while ( emptycnt < cols ) {
-    for ( int col = 0; col < cols; col++ ) {
-      std::string name = labels[col];
-      //      std::cout << name << " " << data[name]->size( );
-      if ( data[name]->size( ) > 0 ) {
-        const auto& row = data[name]->pop( );
-        time_t t = row->time;
-        int v = std::stoi( row->data );
-
-        int row4time = rowForTime( earliest, t, 2 );
-        int index = ( row4time * cols ) + col;
-
-        //        std::cout << " is idx[" << index << "] " << t << ": " << v << std::endl;
-        //        if ( index > buffsz ) {
-        //          std::cerr << "here!" << std::endl;
-        //        }
-        buffer[index] = v;
-      }
-      else {
-        if ( 0 == empties[col] ) {
-          empties[col]++;
-          emptycnt++;
-        }
-        //        std::cout << std::endl;
-      }
-    }
   }
 
   std::vector<std::vector < WFDB_Sample>> ret;
-  for ( int row = 0; row < rows; row++ ) {
+  for ( std::vector<std::string> row : data ) {
     std::vector<WFDB_Sample> vec;
-    for ( int col = 0; col < cols; col++ ) {
-      vec.push_back( buffer[row * cols + col] );
+
+    for ( std::string rowcols : row ) {
+      vec.push_back( std::stoi( rowcols ) );
     }
     ret.push_back( vec );
   }
 
   return ret;
-}
-
-int WfdbWriter::rowForTime( time_t starttime, time_t mytime, float timestep ) const {
-  int diff = mytime - starttime;
-  return diff / timestep;
 }

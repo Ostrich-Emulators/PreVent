@@ -32,7 +32,7 @@ public:
 
 
 	SignalData( const std::string& name, bool largefilesupport );
-	std::unique_ptr<SignalData> shallowcopy();
+	std::unique_ptr<SignalData> shallowcopy( );
 	virtual ~SignalData( );
 
 	void add( const DataRow& row );
@@ -46,11 +46,12 @@ public:
 
 	void startPopping( );
 	std::unique_ptr<DataRow> pop( );
+	bool empty( ) const;
 
 	std::map<std::string, std::string>& metas( );
 	std::map<std::string, int>& metai( );
 	std::map<std::string, double>& metad( );
-	
+
 private:
 	SignalData( const SignalData& orig );
 	/**

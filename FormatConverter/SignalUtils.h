@@ -17,8 +17,10 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <vector>
 
 class SignalData;
+class DataRow;
 
 class SignalUtils {
 public:
@@ -35,6 +37,17 @@ public:
 			std::map<std::string, std::unique_ptr<SignalData> >&map );
 
 	/**
+	 * Consumes the signal data and creates vector data data points such that the
+	 * outside vector is the timestep, and the inside vector is each signal's
+	 * data value (as a string, since only the caller knows how to convert the
+	 * values).
+	 * @param map the map to consume
+	 * @return essentially, a 2D vector
+	 */
+	static std::vector<std::vector<std::string>> syncDatas( std::map<std::string,
+			std::unique_ptr<SignalData> >&map );
+
+	/**
 	 * Gets the earliest and latest timestamps from the SignalData.
 	 * @param map the data to check
 	 * @param earliest the earliest date in the SignalData
@@ -47,6 +60,9 @@ public:
 private:
 	SignalUtils( );
 	SignalUtils( const SignalUtils& );
+
+	static void fillGap( std::unique_ptr<SignalData>& data,
+			std::unique_ptr<DataRow>& row, time_t& nexttime, const int& timestep );
 
 };
 

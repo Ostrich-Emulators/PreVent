@@ -73,6 +73,10 @@ const time_t& SignalData::endTime( ) const {
   return lastdata;
 }
 
+bool SignalData::empty( ) const {
+  return ( 0 == size( ) );
+}
+
 std::unique_ptr<DataRow> SignalData::pop( ) {
   datacount--;
   if ( NULL != file && data.empty( ) ) {

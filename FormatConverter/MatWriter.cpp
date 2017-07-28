@@ -15,6 +15,7 @@
 #include "config.h"
 #include "SignalSet.h"
 #include "SignalData.h"
+#include "SignalUtils.h"
 
 MatWriter::MatWriter( ) {
 }
@@ -82,10 +83,11 @@ int MatWriter::drain( SignalSet& info ) {
   return 0;
 }
 
-int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&data ) {
+int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&map ) {
+  std::map<std::string, std::unique_ptr<SignalData>> data = SignalUtils::sync(map);
+
   for ( auto& map : data ) {
     std::string vital( map.first );
-    std::unique_ptr<SignalData>& data = map.second;
 
     short a[4] = { 1, 2, 6, 7 };
     size_t dims[2] = { 1, 4 };
@@ -94,7 +96,6 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&d
     Mat_VarWrite( matfile, var, compression );
     Mat_VarFree( var );
   }
-
 
   return 0;
 }
