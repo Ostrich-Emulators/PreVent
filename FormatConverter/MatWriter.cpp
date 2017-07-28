@@ -152,17 +152,24 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&m
   Mat_VarWrite( matfile, var, compression );
   Mat_VarFree( var );
 
-  // FIXME: labels (and metadata?)
-  //  dims[0] = 2;
-  //  dims[1] = 2;
-  //  char * vlabels[2] = { "x1", "y2" };
-  //  //  for ( int i = 0; i < labels.size( ); i++ ) {
-  //  //    vlabels[i] = labels[i].c_str( );
-  //  //  }
-  //  var = Mat_VarCreate( "vlabels", MAT_C_CHAR, MAT_T_UTF8, 2, dims, vlabels, 0 );
-  //  int x = Mat_VarWrite( matfile, var, compression );
-  //
-  //  Mat_VarFree( var );
+  dims[0] = cols;
+  dims[1] = 1;
+  var = Mat_VarCreate( "vlabels", MAT_C_CELL, MAT_T_CELL, 2, dims, NULL, 0 );
+
+  for ( int i = 0; i < cols; i++ ) {
+    size_t strdims[2] = { 1, labels[i].size( ) };
+    char * text = (char *) labels[i].c_str( );
+    matvar_t * vart = Mat_VarCreate( NULL, MAT_C_CHAR, MAT_T_UTF8, 2, strdims,
+        text, 0 );
+    Mat_VarSetCell( var, i, vart );
+    // does vart get free'd when var does?
+  }
+
+  Mat_VarWrite( matfile, var, compression );
+
+  Mat_VarFree( var );
+
+  // FIXME: (metadata?)
 
   return 0;
 }
