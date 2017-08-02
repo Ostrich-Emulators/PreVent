@@ -114,6 +114,8 @@ private:
 	xmlTextReaderPtr reader;
 	time_t prevtime;
 	time_t currtime;
+	bool warnMissingName;
+	bool warnJunkData;
 	std::map<std::string, std::string> savedmeta;
 };
 
