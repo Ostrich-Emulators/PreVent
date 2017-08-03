@@ -46,7 +46,7 @@ int MatWriter::initDataSet( const std::string& directory, const std::string& nam
   return !( matfile );
 }
 
-std::string MatWriter::closeDataSet( ) {
+std::vector<std::string> MatWriter::closeDataSet( ) {
   writeVitals( dataptr->vitals( ) );
   writeWaves( dataptr->waves( ) );
 
@@ -61,8 +61,9 @@ std::string MatWriter::closeDataSet( ) {
 
   src.close( );
   dst.close( );
-
-  return matfile;
+  std::vector<std::string> ret;
+  ret.push_back( matfile );
+  return ret;
 }
 
 int MatWriter::drain( SignalSet& info ) {

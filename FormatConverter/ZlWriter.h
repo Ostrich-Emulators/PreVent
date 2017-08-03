@@ -27,7 +27,7 @@ public:
 protected:
 	int initDataSet( const std::string& outdir, const std::string& namestart,
 			int compression );
-	std::string closeDataSet( );
+	std::vector<std::string> closeDataSet( );
 	int drain( SignalSet& );
 
 private:

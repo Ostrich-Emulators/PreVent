@@ -25,13 +25,15 @@ ZlWriter::~ZlWriter( ) {
 }
 
 int ZlWriter::initDataSet( const std::string& directory, const std::string& namestart,
-    int compression ) {
+    int ) {
   filestart = directory + namestart;
   return 0;
 }
 
-std::string ZlWriter::closeDataSet( ) {
-  return filename;
+std::vector<std::string> ZlWriter::closeDataSet( ) {
+  std::vector<std::string> vec;
+  vec.push_back( filename );
+  return vec;
 }
 
 int ZlWriter::drain( SignalSet& info ) {

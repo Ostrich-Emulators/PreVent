@@ -42,10 +42,13 @@ int WfdbWriter::initDataSet( const std::string& directory, const std::string& na
   return headerok;
 }
 
-std::string WfdbWriter::closeDataSet( ) {
+std::vector<std::string> WfdbWriter::closeDataSet( ) {
   chdir( currdir.c_str( ) );
   wfdbquit( );
-  return fileloc + ".hea";
+
+  std::vector<std::string> ret;
+  ret.push_back( fileloc + ".hea" );
+  return ret;
 }
 
 int WfdbWriter::drain( SignalSet& info ) {
@@ -71,7 +74,7 @@ int WfdbWriter::write( std::map<std::string, std::unique_ptr<SignalData>>&data )
     }
   }
 
-  time_t firstTime = SignalUtils::firstlast(data);
+  time_t firstTime = SignalUtils::firstlast( data );
 
   std::vector<std::string> labels;
   auto synco = sync( data, labels );

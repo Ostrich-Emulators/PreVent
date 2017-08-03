@@ -166,7 +166,7 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
     // convert the data to a vector of ints
     std::stringstream stream( row->data );
     int hzcount = 0;
-    for ( std::string each; std::getline( stream, each, ',' ); ){
+    for ( std::string each; std::getline( stream, each, ',' ); ) {
       int val = std::stoi( each );
 
       long pos = idx * 3;
@@ -262,17 +262,15 @@ int Hdf5Writer::drain( SignalSet& info ) {
   return 0;
 }
 
-std::string Hdf5Writer::closeDataSet( ) {
+std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   SignalSet& data = *dataptr;
 
-  tm * time = gmtime( &firstTime );
-  char buf[sizeof "-YYYYMMDD.hdf5"];
-  strftime( buf, sizeof buf, "-%Y%m%d.hdf5", time );
-  std::string output = tempfileloc + buf;
+  std::vector<std::string> ret;
+  std::string output = tempfileloc + getDateSuffix( firstTime ) + ".hdf5";
 
   if ( data.vitals( ).empty( ) && data.waves( ).empty( ) ) {
     std::cout << "Nothing to write to " << output << std::endl;
-    return "";
+    return ret;
   }
 
   std::cout << "Writing to " << output << std::endl;
@@ -306,7 +304,7 @@ std::string Hdf5Writer::closeDataSet( ) {
   std::cout << "Writing " << data.waves( ).size( ) << " Waveforms" << std::endl;
   for ( auto& wavs : data.waves( ) ) {
     std::cout << "Writing Wave: " << wavs.first;
-    int hz = wavs.second->metad().at( SignalData::HERTZ );
+    int hz = wavs.second->metad( ).at( SignalData::HERTZ );
     auto st = std::chrono::high_resolution_clock::now( );
 
     hsize_t sz = wavs.second->size( );
@@ -330,5 +328,6 @@ std::string Hdf5Writer::closeDataSet( ) {
     std::chrono::duration<float> dur = en - st;
     std::cout << " (complete in " << dur.count( ) << "ms)" << std::endl;
   }
-  return output;
+
+  ret.push_back( output );
 }

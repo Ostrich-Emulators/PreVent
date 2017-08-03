@@ -35,7 +35,7 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
   }
 }
 
-std::string Writer::getDateSuffix( const time_t& date ){
+std::string Writer::getDateSuffix( const time_t& date ) {
   char recsuffix[sizeof "-YYYYMMDD"];
   std::strftime( recsuffix, sizeof recsuffix, "-%Y%m%d", gmtime( &date ) );
   return std::string( recsuffix );
@@ -86,12 +86,12 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     drain( data );
 
     if ( ReadResult::END_OF_DAY == retcode || ReadResult::END_OF_PATIENT == retcode ) {
-      std::string file = closeDataSet( );
-      if ( file.empty( ) ) {
+      std::vector<std::string> files = closeDataSet( );
+      if ( files.empty( ) ) {
         std::cerr << "refusing to write empty data file!" << std::endl;
       }
       else {
-        list.push_back( file );
+        list.insert( list.end(), files.begin(), files.end() );
       }
 
       // if our patient name changed, increment our patient number
@@ -107,12 +107,12 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     else if ( ReadResult::END_OF_FILE == retcode ) {
       // end of file, so break out of our write
 
-      std::string file = closeDataSet( );
-      if ( file.empty( ) ) {
+      std::vector<std::string> files = closeDataSet( );
+      if ( files.empty( ) ) {
         std::cerr << "refusing to write empty data file!" << std::endl;
       }
       else {
-        list.push_back( file );
+        list.insert( list.end( ), files.begin( ), files.end( ) );
       }
       break;
     }
@@ -124,7 +124,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
   if ( ReadResult::ERROR == retcode ) {
     std::cerr << "error reading file" << std::endl;
   }
-  
+
   return list;
 }
 

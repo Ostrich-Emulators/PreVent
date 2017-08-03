@@ -40,10 +40,11 @@ protected:
 	/**
 	 * Closes the current data file, and provides the final name for it. Datafiles
 	 * can change names during writing, so only this function provides the name
-	 * of the actual, final, file location
+	 * of the actual, final, file location. Also, a single dataset can be written
+	 * to multiple files
 	 * @return 
 	 */
-	virtual std::string closeDataSet( ) = 0;
+	virtual std::vector<std::string> closeDataSet( ) = 0;
 	
 	/**
 	 * Drains the give ReadInfo's data. This function can be used for incrementally
