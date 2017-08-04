@@ -128,7 +128,6 @@ void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace& space,
   const int buffsz = rows * 4;
   int * buffer = new int[buffsz];
   int scale = data.scale( );
-  data.startPopping( );
   for ( int i = 0; i < rows; i++ ) {
     const std::unique_ptr<DataRow>& row = data.pop( );
     int idx = i * 4;
@@ -159,7 +158,6 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
   // This means we are really keeping two counters going at all times, and 
   // once we're out of all the loops, we need to write any residual data.
 
-  data.startPopping( );
   for ( int i = 0; i < rows; i++ ) {
     std::unique_ptr<DataRow> row = data.pop( );
 

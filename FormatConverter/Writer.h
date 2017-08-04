@@ -26,7 +26,7 @@ public:
 			SignalSet& data );
 
 protected:
-	static std::string getDateSuffix( const time_t& date );
+	static std::string getDateSuffix( const time_t& date, const std::string& sep = "-" );
 
 	/**
 	 * Initializes a new (possibly temporary) data file
@@ -45,7 +45,7 @@ protected:
 	 * @return 
 	 */
 	virtual std::vector<std::string> closeDataSet( ) = 0;
-	
+
 	/**
 	 * Drains the give ReadInfo's data. This function can be used for incrementally
 	 * writing input data, or essentially ignored until closeDataSet is called.

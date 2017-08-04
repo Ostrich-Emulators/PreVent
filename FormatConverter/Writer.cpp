@@ -35,9 +35,10 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
   }
 }
 
-std::string Writer::getDateSuffix( const time_t& date ) {
+std::string Writer::getDateSuffix( const time_t& date, const std::string& sep ) {
   char recsuffix[sizeof "-YYYYMMDD"];
-  std::strftime( recsuffix, sizeof recsuffix, "-%Y%m%d", gmtime( &date ) );
+  const std::string pattern = sep + "%Y%m%d";
+  std::strftime( recsuffix, sizeof recsuffix, pattern.c_str( ), gmtime( &date ) );
   return std::string( recsuffix );
 }
 
@@ -91,7 +92,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
         std::cerr << "refusing to write empty data file!" << std::endl;
       }
       else {
-        list.insert( list.end(), files.begin(), files.end() );
+        list.insert( list.end( ), files.begin( ), files.end( ) );
       }
 
       // if our patient name changed, increment our patient number

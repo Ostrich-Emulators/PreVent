@@ -16,25 +16,35 @@
 
 #include <ctime>
 #include <string>
+#include <vector>
 
 class DataRow {
 public:
-  DataRow( const time_t& time, const std::string& data, 
+	DataRow( const time_t& time, const std::string& data,
 			const std::string& high = "", const std::string& low = "" );
-  DataRow();
-  DataRow( const DataRow& orig );
-  DataRow& operator=(const DataRow& orig );
-  
-  void clear();
-  
-  virtual ~DataRow( );
-  
-  static int scale( const std::string& val );
+	DataRow( );
+	DataRow( const DataRow& orig );
+	DataRow& operator=(const DataRow& orig );
 
-  std::string data;
-  std::string high;
-  std::string low;
-  time_t time;
+	void clear( );
+
+	/**
+	 * convert our "data" value into list of ints. WARNING: if the data isn't an
+	 * int, we will lose precision. This function is most useful for converting
+	 * wave datapoints
+	 * @return
+	 */
+	std::vector<int> values( ) const;
+
+
+	virtual ~DataRow( );
+
+	static int scale( const std::string& val );
+
+	std::string data;
+	std::string high;
+	std::string low;
+	time_t time;
 };
 
 #endif /* DATAROW_H */

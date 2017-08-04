@@ -37,6 +37,7 @@ private:
 	std::string metastr( const H5::Attribute& attr ) const;
 	void copymetas( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
 	void fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
+	void fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
 	void readDataSet( H5::Group& group, const std::string& name, const bool& iswave,
 			SignalSet& info ) const;
 	std::string upgradeMetaKey( const std::string& oldkey )const;

@@ -31,7 +31,7 @@ public:
 	static const std::string TIMEZONE;
 
 
-	SignalData( const std::string& name, bool largefilesupport );
+	SignalData( const std::string& name, bool largefilesupport = false, bool iswave = false );
 	std::unique_ptr<SignalData> shallowcopy( );
 	virtual ~SignalData( );
 
@@ -40,13 +40,15 @@ public:
 	const std::string& uom( ) const;
 	int scale( ) const;
 	int size( ) const;
+	double hz( ) const;
 	const time_t& startTime( ) const;
 	const time_t& endTime( ) const;
 	const std::string& name( ) const;
 
-	void startPopping( );
 	std::unique_ptr<DataRow> pop( );
 	bool empty( ) const;
+	void setWave( bool wave = false );
+	bool wave( ) const;
 
 	std::map<std::string, std::string>& metas( );
 	std::map<std::string, int>& metai( );
@@ -54,6 +56,9 @@ public:
 
 private:
 	SignalData( const SignalData& orig );
+
+	void startPopping( );
+
 	/**
 	 * copy rows from the cache file to the data list.
 	 * @param count the desired elements to uncache
@@ -73,6 +78,8 @@ private:
 	std::map<std::string, int> metadatai;
 	std::map<std::string, double> metadatad;
 	std::FILE * file;
+	bool popping;
+	bool iswave;
 
 	static const int CACHE_LIMIT;
 };

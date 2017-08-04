@@ -13,9 +13,11 @@
 
 #include "DataRow.h"
 #include <cmath>
+#include <sstream>
+#include <vector>
 
 DataRow::DataRow( const time_t& t, const std::string& d, const std::string& hi,
-        const std::string& lo ) : time( t ), data( d ), high( hi ), low( lo ) {
+    const std::string& lo ) : time( t ), data( d ), high( hi ), low( lo ) {
 }
 
 DataRow::DataRow( ) : time( 0 ), data( "" ), high( "" ), low( "" ) {
@@ -55,4 +57,13 @@ int DataRow::scale( const std::string& val ) {
   }
 
   return (int) std::pow( 10, val.length( ) - pos - 1 ); // -1 for the .
+}
+
+std::vector<int> DataRow::values( ) const {
+  std::stringstream stream( data );
+  std::vector<int> vals;
+  for ( std::string each; std::getline( stream, each, ',' ); ) {
+    vals.push_back( std::stoi( each ) );
+  }
+  return vals;
 }

@@ -5,12 +5,12 @@
  */
 
 #include "WfdbWriter.h"
-#include <limits>
 #include <cstdio>
 #include <iostream>
 #include <set>
 #include <unistd.h>
 #include <ctime>
+#include <sstream>
 
 #include "SignalSet.h"
 #include "SignalData.h"
@@ -27,9 +27,9 @@ WfdbWriter::~WfdbWriter( ) {
 
 int WfdbWriter::initDataSet( const std::string& directory, const std::string& namestart, int ) {
   currdir = getcwd( NULL, 0 );
-  chdir( directory.c_str( ) );
+  int x = chdir( directory.c_str( ) );
 
-  sigmap.clear( );
+  files.clear( );
 
   fileloc = namestart;
   std::string rectest = namestart + "-20170101"; // we're going to replace the date
@@ -43,50 +43,58 @@ int WfdbWriter::initDataSet( const std::string& directory, const std::string& na
 }
 
 std::vector<std::string> WfdbWriter::closeDataSet( ) {
-  chdir( currdir.c_str( ) );
+  int x = chdir( currdir.c_str( ) );
   wfdbquit( );
-
-  std::vector<std::string> ret;
-  ret.push_back( fileloc + ".hea" );
-  return ret;
+  return files;
 }
 
 int WfdbWriter::drain( SignalSet& info ) {
-  auto& vitals = info.vitals( );
-  auto& waves = info.waves( );
+  std::map<double, std::vector<std::unique_ptr < SignalData>>> freqgroups;
+  for ( auto& ds : info.vitals( ) ) {
+    double freq = ds.second->hz( );
+    freqgroups[freq].push_back( std::move( ds.second ) );
+  }
 
-  return ( vitals.empty( )
-      ? write( waves )
-      : write( vitals ) );
+  for ( auto& ds : info.waves( ) ) {
+    double freq = ds.second->hz( );
+    freqgroups[freq].push_back( std::move( ds.second ) );
+  }
+
+  for ( auto& ds : freqgroups ) {
+    write( ds.first, ds.second );
+  }
+
+  return 0;
 }
 
-int WfdbWriter::write( std::map<std::string, std::unique_ptr<SignalData>>&data ) {
-  for ( auto& vit : data ) {
-    if ( 0 == sigmap.count( vit.first ) ) {
-      sigmap[vit.first].units = (char *) vit.second->uom( ).c_str( );
-      sigmap[vit.first].group = 0;
-      sigmap[vit.first].desc = (char *) vit.first.c_str( );
-      sigmap[vit.first].fmt = 16;
+int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&data ) {
+  setsampfreq( freq );
 
-      if ( 0 != vit.second->metad( ).count( SignalData::HERTZ ) ) {
-        setsampfreq( vit.second->metad( )[SignalData::HERTZ] );
-      }
-    }
+  sigmap.clear( );
+  for ( auto& signal : data ) {
+    const std::string& name = signal->name( );
+    sigmap[name].units = (char *) signal->uom( ).c_str( );
+    sigmap[name].group = 0;
+    sigmap[name].desc = (char *) name.c_str( );
+    sigmap[name].fmt = 16;
   }
 
   time_t firstTime = SignalUtils::firstlast( data );
 
-  std::vector<std::string> labels;
-  auto synco = sync( data, labels );
+  auto synco = sync( data );
 
-  fileloc += getDateSuffix( firstTime );
-  std::string output = fileloc + ".dat";
+  std::string suffix = ( freq < 1 ? "vitals" : std::to_string( (int)freq ) + "hz" );
+  std::string datedfile = fileloc + getDateSuffix( firstTime, "_" );
+  std::string datafile = datedfile + "_" + suffix + ".dat";
+  std::string headerfile = datedfile + "_" + suffix + ".hea";
+  files.push_back( datafile );
+  files.push_back( headerfile );
 
   WFDB_Siginfo sigs[sigmap.size( )];
   int i = 0;
-  for ( const std::string& name : labels ) {
-    sigs[i] = sigmap[name];
-    sigs[i].fname = (char *) output.c_str( );
+  for ( const auto& signal : data ) {
+    sigs[i] = sigmap[signal->name( )];
+    sigs[i].fname = (char *) datafile.c_str( );
     i++;
   }
 
@@ -105,27 +113,39 @@ int WfdbWriter::write( std::map<std::string, std::unique_ptr<SignalData>>&data )
     putvec( (WFDB_Sample *) ( &vec[0] ) );
   }
 
-  newheader( (char *) fileloc.c_str( ) ); // we know this is a valid record name
+  newheader( (char *) headerfile.c_str( ) ); // we know this is a valid record name
   return 0;
 }
 
-std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync( std::map<std::string,
-    std::unique_ptr<SignalData>>&olddata, std::vector<std::string>& labels ) {
+std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync(
+    std::vector<std::unique_ptr<SignalData>>&olddata ) {
+
+  int idx = 0;
+  std::map<int, bool> wavemap;
+  for ( auto& m : olddata ) {
+    wavemap[idx++] = m->wave( );
+  }
 
   std::vector<std::vector < std::string>> data = SignalUtils::syncDatas( olddata );
 
-  for ( const auto& map : olddata ) {
-    labels.push_back( map.first );
-  }
-
   std::vector<std::vector < WFDB_Sample>> ret;
+  idx = 0;
   for ( std::vector<std::string> row : data ) {
     std::vector<WFDB_Sample> vec;
 
     for ( std::string rowcols : row ) {
-      vec.push_back( std::stoi( rowcols ) );
+      if ( wavemap[idx ] ) {
+        std::stringstream stream( rowcols );
+        for ( std::string each; std::getline( stream, each, ',' ); ) {
+          vec.push_back( std::stoi( each ) );
+        }
+      }
+      else {
+        vec.push_back( std::stoi( rowcols ) );
+      }
     }
     ret.push_back( vec );
+    idx++;
   }
 
   return ret;

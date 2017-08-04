@@ -80,12 +80,10 @@ std::unique_ptr<SignalData>& SignalSet::addVital( const std::string& name, bool 
   int cnt = vmap.count( name );
   if ( 0 == cnt ) {
     vmap.insert( std::make_pair( name,
-        std::unique_ptr<SignalData>( new SignalData( name,
-        largefile ) ) ) );
+        std::unique_ptr<SignalData>( new SignalData( name, largefile ) ) ) );
   }
 
   if ( NULL != added ) {
-
     *added = ( 0 == cnt );
   }
 
@@ -96,8 +94,7 @@ std::unique_ptr<SignalData>& SignalSet::addWave( const std::string& name, bool *
   int cnt = wmap.count( name );
   if ( 0 == cnt ) {
     wmap.insert( std::make_pair( name,
-        std::unique_ptr<SignalData>( new SignalData( name,
-        largefile ) ) ) );
+        std::unique_ptr<SignalData>( new SignalData( name, largefile, true ) ) ) );
   }
 
   if ( NULL != added ) {

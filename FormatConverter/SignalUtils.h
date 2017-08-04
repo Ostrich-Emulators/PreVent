@@ -33,9 +33,8 @@ public:
 	 * @return a map of SignalDatas, where each member has the same start and end 
 	 * times
 	 */
-	static std::map<std::string, std::unique_ptr<SignalData>> sync(
-			std::map<std::string, std::unique_ptr<SignalData> >&map );
-
+	static std::vector<std::unique_ptr<SignalData>> sync(
+			std::vector<std::unique_ptr<SignalData> >&map );
 	/**
 	 * Consumes the signal data and creates vector data data points such that the
 	 * outside vector is the timestep, and the inside vector is each signal's
@@ -44,17 +43,25 @@ public:
 	 * @param map the map to consume
 	 * @return essentially, a 2D vector
 	 */
-	static std::vector<std::vector<std::string>> syncDatas( std::map<std::string,
-			std::unique_ptr<SignalData> >&map );
+	static std::vector<std::vector<std::string>> syncDatas(
+			std::vector<std::unique_ptr<SignalData> >&map );
+
+	static std::vector<std::unique_ptr<SignalData>> vectorize(
+			std::map<std::string, std::unique_ptr<SignalData>>&data );
+
+	static std::map<std::string, std::unique_ptr<SignalData>> mapify(
+			std::vector<std::unique_ptr<SignalData>>&data );
 
 	/**
 	 * Gets the earliest and latest timestamps from the SignalData.
-	 * @param map the data to check
+	 * @param map the signals to check
 	 * @param earliest the earliest date in the SignalData
 	 * @param latest the latest date in the SignalData
 	 * @return the earliest date
 	 */
 	static time_t firstlast( const std::map<std::string, std::unique_ptr<SignalData>>&map,
+			time_t * first = nullptr, time_t * last = nullptr );
+	static time_t firstlast( const std::vector<std::unique_ptr<SignalData>>&map,
 			time_t * first = nullptr, time_t * last = nullptr );
 
 private:

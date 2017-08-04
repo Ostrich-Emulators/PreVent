@@ -50,31 +50,55 @@ time_t SignalUtils::firstlast( const std::map<std::string, std::unique_ptr<Signa
   return earliest;
 }
 
-std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::map<std::string,
-    std::unique_ptr<SignalData> >&map ) {
+time_t SignalUtils::firstlast( const std::vector<std::unique_ptr<SignalData>>&signals,
+    time_t * first, time_t * last ) {
 
-  std::map<std::string, std::unique_ptr<SignalData> > * working = &map;
-  std::map<std::string, std::unique_ptr<SignalData> > tmp;
+  time_t earliest = std::numeric_limits<time_t>::max( );
+
+  if ( nullptr != first ) {
+    *first = std::numeric_limits<time_t>::max( );
+  }
+  if ( nullptr != last ) {
+    *last = 0;
+  }
+  for ( const auto& signal : signals ) {
+    if ( signal->startTime( ) < earliest ) {
+      earliest = signal->startTime( );
+      if ( nullptr != first ) {
+        *first = signal->startTime( );
+      }
+    }
+
+    if ( nullptr != last ) {
+      if ( signal->endTime( ) > *last ) {
+        *last = signal->endTime( );
+      }
+    }
+  }
+
+  return earliest;
+}
+
+std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::vector<std::unique_ptr<SignalData> >&signals ) {
+
+  std::vector<std::unique_ptr<SignalData> > * working = &signals;
+  std::vector<std::unique_ptr<SignalData> > tmp;
 
   // figure out if the data is already synced
   time_t earliest;
   time_t latest;
-  firstlast( map, &earliest, &latest );
-  for ( const auto& m : map ) {
-    if ( m.second->startTime( ) != earliest ||
-        m.second->endTime( ) != latest ) {
-      tmp = sync( map );
+  firstlast( signals, &earliest, &latest );
+  for ( const auto& m : signals ) {
+    if ( m->startTime( ) != earliest ||
+        m->endTime( ) != latest ) {
+      tmp = sync( signals );
       working = &tmp;
       break;
     }
   }
 
-  for ( const auto& m : *working ) {
-    m.second->startPopping( );
-  }
-
   std::vector<std::vector < std::string>> rows;
-  int rowcnt = working->begin( )->second->size( );
+  int rowcnt = ( *working->begin( ) )->size( );
   rows.reserve( rowcnt );
 
   for ( int rownum = 0; rownum < rowcnt; rownum++ ) {
@@ -85,11 +109,11 @@ std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::map<std::stri
 
     for ( auto& m : *working ) {
       //std::cout << "  " << m.first;
-      if ( m.second->empty( ) ) {
-        std::cout << m.first << " BUG! ran out of data before anyone else" << std::endl;
+      if ( m->empty( ) ) {
+        std::cout << m->name( ) << " BUG! ran out of data before anyone else" << std::endl;
       }
       else {
-        const std::unique_ptr<DataRow>& row = m.second->pop( );
+        const std::unique_ptr<DataRow>& row = m->pop( );
         // std::cout << " row: " << row->time << " " << row->data << std::endl;
         rowcols.push_back( row->data );
       }
@@ -100,44 +124,67 @@ std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::map<std::stri
   return rows;
 }
 
-std::map<std::string, std::unique_ptr<SignalData>> SignalUtils::sync(
-    std::map<std::string, std::unique_ptr<SignalData> >& data ) {
+std::map<std::string, std::unique_ptr<SignalData>> SignalUtils::mapify(
+    std::vector<std::unique_ptr<SignalData>>&data ) {
+  std::map<std::string, std::unique_ptr < SignalData>> map;
+  for ( auto& s : data ) {
+    map[s->name( )] = std::move( s );
+  }
 
-  std::map<std::string, std::unique_ptr < SignalData>> ret;
+  return map;
+
+}
+
+std::vector<std::unique_ptr<SignalData>> SignalUtils::vectorize(
+    std::map<std::string, std::unique_ptr<SignalData>>&data ) {
+  std::vector<std::unique_ptr < SignalData>> vec;
+  for ( auto& m : data ) {
+    vec.push_back( std::move( m.second ) );
+  }
+
+  return vec;
+}
+
+std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
+    std::vector<std::unique_ptr<SignalData> >& data ) {
+
+  std::vector<std::unique_ptr < SignalData>> ret;
 
   time_t earliest;
   time_t latest;
   firstlast( data, &earliest, &latest );
 
-  float freq = data.begin( )->second->metad( ).at( SignalData::HERTZ );
+  float freq = ( *data.begin( ) )->hz( );
   int timestep = ( freq < 1 ? 1 / freq : 1 );
 
   // start a-poppin'!
-  for ( auto& m : data ) {
-    std::string name( m.first );
-    //std::cout << "syncing " << name << std::endl;
-    ret[m.first] = std::move( m.second->shallowcopy( ) );
+  for ( auto& signal : data ) {
+    std::unique_ptr<SignalData> copy = std::move( signal->shallowcopy( ) );
 
-    m.second->startPopping( );
+    // const std::string& name = signal->name( );
+    //std::cout << "syncing " << name << std::endl;
+
     time_t nexttime = earliest;
 
-    while ( 0 != m.second->size( ) ) {
-      auto row = std::move( m.second->pop( ) );
+    while ( 0 != signal->size( ) ) {
+      auto row = std::move( signal->pop( ) );
       //std::cout << "  popped row at " << row->time << "; "
-      //    << m.second->size( ) << " rows left" << std::endl;
+      //    << signal->size( ) << " rows left" << std::endl;
 
       // fill in any rows between the last time and this signal's current time
-      fillGap( ret[name], row, nexttime, timestep );
+      fillGap( copy, row, nexttime, timestep );
 
-      ret[name]->add( *row );
+      copy->add( *row );
       nexttime = row->time + timestep;
     }
 
     // fill in any rows after our signal's last time, but before the set's end time
     for ( nexttime; nexttime < latest + timestep; nexttime += timestep ) {
       //std::cout << "    filling to end row at time " << nexttime << std::endl;
-      ret[name]->add( DataRow( nexttime, StpXmlReader::MISSING_VALUESTR ) );
+      copy->add( DataRow( nexttime, StpXmlReader::MISSING_VALUESTR ) );
     }
+
+    ret.push_back( std::move( copy ) );
   }
 
   //  for ( auto& x : ret ) {

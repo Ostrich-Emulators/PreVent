@@ -84,30 +84,34 @@ int MatWriter::drain( SignalSet& info ) {
   return 0;
 }
 
-int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&map ) {
+int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&oldmap ) {
   time_t earliest;
   time_t latest;
-  SignalUtils::firstlast( map, &earliest, &latest );
-  std::vector<std::string> labels;
+
+  std::vector<std::unique_ptr < SignalData>> signals = SignalUtils::vectorize( oldmap );
+
+  SignalUtils::firstlast( signals, &earliest, &latest );
   int maxlabelsize = 0;
 
-  float freq = map.begin( )->second->metad( ).at( SignalData::HERTZ );
+  float freq = ( *signals.begin( ) )->hz( );
   const int timestep = ( freq < 1 ? 1 / freq : 1 );
 
+  std::vector<std::string> labels;
   std::map<std::string, int> scales;
-  for ( auto& m : map ) {
-    labels.push_back( m.first );
-    scales[m.first] = m.second->scale( );
-    if ( m.first.size( ) > maxlabelsize ) {
-      maxlabelsize = m.first.size( );
+  for ( auto& m : signals ) {
+    labels.push_back( m->name( ) );
+    scales[m->name( )] = m->scale( );
+    if ( m->name( ).size( ) > maxlabelsize ) {
+      maxlabelsize = m->name( ).size( );
     }
   }
 
-  std::vector<std::vector < std::string>> syncd = SignalUtils::syncDatas( map );
-  size_t dims[2] = { syncd.size( ), map.size( ) };
-
+  std::vector<std::vector < std::string>> syncd = SignalUtils::syncDatas( signals );
   const int rows = syncd.size( );
-  const int cols = map.size( );
+  const int cols = signals.size( );
+
+  size_t dims[2] = { (size_t) rows, (size_t) cols };
+
   int timestamps[rows] = { 0 };
   short vitals[rows * cols];
   int row = 0;

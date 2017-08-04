@@ -47,7 +47,6 @@ int ZlWriter::drain( SignalSet& info ) {
   int vidx = 0;
   for ( auto& map : info.vitals( ) ) {
     vls.push_back( map.first );
-    map.second->startPopping( );
     vits[vidx++] = std::move( map.second->pop( ) );
 
     if ( map.second->startTime( ) < firsttime ) {
@@ -58,7 +57,6 @@ int ZlWriter::drain( SignalSet& info ) {
   int widx = 0;
   for ( auto& map : info.waves( ) ) {
     ws.push_back( map.first );
-    map.second->startPopping( );
     wavs[widx++] = std::move( map.second->pop( ) );
 
     if ( map.second->startTime( ) < firsttime ) {

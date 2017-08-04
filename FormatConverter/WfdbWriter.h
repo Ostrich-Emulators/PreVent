@@ -34,12 +34,12 @@ protected:
 private:
 	WfdbWriter( const WfdbWriter& orig );
 
-	int write( std::map<std::string, std::unique_ptr<SignalData>>&data );
-	std::vector<std::vector<WFDB_Sample>> sync( std::map<std::string, std::unique_ptr<SignalData>>&data,
-			std::vector<std::string>& labels );
+	int write( double freq, std::vector<std::unique_ptr<SignalData>>&data );
+	std::vector<std::vector<WFDB_Sample>> sync( std::vector<std::unique_ptr<SignalData>>&data );
 
 	std::string fileloc;
 	std::string currdir;
+	std::vector<std::string> files;
 	std::map<std::string, WFDB_Siginfo> sigmap;
 };
 

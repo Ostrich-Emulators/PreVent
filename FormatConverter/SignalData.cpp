@@ -19,6 +19,7 @@
 #include <sstream>
 #include <fstream>
 #include <cstdio>
+#include <limits>
 
 const int SignalData::CACHE_LIMIT = 15000;
 
@@ -28,8 +29,9 @@ const std::string SignalData::UOM = "Unit of Measure";
 const std::string SignalData::MSM = "Missing Value Marker";
 const std::string SignalData::TIMEZONE = "Timezone";
 
-SignalData::SignalData( const std::string& name, bool largefile )
-: label( name ), firstdata( 2099999999 ), lastdata( 0 ), datacount( 0 ) {
+SignalData::SignalData( const std::string& name, bool largefile, bool wavedata )
+: label( name ), firstdata( std::numeric_limits<time_t>::max( ) ), lastdata( 0 ),
+datacount( 0 ), popping( false ), iswave( wavedata ) {
   file = ( largefile ? std::tmpfile( ) : NULL );
   setScale( 1 );
   setUom( "Uncalib" );
@@ -38,7 +40,8 @@ SignalData::SignalData( const std::string& name, bool largefile )
 SignalData::SignalData( const SignalData& orig ) : label( orig.label ),
 firstdata( orig.firstdata ), lastdata( orig.lastdata ),
 datacount( orig.datacount ), metadatas( orig.metadatas ),
-metadatai( orig.metadatai ), metadatad( orig.metadatad ) {
+metadatai( orig.metadatai ), metadatad( orig.metadatad ), popping( orig.popping ),
+iswave( orig.iswave ) {
   for ( auto const& i : orig.data ) {
     data.push_front( std::unique_ptr<DataRow>( new DataRow( *i ) ) );
   }
@@ -50,6 +53,7 @@ std::unique_ptr<SignalData> SignalData::shallowcopy( ) {
   copy->metad( ).insert( metadatad.begin( ), metadatad.end( ) );
   copy->metai( ).insert( metadatai.begin( ), metadatai.end( ) );
   copy->metas( ).insert( metadatas.begin( ), metadatas.end( ) );
+  copy->popping = this->popping;
   return copy;
 }
 
@@ -65,6 +69,12 @@ std::map<std::string, double>& SignalData::metad( ) {
   return metadatad;
 }
 
+double SignalData::hz( ) const {
+  return ( 0 == metadatad.count( SignalData::HERTZ )
+      ? 1
+      : metadatad.at( SignalData::HERTZ ) );
+}
+
 const time_t& SignalData::startTime( ) const {
   return firstdata;
 }
@@ -78,6 +88,10 @@ bool SignalData::empty( ) const {
 }
 
 std::unique_ptr<DataRow> SignalData::pop( ) {
+  if ( !popping ) {
+    startPopping( );
+  }
+
   datacount--;
   if ( NULL != file && data.empty( ) ) {
     int lines = uncache( );
@@ -116,6 +130,7 @@ const std::string& SignalData::uom( ) const {
 }
 
 void SignalData::startPopping( ) {
+  popping = true;
   if ( NULL != file ) {
     cache( ); // copy any extra rows to disk
     std::rewind( file );
@@ -153,6 +168,14 @@ void SignalData::add( const DataRow& row ) {
   if ( row.time < firstdata ) {
     firstdata = row.time;
   }
+}
+
+void SignalData::setWave( bool wave ) {
+  iswave = wave;
+}
+
+bool SignalData::wave( ) const {
+  return iswave;
 }
 
 int SignalData::uncache( int max ) {
