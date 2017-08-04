@@ -84,6 +84,27 @@ int MatWriter::drain( SignalSet& info ) {
   return 0;
 }
 
+int MatWriter::writeStrings( const std::string& label, std::vector<std::string>& strings ) {
+  const size_t rows = strings.size( );
+  size_t dims[2] = { rows, 1 };
+
+  matvar_t * var = Mat_VarCreate( label.c_str( ), MAT_C_CELL, MAT_T_CELL, 2,
+      dims, NULL, 0 );
+
+  for ( int i = 0; i < rows; i++ ) {
+    size_t strdims[2] = { 1, strings[i].size( ) };
+    char * text = (char *) strings[i].c_str( );
+    matvar_t * vart = Mat_VarCreate( NULL, MAT_C_CHAR, MAT_T_UTF8, 2, strdims,
+        text, 0 );
+    Mat_VarSetCell( var, i, vart );
+    // does vart get free'd when var does?
+  }
+
+  int ok = Mat_VarWrite( matfile, var, compression );
+  Mat_VarFree( var );
+  return ok;
+}
+
 int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&oldmap ) {
   time_t earliest;
   time_t latest;
@@ -91,19 +112,17 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
   std::vector<std::unique_ptr < SignalData>> signals = SignalUtils::vectorize( oldmap );
 
   SignalUtils::firstlast( signals, &earliest, &latest );
-  int maxlabelsize = 0;
 
   float freq = ( *signals.begin( ) )->hz( );
   const int timestep = ( freq < 1 ? 1 / freq : 1 );
 
   std::vector<std::string> labels;
+  std::vector<std::string> uoms;
   std::map<std::string, int> scales;
   for ( auto& m : signals ) {
     labels.push_back( m->name( ) );
     scales[m->name( )] = m->scale( );
-    if ( m->name( ).size( ) > maxlabelsize ) {
-      maxlabelsize = m->name( ).size( );
-    }
+    uoms.push_back( m->uom( ) );
   }
 
   std::vector<std::vector < std::string>> syncd = SignalUtils::syncDatas( signals );
@@ -157,22 +176,9 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
   Mat_VarWrite( matfile, var, compression );
   Mat_VarFree( var );
 
-  dims[0] = cols;
-  dims[1] = 1;
-  var = Mat_VarCreate( "vlabels", MAT_C_CELL, MAT_T_CELL, 2, dims, NULL, 0 );
-
-  for ( int i = 0; i < cols; i++ ) {
-    size_t strdims[2] = { 1, labels[i].size( ) };
-    char * text = (char *) labels[i].c_str( );
-    matvar_t * vart = Mat_VarCreate( NULL, MAT_C_CHAR, MAT_T_UTF8, 2, strdims,
-        text, 0 );
-    Mat_VarSetCell( var, i, vart );
-    // does vart get free'd when var does?
-  }
-
-  Mat_VarWrite( matfile, var, compression );
-
-  Mat_VarFree( var );
+  // units of measure
+  writeStrings( "vuom", uoms );
+  writeStrings( "vlabels", labels );
 
   // FIXME: (metadata?)
 

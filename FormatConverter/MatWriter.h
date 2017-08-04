@@ -41,6 +41,9 @@ private:
 	int writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&data );
 	int writeWaves( std::map<std::string, std::unique_ptr<SignalData>>&data );
 
+	int writeStrings( const std::string& label, std::vector<std::string>& strings );
+	
+
 	std::string fileloc;
 	mat_t * matfile;
 	time_t firsttime;
