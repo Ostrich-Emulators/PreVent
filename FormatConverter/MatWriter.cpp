@@ -86,19 +86,38 @@ int MatWriter::drain( SignalSet& info ) {
 
 int MatWriter::writeStrings( const std::string& label, std::vector<std::string>& strings ) {
   const size_t rows = strings.size( );
-  size_t dims[2] = { rows, 1 };
-
-  matvar_t * var = Mat_VarCreate( label.c_str( ), MAT_C_CELL, MAT_T_CELL, 2,
-      dims, NULL, 0 );
-
-  for ( int i = 0; i < rows; i++ ) {
-    size_t strdims[2] = { 1, strings[i].size( ) };
-    char * text = (char *) strings[i].c_str( );
-    matvar_t * vart = Mat_VarCreate( NULL, MAT_C_CHAR, MAT_T_UTF8, 2, strdims,
-        text, 0 );
-    Mat_VarSetCell( var, i, vart );
-    // does vart get free'd when var does?
+  size_t cols = 0;
+  for ( auto& s : strings ) {
+    if ( s.size( ) > cols ) {
+      cols = s.size( );
+    }
   }
+
+  // WARNING: matlab/matio needs column-major ordering
+  size_t dims[] = { rows, cols };
+  char strdata[cols][rows] = { };
+  for ( int c = 0; c < cols; c++ ) {
+    for ( int r = 0; r < rows; r++ ) {
+      strdata[c][r] = ( c > strings[r].size( ) ? ' ' : strings[r][c] );
+    }
+  }
+
+  matvar_t * var = Mat_VarCreate( label.c_str( ), MAT_C_CHAR, MAT_T_UTF8, 2,
+      dims, strdata, 0 );
+
+  // this is the code for writing cells, which seems more appropriate to me
+  // 
+  //  matvar_t * var = Mat_VarCreate( label.c_str( ), MAT_C_CELL, MAT_T_CELL, 2,
+  //      dims, NULL, 0 );
+  //
+  //  for ( int i = 0; i < rows; i++ ) {
+  //    size_t strdims[2] = { 1, strings[i].size( ) };
+  //    char * text = (char *) strings[i].c_str( );
+  //    matvar_t * vart = Mat_VarCreate( NULL, MAT_C_CHAR, MAT_T_UTF8, 2, strdims,
+  //        text, 0 );
+  //    Mat_VarSetCell( var, i, vart );
+  //    // does vart get free'd when var does?
+  //  }
 
   int ok = Mat_VarWrite( matfile, var, compression );
   Mat_VarFree( var );
