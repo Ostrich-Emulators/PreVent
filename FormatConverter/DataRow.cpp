@@ -60,6 +60,10 @@ int DataRow::scale( const std::string& val ) {
 }
 
 std::vector<int> DataRow::values( ) const {
+  return values( data );
+}
+
+std::vector<int> DataRow::values( const std::string& data ) {
   std::stringstream stream( data );
   std::vector<int> vals;
   for ( std::string each; std::getline( stream, each, ',' ); ) {

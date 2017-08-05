@@ -228,15 +228,16 @@ void StpXmlReader::handleWaveformSet( SignalSet& info ) {
     }
     else {
       // reverse the oversampling (if any) and set the true Hz
-      int hz = 240;
+      int thz = 240;
       if ( 0 != Hz60.count( wave ) ) {
         vals = resample( vals, 60 );
-        hz = 60;
+        thz = 60;
       }
       else if ( 0 != Hz120.count( wave ) ) {
         vals = resample( vals, 120 );
-        hz = 120;
+        thz = 120;
       }
+      const int hz = thz;
 
       if ( waveIsOk( vals ) ) {
         bool first;
@@ -253,10 +254,9 @@ void StpXmlReader::handleWaveformSet( SignalSet& info ) {
         sig->metad( )[SignalData::HERTZ] = hz;
 
         // Split the vals in half, and make two 1-second DataRows
-        int hz = hz / 2;
         std::stringstream lines( vals );
         std::string firstvals;
-        for ( int i = 0; i < hz / 2; i++ ) {
+        for ( int i = 0; i < hz; i++ ) {
           std::string each;
           std::getline( lines, each, ',' );
           if ( !firstvals.empty( ) ) {
@@ -264,7 +264,7 @@ void StpXmlReader::handleWaveformSet( SignalSet& info ) {
           }
           firstvals.append( each );
         }
-        std::string secondvals = vals.substr( firstvals.size( ) );
+        std::string secondvals = vals.substr( firstvals.size( ) + 1 );
         sig->add( DataRow( currtime, firstvals ) );
         sig->add( DataRow( currtime + 1, secondvals ) );
       }
