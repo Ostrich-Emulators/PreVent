@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cstring>
 #include <bitset>
+#include <iomanip>
 
 #include "config.h"
 #include "SignalSet.h"
@@ -47,9 +48,6 @@ int MatWriter::initDataSet( const std::string& directory, const std::string& nam
 }
 
 std::vector<std::string> MatWriter::closeDataSet( ) {
-  writeVitals( dataptr->vitals( ) );
-  writeWaves( dataptr->waves( ) );
-
   Mat_Close( matfile );
 
   std::ifstream src( fileloc, std::ios::binary );
@@ -68,17 +66,18 @@ std::vector<std::string> MatWriter::closeDataSet( ) {
 
 int MatWriter::drain( SignalSet& info ) {
   dataptr = &info;
-  for ( auto& m : info.vitals( ) ) {
-    time_t t = m.second->startTime( );
-    if ( t < firsttime ) {
-      firsttime = t;
-    }
+  firsttime = info.earliest( );
+
+  writeVitals( info.vitals( ) );
+
+  std::map<int, std::vector<std::unique_ptr < SignalData>>> freqgroups;
+  for ( auto& ds : info.waves( ) ) {
+    int freq = (int) ds.second->hz( );
+    freqgroups[freq].push_back( std::move( ds.second ) );
   }
-  for ( auto& m : info.waves( ) ) {
-    time_t t = m.second->startTime( );
-    if ( t < firsttime ) {
-      firsttime = t;
-    }
+
+  for ( auto& ds : freqgroups ) {
+    writeWaves( ds.first, ds.second );
   }
 
   return 0;
@@ -204,6 +203,84 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
   return 0;
 }
 
-int MatWriter::writeWaves( std::map<std::string, std::unique_ptr<SignalData>>&data ) {
+int MatWriter::writeWaves( int freq, std::vector<std::unique_ptr<SignalData>>&signals ) {
+  time_t earliest;
+  time_t latest;
+
+  const std::string sfx = std::to_string( (int) freq ) + "hz";
+
+  SignalUtils::firstlast( signals, &earliest, &latest );
+
+  const int timestep = 1;
+
+  std::vector<std::string> labels;
+  std::vector<std::string> uoms;
+  for ( auto& m : signals ) {
+    labels.push_back( m->name( ) );
+    uoms.push_back( m->uom( ) );
+  }
+
+  std::vector<std::vector < std::string>> syncd = SignalUtils::syncDatas( signals );
+  const int rows = syncd.size( ) * freq;
+  const int cols = signals.size( );
+
+  size_t dims[2] = { (size_t) rows, (size_t) cols };
+
+  double timestamps[rows] = { 0 };
+  short datapoints[rows * cols];
+  int row = 0;
+  time_t currenttime = earliest;
+  for ( std::vector<std::string> rowcols : syncd ) {
+    int col = 0;
+    for ( std::string valstr : rowcols ) {
+      std::vector<int> slices = DataRow::values( valstr );
+      for ( int slice = 0; slice < slices.size( ); slice++ ) {
+        // WARNING: we're transposing these values
+        // (because that's how matio wants them)!
+        int idx = col * rows * freq + row + ( slice * cols );
+        datapoints[idx] = (short) slices[slice];
+      }
+
+      col++;
+    }
+
+    for ( int i = 0; i < freq; i++ ) {
+      double fractiontime = (double) i / (double) freq;
+      double mytime = currenttime;
+      mytime += fractiontime;
+
+      //      std::cout << "current time: " << currenttime
+      //          << " fractional: " << fractiontime
+      //          << std::setw( 11 ) << std::setprecision( 15 ) << " total: " << mytime
+      //          << std::endl;
+
+      int idx = row * freq + i;
+      timestamps[idx] = currenttime + fractiontime;
+    }
+    currenttime += timestep;
+    row++;
+  }
+
+  matvar_t * var = Mat_VarCreate( std::string( "waves" + sfx ).c_str( ),
+      MAT_C_INT16, MAT_T_INT16, 2, dims, datapoints, 0 );
+
+  Mat_VarWrite( matfile, var, compression );
+  Mat_VarFree( var );
+
+  // timestamps
+  dims[0] = rows;
+  dims[1] = 1;
+
+  var = Mat_VarCreate( std::string( "wt" + sfx ).c_str( ),
+      MAT_C_DOUBLE, MAT_T_DOUBLE, 2, dims, timestamps, 0 );
+  Mat_VarWrite( matfile, var, compression );
+  Mat_VarFree( var );
+
+  // units of measure
+  writeStrings( "wuom" + sfx, uoms );
+  writeStrings( "wlabels" + sfx, labels );
+
+  // FIXME: (metadata?)
+
   return 0;
 }
