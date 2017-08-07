@@ -39,7 +39,7 @@ private:
 	MatWriter( const MatWriter& orig );
 
 	int writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&data );
-	int writeWaves( int freq, std::vector<std::unique_ptr<SignalData>>&data );
+	int writeWaves( const int& freq, std::vector<std::unique_ptr<SignalData>>&data );
 
 	int writeStrings( const std::string& label, std::vector<std::string>& strings );
 

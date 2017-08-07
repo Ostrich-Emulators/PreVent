@@ -36,6 +36,7 @@ public:
 	 */
 	std::vector<int> values( ) const;
 	static std::vector<int> values( const std::string& );
+	static std::vector<short> shorts( const std::string& );
 
 
 	virtual ~DataRow( );

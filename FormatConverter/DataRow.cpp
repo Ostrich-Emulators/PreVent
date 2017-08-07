@@ -71,3 +71,12 @@ std::vector<int> DataRow::values( const std::string& data ) {
   }
   return vals;
 }
+
+std::vector<short> DataRow::shorts( const std::string& data ) {
+  std::stringstream stream( data );
+  std::vector<short> vals;
+  for ( std::string each; std::getline( stream, each, ',' ); ) {
+    vals.push_back( (short) ( std::stoi( each ) ) );
+  }
+  return vals;
+}

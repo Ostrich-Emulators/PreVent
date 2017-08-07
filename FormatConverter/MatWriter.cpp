@@ -12,6 +12,7 @@
 #include <cstring>
 #include <bitset>
 #include <iomanip>
+#include <vector>
 
 #include "config.h"
 #include "SignalSet.h"
@@ -30,7 +31,8 @@ MatWriter::~MatWriter( ) {
 int MatWriter::initDataSet( const std::string& directory, const std::string& namestart, int comp ) {
   firsttime = std::numeric_limits<time_t>::max( );
   fileloc = directory + namestart;
-  compression = ( 0 == comp ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
+  //compression = ( 0 == comp ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
+  compression = MAT_COMPRESSION_NONE;
 
   char fulldatetime[sizeof "Thu Nov 31 10:10:27 1997"];
   time_t now;
@@ -203,11 +205,11 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
   return 0;
 }
 
-int MatWriter::writeWaves( int freq, std::vector<std::unique_ptr<SignalData>>&signals ) {
+int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalData>>&signals ) {
   time_t earliest;
   time_t latest;
 
-  const std::string sfx = std::to_string( (int) freq ) + "hz";
+  const std::string sfx = std::to_string( freq ) + "hz";
 
   SignalUtils::firstlast( signals, &earliest, &latest );
 
@@ -221,56 +223,44 @@ int MatWriter::writeWaves( int freq, std::vector<std::unique_ptr<SignalData>>&si
   }
 
   std::vector<std::vector < std::string>> syncd = SignalUtils::syncDatas( signals );
-  const int rows = syncd.size( ) * freq;
+  const size_t rows = syncd.size( ) * freq;
   const int cols = signals.size( );
 
-  size_t dims[2] = { (size_t) rows, (size_t) cols };
+  size_t dims[2] = { rows, (size_t) cols };
+  matvar_t * var = Mat_VarCreate( std::string( "waves" + sfx ).c_str( ),
+      MAT_C_INT16, MAT_T_INT16, 2, dims, NULL, 0 );
 
+  // WARNING: if freq > 240 and the duration is a whole day, there will be
+  // too many numbers for this array to hold.
+  // FIXME: use incremental writing of this array
   double timestamps[rows] = { 0 };
-  short datapoints[rows * cols];
-  int row = 0;
-  time_t currenttime = earliest;
-  for ( std::vector<std::string> rowcols : syncd ) {
-    int col = 0;
-    for ( std::string valstr : rowcols ) {
-      std::vector<int> slices = DataRow::values( valstr );
-      for ( int slice = 0; slice < slices.size( ); slice++ ) {
-        // WARNING: we're transposing these values
-        // (because that's how matio wants them)!
-        int idx = col * rows * freq + row + ( slice * cols );
-        datapoints[idx] = (short) slices[slice];
-      }
-
-      col++;
-    }
-
-    for ( int i = 0; i < freq; i++ ) {
-      double fractiontime = (double) i / (double) freq;
-      double mytime = currenttime;
-      mytime += fractiontime;
-
-      //      std::cout << "current time: " << currenttime
-      //          << " fractional: " << fractiontime
-      //          << std::setw( 11 ) << std::setprecision( 15 ) << " total: " << mytime
-      //          << std::endl;
-
-      int idx = row * freq + i;
-      timestamps[idx] = currenttime + fractiontime;
+  double currenttime = earliest;
+  double slicetime = 1.0 / (double) freq;
+  for ( size_t row = 0; row < syncd.size( ); row++ ) {
+    for ( int j = 0; j < freq; j++ ) {
+      timestamps[row * freq + j] = currenttime + slicetime*j;
     }
     currenttime += timestep;
-    row++;
   }
 
-  matvar_t * var = Mat_VarCreate( std::string( "waves" + sfx ).c_str( ),
-      MAT_C_INT16, MAT_T_INT16, 2, dims, datapoints, 0 );
+  int start[2] = { 0, 0 };
+  int stride[2] = { 1, 1 };
+  int edge[2] = { freq, 1 };
 
-  Mat_VarWrite( matfile, var, compression );
+  for ( std::vector<std::string> rowcols : syncd ) {
+    for ( int col = 0; col < rowcols.size( ); col++ ) {
+      start[1] = col;
+      std::vector<short> slices = DataRow::shorts( rowcols[col] );
+      Mat_VarWriteData( matfile, var, &slices[0], start, stride, edge );
+    }
+
+    start[0] += freq;
+  }
   Mat_VarFree( var );
 
   // timestamps
   dims[0] = rows;
   dims[1] = 1;
-
   var = Mat_VarCreate( std::string( "wt" + sfx ).c_str( ),
       MAT_C_DOUBLE, MAT_T_DOUBLE, 2, dims, timestamps, 0 );
   Mat_VarWrite( matfile, var, compression );
