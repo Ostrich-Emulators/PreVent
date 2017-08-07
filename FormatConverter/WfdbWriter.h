@@ -35,7 +35,7 @@ private:
 	WfdbWriter( const WfdbWriter& orig );
 
 	int write( double freq, std::vector<std::unique_ptr<SignalData>>&data );
-	std::vector<std::vector<WFDB_Sample>> sync( std::vector<std::unique_ptr<SignalData>>&data );
+	void syncAndWrite( double freq, std::vector<std::unique_ptr<SignalData>>&data );
 
 	std::string fileloc;
 	std::string currdir;

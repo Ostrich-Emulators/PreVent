@@ -15,6 +15,7 @@
 #include "SignalSet.h"
 #include "SignalData.h"
 #include "SignalUtils.h"
+#include "config.h"
 
 WfdbWriter::WfdbWriter( ) {
 }
@@ -80,15 +81,13 @@ int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&dat
   }
 
   time_t firstTime = SignalUtils::firstlast( data );
-
-  auto synco = sync( data );
-
-  std::string suffix = ( freq < 1 ? "vitals" : std::to_string( (int)freq ) + "hz" );
+  std::string suffix = ( freq < 1 ? "vitals" : std::to_string( (int) freq ) + "hz" );
   std::string datedfile = fileloc + getDateSuffix( firstTime, "_" );
   std::string datafile = datedfile + "_" + suffix + ".dat";
   std::string headerfile = datedfile + "_" + suffix + ".hea";
-  files.push_back( datafile );
-  files.push_back( headerfile );
+  std::string cwd = getcwd( NULL, 0 );
+  files.push_back( cwd + dirsep + datafile );
+  files.push_back( cwd + dirsep + headerfile );
 
   WFDB_Siginfo sigs[sigmap.size( )];
   int i = 0;
@@ -109,44 +108,57 @@ int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&dat
     setbasetime( timestr );
   }
 
-  for ( const auto& vec : synco ) {
-    putvec( (WFDB_Sample *) ( &vec[0] ) );
-  }
+  syncAndWrite( freq, data );
 
   newheader( (char *) headerfile.c_str( ) ); // we know this is a valid record name
   return 0;
 }
 
-std::vector<std::vector<WFDB_Sample>> WfdbWriter::sync(
-    std::vector<std::unique_ptr<SignalData>>&olddata ) {
-
-  int idx = 0;
-  std::map<int, bool> wavemap;
-  for ( auto& m : olddata ) {
-    wavemap[idx++] = m->wave( );
-  }
+void WfdbWriter::syncAndWrite( double freq, std::vector<std::unique_ptr<SignalData>>&olddata ) {
 
   std::vector<std::vector < std::string>> data = SignalUtils::syncDatas( olddata );
 
-  std::vector<std::vector < WFDB_Sample>> ret;
-  idx = 0;
-  for ( std::vector<std::string> row : data ) {
-    std::vector<WFDB_Sample> vec;
+  if ( freq > 1 ) {
+    int ifrq = (int) freq;
 
-    for ( std::string rowcols : row ) {
-      if ( wavemap[idx ] ) {
-        std::stringstream stream( rowcols );
-        for ( std::string each; std::getline( stream, each, ',' ); ) {
-          vec.push_back( std::stoi( each ) );
+    // waveforms
+
+    // these are a little tricker than vitals, because each value is really
+    // ifrq comma-separated values in a string. We need to break the string
+    // apart, but also keep all the columns in sync. We do this by accumulating
+    // all the ifrq values for one row of data, then splitting each vector
+    // out individually
+    for ( std::vector<std::string> rowcols : data ) {
+      int cols = rowcols.size( );
+
+      WFDB_Sample samples[cols][ifrq] = { 0 };
+      for ( int col = 0; col < cols; col++ ) {
+        std::vector<int> slices = DataRow::values( rowcols[col] );
+
+        for ( int slice = 0; slice < slices.size( ); slice++ ) {
+          samples[col][slice] = slices[slice];
         }
       }
-      else {
-        vec.push_back( std::stoi( rowcols ) );
+
+      // we have all the samples for one second of readings, so add them
+      // to our datafile one row at a time.
+      WFDB_Sample onerow[rowcols.size( )];
+      for ( int f = 0; f < ifrq; f++ ) {
+        for ( int c = 0; c < cols; c++ ) {
+          onerow[c] = samples[c][f];
+        }
+        putvec( &onerow[0] );
       }
     }
-    ret.push_back( vec );
-    idx++;
   }
-
-  return ret;
+  else {
+    // vital signs
+    for ( std::vector<std::string> row : data ) {
+      std::vector<WFDB_Sample> vec;
+      for ( std::string rowcols : row ) {
+        vec.push_back( std::stoi( rowcols ) );
+      }
+      putvec( &vec[0] );
+    }
+  }
 }
