@@ -111,6 +111,12 @@ std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::vector<std::u
       //std::cout << "  " << m.first;
       if ( m->empty( ) ) {
         std::cout << m->name( ) << " BUG! ran out of data before anyone else" << std::endl;
+
+        std::string dummy = StpXmlReader::MISSING_VALUESTR;
+        for ( int i = 1; i < m->hz( ); i++ ) {
+          dummy.append( "," ).append( StpXmlReader::MISSING_VALUESTR );
+        }
+        rowcols.push_back( dummy );
       }
       else {
         const std::unique_ptr<DataRow>& row = m->pop( );
