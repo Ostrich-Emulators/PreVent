@@ -28,7 +28,8 @@ const std::string StpXmlReader::MISSING_VALUESTR( "-32768" );
 const std::set<std::string> StpXmlReader::Hz60({ "RR", "VNT_PRES", "VNT_FLOW" } );
 const std::set<std::string> StpXmlReader::Hz120({ "ICP1", "ICP2", "ICP4", "LA4" } );
 
-StpXmlReader::StpXmlReader( ) : warnMissingName( true ), warnJunkData( true ) {
+StpXmlReader::StpXmlReader( ) : warnMissingName( true ), warnJunkData( true ),
+lastvstime( 0 ), lastwavetime( 0 ) {
   LIBXML_TEST_VERSION
 }
 
@@ -123,7 +124,10 @@ ReadResult StpXmlReader::processNode( SignalSet& info ) {
           return handleSegmentPatientName( info );
         }
         else if ( "VitalSigns" == ele ) {
-          if ( isRollover( ) ) {
+          if ( xmlTextReaderIsEmptyElement( reader ) ) {
+            std::cout << "no vitals data" << std::endl;
+          }
+          else if ( isRollover( true ) ) {
             return ReadResult::END_OF_DAY;
           }
           else {
@@ -131,7 +135,10 @@ ReadResult StpXmlReader::processNode( SignalSet& info ) {
           }
         }
         else if ( "Waveforms" == ele ) {
-          if ( isRollover( ) ) {
+          if ( xmlTextReaderIsEmptyElement( reader ) ) {
+            std::cout << "no waveform data" << std::endl;
+          }
+          else if ( isRollover( false ) ) {
             return ReadResult::END_OF_DAY;
           }
           else {
@@ -144,17 +151,30 @@ ReadResult StpXmlReader::processNode( SignalSet& info ) {
       }
     }
     else if ( 2 == depth
-        && ( "VitalSigns" == element || "Waveforms" == element ) ) {
+        && ( "VitalSigns" == element || "Waveforms" == element )
+        && !xmlTextReaderIsEmptyElement( reader ) ) {
       // at level 2, it's either VitalSigns or Waveforms elements
-      if ( isRollover( ) ) {
+      bool isvital = ( "VitalSigns" == element );
+
+      if ( isRollover( isvital ) ) {
         return ReadResult::END_OF_DAY;
       }
       else {
-        if ( "VitalSigns" == element ) {
-          handleVitalsSet( info );
+        if ( isvital ) {
+          if ( lastvstime == currvstime ) {
+            std::cout << "skipping duplicate vital time: " << lastvstime << std::endl;
+          }
+          else {
+            handleVitalsSet( info );
+          }
         }
         else if ( "Waveforms" == element ) {
-          handleWaveformSet( info );
+          if ( lastwavetime == currwavetime ) {
+            std::cout << "skipping duplicate wave time: " << lastwavetime << std::endl;
+          }
+          else {
+            handleWaveformSet( info );
+          }
         }
         else {
           std::cerr << "unexpected node: " << element << std::endl;
@@ -192,10 +212,21 @@ ReadResult StpXmlReader::handleSegmentPatientName( SignalSet& info ) {
   return ReadResult::NORMAL;
 }
 
-bool StpXmlReader::isRollover( ) {
+bool StpXmlReader::isRollover( bool forVitals ) {
   // check the time against our previous time
   std::map<std::string, std::string> map = getAttrs( );
-  currtime = std::stol( map["Time"] );
+
+  time_t currtime = std::stol( map["Time"] );
+
+  if ( forVitals ) {
+    lastvstime = currvstime;
+    currvstime = currtime;
+  }
+  else {
+    lastwavetime = currwavetime;
+    currwavetime = currtime;
+  }
+
 
   if ( 0 == prevtime ) {
     prevtime = currtime;
@@ -265,8 +296,8 @@ void StpXmlReader::handleWaveformSet( SignalSet& info ) {
           firstvals.append( each );
         }
         std::string secondvals = vals.substr( firstvals.size( ) + 1 );
-        sig->add( DataRow( currtime, firstvals ) );
-        sig->add( DataRow( currtime + 1, secondvals ) );
+        sig->add( DataRow( currwavetime, firstvals ) );
+        sig->add( DataRow( currwavetime + 1, secondvals ) );
       }
       else if ( warnJunkData ) {
         warnJunkData = false;
@@ -335,7 +366,7 @@ DataRow StpXmlReader::handleOneVs( std::string& param, std::string& uom ) {
     next( ); // could be </VS> or the next <Par>
   }
 
-  return DataRow( currtime, val, hi, lo );
+  return DataRow( currvstime, val, hi, lo );
 }
 
 std::map<std::string, std::string> StpXmlReader::getHeaders( ) {

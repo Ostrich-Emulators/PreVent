@@ -112,11 +112,8 @@ std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::vector<std::u
       if ( m->empty( ) ) {
         std::cout << m->name( ) << " BUG! ran out of data before anyone else" << std::endl;
 
-        std::string dummy = StpXmlReader::MISSING_VALUESTR;
-        for ( int i = 1; i < m->hz( ); i++ ) {
-          dummy.append( "," ).append( StpXmlReader::MISSING_VALUESTR );
-        }
-        rowcols.push_back( dummy );
+        DataRow dummy = dummyfill( m, 0 );
+        rowcols.push_back( dummy.data );
       }
       else {
         const std::unique_ptr<DataRow>& row = m->pop( );
@@ -177,7 +174,7 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
       //std::cout << "  popped row at " << row->time << "; "
       //    << signal->size( ) << " rows left" << std::endl;
 
-      // fill in any rows between the last time and this signal's current time
+      // fill in any rows between this signal's current time and our expected next time
       fillGap( copy, row, nexttime, timestep );
 
       copy->add( *row );
@@ -185,11 +182,16 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
     }
 
     // fill in any rows after our signal's last time, but before the set's end time
+    time_t firsttime = nexttime;
     for ( nexttime; nexttime < latest + timestep; nexttime += timestep ) {
-      //std::cout << "    filling to end row at time " << nexttime << std::endl;
-      copy->add( DataRow( nexttime, StpXmlReader::MISSING_VALUESTR ) );
+      copy->add( dummyfill( signal, nexttime ) );
+    }
+    if ( firsttime != nexttime ) {
+      std::cout << "    filled ending rows from " << firsttime
+          << " to " << nexttime << std::endl;
     }
 
+    std::cout << signal->name( ) << " rows: " << copy->size( ) << std::endl;
     ret.push_back( std::move( copy ) );
   }
 
@@ -200,7 +202,7 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
   return ret;
 }
 
-void SignalUtils::fillGap( std::unique_ptr<SignalData>& data, std::unique_ptr<DataRow>& row,
+void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<DataRow>& row,
     time_t& nexttime, const int& timestep ) {
   if ( row->time == nexttime ) {
     return;
@@ -213,24 +215,42 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& data, std::unique_ptr<Da
 
   // easy case: 1 second time drift
   if ( 2 == timestep && row->time == nexttime + 1 ) {
-    std::cout << data->name( ) << " correcting time drift "
+    std::cout << signal->name( ) << " correcting time drift "
         << row->time << " to " << nexttime << std::endl;
     row->time = nexttime;
     return;
   }
 
+  time_t fillstart = nexttime;
   for ( nexttime; nexttime < row->time - timestep; nexttime += timestep ) {
-    std::cout << data->name( ) << " adding filler row at time " << nexttime << std::endl;
-    data->add( DataRow( nexttime, StpXmlReader::MISSING_VALUESTR ) );
+    signal->add( dummyfill( signal, nexttime ) );
   }
 
+  if ( nexttime != fillstart ) {
+    std::cout << signal->name( ) << " added filler rows from " << fillstart
+        << " to " << nexttime << std::endl;
+  }
+
+
   if ( 2 == timestep && row->time == nexttime + 1 ) {
-    std::cout << data->name( ) << " correcting time drift after filling data "
+    std::cout << signal->name( ) << " correcting time drift after filling data "
         << row->time << " to " << ( row->time - 1 ) << std::endl;
     row->time -= 1;
   }
   else {
-    data->add( DataRow( nexttime, StpXmlReader::MISSING_VALUESTR ) );
+    std::cout << signal->name( ) << " added filler row at " << nexttime << std::endl;
+    signal->add( dummyfill( signal, nexttime ) );
   }
+}
+
+DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const time_t& time ) {
+  std::string dummy = StpXmlReader::MISSING_VALUESTR;
+
+  if ( signal->wave( ) ) {
+    for ( int i = 1; i < signal->hz( ); i++ ) {
+      dummy.append( "," ).append( StpXmlReader::MISSING_VALUESTR );
+    }
+  }
+  return DataRow( time, dummy );
 }
 

@@ -78,6 +78,14 @@ CND_ARTIFACT_PATH_Debug-xml-to-mat=dist/Debug-xml-to-mat/GNU-Linux/formatconvert
 CND_PACKAGE_DIR_Debug-xml-to-mat=dist/Debug-xml-to-mat/GNU-Linux/package
 CND_PACKAGE_NAME_Debug-xml-to-mat=formatconverter.tar
 CND_PACKAGE_PATH_Debug-xml-to-mat=dist/Debug-xml-to-mat/GNU-Linux/package/formatconverter.tar
+# Debug-xml-to-mat-big configuration
+CND_PLATFORM_Debug-xml-to-mat-big=GNU-Linux
+CND_ARTIFACT_DIR_Debug-xml-to-mat-big=dist/Debug-xml-to-mat-big/GNU-Linux
+CND_ARTIFACT_NAME_Debug-xml-to-mat-big=formatconverter
+CND_ARTIFACT_PATH_Debug-xml-to-mat-big=dist/Debug-xml-to-mat-big/GNU-Linux/formatconverter
+CND_PACKAGE_DIR_Debug-xml-to-mat-big=dist/Debug-xml-to-mat-big/GNU-Linux/package
+CND_PACKAGE_NAME_Debug-xml-to-mat-big=formatconverter.tar
+CND_PACKAGE_PATH_Debug-xml-to-mat-big=dist/Debug-xml-to-mat-big/GNU-Linux/package/formatconverter.tar
 #
 # include compiler specific variables
 #

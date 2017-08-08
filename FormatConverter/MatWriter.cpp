@@ -229,19 +229,7 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   size_t dims[2] = { rows, (size_t) cols };
   matvar_t * var = Mat_VarCreate( std::string( "waves" + sfx ).c_str( ),
       MAT_C_INT16, MAT_T_INT16, 2, dims, NULL, 0 );
-
-  // WARNING: if freq > 240 and the duration is a whole day, there will be
-  // too many numbers for this array to hold.
-  // FIXME: use incremental writing of this array
-  double timestamps[rows] = { 0 };
-  double currenttime = earliest;
-  double slicetime = 1.0 / (double) freq;
-  for ( size_t row = 0; row < syncd.size( ); row++ ) {
-    for ( int j = 0; j < freq; j++ ) {
-      timestamps[row * freq + j] = currenttime + slicetime*j;
-    }
-    currenttime += timestep;
-  }
+  Mat_VarWriteInfo( matfile, var );
 
   int start[2] = { 0, 0 };
   int stride[2] = { 1, 1 };
@@ -259,10 +247,32 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   Mat_VarFree( var );
 
   // timestamps
+  // use incremental writing here too, because if we have 24 hours of >240hz
+  // samples, it's too much data to fit in memory
   dims[0] = rows;
   dims[1] = 1;
+  start[0] = 0;
+  start[1] = 0;
+  int tschunk = freq;
   var = Mat_VarCreate( std::string( "wt" + sfx ).c_str( ),
-      MAT_C_DOUBLE, MAT_T_DOUBLE, 2, dims, timestamps, 0 );
+      MAT_C_DOUBLE, MAT_T_DOUBLE, 2, dims, NULL, 0 );
+  Mat_VarWriteInfo( matfile, var );
+
+  double timestamps[tschunk] = { 0 };
+  double currenttime = earliest;
+  double slicetime = 1.0 / (double) freq;
+
+  for ( size_t row = 0; row < syncd.size( ); row++ ) {
+    for ( int slice = 0; slice < freq; slice++ ) {
+      timestamps[slice] = currenttime + slicetime*slice;
+    }
+
+    Mat_VarWriteData( matfile, var, timestamps, start, stride, edge );
+    start[0] += freq;
+
+    currenttime += timestep;
+  }
+
   Mat_VarWrite( matfile, var, compression );
   Mat_VarFree( var );
 

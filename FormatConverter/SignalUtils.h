@@ -70,7 +70,14 @@ private:
 
 	static void fillGap( std::unique_ptr<SignalData>& data,
 			std::unique_ptr<DataRow>& row, time_t& nexttime, const int& timestep );
-
+	/**
+	 * Creates a valid "dummy" DataRow for the given signal. (Wave forms need
+	 * a series of missing values, while vitals only need one.)
+	 * @param signal
+	 * @param time
+	 * @return
+	 */
+	static DataRow dummyfill( std::unique_ptr<SignalData>& signal, const time_t& time );
 };
 
 #endif /* SIGNALUTILS_H */

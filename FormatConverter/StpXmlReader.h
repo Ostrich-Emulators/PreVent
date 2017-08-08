@@ -75,7 +75,7 @@ private:
 	 * @param reader
 	 * @return true, if we should rollover
 	 */
-	bool isRollover( );
+	bool isRollover( bool forVitals );
 
 	std::map<std::string, std::string> getAttrs( );
 	std::map<std::string, std::string> getHeaders( );
@@ -113,7 +113,10 @@ private:
 
 	xmlTextReaderPtr reader;
 	time_t prevtime;
-	time_t currtime;
+	time_t currvstime;
+	time_t lastvstime;
+	time_t currwavetime;
+	time_t lastwavetime;
 	bool warnMissingName;
 	bool warnJunkData;
 	std::map<std::string, std::string> savedmeta;

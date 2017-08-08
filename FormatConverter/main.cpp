@@ -38,7 +38,8 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-o or --outdir <output directory>"
       << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
       << std::endl << "\t-p or --prefix <output file prefix>"
-      << std::endl << "\tValid formats: wfdb, hdf5, stpxml, zl, and mat(output only)s"
+      << std::endl << "\tValid input formats: wfdb, hdf5, stpxml"
+      << std::endl << "\tValid output formats: wfdb, hdf5, mat"
       //<< std::endl << "\tIf file is -, stdin is read for input, and the format is assumed to be our zl format, regardless of --from option"
       << std::endl << std::endl;
   exit( 1 );

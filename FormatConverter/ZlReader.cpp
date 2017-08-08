@@ -194,7 +194,12 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       std::getline( points, uom, '|' );
       std::getline( points, val, '|' );
 
-      std::unique_ptr<SignalData>& dataset = info.addWave( wavename );
+      bool first;
+      std::unique_ptr<SignalData>& dataset = info.addWave( wavename, &first );
+      if ( first ) {
+        //dataset->metad( )[SignalData::HERTZ] = 240;
+      }
+      
       points >> wavename >> uom >> val;
 
       dataset->setUom( uom );
