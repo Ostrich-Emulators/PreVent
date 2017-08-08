@@ -86,6 +86,14 @@ CND_ARTIFACT_PATH_Debug-xml-to-mat-big=dist/Debug-xml-to-mat-big/GNU-Linux/forma
 CND_PACKAGE_DIR_Debug-xml-to-mat-big=dist/Debug-xml-to-mat-big/GNU-Linux/package
 CND_PACKAGE_NAME_Debug-xml-to-mat-big=formatconverter.tar
 CND_PACKAGE_PATH_Debug-xml-to-mat-big=dist/Debug-xml-to-mat-big/GNU-Linux/package/formatconverter.tar
+# Debug-xml-to-wfdb-big configuration
+CND_PLATFORM_Debug-xml-to-wfdb-big=GNU-Linux
+CND_ARTIFACT_DIR_Debug-xml-to-wfdb-big=dist/Debug-xml-to-wfdb-big/GNU-Linux
+CND_ARTIFACT_NAME_Debug-xml-to-wfdb-big=formatconverter
+CND_ARTIFACT_PATH_Debug-xml-to-wfdb-big=dist/Debug-xml-to-wfdb-big/GNU-Linux/formatconverter
+CND_PACKAGE_DIR_Debug-xml-to-wfdb-big=dist/Debug-xml-to-wfdb-big/GNU-Linux/package
+CND_PACKAGE_NAME_Debug-xml-to-wfdb-big=formatconverter.tar
+CND_PACKAGE_PATH_Debug-xml-to-wfdb-big=dist/Debug-xml-to-wfdb-big/GNU-Linux/package/formatconverter.tar
 #
 # include compiler specific variables
 #
