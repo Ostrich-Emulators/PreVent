@@ -31,8 +31,7 @@ MatWriter::~MatWriter( ) {
 int MatWriter::initDataSet( const std::string& directory, const std::string& namestart, int comp ) {
   firsttime = std::numeric_limits<time_t>::max( );
   fileloc = directory + namestart;
-  //compression = ( 0 == comp ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
-  compression = MAT_COMPRESSION_NONE;
+  compression = ( 0 == comp ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
 
   char fulldatetime[sizeof "Thu Nov 31 10:10:27 1997"];
   time_t now;
@@ -222,6 +221,10 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
     uoms.push_back( m->uom( ) );
   }
 
+    // units of measure
+  writeStrings( "wuom" + sfx, uoms );
+  writeStrings( "wlabels" + sfx, labels );
+
   std::vector<std::vector < std::string>> syncd = SignalUtils::syncDatas( signals );
   const size_t rows = syncd.size( ) * freq;
   const int cols = signals.size( );
@@ -275,10 +278,6 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
 
   Mat_VarWrite( matfile, var, compression );
   Mat_VarFree( var );
-
-  // units of measure
-  writeStrings( "wuom" + sfx, uoms );
-  writeStrings( "wlabels" + sfx, labels );
 
   // FIXME: (metadata?)
 

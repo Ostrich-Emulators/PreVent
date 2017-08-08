@@ -191,7 +191,7 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
           << " to " << nexttime << std::endl;
     }
 
-    std::cout << signal->name( ) << " rows: " << copy->size( ) << std::endl;
+    // std::cout << signal->name( ) << " rows: " << copy->size( ) << std::endl;
     ret.push_back( std::move( copy ) );
   }
 
