@@ -30,8 +30,37 @@ Format Formats::getValue( const std::string& fmt ) {
   if ( "zl" == fmt || "dszl" == fmt ) {
     return DSZL;
   }
-  if ( "mat" == fmt || "matlab" == fmt ) {
-    return MAT;
+  if ( "mat73" == fmt || "matlab73" == fmt ) {
+    return MAT73;
+  }
+  if ( "mat4" == fmt || "matlab4" == fmt ) {
+    return MAT4;
+  }
+  if ( "mat" == fmt || "matlab" == fmt || "mat5" == fmt || "matlab5" == fmt ) {
+    return MAT5;
   }
   return UNRECOGNIZED;
+}
+
+Format Formats::guess( const std::string& filename ) {
+  int idx = filename.find_last_of( '.' );
+  if ( idx > 0 ) {
+    std::string suffix = filename.substr( idx + 1 );
+    if ( "mat" == suffix ) {
+      return Format::MAT5;
+    }
+    else if ( "hdf5" == suffix || "h5" == suffix ) {
+      return Format::HDF5;
+    }
+    else if ( "xml" == suffix ) {
+      return Format::STPXML;
+    }
+    else if ( "zl" == suffix ) {
+      return Format::DSZL;
+    }
+    else if ( "hea" == suffix ) {
+      return Format::WFDB;
+    }
+  }
+  return Format::UNRECOGNIZED;
 }

@@ -18,12 +18,13 @@
 
 // valid formats
 enum Format {
-	UNRECOGNIZED, WFDB, HDF5, STPXML, DSZL, MAT
+	UNRECOGNIZED, WFDB, HDF5, STPXML, DSZL, MAT5, MAT4, MAT73
 };
 
 class Formats {
 public:
 	static Format getValue( const std::string& fmt );
+	static Format guess( const std::string& filename );
 	virtual ~Formats( );
 private:
 	Formats( );

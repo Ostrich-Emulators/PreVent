@@ -19,7 +19,7 @@
 #include "SignalData.h"
 #include "SignalUtils.h"
 
-MatWriter::MatWriter( ) {
+MatWriter::MatWriter( MatVersion ver ) : version( ver ) {
 }
 
 MatWriter::MatWriter( const MatWriter& ) {
@@ -39,11 +39,27 @@ int MatWriter::initDataSet( const std::string& directory, const std::string& nam
   std::strftime( fulldatetime, sizeof fulldatetime, "%c", gmtime( &now ) );
 
   std::stringstream header;
-  header << "MATLAB 5.0 MAT-file, Platform: " << osname
+  mat_ft ver;
+  header << "MATLAB ";
+  switch ( version ) {
+    case MV5:
+      ver = MAT_FT_MAT5;
+      header << "5.0";
+      break;
+    case MV4:
+      ver = MAT_FT_MAT4;
+      header << "4.0";
+      break;
+    default:
+      ver= MAT_FT_MAT73;
+      header << "7.3";
+  }
+
+  header << "  MAT-file, Platform: " << osname
       << ", Created by: fmtcnv (rpb6eg@virginia.edu) on: "
       << fulldatetime;
 
-  matfile = Mat_CreateVer( fileloc.c_str( ), header.str( ).c_str( ), MAT_FT_MAT5 );
+  matfile = Mat_CreateVer( fileloc.c_str( ), header.str( ).c_str( ), ver );
 
   return !( matfile );
 }
@@ -221,7 +237,7 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
     uoms.push_back( m->uom( ) );
   }
 
-    // units of measure
+  // units of measure
   writeStrings( "wuom" + sfx, uoms );
   writeStrings( "wlabels" + sfx, labels );
 

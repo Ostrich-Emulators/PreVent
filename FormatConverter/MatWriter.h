@@ -24,9 +24,11 @@
 class SignalData;
 class SignalSet;
 
+enum MatVersion { MV4, MV5, MV7 };
+
 class MatWriter : public Writer {
 public:
-	MatWriter( );
+	MatWriter( MatVersion version = MV5  );
 	virtual ~MatWriter( );
 
 protected:
@@ -48,6 +50,7 @@ private:
 	time_t firsttime;
 	SignalSet * dataptr;
 	matio_compression compression;
+        MatVersion version;
 };
 
 

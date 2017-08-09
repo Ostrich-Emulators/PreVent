@@ -97,6 +97,27 @@ int main( int argc, char** argv ) {
   }
 
   if ( "" == fromstr ) {
+    Format f = Formats::guess( argv[optind] );
+    switch ( f ) {
+      case HDF5:
+        fromstr = "hdf5";
+        break;
+      case WFDB:
+        fromstr = "wfdb";
+        break;
+      case MAT5:
+        fromstr = "mat5";
+        break;
+      case STPXML:
+        fromstr = "stpxml";
+        break;
+      case DSZL:
+        fromstr = "zl";
+        break;
+    }
+  }
+
+  if ( "" == fromstr ) {
     helpAndExit( argv[0], "--from not specified" );
   }
   else if ( "" == tostr ) {

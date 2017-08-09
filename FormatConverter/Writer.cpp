@@ -28,8 +28,12 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
       return std::unique_ptr<Writer>( new WfdbWriter( ) );
     case DSZL:
       return std::unique_ptr<Writer>( new ZlWriter( ) );
-    case MAT:
-      return std::unique_ptr<Writer>( new MatWriter( ) );
+    case MAT73:
+      return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV7 ) );
+    case MAT5:
+      return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV5 ) );
+    case MAT4:
+      return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV4 ) );
     default:
       throw "writer not yet implemented";
   }
