@@ -51,7 +51,7 @@ int MatWriter::initDataSet( const std::string& directory, const std::string& nam
       header << "4.0";
       break;
     default:
-      ver= MAT_FT_MAT73;
+      ver = MAT_FT_MAT73;
       header << "7.3";
   }
 
@@ -102,38 +102,43 @@ int MatWriter::drain( SignalSet& info ) {
 
 int MatWriter::writeStrings( const std::string& label, std::vector<std::string>& strings ) {
   const size_t rows = strings.size( );
-  size_t cols = 0;
-  for ( auto& s : strings ) {
-    if ( s.size( ) > cols ) {
-      cols = s.size( );
-    }
-  }
+
 
   // WARNING: matlab/matio needs column-major ordering
-  size_t dims[] = { rows, cols };
-  char strdata[cols][rows] = { };
-  for ( int c = 0; c < cols; c++ ) {
-    for ( int r = 0; r < rows; r++ ) {
-      strdata[c][r] = ( c > strings[r].size( ) ? ' ' : strings[r][c] );
-    }
-  }
 
-  matvar_t * var = Mat_VarCreate( label.c_str( ), MAT_C_CHAR, MAT_T_UTF8, 2,
-      dims, strdata, 0 );
+  // this is the logic for writing a character matrix, where every name
+  // has the same number of spaces
+  //  size_t cols = 0;
+  //  for ( auto& s : strings ) {
+  //    if ( s.size( ) > cols ) {
+  //      cols = s.size( );
+  //    }
+  //  }
+  //
+  //  size_t dims[] = { rows, cols };
+  //  char strdata[cols][rows] = { };
+  //  for ( int c = 0; c < cols; c++ ) {
+  //    for ( int r = 0; r < rows; r++ ) {
+  //      strdata[c][r] = ( c > strings[r].size( ) ? ' ' : strings[r][c] );
+  //    }
+  //  }
+  //
+  //  matvar_t * var = Mat_VarCreate( label.c_str( ), MAT_C_CHAR, MAT_T_UTF8, 2,
+  //      dims, strdata, 0 );
 
   // this is the code for writing cells, which seems more appropriate to me
-  // 
-  //  matvar_t * var = Mat_VarCreate( label.c_str( ), MAT_C_CELL, MAT_T_CELL, 2,
-  //      dims, NULL, 0 );
-  //
-  //  for ( int i = 0; i < rows; i++ ) {
-  //    size_t strdims[2] = { 1, strings[i].size( ) };
-  //    char * text = (char *) strings[i].c_str( );
-  //    matvar_t * vart = Mat_VarCreate( NULL, MAT_C_CHAR, MAT_T_UTF8, 2, strdims,
-  //        text, 0 );
-  //    Mat_VarSetCell( var, i, vart );
-  //    // does vart get free'd when var does?
-  //  }
+  size_t dims[] = { 1, rows };
+  matvar_t * var = Mat_VarCreate( label.c_str( ), MAT_C_CELL, MAT_T_CELL, 2,
+      dims, NULL, 0 );
+
+  for ( int i = 0; i < rows; i++ ) {
+    size_t strdims[2] = { 1, strings[i].size( ) };
+    char * text = (char *) strings[i].c_str( );
+    matvar_t * vart = Mat_VarCreate( NULL, MAT_C_CHAR, MAT_T_UTF8, 2, strdims,
+        text, 0 );
+    Mat_VarSetCell( var, i, vart );
+    // does vart get free'd when var does?
+  }
 
   int ok = Mat_VarWrite( matfile, var, compression );
   Mat_VarFree( var );
@@ -245,10 +250,15 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   const size_t rows = syncd.size( ) * freq;
   const int cols = signals.size( );
 
-  size_t dims[2] = { rows, (size_t) cols };
-  matvar_t * var = Mat_VarCreate( std::string( "waves" + sfx ).c_str( ),
-      MAT_C_INT16, MAT_T_INT16, 2, dims, NULL, 0 );
-  Mat_VarWriteInfo( matfile, var );
+  size_t dims[2] = { rows, 1 };
+
+  std::vector<matvar_t *> vars;
+  for ( int i = 0; i < cols; i++ ) {
+    matvar_t * var = Mat_VarCreate( signals[i]->name( ).c_str( ),
+        MAT_C_INT16, MAT_T_INT16, 2, dims, NULL, 0 );
+    Mat_VarWriteInfo( matfile, var );
+    vars.push_back( var );
+  }
 
   int start[2] = { 0, 0 };
   int stride[2] = { 1, 1 };
@@ -256,14 +266,16 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
 
   for ( std::vector<std::string> rowcols : syncd ) {
     for ( int col = 0; col < rowcols.size( ); col++ ) {
-      start[1] = col;
       std::vector<short> slices = DataRow::shorts( rowcols[col] );
-      Mat_VarWriteData( matfile, var, &slices[0], start, stride, edge );
+      Mat_VarWriteData( matfile, vars[col], &slices[0], start, stride, edge );
     }
 
     start[0] += freq;
   }
-  Mat_VarFree( var );
+
+  for ( int i = 0; i < vars.size( ); i++ ) {
+    Mat_VarFree( vars[i] );
+  }
 
   // timestamps
   // use incremental writing here too, because if we have 24 hours of >240hz
@@ -272,27 +284,36 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   dims[1] = 1;
   start[0] = 0;
   start[1] = 0;
-  int tschunk = freq;
-  var = Mat_VarCreate( std::string( "wt" + sfx ).c_str( ),
+  const int tschunk = freq * 2000; // arbitrary, but on the big side
+  edge[0] = tschunk;
+
+  matvar_t * var = Mat_VarCreate( std::string( "wt" + sfx ).c_str( ),
       MAT_C_DOUBLE, MAT_T_DOUBLE, 2, dims, NULL, 0 );
   Mat_VarWriteInfo( matfile, var );
 
-  double timestamps[tschunk] = { 0 };
+  double timestamps[tschunk] = { 0.0 };
   double currenttime = earliest;
   double slicetime = 1.0 / (double) freq;
 
+  int counter = 0;
   for ( size_t row = 0; row < syncd.size( ); row++ ) {
     for ( int slice = 0; slice < freq; slice++ ) {
       timestamps[slice] = currenttime + slicetime*slice;
-    }
+      counter++;
 
-    Mat_VarWriteData( matfile, var, timestamps, start, stride, edge );
-    start[0] += freq;
+      if ( tschunk == counter ) {
+        Mat_VarWriteData( matfile, var, timestamps, start, stride, edge );
+        start[0] += tschunk;
+        counter = 0;
+      }
+    }
 
     currenttime += timestep;
   }
 
-  Mat_VarWrite( matfile, var, compression );
+  // write anything left in our data array
+  edge[0] = counter;
+  Mat_VarWriteData( matfile, var, timestamps, start, stride, edge );
   Mat_VarFree( var );
 
   // FIXME: (metadata?)
