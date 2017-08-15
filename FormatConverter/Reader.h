@@ -53,9 +53,9 @@ protected:
 	/**
 	 * Gets a size calculation for this input
 	 * @param input the input to size
-	 * @return size for the input, or -1 for error
+	 * @return size for the input, or 0 for error
 	 */
-	virtual int getSize( const std::string& input ) const = 0;
+	virtual size_t getSize( const std::string& input ) const = 0;
 
 private:
 	Reader( const Reader& );

@@ -27,7 +27,7 @@ protected:
 	void finish( ) override;
 
 	ReadResult fill( SignalSet& data, const ReadResult& lastfill ) override;
-	int getSize( const std::string& input ) const override;
+	size_t getSize( const std::string& input ) const override;
 
 private:
 	int sigcount;

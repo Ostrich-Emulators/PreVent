@@ -25,7 +25,7 @@ std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
     case STPXML:
       return std::unique_ptr<Reader>( new StpXmlReader( ) );
     case HDF5:
-      return std::unique_ptr<Reader>( new Hdf5Reader() );
+      return std::unique_ptr<Reader>( new Hdf5Reader( ) );
     default:
       throw "reader not yet implemented";
   }
@@ -39,8 +39,8 @@ int Reader::prepare( const std::string& input, SignalSet& info ) {
   }
   else {
     // arbitrary: "large file" is anything over 750M
-    int sz = getSize( input );
-    if ( sz < 0 ) {
+    size_t sz = getSize( input );
+    if ( 0 == sz ) {
       return -1;
     }
 

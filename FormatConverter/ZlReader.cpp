@@ -51,12 +51,12 @@ void ZlReader::finish( ) {
   stream.release( );
 }
 
-int ZlReader::getSize( const std::string& input ) const {
+size_t ZlReader::getSize( const std::string& input ) const {
   struct stat info;
 
   if ( stat( input.c_str( ), &info ) < 0 ) {
     perror( input.c_str( ) );
-    return -1;
+    return 0;
   }
 
   return info.st_size;

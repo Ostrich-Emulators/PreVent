@@ -161,22 +161,22 @@ ReadResult WfdbReader::fill( SignalSet& info, const ReadResult& ) {
   return ( 0 <= retcode ? ReadResult::NORMAL : ReadResult::ERROR );
 }
 
-int WfdbReader::getSize( const std::string& input ) const {
+size_t WfdbReader::getSize( const std::string& input ) const {
   // input is a record name, so we need to figure out how big that data will
   // eventually be
   int nsig = isigopen( (char *) ( input.c_str( ) ), NULL, 0 );
   if ( nsig < 1 ) {
-    return -1;
+    return 0;
   }
 
   WFDB_Siginfo * siginfo = new WFDB_Siginfo[nsig];
   nsig = isigopen( (char *) ( input.c_str( ) ), siginfo, nsig );
-  long sz = 0;
+  size_t sz = 0;
   for ( int i = 0; i < nsig; i++ ) {
     sz += siginfo[i].nsamp * siginfo[i].fmt;
   }
 
   delete [] siginfo;
 
-  return (int) sz;
+  return sz;
 }

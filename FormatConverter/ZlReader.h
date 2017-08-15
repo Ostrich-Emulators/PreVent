@@ -37,7 +37,7 @@ public:
 
 protected:
 	ReadResult fill( SignalSet&, const ReadResult& lastfill ) override;
-	int getSize( const std::string& input ) const override;
+	size_t getSize( const std::string& input ) const override;
 
 	int prepare( const std::string& input, SignalSet& info ) override;
 	void finish( ) override;

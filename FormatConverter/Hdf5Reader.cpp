@@ -56,8 +56,8 @@ ReadResult Hdf5Reader::fill( SignalSet& info, const ReadResult& ) {
   return ReadResult::END_OF_FILE;
 }
 
-int Hdf5Reader::getSize( const std::string& input ) const {
-  return 0;
+size_t Hdf5Reader::getSize( const std::string& input ) const {
+  return 1;
 }
 
 void Hdf5Reader::readDataSet( H5::Group& group, const std::string& name,
