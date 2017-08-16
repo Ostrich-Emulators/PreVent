@@ -14,7 +14,6 @@
 #ifndef CSVWRITER_H
 #define CSVWRITER_H
 
-#include <H5Cpp.h>
 #include <map>
 #include <set>
 #include <vector>
