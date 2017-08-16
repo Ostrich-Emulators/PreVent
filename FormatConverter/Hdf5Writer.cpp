@@ -151,35 +151,29 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
 
   // see the comment in writeVital
   int * buffer = new int[maxslabcnt * 3];
-  int idx = 0;
+  int writecounter = 0;
 
   // We're keeping a buffer to eventually write to the file. However, this 
   // buffer is based on a number of rows, *not* some multiple of the data size.
   // This means we are really keeping two counters going at all times, and 
   // once we're out of all the loops, we need to write any residual data.
 
-  for ( int i = 0; i < rows; i++ ) {
-    std::unique_ptr<DataRow> row = data.pop( );
+  for ( int row = 0; row < rows; row++ ) {
+    std::unique_ptr<DataRow> datarow = data.pop( );
 
-    // convert the data to a vector of ints
-    std::stringstream stream( row->data );
-    int hzcount = 0;
-    for ( std::string each; std::getline( stream, each, ',' ); ) {
-      int val = std::stoi( each );
-
-      long pos = idx * 3;
-      // after hz values, increment the time by one second
-      buffer[pos] = (long) ( hzcount++ >= hz ? row->time + 1 : row->time );
+    for( int val : datarow->ints( ) ){
+      long pos = writecounter * 3;
+      buffer[pos] = (long) datarow->time;
       buffer[pos + 1] = val;
-      buffer[pos + 2] = ( offset[0] + idx ) % hz;
-      idx++;
+      buffer[pos + 2] = ( offset[0] + writecounter ) % hz;
+      writecounter++;
       // std::cout << "idx is " << idx << std::endl;
 
-      if ( idx == maxslabcnt ) {
-        count[0] = idx;
+      if ( writecounter == maxslabcnt ) {
+        count[0] = writecounter;
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
         offset[0] += count[0];
-        idx = 0;
+        writecounter = 0;
 
         H5::DataSpace memspace( 2, count );
         ds.write( buffer, H5::PredType::STD_I32LE, memspace, space );
@@ -188,11 +182,11 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
   }
 
   // finally, write whatever's left in the buffer
-  if ( 0 != idx ) {
-    count[0] = idx;
+  if ( 0 != writecounter ) {
+    count[0] = writecounter;
     space.selectHyperslab( H5S_SELECT_SET, count, offset );
     offset[0] += count[0];
-    idx = 0;
+    writecounter = 0;
 
     H5::DataSpace memspace( 2, count );
     ds.write( buffer, H5::PredType::STD_I32LE, memspace, space );
@@ -306,7 +300,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     auto st = std::chrono::high_resolution_clock::now( );
 
     hsize_t sz = wavs.second->size( );
-    hsize_t dims[] = { sz * hz * 2, 3 }; // 2 second blocks, so we have double the hz values
+    hsize_t dims[] = { sz * hz, 3 }; // each datarow has hz values in it
     H5::DataSpace space( 2, dims );
     H5::DSetCreatPropList props;
     if ( compression > 0 ) {

@@ -31,7 +31,7 @@ const std::string SignalData::TIMEZONE = "Timezone";
 
 SignalData::SignalData( const std::string& name, bool largefile, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<time_t>::max( ) ), lastdata( 0 ),
-datacount( 0 ), popping( false ), iswave( wavedata ) {
+datacount( 0 ), lastins( nullptr ), popping( false ), iswave( wavedata ) {
   file = ( largefile ? std::tmpfile( ) : NULL );
   setScale( 1 );
   setUom( "Uncalib" );
@@ -117,7 +117,7 @@ void SignalData::setUom( const std::string& u ) {
   metadatas[UOM] = u;
 }
 
-int SignalData::size( ) const {
+size_t SignalData::size( ) const {
   return datacount;
 }
 
@@ -160,7 +160,8 @@ void SignalData::add( const DataRow& row ) {
     setScale( rowscale );
   }
 
-  data.push_back( std::unique_ptr<DataRow>( new DataRow( row ) ) );
+  lastins = new DataRow( row );
+  data.push_back( std::unique_ptr<DataRow>( lastins ) );
 
   if ( row.time > lastdata ) {
     lastdata = row.time;
@@ -168,6 +169,10 @@ void SignalData::add( const DataRow& row ) {
   if ( row.time < firstdata ) {
     firstdata = row.time;
   }
+}
+
+DataRow& SignalData::lastInserted( ) const {
+  return *lastins;
 }
 
 void SignalData::setWave( bool wave ) {

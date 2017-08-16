@@ -87,14 +87,25 @@ std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::vector<std::u
   // figure out if the data is already synced
   time_t earliest;
   time_t latest;
+  const size_t size = signals[0]->size( );
   firstlast( signals, &earliest, &latest );
   for ( const auto& m : signals ) {
-    if ( m->startTime( ) != earliest ||
-        m->endTime( ) != latest ) {
+    // check that every signal has the same start time, end time, and # datapoints
+    // if not, we need to sync them
+    if ( !( m->startTime( ) == earliest
+        && m->endTime( ) == latest
+        && m->size( ) == size ) ) {
+      std::cout << "syncing signals" << std::endl;
       tmp = sync( signals );
       working = &tmp;
       break;
     }
+  }
+
+
+  for ( const auto& s : *working ) {
+    std::cout << s->name( ) << "\t" << s->startTime( ) << "\t"
+        << s->endTime( ) << "\t" << s->size( ) << std::endl;
   }
 
   std::vector<std::vector < std::string>> rows;
@@ -156,6 +167,13 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
   time_t earliest;
   time_t latest;
   firstlast( data, &earliest, &latest );
+
+  std::cout << "f/l:\t" << earliest << "\t" << latest << std::endl;
+  for ( const auto& s : data ) {
+    std::cout << s->name( ) << "\t" << s->startTime( ) << "\t"
+        << s->endTime( ) << "\t" << s->size( ) << std::endl;
+  }
+
 
   float freq = ( *data.begin( ) )->hz( );
   int timestep = ( freq < 1 ? 1 / freq : 1 );

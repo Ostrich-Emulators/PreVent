@@ -39,7 +39,7 @@ public:
 	void setUom( const std::string& u );
 	const std::string& uom( ) const;
 	int scale( ) const;
-	int size( ) const;
+	size_t size( ) const;
 	double hz( ) const;
 	const time_t& startTime( ) const;
 	const time_t& endTime( ) const;
@@ -53,6 +53,8 @@ public:
 	std::map<std::string, std::string>& metas( );
 	std::map<std::string, int>& metai( );
 	std::map<std::string, double>& metad( );
+
+	DataRow& lastInserted() const;
 
 private:
 	SignalData( const SignalData& orig );
@@ -72,12 +74,13 @@ private:
 	const std::string label;
 	time_t firstdata;
 	time_t lastdata;
-	int datacount;
+	size_t datacount;
 	std::list<std::unique_ptr<DataRow>> data;
 	std::map<std::string, std::string> metadatas;
 	std::map<std::string, int> metadatai;
 	std::map<std::string, double> metadatad;
 	std::FILE * file;
+	DataRow * lastins;
 	bool popping;
 	bool iswave;
 

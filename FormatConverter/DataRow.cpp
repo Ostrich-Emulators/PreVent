@@ -59,17 +59,21 @@ int DataRow::scale( const std::string& val ) {
   return (int) std::pow( 10, val.length( ) - pos - 1 ); // -1 for the .
 }
 
-std::vector<int> DataRow::values( ) const {
-  return values( data );
+std::vector<int> DataRow::ints( ) const {
+  return ints( data );
 }
 
-std::vector<int> DataRow::values( const std::string& data ) {
+std::vector<int> DataRow::ints( const std::string& data ) {
   std::stringstream stream( data );
   std::vector<int> vals;
   for ( std::string each; std::getline( stream, each, ',' ); ) {
     vals.push_back( std::stoi( each ) );
   }
   return vals;
+}
+
+std::vector<short> DataRow::shorts( ) const {
+  return shorts( data );
 }
 
 std::vector<short> DataRow::shorts( const std::string& data ) {

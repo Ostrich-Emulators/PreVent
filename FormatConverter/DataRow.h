@@ -34,8 +34,9 @@ public:
 	 * wave datapoints
 	 * @return
 	 */
-	std::vector<int> values( ) const;
-	static std::vector<int> values( const std::string& );
+	std::vector<int> ints( ) const;
+	std::vector<short> shorts() const;
+	static std::vector<int> ints( const std::string& );
 	static std::vector<short> shorts( const std::string& );
 
 
