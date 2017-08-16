@@ -18,7 +18,7 @@
 
 // valid formats
 enum Format {
-	UNRECOGNIZED, WFDB, HDF5, STPXML, DSZL, MAT5, MAT4, MAT73
+	UNRECOGNIZED, WFDB, HDF5, STPXML, DSZL, MAT5, MAT4, MAT73, CSV
 };
 
 class Formats {

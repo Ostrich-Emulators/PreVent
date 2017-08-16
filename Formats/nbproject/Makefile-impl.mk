@@ -24,14 +24,14 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=FormatConverter
+PROJECTNAME=Formats
 
 # Active Configuration
-DEFAULTCONF=Release
+DEFAULTCONF=Debug
 CONF=${DEFAULTCONF}
 
 # All Configurations
-ALLCONFS=Release Debug 
+ALLCONFS=Debug Release 
 
 
 # build

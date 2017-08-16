@@ -39,6 +39,10 @@ Format Formats::getValue( const std::string& fmt ) {
   if ( "mat" == fmt || "matlab" == fmt || "mat5" == fmt || "matlab5" == fmt ) {
     return MAT5;
   }
+  if ( "csv" == fmt ) {
+    return CSV;
+  }
+
   return UNRECOGNIZED;
 }
 
@@ -60,6 +64,9 @@ Format Formats::guess( const std::string& filename ) {
     }
     else if ( "hea" == suffix ) {
       return Format::WFDB;
+    }
+    else if ( "csv" == suffix ) {
+      return Format::CSV;
     }
   }
   return Format::UNRECOGNIZED;

@@ -55,3 +55,11 @@ int Reader::prepare( const std::string& input, SignalSet& info ) {
 void Reader::finish( ) {
 
 }
+
+void Reader::extractOnly( const std::string& toExtract ) {
+  toextract = toExtract;
+}
+
+bool Reader::shouldExtract( const std::string& q ) const {
+  return ( toextract.empty( ) ? true : toextract == q );
+}

@@ -258,50 +258,52 @@ void StpXmlReader::handleWaveformSet( SignalSet& info ) {
       }
     }
     else {
-      // reverse the oversampling (if any) and set the true Hz
-      int thz = 240;
-      if ( 0 != Hz60.count( wave ) ) {
-        vals = resample( vals, 60 );
-        thz = 60;
-      }
-      else if ( 0 != Hz120.count( wave ) ) {
-        vals = resample( vals, 120 );
-        thz = 120;
-      }
-      const int hz = thz;
-
-      if ( waveIsOk( vals ) ) {
-        bool first;
-        std::unique_ptr<SignalData>& sig = info.addWave( wave, &first );
-        if ( first ) {
-          sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
-          sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
-
-          if ( 0 != map.count( "UOM" ) ) {
-            sig->setUom( map["UOM"] );
-          }
+      if ( shouldExtract( wave ) ) {
+        // reverse the oversampling (if any) and set the true Hz
+        int thz = 240;
+        if ( 0 != Hz60.count( wave ) ) {
+          vals = resample( vals, 60 );
+          thz = 60;
         }
-
-        sig->metad( )[SignalData::HERTZ] = hz;
-
-        // Split the vals in half, and make two 1-second DataRows
-        std::stringstream lines( vals );
-        std::string firstvals;
-        for ( int i = 0; i < hz; i++ ) {
-          std::string each;
-          std::getline( lines, each, ',' );
-          if ( !firstvals.empty( ) ) {
-            firstvals.append( "," );
-          }
-          firstvals.append( each );
+        else if ( 0 != Hz120.count( wave ) ) {
+          vals = resample( vals, 120 );
+          thz = 120;
         }
-        std::string secondvals = vals.substr( firstvals.size( ) + 1 );
-        sig->add( DataRow( currwavetime, firstvals ) );
-        sig->add( DataRow( currwavetime + 1, secondvals ) );
-      }
-      else if ( warnJunkData ) {
-        warnJunkData = false;
-        std::cerr << "skipping waveforms with no usable data" << std::endl;
+        const int hz = thz;
+
+        if ( waveIsOk( vals ) ) {
+          bool first;
+          std::unique_ptr<SignalData>& sig = info.addWave( wave, &first );
+          if ( first ) {
+            sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
+            sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
+
+            if ( 0 != map.count( "UOM" ) ) {
+              sig->setUom( map["UOM"] );
+            }
+          }
+
+          sig->metad( )[SignalData::HERTZ] = hz;
+
+          // Split the vals in half, and make two 1-second DataRows
+          std::stringstream lines( vals );
+          std::string firstvals;
+          for ( int i = 0; i < hz; i++ ) {
+            std::string each;
+            std::getline( lines, each, ',' );
+            if ( !firstvals.empty( ) ) {
+              firstvals.append( "," );
+            }
+            firstvals.append( each );
+          }
+          std::string secondvals = vals.substr( firstvals.size( ) + 1 );
+          sig->add( DataRow( currwavetime, firstvals ) );
+          sig->add( DataRow( currwavetime + 1, secondvals ) );
+        }
+        else if ( warnJunkData ) {
+          warnJunkData = false;
+          std::cerr << "skipping waveforms with no usable data" << std::endl;
+        }
       }
     }
     next( );
@@ -317,19 +319,20 @@ void StpXmlReader::handleVitalsSet( SignalSet & info ) {
     std::string uom;
     DataRow row = handleOneVs( param, uom );
 
-    bool first;
-    std::unique_ptr<SignalData>& sig = info.addVital( param, &first );
-    if ( first ) {
-      sig->metad( ).insert( std::make_pair( SignalData::HERTZ, 0.5 ) );
-      sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
-      sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
+    if ( shouldExtract( param ) ) {
+      bool first;
+      std::unique_ptr<SignalData>& sig = info.addVital( param, &first );
+      if ( first ) {
+        sig->metad( ).insert( std::make_pair( SignalData::HERTZ, 0.5 ) );
+        sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
+        sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
 
-      if ( !uom.empty( ) ) {
-        sig->setUom( uom );
+        if ( !uom.empty( ) ) {
+          sig->setUom( uom );
+        }
       }
+      sig->add( row );
     }
-    sig->add( row );
-
     next( );
     element = stringAndFree( xmlTextReaderName( reader ) );
   }

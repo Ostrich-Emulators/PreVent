@@ -1,6 +1,3 @@
-// XmlToHdf5.cpp : Defines the entry point for the console application.
-//
-
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -12,9 +9,6 @@
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <wfdb/wfdb.h>
-
-#include "H5Cpp.h"
 
 #include "ZlReader.h"
 #include "Reader.h"
@@ -24,22 +18,17 @@
 #include "DataRow.h"
 #include "SignalSet.h"
 
-#ifndef H5_NO_NAMESPACE
-using namespace H5;
-#endif
-
-using namespace std;
-
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
-      << "Syntax: " << progname << " --from <format> --to <format> <file>..."
+      << "Syntax: " << progname << " --to <format> <file>..."
       << std::endl << "\t-f or --from <input format>"
       << std::endl << "\t-t or --to <output format>"
       << std::endl << "\t-o or --outdir <output directory>"
       << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
       << std::endl << "\t-p or --prefix <output file prefix>"
+      << std::endl << "\t-e or --export <vital/wave to export>"
       << std::endl << "\tValid input formats: wfdb, hdf5, stpxml"
-      << std::endl << "\tValid output formats: wfdb, hdf5, mat"
+      << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
       //<< std::endl << "\tIf file is -, stdin is read for input, and the format is assumed to be our zl format, regardless of --from option"
       << std::endl << std::endl;
   exit( 1 );
@@ -51,6 +40,7 @@ struct option longopts[] = {
   { "outdir", required_argument, NULL, 'o' },
   { "compression", required_argument, NULL, 'z' },
   { "prefix", required_argument, NULL, 'p' },
+  { "export", required_argument, NULL, 'e' },
   { 0, 0, 0, 0 }
 };
 
@@ -62,6 +52,7 @@ int main( int argc, char** argv ) {
   std::string tostr = "";
   std::string outdir = ".";
   std::string prefix = "";
+  std::string exp = "";
   int compression = 6;
 
   while ( ( c = getopt_long( argc, argv, ":f:t:ozp", longopts, NULL ) ) != -1 ) {
@@ -80,6 +71,9 @@ int main( int argc, char** argv ) {
         break;
       case 'z':
         compression = std::atoi( optarg );
+        break;
+      case 'e':
+        exp = optarg;
         break;
       case '?':
       default:
@@ -139,6 +133,10 @@ int main( int argc, char** argv ) {
   try {
     from = Reader::get( fromfmt );
     to = Writer::get( tofmt );
+
+    if ( !exp.empty( ) ) {
+      from->extractOnly( exp );
+    }
   }
   catch ( std::string x ) {
     std::cerr << x << std::endl;

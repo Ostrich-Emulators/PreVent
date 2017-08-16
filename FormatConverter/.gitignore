@@ -8,3 +8,5 @@ core
 *.ann
 gmon.out
 test.zl*
+big.xml
+small.xml

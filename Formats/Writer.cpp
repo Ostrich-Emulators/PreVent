@@ -9,6 +9,7 @@
 #include "WfdbWriter.h"
 #include "ZlWriter.h"
 #include "MatWriter.h"
+#include "CsvWriter.h"
 
 Writer::Writer( ) {
 }
@@ -34,6 +35,8 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
       return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV5 ) );
     case MAT4:
       return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV4 ) );
+    case CSV:
+      return std::unique_ptr<Writer>( new CsvWriter() );
     default:
       throw "writer not yet implemented";
   }
