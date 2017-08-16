@@ -42,8 +42,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-O0 -pg
-CXXFLAGS=-O0 -pg
+CCFLAGS=-Wno-deprecated -O0 -pg
+CXXFLAGS=-Wno-deprecated -O0 -pg
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -57,6 +57,7 @@ LDLIBSOPTIONS=-Wl,-rpath,'../Formats/dist/Debug/GNU-Linux' -L../Formats/dist/Deb
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter
+	${CP} ../Formats/dist/Debug/GNU-Linux/libFormats.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ../Formats/dist/Debug/GNU-Linux/libFormats.so
 
