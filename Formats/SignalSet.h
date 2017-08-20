@@ -29,6 +29,8 @@ class SignalSet {
 public:
 	SignalSet( );
 	virtual ~SignalSet( );
+	const std::map<std::string, std::unique_ptr<SignalData>>&vitals( ) const;
+	const std::map<std::string, std::unique_ptr<SignalData>>&waves( ) const;
 	std::map<std::string, std::unique_ptr<SignalData>>&vitals( );
 	std::map<std::string, std::unique_ptr<SignalData>>&waves( );
 	std::map<std::string, std::string>& metadata( );

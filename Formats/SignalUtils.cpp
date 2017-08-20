@@ -9,8 +9,10 @@
 #include "SignalData.h"
 #include "DataRow.h"
 #include "StpXmlReader.h"
+
 #include <limits>
 #include <vector>
+#include <algorithm>
 
 SignalUtils::SignalUtils( ) {
 }
@@ -271,4 +273,47 @@ DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const time_
   }
   return DataRow( time, dummy );
 }
+
+std::vector<time_t> SignalUtils::alltimes( const SignalSet& ss ) {
+  std::set<time_t> times;
+  for ( const auto& signal : ss.vitals( ) ) {
+    times.insert( signal.second->times( ).begin( ), signal.second->times( ).end( ) );
+  }
+  for ( const auto& signal : ss.waves( ) ) {
+    times.insert( signal.second->times( ).begin( ), signal.second->times( ).end( ) );
+  }
+
+  std::vector<time_t> vec( times.begin( ), times.end( ) );
+  std::sort( vec.begin( ), vec.end( ) );
+
+  return vec;
+}
+
+std::vector<size_t> SignalUtils::index( const std::vector<time_t>& alltimes,
+    const SignalData& signal ) {
+
+  std::cout << "signaltimes values: " << signal.times( ).size( ) << std::endl;
+  std::deque<time_t> signaltimes( signal.times( ).begin( ), signal.times( ).end( ) );
+  std::sort( signaltimes.begin( ), signaltimes.end( ) );
+  const double hz = signal.hz( );
+  const int rowsPerTime = ( hz < 1.0 ? 1 : (int) hz );
+  std::cout << "signaltimes values (2): " << signaltimes.size( ) << std::endl;
+
+  std::vector<size_t> indexes;
+
+  size_t currentIndex = 0;
+  for ( time_t all : alltimes ) {
+    std::cout << "all: " << all << "\t front: " << signaltimes.front( ) << std::endl;
+    indexes.push_back( currentIndex );
+    if ( !signaltimes.empty( ) && signaltimes.front( ) == all ) {
+      currentIndex += rowsPerTime;
+      signaltimes.pop_front( );
+    }
+
+    // else skip ahead until we find the time from the
+  }
+
+  return indexes;
+}
+
 

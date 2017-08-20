@@ -20,6 +20,7 @@
 #include <fstream>
 #include <cstdio>
 #include <limits>
+#include <queue>
 
 const int SignalData::CACHE_LIMIT = 15000;
 
@@ -28,10 +29,11 @@ const std::string SignalData::SCALE = "Scale";
 const std::string SignalData::UOM = "Unit of Measure";
 const std::string SignalData::MSM = "Missing Value Marker";
 const std::string SignalData::TIMEZONE = "Timezone";
+const int SignalData::MISSING_VALUE = -32768;
 
 SignalData::SignalData( const std::string& name, bool largefile, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<time_t>::max( ) ), lastdata( 0 ),
-datacount( 0 ), lastins( nullptr ), popping( false ), iswave( wavedata ) {
+datacount( 0 ), popping( false ), iswave( wavedata ) {
   file = ( largefile ? std::tmpfile( ) : NULL );
   setScale( 1 );
   setUom( "Uncalib" );
@@ -93,6 +95,7 @@ std::unique_ptr<DataRow> SignalData::pop( ) {
   }
 
   datacount--;
+  dates.pop_back( );
   if ( NULL != file && data.empty( ) ) {
     int lines = uncache( );
     if ( 0 == lines ) {
@@ -160,7 +163,7 @@ void SignalData::add( const DataRow& row ) {
     setScale( rowscale );
   }
 
-  lastins = new DataRow( row );
+  DataRow * lastins = new DataRow( row );
   data.push_back( std::unique_ptr<DataRow>( lastins ) );
 
   if ( row.time > lastdata ) {
@@ -169,10 +172,7 @@ void SignalData::add( const DataRow& row ) {
   if ( row.time < firstdata ) {
     firstdata = row.time;
   }
-}
-
-DataRow& SignalData::lastInserted( ) const {
-  return *lastins;
+  dates.push_front( row.time );
 }
 
 void SignalData::setWave( bool wave ) {
@@ -220,4 +220,8 @@ int SignalData::scale( ) const {
 
 void SignalData::setScale( int x ) {
   metadatai[SCALE] = x;
+}
+
+const std::deque<time_t>& SignalData::times() const{
+  return dates;
 }

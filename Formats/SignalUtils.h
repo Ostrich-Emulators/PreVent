@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 
+class SignalSet;
 class SignalData;
 class DataRow;
 
@@ -51,6 +52,23 @@ public:
 
 	static std::map<std::string, std::unique_ptr<SignalData>> mapify(
 			std::vector<std::unique_ptr<SignalData>>&data );
+
+	/**
+	 * Gets all times in the given SignalSet. This is the superset of all 
+	 * SignalData's timeseries.
+	 * @param ss
+	 * @return 
+	 */
+	static std::vector<time_t> alltimes( const SignalSet& ss );
+
+	/**
+	 * Creates a vector with index positions for the given signal's data.
+	 * @param alltimes
+	 * @param signal
+	 * @return a vector the same size as alltimes
+	 */
+	static std::vector<size_t> index( const std::vector<time_t>& alltimes,
+			const SignalData& signal );
 
 	/**
 	 * Gets the earliest and latest timestamps from the SignalData.

@@ -15,13 +15,13 @@
 #include <utility>
 #include <chrono>
 #include <sstream>
+#include <limits>
 
 #include "config.h"
 #include "Hdf5Writer.h"
 #include "SignalData.h"
 #include "DataRow.h"
-
-const int Hdf5Writer::MISSING_VALUE = -32768;
+#include "SignalUtils.h"
 
 Hdf5Writer::Hdf5Writer( ) {
 }
@@ -105,7 +105,7 @@ void Hdf5Writer::writeAttributes( H5::DataSet& ds, const SignalData& data,
   writeAttribute( ds, "Sample Period Unit", "second" );
   writeAttribute( ds, "Sample Frequency Unit", "Hz" );
   writeAttribute( ds, "Unit of Measure", data.uom( ) );
-  writeAttribute( ds, "Missing Value Marker", MISSING_VALUE );
+  writeAttribute( ds, "Missing Value Marker", SignalData::MISSING_VALUE );
 }
 
 void Hdf5Writer::writeAttributes( H5::H5File file,
@@ -133,8 +133,8 @@ void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace& space,
     int idx = i * 4;
     buffer[idx] = (int) ( row->time );
     buffer[idx + 1] = (int) ( std::stof( row->data ) * scale );
-    buffer[idx + 2] = (int) ( row->high.empty( ) ? MISSING_VALUE : scale * std::stof( row->high ) );
-    buffer[idx + 3] = (int) ( row->low.empty( ) ? MISSING_VALUE : scale * std::stof( row->low ) );
+    buffer[idx + 2] = (int) ( row->high.empty( ) ? SignalData::MISSING_VALUE : scale * std::stof( row->high ) );
+    buffer[idx + 3] = (int) ( row->low.empty( ) ? SignalData::MISSING_VALUE : scale * std::stof( row->low ) );
   }
 
   ds.write( buffer, H5::PredType::STD_I32LE );
@@ -161,7 +161,7 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
   for ( int row = 0; row < rows; row++ ) {
     std::unique_ptr<DataRow> datarow = data.pop( );
 
-    for( int val : datarow->ints( ) ){
+    for ( int val : datarow->ints( ) ) {
       long pos = writecounter * 3;
       buffer[pos] = (long) datarow->time;
       buffer[pos + 1] = val;
@@ -225,7 +225,7 @@ int Hdf5Writer::initDataSet( const std::string& directory, const std::string& na
     int compression ) {
   tempfileloc = directory + namestart;
   lastTime = 0;
-  firstTime = 2099999999;
+  firstTime = std::numeric_limits<time_t>::max( );
   this->compression = compression;
   return 0;
 }
@@ -256,6 +256,16 @@ int Hdf5Writer::drain( SignalSet& info ) {
 
 std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   SignalSet& data = *dataptr;
+
+//  std::vector<time_t> alltimes = SignalUtils::alltimes( data );
+//  for ( const auto& m : data.waves( ) ) {
+//    std::cout << m.first << std::endl;
+//    const auto& s = m.second;
+//    std::vector<size_t> indi = SignalUtils::index( alltimes, *s );
+//    for ( size_t i : indi ) {
+//      std::cout << "  " << i << std::endl;
+//    }
+//  }
 
   std::vector<std::string> ret;
   std::string output = tempfileloc + getDateSuffix( firstTime ) + ".hdf5";

@@ -19,6 +19,7 @@
 #include <string>
 #include <time.h>
 #include <map>
+#include <deque>
 
 class DataRow;
 
@@ -29,7 +30,7 @@ public:
 	static const std::string UOM;
 	static const std::string MSM;
 	static const std::string TIMEZONE;
-
+	static const int MISSING_VALUE;
 
 	SignalData( const std::string& name, bool largefilesupport = false, bool iswave = false );
 	std::unique_ptr<SignalData> shallowcopy( );
@@ -53,8 +54,7 @@ public:
 	std::map<std::string, std::string>& metas( );
 	std::map<std::string, int>& metai( );
 	std::map<std::string, double>& metad( );
-
-	DataRow& lastInserted() const;
+	const std::deque<time_t>& times() const;
 
 private:
 	SignalData( const SignalData& orig );
@@ -76,11 +76,11 @@ private:
 	time_t lastdata;
 	size_t datacount;
 	std::list<std::unique_ptr<DataRow>> data;
+	std::deque<time_t> dates;
 	std::map<std::string, std::string> metadatas;
 	std::map<std::string, int> metadatai;
 	std::map<std::string, double> metadatad;
 	std::FILE * file;
-	DataRow * lastins;
 	bool popping;
 	bool iswave;
 

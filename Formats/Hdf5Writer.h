@@ -31,8 +31,6 @@ public:
 	Hdf5Writer( );
 	virtual ~Hdf5Writer( );
 
-	static const int MISSING_VALUE;
-
 protected:
 	int initDataSet( const std::string& outdir, const std::string& namestart,
 			int compression );

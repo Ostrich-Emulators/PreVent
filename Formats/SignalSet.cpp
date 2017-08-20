@@ -34,6 +34,16 @@ std::map<std::string, std::unique_ptr<SignalData>>&SignalSet::waves( ) {
   return wmap;
 }
 
+const std::map<std::string, std::unique_ptr<SignalData>>&SignalSet::vitals( ) const {
+  return vmap;
+}
+
+const std::map<std::string, std::unique_ptr<SignalData>>&SignalSet::waves( ) const {
+  return wmap;
+}
+
+
+
 time_t SignalSet::earliest( const TimeCounter& type ) const {
   time_t early = std::numeric_limits<time_t>::max( );
 
