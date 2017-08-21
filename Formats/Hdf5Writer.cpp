@@ -123,35 +123,38 @@ void Hdf5Writer::writeAttributes( H5::H5File file,
 void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace& space,
     SignalData& data ) {
   const int rows = data.size( );
-  // MSVC doesn't allow 2D arrays with variable size indices (bombs during initialization)
-  // So we'll just use a 1D array, and populate it like a 2D array
-  const int buffsz = rows * 4;
-  int * buffer = new int[buffsz];
+  int buffer[rows] = { 0 };
   int scale = data.scale( );
-  for ( int i = 0; i < rows; i++ ) {
-    const std::unique_ptr<DataRow>& row = data.pop( );
-    int idx = i * 4;
-    buffer[idx] = (int) ( row->time );
-    buffer[idx + 1] = (int) ( std::stof( row->data ) * scale );
-    buffer[idx + 2] = (int) ( row->high.empty( ) ? SignalData::MISSING_VALUE : scale * std::stof( row->high ) );
-    buffer[idx + 3] = (int) ( row->low.empty( ) ? SignalData::MISSING_VALUE : scale * std::stof( row->low ) );
+  for ( int row = 0; row < rows; row++ ) {
+    const std::unique_ptr<DataRow>& datarow = data.pop( );
+    buffer[row] = (int) ( std::stof( datarow->data ) * scale );
   }
 
-  ds.write( buffer, H5::PredType::STD_I32LE );
-  delete[] buffer;
+  ds.write( &buffer, H5::PredType::STD_I32LE );
 }
 
 void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
     SignalData& data, int hz ) {
 
-  int rows = data.size( );
-  const hsize_t maxslabcnt = 40960;
-  hsize_t offset[] = { 0, 0 };
-  hsize_t count[] = { 0, 3 };
+  const size_t rows = data.size( );
+  const size_t hzrows = rows * hz;
+  int numwrites = 32;
+  if ( hzrows < 100000 ) {
+    numwrites = 2;
+  }
+  else if ( hzrows < 1024 * 1024 ) {
+    numwrites = 8;
+  }
+  else if ( hzrows < 1024 * 1024 * 10 ) {
+    numwrites = 16;
+  }
 
-  // see the comment in writeVital
-  int * buffer = new int[maxslabcnt * 3];
-  int writecounter = 0;
+  const hsize_t maxslabcnt = hzrows / numwrites;
+  hsize_t offset[] = { 0, 0 };
+  hsize_t count[] = { 0, 1 };
+
+  std::vector<int> buffer;
+  buffer.reserve( maxslabcnt );
 
   // We're keeping a buffer to eventually write to the file. However, this 
   // buffer is based on a number of rows, *not* some multiple of the data size.
@@ -160,38 +163,28 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
 
   for ( int row = 0; row < rows; row++ ) {
     std::unique_ptr<DataRow> datarow = data.pop( );
+    std::vector<int> ints = datarow->ints( );
+    buffer.insert(buffer.end(), ints.begin(), ints.end() );
 
-    for ( int val : datarow->ints( ) ) {
-      long pos = writecounter * 3;
-      buffer[pos] = (long) datarow->time;
-      buffer[pos + 1] = val;
-      buffer[pos + 2] = ( offset[0] + writecounter ) % hz;
-      writecounter++;
-      // std::cout << "idx is " << idx << std::endl;
+    if ( buffer.size( ) >= maxslabcnt ) {
+      count[0] = buffer.size( );
+      space.selectHyperslab( H5S_SELECT_SET, count, offset );
+      offset[0] += count[0];
 
-      if ( writecounter == maxslabcnt ) {
-        count[0] = writecounter;
-        space.selectHyperslab( H5S_SELECT_SET, count, offset );
-        offset[0] += count[0];
-        writecounter = 0;
-
-        H5::DataSpace memspace( 2, count );
-        ds.write( buffer, H5::PredType::STD_I32LE, memspace, space );
-      }
+      H5::DataSpace memspace( 2, count );
+      ds.write( &buffer[0], H5::PredType::STD_I32LE, memspace, space );
+      buffer.clear( );
+      buffer.reserve( maxslabcnt );
     }
   }
 
   // finally, write whatever's left in the buffer
-  if ( 0 != writecounter ) {
-    count[0] = writecounter;
+  if ( !buffer.empty( ) ) {
+    count[0] = buffer.size( );
     space.selectHyperslab( H5S_SELECT_SET, count, offset );
-    offset[0] += count[0];
-    writecounter = 0;
-
     H5::DataSpace memspace( 2, count );
-    ds.write( buffer, H5::PredType::STD_I32LE, memspace, space );
+    ds.write( &buffer[0], H5::PredType::STD_I32LE, memspace, space );
   }
-  delete[] buffer;
 }
 
 void Hdf5Writer::autochunk( hsize_t* dims, int rank, hsize_t* rslts ) {
@@ -257,15 +250,15 @@ int Hdf5Writer::drain( SignalSet& info ) {
 std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   SignalSet& data = *dataptr;
 
-//  std::vector<time_t> alltimes = SignalUtils::alltimes( data );
-//  for ( const auto& m : data.waves( ) ) {
-//    std::cout << m.first << std::endl;
-//    const auto& s = m.second;
-//    std::vector<size_t> indi = SignalUtils::index( alltimes, *s );
-//    for ( size_t i : indi ) {
-//      std::cout << "  " << i << std::endl;
-//    }
-//  }
+  //  std::vector<time_t> alltimes = SignalUtils::alltimes( data );
+  //  for ( const auto& m : data.waves( ) ) {
+  //    std::cout << m.first << std::endl;
+  //    const auto& s = m.second;
+  //    std::vector<size_t> indi = SignalUtils::index( alltimes, *s );
+  //    for ( size_t i : indi ) {
+  //      std::cout << "  " << i << std::endl;
+  //    }
+  //  }
 
   std::vector<std::string> ret;
   std::string output = tempfileloc + getDateSuffix( firstTime ) + ".hdf5";
@@ -286,7 +279,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   for ( auto& vits : data.vitals( ) ) {
     std::cout << "Writing Vital: " << vits.first << std::endl;
     hsize_t sz = vits.second->size( );
-    hsize_t dims[] = { sz, 4 };
+    hsize_t dims[] = { sz, 1 };
     H5::DataSpace space( 2, dims );
     H5::DSetCreatPropList props;
     if ( compression > 0 ) {
@@ -297,7 +290,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     }
     H5::DataSet ds = grp.createDataSet( vits.first, H5::PredType::STD_I32LE, space, props );
     writeAttributes( ds, *( vits.second ), 2.0, 1.0 / 2.0 );
-    writeAttribute( ds, "Columns", "timestamp, scaled value, scaled high alarm, scaled low alarm" );
+    writeAttribute( ds, "Columns", "scaled value" );
     writeAttribute( ds, "Data Label", vits.first );
     writeVital( ds, space, *( vits.second ) );
   }
@@ -310,7 +303,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     auto st = std::chrono::high_resolution_clock::now( );
 
     hsize_t sz = wavs.second->size( );
-    hsize_t dims[] = { sz * hz, 3 }; // each datarow has hz values in it
+    hsize_t dims[] = { sz * hz * 2, 1 }; // each datarow is 2s long, at hz values/s
     H5::DataSpace space( 2, dims );
     H5::DSetCreatPropList props;
     if ( compression > 0 ) {
@@ -321,7 +314,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     }
     H5::DataSet ds = grp.createDataSet( wavs.first, H5::PredType::STD_I32LE, space, props );
     writeAttributes( ds, *( wavs.second ), 1.0 / hz, hz );
-    writeAttribute( ds, "Columns", "timestamp, value, sample number" );
+    writeAttribute( ds, "Columns", "value" );
     writeAttribute( ds, "Data Label", wavs.first );
 
     writeWave( ds, space, *( wavs.second ), hz );
