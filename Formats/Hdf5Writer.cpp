@@ -99,22 +99,22 @@ void Hdf5Writer::writeAttributes( H5::DataSet& ds, const SignalData& data ) {
 
   writeTimesAndDurationAttributes( ds, data.startTime( ), data.endTime( ) );
 
-  for( const auto& m : data.metad() ){
+  for ( const auto& m : data.metad( ) ) {
     writeAttribute( ds, m.first, m.second );
   }
-  for( const auto& m : data.metas() ){
+  for ( const auto& m : data.metas( ) ) {
     writeAttribute( ds, m.first, m.second );
   }
-  for( const auto& m : data.metai() ){
+  for ( const auto& m : data.metai( ) ) {
     writeAttribute( ds, m.first, m.second );
   }
 
-//  writeAttribute( ds, "Sample Period", period );
-//  writeAttribute( ds, "Sample Frequency", freq );
-//  writeAttribute( ds, "Sample Period Unit", "second" );
-//  writeAttribute( ds, "Sample Frequency Unit", "Hz" );
-//  writeAttribute( ds, "Unit of Measure", data.uom( ) );
-//  writeAttribute( ds, "Missing Value Marker", SignalData::MISSING_VALUE );
+  //  writeAttribute( ds, "Sample Period", period );
+  //  writeAttribute( ds, "Sample Frequency", freq );
+  //  writeAttribute( ds, "Sample Period Unit", "second" );
+  //  writeAttribute( ds, "Sample Frequency Unit", "Hz" );
+  //  writeAttribute( ds, "Unit of Measure", data.uom( ) );
+  //  writeAttribute( ds, "Missing Value Marker", SignalData::MISSING_VALUE );
 }
 
 void Hdf5Writer::writeFileAttributes( H5::H5File file,
@@ -129,8 +129,7 @@ void Hdf5Writer::writeFileAttributes( H5::H5File file,
   }
 }
 
-void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace& space,
-    SignalData& data ) {
+void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace&, SignalData& data ) {
   const int rows = data.size( );
   int buffer[rows] = { 0 };
   int scale = data.scale( );
@@ -161,7 +160,7 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
   for ( int row = 0; row < rows; row++ ) {
     std::unique_ptr<DataRow> datarow = data.pop( );
     std::vector<int> ints = datarow->ints( );
-    buffer.insert(buffer.end(), ints.begin(), ints.end() );
+    buffer.insert( buffer.end( ), ints.begin( ), ints.end( ) );
 
     if ( buffer.size( ) >= maxslabcnt ) {
       count[0] = buffer.size( );
@@ -211,6 +210,59 @@ void Hdf5Writer::autochunk( hsize_t* dims, int rank, hsize_t* rslts ) {
   rslts[1] = ( rslts[0] < 1000 ? 2 : 1 );
 }
 
+void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
+  H5::Group grp = file.createGroup( "Events" );
+  std::vector<time_t> alltimes = SignalUtils::alltimes( data );
+
+  auto signals = data.allsignals( );
+  std::vector<std::string> signalnames;
+
+  hsize_t dims[] = { alltimes.size( ), signals.size( ) };
+  H5::DataSpace space( 2, dims );
+
+  H5::DSetCreatPropList props;
+  if ( compression > 0 ) {
+    hsize_t chunkdims[] = { alltimes.size( ), 1 }; // compress each column separately
+    props.setChunk( 2, chunkdims );
+    props.setDeflate( compression );
+  }
+  long fillval = SignalData::MISSING_VALUE;
+  props.setFillValue( H5::PredType::STD_I64LE, &fillval );
+  H5::DataSet ds = grp.createDataSet( "Times", H5::PredType::STD_I64LE, space, props );
+
+  hsize_t offset[] = { 0, 0 };
+  hsize_t count[] = { alltimes.size( ), 1 };
+
+  for ( const std::unique_ptr<SignalData>& m : signals ) {
+    // the deque is in reverse order, so add it to our vector reversed
+    std::vector<time_t> times( m->times( ).rbegin( ), m->times( ).rend( ) );
+
+    offset[1] = signalnames.size( );
+    count[0] = times.size( );
+
+    space.selectHyperslab( H5S_SELECT_SET, count, offset );
+    H5::DataSpace memspace( 2, count );
+    ds.write( &times[0], H5::PredType::STD_I64LE, memspace, space );
+
+    signalnames.push_back( m->name( ) );
+  }
+
+  int col = 0;
+  std::string cols;
+  for ( const std::string& n : signalnames ) {
+    writeAttribute( ds, "Column " + std::to_string( col++ ), n );
+
+    if ( !cols.empty( ) ) {
+      cols.append( ", " );
+    }
+    cols.append( n );
+  }
+
+  writeAttribute( ds, "Column Order", cols );
+  writeAttribute( ds, "Time Source", "raw" );
+  writeAttribute( ds, SignalData::MSM, SignalData::MISSING_VALUE );
+}
+
 int Hdf5Writer::initDataSet( const std::string& directory, const std::string& namestart,
     int compression ) {
   tempfileloc = directory + namestart;
@@ -226,8 +278,8 @@ int Hdf5Writer::drain( SignalSet& info ) {
 std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   SignalSet& data = *dataptr;
 
-  time_t firstTime = data.earliest();
-  time_t lastTime = data.latest();
+  time_t firstTime = data.earliest( );
+  time_t lastTime = data.latest( );
 
   //  std::vector<time_t> alltimes = SignalUtils::alltimes( data );
   //  for ( const auto& m : data.waves( ) ) {
@@ -251,6 +303,8 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 
   H5::H5File file( output, H5F_ACC_TRUNC );
   writeFileAttributes( file, data.metadata( ), firstTime, lastTime );
+
+  createEvents( file, data );
 
   H5::Group grp = file.createGroup( "Vital Signs" );
 

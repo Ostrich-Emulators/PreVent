@@ -17,7 +17,9 @@
 #include "DataRow.h"
 #include <memory>
 #include <string>
+#include <vector>
 #include <map>
+#include <functional>
 
 class SignalData;
 
@@ -31,6 +33,7 @@ public:
 	virtual ~SignalSet( );
 	const std::map<std::string, std::unique_ptr<SignalData>>&vitals( ) const;
 	const std::map<std::string, std::unique_ptr<SignalData>>&waves( ) const;
+	std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const;
 	std::map<std::string, std::unique_ptr<SignalData>>&vitals( );
 	std::map<std::string, std::unique_ptr<SignalData>>&waves( );
 	std::map<std::string, std::string>& metadata( );

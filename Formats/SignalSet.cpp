@@ -42,7 +42,20 @@ const std::map<std::string, std::unique_ptr<SignalData>>&SignalSet::waves( ) con
   return wmap;
 }
 
+std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> SignalSet::allsignals( ) const{
+std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> vec;
 
+  for ( const auto& m : wmap ) {
+    const auto& w = m.second;
+    vec.push_back( std::cref( w ) );
+  }
+  for ( const auto& m : vmap ) {
+    const auto& w = m.second;
+    vec.push_back( std::cref( w ) );
+  }
+
+  return vec;
+}
 
 time_t SignalSet::earliest( const TimeCounter& type ) const {
   time_t early = std::numeric_limits<time_t>::max( );
