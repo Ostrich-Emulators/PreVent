@@ -41,25 +41,22 @@ private:
 
 	Hdf5Writer( const Hdf5Writer& orig );
 
-	static void writeAttributes( H5::H5File file, std::map<std::string, std::string> datasetattrs,
-			const time_t& firstTie, const time_t& lasttime );
+	static void writeFileAttributes( H5::H5File file, std::map<std::string, std::string> datasetattrs,
+			const time_t& firsttime, const time_t& lasttime );
 	static void writeAttribute( H5::H5Location& loc,
 			const std::string& attr, const std::string& val );
 	static void writeAttribute( H5::H5Location& loc,
 			const std::string& attr, int val );
 	static void writeAttribute( H5::H5Location& loc,
 			const std::string& attr, double val );
-	static void writeAttributes( H5::H5Location& loc,
+	static void writeTimesAndDurationAttributes( H5::H5Location& loc,
 			const time_t& start, const time_t& end );
-	static void writeAttributes( H5::DataSet& ds, const SignalData& data,
-			double period, double freq );
+	static void writeAttributes( H5::DataSet& ds, const SignalData& data );
 	static void writeVital( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
-	static void writeWave( H5::DataSet& ds, H5::DataSpace& space, SignalData& data, int hz );
+	static void writeWave( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
 	static void autochunk( hsize_t* dims, int rank, hsize_t* rslts );
 
 	std::string tempfileloc;
-	time_t firstTime;
-	time_t lastTime;
 	int compression;
 	SignalSet * dataptr;
 };

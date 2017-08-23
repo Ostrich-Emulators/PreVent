@@ -54,6 +54,9 @@ public:
 	std::map<std::string, std::string>& metas( );
 	std::map<std::string, int>& metai( );
 	std::map<std::string, double>& metad( );
+	const std::map<std::string, std::string>& metas( ) const;
+	const std::map<std::string, int>& metai( ) const;
+	const std::map<std::string, double>& metad( ) const;
 	const std::deque<time_t>& times() const;
 
 private:

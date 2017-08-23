@@ -71,6 +71,18 @@ std::map<std::string, double>& SignalData::metad( ) {
   return metadatad;
 }
 
+const std::map<std::string, std::string>& SignalData::metas( ) const {
+  return metadatas;
+}
+
+const std::map<std::string, int>& SignalData::metai( ) const {
+  return metadatai;
+}
+
+const std::map<std::string, double>& SignalData::metad( ) const {
+  return metadatad;
+}
+
 double SignalData::hz( ) const {
   return ( 0 == metadatad.count( SignalData::HERTZ )
       ? 1

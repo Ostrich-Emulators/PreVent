@@ -57,9 +57,8 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
   attrib.write( H5::PredType::IEEE_F64LE, &val );
 }
 
-void Hdf5Writer::writeAttributes( H5::H5Location& loc,
+void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
     const time_t& start, const time_t& end ) {
-  writeAttribute( loc, "Timezone", "UTC" );
   writeAttribute( loc, "Start Time", (int) start );
   writeAttribute( loc, "End Time", (int) end );
 
@@ -96,23 +95,33 @@ void Hdf5Writer::writeAttributes( H5::H5Location& loc,
   writeAttribute( loc, "Duration", duration );
 }
 
-void Hdf5Writer::writeAttributes( H5::DataSet& ds, const SignalData& data,
-    double period, double freq ) {
-  writeAttributes( ds, data.startTime( ), data.endTime( ) );
-  writeAttribute( ds, "Scale", double( 1.0 / data.scale( ) ) );
-  writeAttribute( ds, "Sample Period", period );
-  writeAttribute( ds, "Sample Frequency", freq );
-  writeAttribute( ds, "Sample Period Unit", "second" );
-  writeAttribute( ds, "Sample Frequency Unit", "Hz" );
-  writeAttribute( ds, "Unit of Measure", data.uom( ) );
-  writeAttribute( ds, "Missing Value Marker", SignalData::MISSING_VALUE );
+void Hdf5Writer::writeAttributes( H5::DataSet& ds, const SignalData& data ) {
+
+  writeTimesAndDurationAttributes( ds, data.startTime( ), data.endTime( ) );
+
+  for( const auto& m : data.metad() ){
+    writeAttribute( ds, m.first, m.second );
+  }
+  for( const auto& m : data.metas() ){
+    writeAttribute( ds, m.first, m.second );
+  }
+  for( const auto& m : data.metai() ){
+    writeAttribute( ds, m.first, m.second );
+  }
+
+//  writeAttribute( ds, "Sample Period", period );
+//  writeAttribute( ds, "Sample Frequency", freq );
+//  writeAttribute( ds, "Sample Period Unit", "second" );
+//  writeAttribute( ds, "Sample Frequency Unit", "Hz" );
+//  writeAttribute( ds, "Unit of Measure", data.uom( ) );
+//  writeAttribute( ds, "Missing Value Marker", SignalData::MISSING_VALUE );
 }
 
-void Hdf5Writer::writeAttributes( H5::H5File file,
+void Hdf5Writer::writeFileAttributes( H5::H5File file,
     std::map<std::string, std::string> datasetattrs,
     const time_t& firstTime, const time_t& lastTime ) {
 
-  writeAttributes( file, firstTime, lastTime );
+  writeTimesAndDurationAttributes( file, firstTime, lastTime );
 
   for ( std::map<std::string, std::string>::const_iterator it = datasetattrs.begin( );
       it != datasetattrs.end( ); ++it ) {
@@ -134,22 +143,10 @@ void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace& space,
 }
 
 void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
-    SignalData& data, int hz ) {
+    SignalData& data ) {
 
   const size_t rows = data.size( );
-  const size_t hzrows = rows * hz;
-  int numwrites = 32;
-  if ( hzrows < 100000 ) {
-    numwrites = 2;
-  }
-  else if ( hzrows < 1024 * 1024 ) {
-    numwrites = 8;
-  }
-  else if ( hzrows < 1024 * 1024 * 10 ) {
-    numwrites = 16;
-  }
-
-  const hsize_t maxslabcnt = hzrows / numwrites;
+  const hsize_t maxslabcnt = 125000;
   hsize_t offset[] = { 0, 0 };
   hsize_t count[] = { 0, 1 };
 
@@ -217,38 +214,20 @@ void Hdf5Writer::autochunk( hsize_t* dims, int rank, hsize_t* rslts ) {
 int Hdf5Writer::initDataSet( const std::string& directory, const std::string& namestart,
     int compression ) {
   tempfileloc = directory + namestart;
-  lastTime = 0;
-  firstTime = std::numeric_limits<time_t>::max( );
   this->compression = compression;
   return 0;
 }
 
 int Hdf5Writer::drain( SignalSet& info ) {
-  // copy any new metadata
   dataptr = &info;
-
-  for ( auto& m : info.vitals( ) ) {
-    if ( m.second->startTime( ) < firstTime ) {
-      firstTime = m.second->startTime( );
-    }
-    if ( m.second->endTime( ) > lastTime ) {
-      lastTime = m.second->endTime( );
-    }
-  }
-  for ( auto& m : info.waves( ) ) {
-    if ( m.second->startTime( ) < firstTime ) {
-      firstTime = m.second->startTime( );
-    }
-    if ( m.second->endTime( ) > lastTime ) {
-      lastTime = m.second->endTime( );
-    }
-  }
-
   return 0;
 }
 
 std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   SignalSet& data = *dataptr;
+
+  time_t firstTime = data.earliest();
+  time_t lastTime = data.latest();
 
   //  std::vector<time_t> alltimes = SignalUtils::alltimes( data );
   //  for ( const auto& m : data.waves( ) ) {
@@ -271,7 +250,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   std::cout << "Writing to " << output << std::endl;
 
   H5::H5File file( output, H5F_ACC_TRUNC );
-  writeAttributes( file, data.metadata( ), firstTime, lastTime );
+  writeFileAttributes( file, data.metadata( ), firstTime, lastTime );
 
   H5::Group grp = file.createGroup( "Vital Signs" );
 
@@ -289,7 +268,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
       props.setDeflate( compression );
     }
     H5::DataSet ds = grp.createDataSet( vits.first, H5::PredType::STD_I32LE, space, props );
-    writeAttributes( ds, *( vits.second ), 2.0, 1.0 / 2.0 );
+    writeAttributes( ds, *( vits.second ) );
     writeAttribute( ds, "Columns", "scaled value" );
     writeAttribute( ds, "Data Label", vits.first );
     writeVital( ds, space, *( vits.second ) );
@@ -313,11 +292,11 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
       props.setDeflate( compression );
     }
     H5::DataSet ds = grp.createDataSet( wavs.first, H5::PredType::STD_I32LE, space, props );
-    writeAttributes( ds, *( wavs.second ), 1.0 / hz, hz );
+    writeAttributes( ds, *( wavs.second ) );
     writeAttribute( ds, "Columns", "value" );
     writeAttribute( ds, "Data Label", wavs.first );
 
-    writeWave( ds, space, *( wavs.second ), hz );
+    writeWave( ds, space, *( wavs.second ) );
 
     auto en = std::chrono::high_resolution_clock::now( );
     std::chrono::duration<float> dur = en - st;
