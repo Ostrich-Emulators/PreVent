@@ -23,7 +23,7 @@ AS=as
 # Macros
 CND_PLATFORM=Cygwin-Windows
 CND_DLIB_EXT=dll
-CND_CONF=Release
+CND_CONF=Release_Cygwin
 CND_DISTDIR=dist
 CND_BUILDDIR=build
 
@@ -58,8 +58,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wno-deprecated -O2 `wfdb-config --cflags` 
-CXXFLAGS=-Wno-deprecated -O2 `wfdb-config --cflags` 
+CCFLAGS=-Wno-deprecated -O2 `wfdb-config --cflags` -D_XOPEN_SOURCE=700 
+CXXFLAGS=-Wno-deprecated -O2 `wfdb-config --cflags` -D_XOPEN_SOURCE=700 
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -68,15 +68,11 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=`pkg-config --libs zlib` /usr/lib/libhdf5.dll.a "/usr/lib/libhdf5_hl_cpp.dll.a " `pkg-config --libs libxml-2.0` `pkg-config --libs matio`  
+LDLIBSOPTIONS=`pkg-config --libs zlib` -lhdf5.dll -lhdf5_cpp.dll `pkg-config --libs libxml-2.0` `pkg-config --libs matio`  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}
-
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: /usr/lib/libhdf5.dll.a
-
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: /usr/lib/libhdf5_hl_cpp.dll.a\ 
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}

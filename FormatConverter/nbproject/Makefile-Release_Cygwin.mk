@@ -23,7 +23,7 @@ AS=as
 # Macros
 CND_PLATFORM=Cygwin-Windows
 CND_DLIB_EXT=dll
-CND_CONF=Release
+CND_CONF=Release_Cygwin
 CND_DISTDIR=dist
 CND_BUILDDIR=build
 
@@ -52,14 +52,14 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L../Formats/dist/Release/Cygwin-Windows -lFormats
+LDLIBSOPTIONS=-L../Formats/dist/Release_Cygwin/Cygwin-Windows -lFormats
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe
-	${CP} ../Formats/dist/Release/Cygwin-Windows/libFormats.dll ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
+	${CP} ../Formats/dist/Release_Cygwin/Cygwin-Windows/libFormats.dll ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe: ../Formats/dist/Release/Cygwin-Windows/libFormats.dll
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe: ../Formats/dist/Release_Cygwin/Cygwin-Windows/libFormats.dll
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
@@ -72,7 +72,7 @@ ${OBJECTDIR}/main.o: main.cpp
 
 # Subprojects
 .build-subprojects:
-	cd ../Formats && ${MAKE}  -f Makefile CONF=Release
+	cd ../Formats && ${MAKE}  -f Makefile CONF=Release_Cygwin
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
@@ -82,7 +82,7 @@ ${OBJECTDIR}/main.o: main.cpp
 
 # Subprojects
 .clean-subprojects:
-	cd ../Formats && ${MAKE}  -f Makefile CONF=Release clean
+	cd ../Formats && ${MAKE}  -f Makefile CONF=Release_Cygwin clean
 
 # Enable dependency checking
 .dep.inc: .depcheck-impl
