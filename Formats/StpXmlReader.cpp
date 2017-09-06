@@ -28,8 +28,8 @@ const std::string StpXmlReader::MISSING_VALUESTR( "-32768" );
 const std::set<std::string> StpXmlReader::Hz60({ "RR", "VNT_PRES", "VNT_FLOW" } );
 const std::set<std::string> StpXmlReader::Hz120({ "ICP1", "ICP2", "ICP4", "LA4" } );
 
-StpXmlReader::StpXmlReader( ) : warnMissingName( true ), warnJunkData( true ),
-lastvstime( 0 ), lastwavetime( 0 ) {
+StpXmlReader::StpXmlReader( ) : reader( 0 ), warnMissingName( true ), warnJunkData( true ),
+prevtime( 0 ), currvstime( 0 ), lastvstime( 0 ), currwavetime( 0 ), lastwavetime( 0 ) {
   LIBXML_TEST_VERSION
 }
 

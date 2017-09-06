@@ -30,6 +30,14 @@ CND_ARTIFACT_PATH_Release_Cygwin=dist/Release_Cygwin/Cygwin-Windows/libFormats.d
 CND_PACKAGE_DIR_Release_Cygwin=dist/Release_Cygwin/Cygwin-Windows/package
 CND_PACKAGE_NAME_Release_Cygwin=libFormats.dll.tar
 CND_PACKAGE_PATH_Release_Cygwin=dist/Release_Cygwin/Cygwin-Windows/package/libFormats.dll.tar
+# Debug_Cygwin configuration
+CND_PLATFORM_Debug_Cygwin=Cygwin-Windows
+CND_ARTIFACT_DIR_Debug_Cygwin=dist/Debug_Cygwin/Cygwin-Windows
+CND_ARTIFACT_NAME_Debug_Cygwin=libFormats.dll
+CND_ARTIFACT_PATH_Debug_Cygwin=dist/Debug_Cygwin/Cygwin-Windows/libFormats.dll
+CND_PACKAGE_DIR_Debug_Cygwin=dist/Debug_Cygwin/Cygwin-Windows/package
+CND_PACKAGE_NAME_Debug_Cygwin=libFormats.dll.tar
+CND_PACKAGE_PATH_Debug_Cygwin=dist/Debug_Cygwin/Cygwin-Windows/package/libFormats.dll.tar
 #
 # include compiler specific variables
 #
