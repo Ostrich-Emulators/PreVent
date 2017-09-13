@@ -218,7 +218,10 @@ bool StpXmlReader::isRollover( bool forVitals ) {
 
   time_t currtime;
   std::string timer( map["Time"] );
-  if ( timer.find( " " ) ) {
+  if ( std::string::npos == timer.find( " " ) ) {
+    currtime = std::stol( timer );
+  }
+  else {
     // we have a local time that we need to convert
     tm mytime;
     strptime( timer.c_str( ), "%m/%d/%Y %I:%M:%S %p", &mytime );
@@ -226,9 +229,6 @@ bool StpXmlReader::isRollover( bool forVitals ) {
     time_t local = mktime( &mytime );
     mytime = *gmtime( &local );
     currtime = mktime( &mytime );
-  }
-  else {
-    currtime = std::stol( timer );
   }
 
   if ( forVitals ) {
