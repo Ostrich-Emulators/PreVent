@@ -56,6 +56,7 @@ PROCLOG=$DIR/processing.log
 ERRLOG=$DIR/errors.log
 DONELOG=$DIR/done.log
 
+touch PROCLOG
 ls -tr $DIR/*.Stp $DIR/*.xml 1>/dev/null 2>&1
 x=$?
 if [ "$x" -eq "0" ] ; then

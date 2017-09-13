@@ -211,56 +211,31 @@ void Hdf5Writer::autochunk( hsize_t* dims, int rank, hsize_t* rslts ) {
 }
 
 void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
-  H5::Group grp = file.createGroup( "Events" );
-  std::vector<time_t> alltimes = SignalUtils::alltimes( data );
+  H5::Group events = file.createGroup( "Events" );
+  H5::Group grp = events.createGroup( "Times" );
 
-  auto signals = data.allsignals( );
-  std::vector<std::string> signalnames;
-
-  hsize_t dims[] = { alltimes.size( ), signals.size( ) };
-  H5::DataSpace space( 2, dims );
-
-  H5::DSetCreatPropList props;
-  if ( compression > 0 ) {
-    hsize_t chunkdims[] = { alltimes.size( ), 1 }; // compress each column separately
-    props.setChunk( 2, chunkdims );
-    props.setDeflate( compression );
-  }
-  long fillval = SignalData::MISSING_VALUE;
-  props.setFillValue( H5::PredType::STD_I64LE, &fillval );
-  H5::DataSet ds = grp.createDataSet( "Times", H5::PredType::STD_I64LE, space, props );
-
-  hsize_t offset[] = { 0, 0 };
-  hsize_t count[] = { alltimes.size( ), 1 };
-
-  for ( const std::unique_ptr<SignalData>& m : signals ) {
-    // the deque is in reverse order, so add it to our vector reversed
+  for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {
     std::vector<time_t> times( m->times( ).rbegin( ), m->times( ).rend( ) );
+    if ( m->wave( ) ) {
+      std::vector<time_t> alltimes;
+      alltimes.reserve( times.size( )*2 );
 
-    offset[1] = signalnames.size( );
-    count[0] = times.size( );
-
-    space.selectHyperslab( H5S_SELECT_SET, count, offset );
-    H5::DataSpace memspace( 2, count );
-    ds.write( &times[0], H5::PredType::STD_I64LE, memspace, space );
-
-    signalnames.push_back( m->name( ) );
-  }
-
-  int col = 0;
-  std::string cols;
-  for ( const std::string& n : signalnames ) {
-    writeAttribute( ds, "Column " + std::to_string( col++ ), n );
-
-    if ( !cols.empty( ) ) {
-      cols.append( ", " );
+      for ( auto& t : times ) {
+        alltimes.push_back( t );
+        alltimes.push_back( t + 1 );
+      }
+      times = alltimes;
     }
-    cols.append( n );
-  }
 
-  writeAttribute( ds, "Column Order", cols );
-  writeAttribute( ds, "Time Source", "raw" );
-  writeAttribute( ds, SignalData::MSM, SignalData::MISSING_VALUE );
+    hsize_t dims[] = { times.size( ), 1 };
+    H5::DataSpace space( 2, dims );
+
+    H5::DataSet ds = grp.createDataSet( m->name( ).c_str( ), H5::PredType::STD_I64LE, space );
+    ds.write( &times[0], H5::PredType::STD_I64LE );
+    writeAttribute( ds, "Time Source", "raw" );
+    int hz = ( m->hz() < 1 ? 1 : (int)m->hz() );
+    writeAttribute( ds, "Readings Per Time", hz );
+  }
 }
 
 int Hdf5Writer::initDataSet( const std::string& directory, const std::string& namestart,
