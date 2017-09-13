@@ -192,8 +192,8 @@
           <commandlineTool>g++</commandlineTool>
           <linkerLibItems>
             <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
-            <linkerLibFileItem>/usr/lib/libhdf5.dll.a</linkerLibFileItem>
-            <linkerLibFileItem>/usr/lib/libhdf5_hl_cpp.dll.a </linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
             <linkerOptionItem>`pkg-config --libs libxml-2.0`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
           </linkerLibItems>
