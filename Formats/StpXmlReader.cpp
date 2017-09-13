@@ -216,7 +216,20 @@ bool StpXmlReader::isRollover( bool forVitals ) {
   // check the time against our previous time
   std::map<std::string, std::string> map = getAttrs( );
 
-  time_t currtime = std::stol( map["Time"] );
+  time_t currtime;
+  std::string timer( map["Time"] );
+  if ( timer.find( " " ) ) {
+    // we have a local time that we need to convert
+    tm mytime;
+    strptime( timer.c_str( ), "%m/%d/%Y %I:%M:%S %p", &mytime );
+    // now convert our local time to UTC
+    time_t local = mktime( &mytime );
+    mytime = *gmtime( &local );
+    currtime = mktime( &mytime );
+  }
+  else {
+    currtime = std::stol( timer );
+  }
 
   if ( forVitals ) {
     lastvstime = currvstime;
