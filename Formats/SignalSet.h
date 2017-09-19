@@ -37,6 +37,7 @@ public:
 	std::map<std::string, std::unique_ptr<SignalData>>&vitals( );
 	std::map<std::string, std::unique_ptr<SignalData>>&waves( );
 	std::map<std::string, std::string>& metadata( );
+	const std::map<std::string, std::string>& metadata( ) const;
 
 	/**
 	 * Adds a new vital sign if it has not already been added. If it already

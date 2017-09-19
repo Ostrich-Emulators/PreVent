@@ -95,6 +95,10 @@ std::map<std::string, std::string>& SignalSet::metadata( ) {
   return metamap;
 }
 
+const std::map<std::string, std::string>& SignalSet::metadata( ) const {
+  return metamap;
+}
+
 void SignalSet::addMeta( const std::string& key, const std::string & val ) {
   metamap[key] = val;
 }
