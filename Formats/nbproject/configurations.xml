@@ -18,6 +18,7 @@
         <itemPath>WfdbWriter.h</itemPath>
         <itemPath>ZlWriter.h</itemPath>
       </logicalFolder>
+      <itemPath>ConversionListener.h</itemPath>
       <itemPath>DataRow.h</itemPath>
       <itemPath>Formats.h</itemPath>
       <itemPath>Reader.h</itemPath>
@@ -95,6 +96,8 @@
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
       </compileType>
+      <item path="ConversionListener.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="CsvWriter.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="CsvWriter.h" ex="false" tool="3" flavor2="0">
@@ -200,6 +203,8 @@
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
       </compileType>
+      <item path="ConversionListener.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="CsvWriter.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="CsvWriter.h" ex="false" tool="3" flavor2="0">
@@ -305,6 +310,8 @@
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
       </compileType>
+      <item path="ConversionListener.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="CsvWriter.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="CsvWriter.h" ex="false" tool="3" flavor2="0">
@@ -410,6 +417,8 @@
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
       </compileType>
+      <item path="ConversionListener.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="CsvWriter.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="CsvWriter.h" ex="false" tool="3" flavor2="0">

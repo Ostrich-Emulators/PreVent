@@ -17,6 +17,7 @@
 #include "SignalData.h"
 #include "DataRow.h"
 #include "SignalSet.h"
+#include "Db.h"
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
@@ -27,8 +28,11 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
       << std::endl << "\t-p or --prefix <output file prefix>"
       << std::endl << "\t-e or --export <vital/wave to export>"
+      << std::endl << "\t-s or --sqlite <db file>"
+      << std::endl << "\t-q or --quiet"
       << std::endl << "\tValid input formats: wfdb, hdf5, stpxml"
       << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
+      << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
       //<< std::endl << "\tIf file is -, stdin is read for input, and the format is assumed to be our zl format, regardless of --from option"
       << std::endl << std::endl;
   exit( 1 );
@@ -41,6 +45,8 @@ struct option longopts[] = {
   { "compression", required_argument, NULL, 'z' },
   { "prefix", required_argument, NULL, 'p' },
   { "export", required_argument, NULL, 'e' },
+  { "sqlite", required_argument, NULL, 's' },
+  { "quiet", no_argument, NULL, 'q' },
   { 0, 0, 0, 0 }
 };
 
@@ -53,6 +59,8 @@ int main( int argc, char** argv ) {
   std::string outdir = ".";
   std::string prefix = "";
   std::string exp = "";
+  std::string sqlitedb = "";
+  bool quiet = false;
   int compression = 6;
 
   while ( ( c = getopt_long( argc, argv, ":f:t:ozp", longopts, NULL ) ) != -1 ) {
@@ -74,6 +82,12 @@ int main( int argc, char** argv ) {
         break;
       case 'e':
         exp = optarg;
+        break;
+      case 'q':
+        quiet = true;
+        break;
+      case 's':
+        sqlitedb = optarg;
         break;
       case '?':
       default:
@@ -142,6 +156,12 @@ int main( int argc, char** argv ) {
     std::cerr << x << std::endl;
   }
 
+  std::shared_ptr<Db> db;
+  if ( !sqlitedb.empty( ) ) {
+    db.reset( new Db( sqlitedb ) );
+    to->addListener( db );
+  }
+
   int returncode = 0;
   // send the files through
   for ( int i = optind; i < argc; i++ ) {
@@ -162,8 +182,14 @@ int main( int argc, char** argv ) {
       std::vector<std::string> files = to->write( from, data );
       from->finish( );
 
-      for ( const auto& f : files ) {
-        std::cout << " written to " << f << std::endl;
+      if ( quiet ) {
+        for ( const auto& f : files ) {
+          std::cout << " written to " << f << std::endl;
+        }
+      }
+
+      if( db ){
+        db->onConversionCompleted( argv[i], files );
       }
     }
   }

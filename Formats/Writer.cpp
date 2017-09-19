@@ -2,6 +2,7 @@
 #include "Writer.h"
 #include <sys/stat.h>
 #include <iostream>
+#include <sstream>
 
 #include "Reader.h"
 #include "config.h"
@@ -10,11 +11,12 @@
 #include "ZlWriter.h"
 #include "MatWriter.h"
 #include "CsvWriter.h"
+#include "ConversionListener.h"
 
-Writer::Writer( ) {
+Writer::Writer( ) : quiet( false ) {
 }
 
-Writer::Writer( const Writer& ) {
+Writer::Writer( const Writer& ) : quiet( false ) {
 
 }
 
@@ -36,7 +38,7 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
     case MAT4:
       return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV4 ) );
     case CSV:
-      return std::unique_ptr<Writer>( new CsvWriter() );
+      return std::unique_ptr<Writer>( new CsvWriter( ) );
     default:
       throw "writer not yet implemented";
   }
@@ -95,6 +97,12 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
 
     if ( ReadResult::END_OF_DAY == retcode || ReadResult::END_OF_PATIENT == retcode ) {
       std::vector<std::string> files = closeDataSet( );
+      for ( auto& outfile : files ) {
+        for ( auto& l : listeners ) {
+          l->onFileCompleted( outfile, data );
+        }
+      }
+
       if ( files.empty( ) ) {
         std::cerr << "refusing to write empty data file!" << std::endl;
       }
@@ -121,6 +129,12 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
       }
       else {
         list.insert( list.end( ), files.begin( ), files.end( ) );
+
+        for ( auto& outfile : files ) {
+          for ( auto& l : listeners ) {
+            l->onFileCompleted( outfile, data );
+          }
+        }
       }
       break;
     }
@@ -136,3 +150,22 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
   return list;
 }
 
+void Writer::addListener( std::shared_ptr<ConversionListener> l ) {
+  listeners.push_back( l );
+}
+
+class NullBuffer : public std::streambuf{
+public:
+
+  int overflow( int c ) {
+    return c;
+  }
+};
+
+void Writer::setQuiet( bool q ) {
+  quiet = q;
+}
+
+std::ostream& Writer::output( ) const {
+  return ( quiet ? ( std::ostream& ) ss : std::cout );
+}

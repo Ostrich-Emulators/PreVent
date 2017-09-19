@@ -267,25 +267,25 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   //  }
 
   std::vector<std::string> ret;
-  std::string output = tempfileloc + getDateSuffix( firstTime ) + ".hdf5";
+  std::string outy = tempfileloc + getDateSuffix( firstTime ) + ".hdf5";
 
   if ( data.vitals( ).empty( ) && data.waves( ).empty( ) ) {
-    std::cout << "Nothing to write to " << output << std::endl;
+    std::cerr << "Nothing to write to " << outy << std::endl;
     return ret;
   }
 
-  std::cout << "Writing to " << output << std::endl;
+  output() << "Writing to " << outy << std::endl;
 
-  H5::H5File file( output, H5F_ACC_TRUNC );
+  H5::H5File file( outy, H5F_ACC_TRUNC );
   writeFileAttributes( file, data.metadata( ), firstTime, lastTime );
 
   createEvents( file, data );
 
   H5::Group grp = file.createGroup( "Vital Signs" );
 
-  std::cout << "Writing " << data.vitals( ).size( ) << " Vitals" << std::endl;
+  output() << "Writing " << data.vitals( ).size( ) << " Vitals" << std::endl;
   for ( auto& vits : data.vitals( ) ) {
-    std::cout << "Writing Vital: " << vits.first << std::endl;
+    output() << "Writing Vital: " << vits.first << std::endl;
     hsize_t sz = vits.second->size( );
     hsize_t dims[] = { sz, 1 };
     H5::DataSpace space( 2, dims );
@@ -304,9 +304,9 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   }
 
   grp = file.createGroup( "Waveforms" );
-  std::cout << "Writing " << data.waves( ).size( ) << " Waveforms" << std::endl;
+  output() << "Writing " << data.waves( ).size( ) << " Waveforms" << std::endl;
   for ( auto& wavs : data.waves( ) ) {
-    std::cout << "Writing Wave: " << wavs.first;
+    output() << "Writing Wave: " << wavs.first;
     int hz = wavs.second->metad( ).at( SignalData::HERTZ );
     auto st = std::chrono::high_resolution_clock::now( );
 
@@ -329,8 +329,8 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 
     auto en = std::chrono::high_resolution_clock::now( );
     std::chrono::duration<float> dur = en - st;
-    std::cout << " (complete in " << dur.count( ) << "ms)" << std::endl;
+    output() << " (complete in " << dur.count( ) << "ms)" << std::endl;
   }
 
-  ret.push_back( output );
+  ret.push_back( outy );
 }
