@@ -16,16 +16,20 @@
 
 #include <memory>
 #include <string>
+#include <map>
 #include <sqlite3.h>
 
 #include "ConversionListener.h"
 
 class SignalSet;
+class SignalData;
 
 class Db : public ConversionListener {
 public:
-	Db( const std::string& fileloc );
+	Db( );
 	virtual ~Db( );
+
+	void init( const std::string& fileloc );
 
 	virtual void onFileCompleted( const std::string& filename,
 			const SignalSet& data ) override;
@@ -34,6 +38,20 @@ public:
 
 private:
 	sqlite3 * ptr;
+	static const std::string CREATE;
+	// unit-bed -> id
+	std::map<std::pair<std::string, std::string>, int> bedids;
+	std::map<std::string, int> unitids;
+	std::map<std::string, int> signalids;
+	std::map<std::string, int> patientids;
+
+	static int nameidcb( void *a_param, int argc, char **argv, char **column );
+	static int bedcb( void *a_param, int argc, char **argv, char **column );
+
+	void exec( const std::string& sql, void * callback = nullptr, void * param = nullptr );
+	int addPatient( const std::string& name );
+	void addFile( const SignalSet& sig );
+	void addSignal( int fileid, const SignalData& sig );
 };
 
 

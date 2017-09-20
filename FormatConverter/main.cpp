@@ -158,7 +158,8 @@ int main( int argc, char** argv ) {
 
   std::shared_ptr<Db> db;
   if ( !sqlitedb.empty( ) ) {
-    db.reset( new Db( sqlitedb ) );
+    db.reset( new Db( ) );
+    db->init( sqlitedb );
     to->addListener( db );
   }
 
@@ -188,7 +189,7 @@ int main( int argc, char** argv ) {
         }
       }
 
-      if( db ){
+      if ( db ) {
         db->onConversionCompleted( argv[i], files );
       }
     }
