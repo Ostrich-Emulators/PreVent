@@ -5,6 +5,7 @@
                    displayName="Header Files"
                    projectFiles="true">
       <logicalFolder name="f1" displayName="Readers" projectFiles="true">
+        <itemPath>CpcXmlReader.h</itemPath>
         <itemPath>Hdf5Reader.h</itemPath>
         <itemPath>StpXmlReader.h</itemPath>
         <itemPath>StreamChunkReader.h</itemPath>
@@ -18,6 +19,7 @@
         <itemPath>WfdbWriter.h</itemPath>
         <itemPath>ZlWriter.h</itemPath>
       </logicalFolder>
+      <itemPath>Base64.h</itemPath>
       <itemPath>ConversionListener.h</itemPath>
       <itemPath>DataRow.h</itemPath>
       <itemPath>Formats.h</itemPath>
@@ -36,6 +38,7 @@
                    displayName="Source Files"
                    projectFiles="true">
       <logicalFolder name="f1" displayName="Readers" projectFiles="true">
+        <itemPath>CpcXmlReader.cpp</itemPath>
         <itemPath>Hdf5Reader.cpp</itemPath>
         <itemPath>StpXmlReader.cpp</itemPath>
         <itemPath>StreamChunkReader.cpp</itemPath>
@@ -49,6 +52,7 @@
         <itemPath>WfdbWriter.cpp</itemPath>
         <itemPath>ZlWriter.cpp</itemPath>
       </logicalFolder>
+      <itemPath>Base64.cpp</itemPath>
       <itemPath>DataRow.cpp</itemPath>
       <itemPath>Formats.cpp</itemPath>
       <itemPath>Reader.cpp</itemPath>
@@ -96,7 +100,15 @@
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
       </compileType>
+      <item path="Base64.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Base64.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="ConversionListener.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="CpcXmlReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="CpcXmlReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="CsvWriter.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -183,7 +195,7 @@
           <developmentMode>5</developmentMode>
           <standard>11</standard>
           <commandlineTool>h5c++</commandlineTool>
-          <commandLine>-Wno-deprecated -O2 `wfdb-config --cflags`</commandLine>
+          <commandLine>-Wno-deprecated -O2 `wfdb-config --cflags` `pkg-config --cflags expat`</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -199,11 +211,20 @@
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
             <linkerOptionItem>`pkg-config --libs libxml-2.0`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
       </compileType>
+      <item path="Base64.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Base64.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="ConversionListener.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="CpcXmlReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="CpcXmlReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="CsvWriter.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -310,7 +331,15 @@
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
       </compileType>
+      <item path="Base64.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Base64.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="ConversionListener.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="CpcXmlReader.cpp" ex="false" tool="1" flavor2="11">
+      </item>
+      <item path="CpcXmlReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="CsvWriter.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -417,7 +446,15 @@
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
       </compileType>
+      <item path="Base64.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Base64.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="ConversionListener.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="CpcXmlReader.cpp" ex="false" tool="1" flavor2="11">
+      </item>
+      <item path="CpcXmlReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="CsvWriter.cpp" ex="false" tool="1" flavor2="0">
       </item>

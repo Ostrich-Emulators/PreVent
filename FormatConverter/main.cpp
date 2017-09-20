@@ -30,7 +30,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-e or --export <vital/wave to export>"
       << std::endl << "\t-s or --sqlite <db file>"
       << std::endl << "\t-q or --quiet"
-      << std::endl << "\tValid input formats: wfdb, hdf5, stpxml"
+      << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml"
       << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
       << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
       //<< std::endl << "\tIf file is -, stdin is read for input, and the format is assumed to be our zl format, regardless of --from option"

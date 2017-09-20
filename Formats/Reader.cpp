@@ -5,6 +5,7 @@
 #include "ZlReader.h"
 #include "Hdf5Reader.h"
 #include "StpXmlReader.h"
+#include "CpcXmlReader.h"
 
 Reader::Reader( ) : largefile( false ) {
 }
@@ -26,6 +27,8 @@ std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
       return std::unique_ptr<Reader>( new StpXmlReader( ) );
     case HDF5:
       return std::unique_ptr<Reader>( new Hdf5Reader( ) );
+    case CPCXML:
+      return std::unique_ptr<Reader>( new CpcXmlReader( ) );
     default:
       throw "reader not yet implemented";
   }
