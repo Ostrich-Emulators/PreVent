@@ -15,22 +15,22 @@
 const std::string Db::CREATE = "CREATE TABLE patient (  id INTEGER PRIMARY KEY,  name VARCHAR( 500 ));CREATE TABLE unit (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ));CREATE TABLE bed ( id INTEGER PRIMARY KEY,  unit_id INTEGER,  name VARCHAR( 25 ));CREATE TABLE file (  id INTEGER PRIMARY KEY,  filename VARCHAR( 500 ),  patient_id INTEGER,  bed_id INTEGER,  start INTEGER,  end INTEGER);CREATE TABLE signal (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ),  hz FLOAT,  uom VARCHAR( 25 ));CREATE TABLE file_signal (  file_id INTEGER,  signal_id INTEGER,  start INTEGER,  end INTEGER,  PRIMARY KEY( file_id, signal_id ));";
 
 int Db::nameidcb( void * a_param, int argc, char **argv, char ** ) {
-  std::map<std::string, int> map = *static_cast<std::map< std::string, int>*> ( a_param );
-  map.insert( std::make_pair( argv[0], std::stoi( argv[1] ) ) );
+  std::map<std::string, int> * map = static_cast<std::map< std::string, int>*> ( a_param );
+  map->insert( std::make_pair( argv[0], std::stoi( argv[1] ) ) );
   return 0;
 }
 
 int Db::bedcb( void *a_param, int argc, char **argv, char ** ) {
-  std::map<std::pair<std::string, std::string>, int> map
-      = *static_cast<std::map<std::pair<std::string, std::string>, int>*> ( a_param );
-  map.insert( std::make_pair( std::make_pair( argv[0], argv[1] ), std::stoi( argv[2] ) ) );
+  std::map<std::pair<std::string, std::string>, int> * map
+      = static_cast<std::map<std::pair<std::string, std::string>, int>*> ( a_param );
+  map->insert( std::make_pair( std::make_pair( argv[0], argv[1] ), std::stoi( argv[2] ) ) );
   return 0;
 }
 
 int Db::signalcb( void * a_param, int argc, char ** argv, char ** column ) {
-  std::map<std::pair<std::string, double>, int> map
-      = *static_cast<std::map<std::pair<std::string, double>, int>*> ( a_param );
-  map.insert( std::make_pair( std::make_pair( argv[0], std::stod( argv[1] ) ), std::stoi( argv[2] ) ) );
+  std::map<std::pair<std::string, double>, int> * map
+      = static_cast<std::map<std::pair<std::string, double>, int>*> ( a_param );
+  map->insert( std::make_pair( std::make_pair( argv[0], std::stod( argv[1] ) ), std::stoi( argv[2] ) ) );
   return 0;
 }
 
@@ -57,7 +57,6 @@ void Db::init( const std::string& fileloc ) {
     exec( Db::CREATE.c_str( ) );
   }
 
-  // FIXME: these caches aren't working
   exec( "SELECT name, id FROM unit", &nameidcb, &unitids );
 
   exec( "SELECT u.name, b.name, b.id FROM bed b JOIN unit u ON b.unit_id=u.id",
