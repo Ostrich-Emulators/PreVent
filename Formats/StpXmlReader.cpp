@@ -23,12 +23,18 @@
 #include <functional>
 #include <sstream>
 #include <map>
+#include <memory>
 
 const std::string StpXmlReader::MISSING_VALUESTR( "-32768" );
 const std::set<std::string> StpXmlReader::Hz60({ "RR", "VNT_PRES", "VNT_FLOW" } );
 const std::set<std::string> StpXmlReader::Hz120({ "ICP1", "ICP2", "ICP4", "LA4" } );
+std::string StpXmlReader::working;
+const int StpXmlReader::INHEADER = 1;
+const int StpXmlReader::INVITAL = 2;
+const int StpXmlReader::INWAVE = 4;
+const int StpXmlReader::INNAME = 8;
 
-StpXmlReader::StpXmlReader( ) : reader( 0 ), warnMissingName( true ), warnJunkData( true ),
+StpXmlReader::StpXmlReader( ) : warnMissingName( true ), warnJunkData( true ),
 prevtime( 0 ), currvstime( 0 ), lastvstime( 0 ), currwavetime( 0 ), lastwavetime( 0 ) {
   LIBXML_TEST_VERSION
 }
@@ -40,10 +46,7 @@ StpXmlReader::~StpXmlReader( ) {
 }
 
 void StpXmlReader::finish( ) {
-  if ( NULL == reader ) {
-    xmlFreeTextReader( reader );
-    reader = NULL;
-  }
+  XML_ParserFree( parser );
 }
 
 size_t StpXmlReader::getSize( const std::string& input ) const {
@@ -57,30 +60,212 @@ size_t StpXmlReader::getSize( const std::string& input ) const {
   return info.st_size;
 }
 
-int StpXmlReader::prepare( const std::string& input, SignalSet& info ) {
-  int rslt = Reader::prepare( input, info );
-  if ( 0 == rslt ) {
-    if ( NULL == reader ) {
-      reader = xmlNewTextReaderFilename( input.c_str( ) );
+void StpXmlReader::start( void * data, const char * el, const char ** attr ) {
+  std::map<std::string, std::string> attrs;
+  for ( int i = 0; attr[i]; i += 2 ) {
+    attrs[attr[i]] = attr[i + 1];
+  }
+
+  StpXmlReader * rdr = static_cast<StpXmlReader *> ( data );
+  rdr->start( el, attrs );
+}
+
+void StpXmlReader::end( void * data, const char * el ) {
+  StpXmlReader * rdr = static_cast<StpXmlReader *> ( data );
+  rdr->end( el, trim( working ) );
+  working.clear( );
+}
+
+void StpXmlReader::chars( void * data, const char * text, int len ) {
+  working.append( text, len );
+}
+
+void StpXmlReader::setstate( int st ) {
+  state = st;
+}
+
+void StpXmlReader::start( const std::string& element, std::map<std::string, std::string>& attrs ) {
+  if ( "FileInfo" == element ) {
+    setstate( INHEADER );
+  }
+  else if ( "VitalSigns" == element ) {
+    setstate( INVITAL );
+    lastvstime = currvstime;
+    currvstime = time( attrs["Time"] );
+    if ( isRollover( lastvstime, currvstime ) ) {
+      rslt = ReadResult::END_OF_DAY;
+      prevtime = currvstime;
+      filler = &saved;
+    }
+  }
+  else if ( "Waveforms" == element ) {
+    setstate( INWAVE );
+    lastwavetime = currwavetime;
+    currwavetime = time( attrs["Time"] );
+    if ( isRollover( lastwavetime, currwavetime ) ) {
+      rslt = ReadResult::END_OF_DAY;
+      prevtime = currwavetime;
+      filler = &saved;
+    }
+  }
+  else if ( "PatientName" == element ) {
+    setstate( INNAME );
+  }
+
+  if ( "Value" == element ) {
+    if ( 0 != attrs.count( "UOM" ) ) {
+      uom = attrs["UOM"];
+    }
+    if ( 0 != attrs.count( "Q" ) ) {
+      q = attrs["Q"];
+    }
+  }
+
+  std::cout << "start " << element << std::endl;
+  if ( !attrs.empty( ) ) {
+    for ( auto& m : attrs ) {
+      std::cout << "\t" << m.first << "=>" << m.second << std::endl;
+    }
+  }
+}
+
+void StpXmlReader::end( const std::string& element, const std::string& text ) {
+  if ( INHEADER == state ) {
+    filler->metadata( )[element] = text;
+    rslt = ReadResult::NORMAL;
+  }
+  else if ( INNAME == state ) {
+    if ( 0 == prevtime ) {
+      filler->metadata( )["Patient Name"] = text;
+    }
+    else {
+      std::string pname = filler->metadata( )["Patient Name"];
+      if ( text != pname ) {
+        rslt = ReadResult::END_OF_PATIENT;
+        // we've cut over to a new set of data, so
+        // save the data we parse now to a different SignalSet
+        filler = &saved;
+      }
+    }
+  }
+  else if ( INVITAL == state ) {
+    if ( "Par" == element ) {
+      label = text;
+    }
+    else if ( "Value" == element ) {
+      value = text;
+    }
+    else if ( "VS" == element ) {
+      bool added = false;
+      std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
+
+      if ( added ) {
+        sig->metad( ).insert( std::make_pair( SignalData::HERTZ, 0.5 ) );
+        sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
+        sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
+
+        if ( !uom.empty( ) ) {
+          sig->setUom( uom );
+        }
+      }
+
+      sig->add( DataRow( currvstime, value ) );
+    }
+  }
+  else if ( INWAVE == state ) {
+
+  }
+
+
+
+  std::cout << "end " << element << std::endl;//"(" << text << ")" << std::endl;
+}
+
+int StpXmlReader::prepare( const std::string& fname, SignalSet& info ) {
+  int rr = Reader::prepare( fname, info );
+  if ( 0 == rr ) {
+    parser = XML_ParserCreate( NULL );
+    XML_SetUserData( parser, this );
+    XML_SetElementHandler( parser, StpXmlReader::start, StpXmlReader::end );
+    XML_SetCharacterDataHandler( parser, StpXmlReader::chars );
+    input.open( fname, std::ifstream::in );
+    rslt = ReadResult::NORMAL;
+  }
+  return rr;
+}
+
+void StpXmlReader::copysaved( SignalSet& newset ) {
+  newset.metadata( ).insert( saved.metadata( ).begin( ), saved.metadata( ).end( ) );
+  saved.metadata( ).clear( );
+
+  for ( auto& m : saved.vitals( ) ) {
+    std::unique_ptr<SignalData>& savedsignal = m.second;
+
+    bool added = false;
+    std::unique_ptr<SignalData>& infodata = newset.addVital( m.first, &added );
+
+    if ( added ) {
+      auto& smap = savedsignal->metas( );
+      infodata->metas( ).insert( smap.begin( ), smap.end( ) );
+
+      auto& dmap = savedsignal->metad( );
+      infodata->metad( ).insert( dmap.begin( ), dmap.end( ) );
+
+      auto& imap = savedsignal->metai( );
+      infodata->metai( ).insert( imap.begin( ), imap.end( ) );
     }
 
-    return ( NULL == reader ? -1 : 0 );
+    int rows = savedsignal->size( );
+    for ( int row = 0; row < rows; row++ ) {
+      const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
+      infodata->add( *datarow );
+    }
   }
-  return rslt;
+
+  for ( auto& m : saved.waves( ) ) {
+    std::unique_ptr<SignalData>& savedsignal = m.second;
+
+    bool added = false;
+    std::unique_ptr<SignalData>& infodata = newset.addWave( m.first, &added );
+
+    if ( added ) {
+      auto& smap = savedsignal->metas( );
+      infodata->metas( ).insert( smap.begin( ), smap.end( ) );
+
+      auto& dmap = savedsignal->metad( );
+      infodata->metad( ).insert( dmap.begin( ), dmap.end( ) );
+
+      auto& imap = savedsignal->metai( );
+      infodata->metai( ).insert( imap.begin( ), imap.end( ) );
+    }
+
+    int rows = savedsignal->size( );
+    for ( int row = 0; row < rows; row++ ) {
+      const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
+      infodata->add( *datarow );
+    }
+  }
+
+  saved.vitals( ).clear( );
+  saved.waves( ).clear( );
 }
 
 ReadResult StpXmlReader::fill( SignalSet & info, const ReadResult& lastfill ) {
   if ( ReadResult::END_OF_DAY == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
-    info.metadata( ).insert( savedmeta.begin( ), savedmeta.end( ) );
+    copysaved( info );
+  }
+  filler = &info;
+
+  const int buffsz = 16384;
+  std::vector<char> buffer( buffsz, 0 );
+  while ( input.read( buffer.data( ), buffer.size( ) ) ) {
+    XML_Parse( parser, &buffer[0], buffer.size( ), input.gcount( ) < buffsz );
+    if ( ReadResult::NORMAL != rslt ) {
+      return rslt;
+    }
   }
 
-  ReadResult rslt = ReadResult::NORMAL;
-  do {
-    rslt = processNode( info );
-  }
-  while ( rslt == ReadResult::NORMAL );
-
-  return rslt;
+  return ReadResult::END_OF_FILE;
 }
 
 ReadResult StpXmlReader::processNode( SignalSet& info ) {
@@ -101,10 +286,10 @@ ReadResult StpXmlReader::processNode( SignalSet& info ) {
     if ( 1 == depth ) {
       // only FileInfo, Segment_*, and (sometimes) PatientName elements at level 1
       if ( "FileInfo" == element ) {
-        savedmeta = getHeaders( );
+        //        savedmeta = getHeaders( );
 
-        savedmeta.erase( "Size" ); // Size is meaningless for us
-        info.metadata( ).insert( savedmeta.begin( ), savedmeta.end( ) );
+        //        savedmeta.erase( "Size" ); // Size is meaningless for us
+        //        info.metadata( ).insert( savedmeta.begin( ), savedmeta.end( ) );
 
         //for ( auto mx : m ) {
         //  std::cout << mx.first << ": " << mx.second << std::endl;
@@ -192,7 +377,7 @@ ReadResult StpXmlReader::processNode( SignalSet& info ) {
 
 ReadResult StpXmlReader::handleSegmentPatientName( SignalSet& info ) {
   std::string patientname = textAndClose( );
-  savedmeta["Patient Name"] = patientname;
+  //savedmeta["Patient Name"] = patientname;
 
   // we have a new patient name, so see if it's the same as our last one
   if ( 0 == prevtime ) {
@@ -210,6 +395,32 @@ ReadResult StpXmlReader::handleSegmentPatientName( SignalSet& info ) {
 
   // std::cout << "patient name is " << patientname << std::endl;
   return ReadResult::NORMAL;
+}
+
+bool StpXmlReader::isRollover( const time_t& then, const time_t& now ) const {
+  if ( 0 != then ) {
+    const int cdoy = gmtime( &now )->tm_yday;
+    const int pdoy = gmtime( &then )->tm_yday;
+    if ( cdoy != pdoy ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+time_t StpXmlReader::time( const std::string& timer ) const {
+  if ( std::string::npos == timer.find( " " ) ) {
+    return std::stol( timer );
+  }
+
+  // we have a local time that we need to convert
+  tm mytime;
+  strptime( timer.c_str( ), "%m/%d/%Y %I:%M:%S %p", &mytime );
+  // now convert our local time to UTC
+  time_t local = mktime( &mytime );
+  mytime = *gmtime( &local );
+  return mktime( &mytime );
 }
 
 bool StpXmlReader::isRollover( bool forVitals ) {
@@ -401,7 +612,7 @@ std::map<std::string, std::string> StpXmlReader::getAttrs( ) {
   return map;
 }
 
-std::string StpXmlReader::trim( std::string & totrim ) const {
+std::string StpXmlReader::trim( std::string & totrim ) {
   // ltrim
   totrim.erase( totrim.begin( ), std::find_if( totrim.begin( ), totrim.end( ),
       std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );

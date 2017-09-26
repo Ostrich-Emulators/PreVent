@@ -50,7 +50,6 @@ private:
 
 	void exec( const std::string& sql, void * callback = nullptr, void * param = nullptr );
 	int addPatient( const std::string& name );
-	void addFile( const SignalSet& sig );
 	void addSignal( int fileid, const SignalData& sig );
 };
 

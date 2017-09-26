@@ -22,7 +22,11 @@
 #include <libxml/parser.h>
 
 #include "DataRow.h"
+#include "SignalSet.h"
 #include "StreamChunkReader.h"
+#include <expat.h>
+#include <iostream>
+#include <fstream>
 #include <libxml/xmlreader.h>
 
 class SignalData;
@@ -32,6 +36,10 @@ public:
 	static const std::set<std::string> Hz60;
 	static const std::set<std::string> Hz120;
 	static const std::string MISSING_VALUESTR;
+	static const int INHEADER;
+	static const int INVITAL;
+	static const int INWAVE;
+	static const int INNAME;
 
 	StpXmlReader( );
 	virtual ~StpXmlReader( );
@@ -44,6 +52,10 @@ protected:
 
 private:
 	StpXmlReader( const StpXmlReader& orig );
+
+	static void start( void * data, const char * el, const char ** attr );
+	static void end( void * data, const char * el );
+	static void chars( void * data, const char * text, int len );
 
 	ReadResult processNode( SignalSet& info );
 
@@ -93,12 +105,13 @@ private:
 	 * @return
 	 */
 	std::string textAndAttrsToClose( std::map<std::string, std::string>& attrs );
+
 	/**
 	 * Trims the given string in-place. Also returns that same string
 	 * @param totrim
 	 * @return the argument
 	 */
-	std::string trim( std::string& totrim ) const;
+	static std::string trim( std::string& totrim );
 
 	/**
 	 * Reads the next element, discarding any junk whitespace before it
@@ -111,7 +124,16 @@ private:
 
 	static bool waveIsOk( const std::string& wavedata );
 
+	void copysaved( SignalSet& newset );
+	void start( const std::string& element, std::map<std::string, std::string>& attrs );
+	void end( const std::string& element, const std::string& text );
+
+	void setstate( int state );
+	time_t time( const std::string& val ) const;
+	bool isRollover( const time_t& now, const time_t& then ) const;
+
 	xmlTextReaderPtr reader;
+	XML_Parser parser;
 	time_t prevtime;
 	time_t currvstime;
 	time_t lastvstime;
@@ -119,7 +141,18 @@ private:
 	time_t lastwavetime;
 	bool warnMissingName;
 	bool warnJunkData;
-	std::map<std::string, std::string> savedmeta;
+
+	static std::string working;
+	// std::map<std::string, std::string> savedmeta;
+	SignalSet saved;
+	SignalSet * filler;
+	std::ifstream input;
+	ReadResult rslt;
+	int state;
+	std::string label;
+	std::string value;
+	std::string uom;
+	std::string q;
 };
 
 #endif /* STPXMLREADER_H */
