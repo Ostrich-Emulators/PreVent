@@ -62,6 +62,7 @@ public:
 	void setFileSupport( bool );
 	time_t earliest( const TimeCounter& tc = EITHER ) const;
 	time_t latest( const TimeCounter& tc = EITHER ) const;
+	void setMetadataFrom( const SignalSet& target );
 
 private:
 	SignalSet( const SignalSet& );

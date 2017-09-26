@@ -42,8 +42,8 @@ const std::map<std::string, std::unique_ptr<SignalData>>&SignalSet::waves( ) con
   return wmap;
 }
 
-std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> SignalSet::allsignals( ) const{
-std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> vec;
+std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> SignalSet::allsignals( ) const {
+  std::vector<std::reference_wrapper<const std::unique_ptr < SignalData>>> vec;
 
   for ( const auto& m : wmap ) {
     const auto& w = m.second;
@@ -55,6 +55,11 @@ std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> vec;
   }
 
   return vec;
+}
+
+void SignalSet::setMetadataFrom( const SignalSet& src ) {
+  metamap.clear();
+  metamap.insert(src.metadata().begin(), src.metadata().end() );
 }
 
 time_t SignalSet::earliest( const TimeCounter& type ) const {

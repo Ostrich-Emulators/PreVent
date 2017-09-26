@@ -42,14 +42,20 @@ private:
 	// unit-bed -> id
 	std::map<std::pair<std::string, std::string>, int> bedids;
 	std::map<std::string, int> unitids;
-	std::map<std::string, int> signalids;
+	std::map<std::pair<std::string, double>, int> signalids;
 	std::map<std::string, int> patientids;
 
-	static int nameidcb( void *a_param, int argc, char **argv, char **column );
-	static int bedcb( void *a_param, int argc, char **argv, char **column );
+	static int nameidcb( void * a_param, int argc, char ** argv, char ** scolumn );
+	static int bedcb( void * a_param, int argc, char ** argv, char ** column );
+	static int signalcb( void * a_param, int argc, char ** argv, char ** column );
 
-	void exec( const std::string& sql, void * callback = nullptr, void * param = nullptr );
-	int addPatient( const std::string& name );
+	void exec( const std::string& sql, int (*cb )(void*, int, char**, char**) = 0,
+			void * param = nullptr );
+	int getOrAddUnit( const std::string& name );
+	int getOrAddBed( const std::string& name, const std::string& unitname );
+	int getOrAddPatient( const std::string& name );
+	int getOrAddSignal( const SignalData& data );
+	int addLookup( const std::string& sql, const std::string& name );
 	void addSignal( int fileid, const SignalData& sig );
 };
 

@@ -95,6 +95,7 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     if ( isRollover( lastvstime, currvstime ) ) {
       rslt = ReadResult::END_OF_DAY;
       prevtime = currvstime;
+      saved.setMetadataFrom( *filler );
       filler = &saved;
     }
   }
@@ -105,6 +106,7 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     if ( isRollover( lastwavetime, currwavetime ) ) {
       rslt = ReadResult::END_OF_DAY;
       prevtime = currwavetime;
+      saved.setMetadataFrom( *filler );
       filler = &saved;
     }
   }
@@ -121,18 +123,24 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     }
   }
 
-  std::cout << "start " << element << std::endl;
-  if ( !attrs.empty( ) ) {
-    for ( auto& m : attrs ) {
-      std::cout << "\t" << m.first << "=>" << m.second << std::endl;
-    }
+  if ( "WaveformData" == element ) {
+    label = attrs["Channel"];
+    uom = attrs["UOM"];
   }
+
+  //  std::cout << "start " << element << std::endl;
+  //  if ( !attrs.empty( ) ) {
+  //    for ( auto& m : attrs ) {
+  //      std::cout << "\t" << m.first << "=>" << m.second << std::endl;
+  //    }
+  //  }
 }
 
 void StpXmlReader::end( const std::string& element, const std::string& text ) {
   if ( INHEADER == state ) {
-    filler->metadata( )[element] = text;
-    rslt = ReadResult::NORMAL;
+    if ( !( "FileInfo" == text || "Size" == text ) ) {
+      filler->metadata( )[element] = text;
+    }
   }
   else if ( INNAME == state ) {
     if ( 0 == prevtime ) {
@@ -144,6 +152,8 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
         rslt = ReadResult::END_OF_PATIENT;
         // we've cut over to a new set of data, so
         // save the data we parse now to a different SignalSet
+        saved.setMetadataFrom( *filler );
+        saved.metadata( )["Patient Name"] = text;
         filler = &saved;
       }
     }
@@ -173,17 +183,58 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
     }
   }
   else if ( INWAVE == state ) {
+    if ( "WaveformData" == element ) {
+      if ( label.empty( ) ) {
+        if ( warnMissingName ) {
+          std::cerr << "ignoring unnamed waveforms" << std::endl;
+          warnMissingName = false;
+        }
+      }
+      else if ( shouldExtract( label ) ) {
+        std::string wavepoints = text;
+        // reverse the oversampling (if any) and set the true Hz
+        int thz = 240;
+        if ( 0 != Hz60.count( label ) ) {
+          wavepoints = resample( text, 60 );
+          thz = 60;
+        }
+        else if ( 0 != Hz120.count( label ) ) {
+          wavepoints = resample( text, 120 );
+          thz = 120;
+        }
+        const int hz = thz;
 
+        if ( waveIsOk( wavepoints ) ) {
+          bool first;
+          std::unique_ptr<SignalData>& sig = filler->addWave( label, &first );
+          if ( first ) {
+            sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
+            sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
+
+            if ( sig->uom( ).empty( ) && !uom.empty( ) ) {
+              sig->setUom( uom );
+            }
+          }
+
+          sig->metad( )[SignalData::HERTZ] = hz;
+          sig->add( DataRow( currwavetime, wavepoints ) );
+        }
+        else if ( warnJunkData ) {
+
+          warnJunkData = false;
+          std::cerr << "skipping waveforms with no usable data" << std::endl;
+        }
+      }
+    }
   }
 
-
-
-  std::cout << "end " << element << std::endl;//"(" << text << ")" << std::endl;
+  // std::cout << "end " << element << std::endl; //"(" << text << ")" << std::endl;
 }
 
 int StpXmlReader::prepare( const std::string& fname, SignalSet& info ) {
   int rr = Reader::prepare( fname, info );
   if ( 0 == rr ) {
+
     parser = XML_ParserCreate( NULL );
     XML_SetUserData( parser, this );
     XML_SetElementHandler( parser, StpXmlReader::start, StpXmlReader::end );
@@ -194,15 +245,15 @@ int StpXmlReader::prepare( const std::string& fname, SignalSet& info ) {
   return rr;
 }
 
-void StpXmlReader::copysaved( SignalSet& newset ) {
-  newset.metadata( ).insert( saved.metadata( ).begin( ), saved.metadata( ).end( ) );
+void StpXmlReader::copysaved( SignalSet& tgt ) {
+  tgt.setMetadataFrom( saved );
   saved.metadata( ).clear( );
 
   for ( auto& m : saved.vitals( ) ) {
     std::unique_ptr<SignalData>& savedsignal = m.second;
 
     bool added = false;
-    std::unique_ptr<SignalData>& infodata = newset.addVital( m.first, &added );
+    std::unique_ptr<SignalData>& infodata = tgt.addVital( m.first, &added );
 
     if ( added ) {
       auto& smap = savedsignal->metas( );
@@ -226,7 +277,7 @@ void StpXmlReader::copysaved( SignalSet& newset ) {
     std::unique_ptr<SignalData>& savedsignal = m.second;
 
     bool added = false;
-    std::unique_ptr<SignalData>& infodata = newset.addWave( m.first, &added );
+    std::unique_ptr<SignalData>& infodata = tgt.addWave( m.first, &added );
 
     if ( added ) {
       auto& smap = savedsignal->metas( );
@@ -241,6 +292,7 @@ void StpXmlReader::copysaved( SignalSet& newset ) {
 
     int rows = savedsignal->size( );
     for ( int row = 0; row < rows; row++ ) {
+
       const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
       infodata->add( *datarow );
     }
@@ -255,11 +307,13 @@ ReadResult StpXmlReader::fill( SignalSet & info, const ReadResult& lastfill ) {
     copysaved( info );
   }
   filler = &info;
+  rslt = ReadResult::NORMAL;
 
   const int buffsz = 16384;
   std::vector<char> buffer( buffsz, 0 );
   while ( input.read( buffer.data( ), buffer.size( ) ) ) {
-    XML_Parse( parser, &buffer[0], buffer.size( ), input.gcount( ) < buffsz );
+    long gcnt = input.gcount( );
+    XML_Parse( parser, &buffer[0], buffer.size( ), gcnt < buffsz );
     if ( ReadResult::NORMAL != rslt ) {
       return rslt;
     }
@@ -390,6 +444,7 @@ ReadResult StpXmlReader::handleSegmentPatientName( SignalSet& info ) {
     // didn't have a patient name, but now we do, or we had one and
     // it's different from this new one
     // in either case, rollover
+
     return ReadResult::END_OF_PATIENT;
   }
 
@@ -402,6 +457,7 @@ bool StpXmlReader::isRollover( const time_t& then, const time_t& now ) const {
     const int cdoy = gmtime( &now )->tm_yday;
     const int pdoy = gmtime( &then )->tm_yday;
     if ( cdoy != pdoy ) {
+
       return true;
     }
   }
@@ -420,6 +476,7 @@ time_t StpXmlReader::time( const std::string& timer ) const {
   // now convert our local time to UTC
   time_t local = mktime( &mytime );
   mytime = *gmtime( &local );
+
   return mktime( &mytime );
 }
 
@@ -460,6 +517,7 @@ bool StpXmlReader::isRollover( bool forVitals ) {
     const int pdoy = gmtime( &prevtime )->tm_yday;
     if ( cdoy != pdoy ) {
       prevtime = currtime;
+
       return true;
     }
   }
@@ -511,6 +569,7 @@ void StpXmlReader::handleWaveformSet( SignalSet& info ) {
           sig->add( DataRow( currwavetime, vals ) );
         }
         else if ( warnJunkData ) {
+
           warnJunkData = false;
           std::cerr << "skipping waveforms with no usable data" << std::endl;
         }
@@ -538,6 +597,7 @@ void StpXmlReader::handleVitalsSet( SignalSet & info ) {
         sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
 
         if ( !uom.empty( ) ) {
+
           sig->setUom( uom );
         }
       }
@@ -572,6 +632,7 @@ DataRow StpXmlReader::handleOneVs( std::string& param, std::string& uom ) {
         hi = value;
       }
       else if ( "AlarmLimitLow" == element ) {
+
         lo = value;
       }
     }
@@ -590,6 +651,7 @@ std::map<std::string, std::string> StpXmlReader::getHeaders( ) {
   next( ); // opening <Filename>, <Unit>, etc.
   while ( MINDEPTH < xmlTextReaderDepth( reader ) ) {
     // consume all the nodes until we get to the closing </FileInfo>... (our MINDEPTH)
+
     std::string element = stringAndFree( xmlTextReaderName( reader ) );
     std::string value = textAndClose( );
     map.insert( std::make_pair( element, value ) );
@@ -604,6 +666,7 @@ std::map<std::string, std::string> StpXmlReader::getAttrs( ) {
   std::map<std::string, std::string> map;
   if ( xmlTextReaderHasAttributes( reader ) ) {
     while ( xmlTextReaderMoveToNextAttribute( reader ) ) {
+
       std::string key = stringAndFree( xmlTextReaderName( reader ) );
       std::string val = stringAndFree( xmlTextReaderValue( reader ) );
       map[key] = val;
@@ -650,6 +713,7 @@ std::string StpXmlReader::textAndAttrsToClose( std::map<std::string, std::string
     attrs = getAttrs( );
   }
   else {
+
     std::cerr << "cannot read attributes from non-opening element" << std::endl;
   }
 
@@ -659,6 +723,7 @@ std::string StpXmlReader::textAndAttrsToClose( std::map<std::string, std::string
 std::string StpXmlReader::stringAndFree( xmlChar * chars ) const {
   std::string ret;
   if ( NULL != chars ) {
+
     ret = std::string( (char *) chars );
     xmlFree( chars );
   }
@@ -678,6 +743,7 @@ int StpXmlReader::next( ) {
 
   if ( xmlReaderTypes::XML_READER_TYPE_SIGNIFICANT_WHITESPACE == type ) {
     //std::cout << "skipping whitespace" << std::endl;
+
     return next( );
   }
 
@@ -747,6 +813,7 @@ std::string StpXmlReader::resample( const std::string& data, int hz ) {
   std::string newvals;
   for ( auto s : valvec ) {
     if ( !newvals.empty( ) ) {
+
       newvals.append( "," );
     }
     newvals.append( s );
