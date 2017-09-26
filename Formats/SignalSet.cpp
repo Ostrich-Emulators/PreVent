@@ -58,8 +58,10 @@ std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> SignalSet
 }
 
 void SignalSet::setMetadataFrom( const SignalSet& src ) {
-  metamap.clear();
-  metamap.insert(src.metadata().begin(), src.metadata().end() );
+  if ( this != &src ) {
+    metamap.clear( );
+    metamap.insert( src.metadata( ).begin( ), src.metadata( ).end( ) );
+  }
 }
 
 time_t SignalSet::earliest( const TimeCounter& type ) const {

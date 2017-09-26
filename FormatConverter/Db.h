@@ -35,10 +35,13 @@ public:
 			const SignalSet& data ) override;
 	virtual void onConversionCompleted( const std::string& input,
 			const std::vector<std::string>& outputs ) override;
+	virtual void setProperty( ConversionProperty key, const std::string& val ) override;
 
 private:
 	sqlite3 * ptr;
 	static const std::string CREATE;
+	bool quiet;
+
 	// unit-bed -> id
 	std::map<std::pair<std::string, std::string>, int> bedids;
 	std::map<std::string, int> unitids;

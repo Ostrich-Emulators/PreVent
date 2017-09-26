@@ -57,6 +57,7 @@ void Db::init( const std::string& fileloc ) {
     exec( Db::CREATE.c_str( ) );
   }
 
+  // FIXME: these caches aren't working
   exec( "SELECT name, id FROM unit", &nameidcb, &unitids );
 
   exec( "SELECT u.name, b.name, b.id FROM bed b JOIN unit u ON b.unit_id=u.id",
@@ -199,7 +200,17 @@ int Db::getOrAddBed( const std::string& name, const std::string& unitname ) {
   return bedids.at( pairkey );
 }
 
+void Db::setProperty( ConversionProperty key, const std::string& val ) {
+  if ( ConversionProperty::QUIET == key ) {
+    quiet = ( "TRUE" == val );
+  }
+}
+
 void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
+  if ( !quiet ) {
+    std::cout << "updating database" << std::endl;
+  }
+
   int pid = 0;
   int bid = 0;
   if ( 0 != data.metadata( ).count( "Patient Name" ) ) {
@@ -253,29 +264,28 @@ void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
     addSignal( id, *signal );
   }
 
-  std::cout << "file completed: " << filename << std::endl;
-
-  std::cout << "\t" << data.earliest( ) << " to " << data.latest( ) << std::endl;
-  for ( const auto& m : data.metadata( ) ) {
-    std::cout << "\t" << m.first << ": " << m.second << std::endl;
-  }
-
-  for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {
-    std::cout << "\t  " << ( m->wave( ) ? "WAVE " : "VITAL " ) << m->name( ) << std::endl;
-    std::cout << "\t\t" << m->startTime( ) << " to " << m->endTime( ) << std::endl;
-
-    for ( const auto& x : m->metad( ) ) {
-      std::cout << "\t\t" << x.first << ": " << x.second << std::endl;
-    }
-    for ( const auto& x : m->metas( ) ) {
-      std::cout << "\t\t" << x.first << ": " << x.second << std::endl;
-    }
-    for ( const auto& x : m->metai( ) ) {
-
-      std::cout << "\t\t" << x.first << ": " << x.second << std::endl;
-    }
-
-  }
+  //  std::cout << "file completed: " << filename << std::endl;
+  //
+  //  std::cout << "\t" << data.earliest( ) << " to " << data.latest( ) << std::endl;
+  //  for ( const auto& m : data.metadata( ) ) {
+  //    std::cout << "\t" << m.first << ": " << m.second << std::endl;
+  //  }
+  //
+  //  for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {
+  //    std::cout << "\t  " << ( m->wave( ) ? "WAVE " : "VITAL " ) << m->name( ) << std::endl;
+  //    std::cout << "\t\t" << m->startTime( ) << " to " << m->endTime( ) << std::endl;
+  //
+  //    for ( const auto& x : m->metad( ) ) {
+  //      std::cout << "\t\t" << x.first << ": " << x.second << std::endl;
+  //    }
+  //    for ( const auto& x : m->metas( ) ) {
+  //      std::cout << "\t\t" << x.first << ": " << x.second << std::endl;
+  //    }
+  //    for ( const auto& x : m->metai( ) ) {
+  //
+  //      std::cout << "\t\t" << x.first << ": " << x.second << std::endl;
+  //    }
+  //  }
 }
 
 void Db::onConversionCompleted( const std::string& input,

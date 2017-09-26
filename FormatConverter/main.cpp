@@ -161,6 +161,8 @@ int main( int argc, char** argv ) {
     db.reset( new Db( ) );
     db->init( sqlitedb );
     to->addListener( db );
+
+    db->setProperty( ConversionProperty::QUIET, ( quiet ? "TRUE" : "FALSE" ) );
   }
 
   int returncode = 0;
@@ -183,7 +185,7 @@ int main( int argc, char** argv ) {
       std::vector<std::string> files = to->write( from, data );
       from->finish( );
 
-      if ( quiet ) {
+      if ( !quiet ) {
         for ( const auto& f : files ) {
           std::cout << " written to " << f << std::endl;
         }

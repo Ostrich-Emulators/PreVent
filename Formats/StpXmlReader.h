@@ -19,7 +19,6 @@
 #include <list>
 #include <set>
 #include <zlib.h>
-#include <libxml/parser.h>
 
 #include "DataRow.h"
 #include "SignalSet.h"
@@ -27,7 +26,6 @@
 #include <expat.h>
 #include <iostream>
 #include <fstream>
-#include <libxml/xmlreader.h>
 
 class SignalData;
 
@@ -40,6 +38,7 @@ public:
 	static const int INVITAL;
 	static const int INWAVE;
 	static const int INNAME;
+	static const int INDETERMINATE;
 
 	StpXmlReader( );
 	virtual ~StpXmlReader( );
@@ -56,73 +55,15 @@ private:
 	static void start( void * data, const char * el, const char ** attr );
 	static void end( void * data, const char * el );
 	static void chars( void * data, const char * text, int len );
-
-	ReadResult processNode( SignalSet& info );
-
 	static std::string resample( const std::string& data, int hz );
+	static bool waveIsOk( const std::string& wavedata );
 
 	/**
-	 * Gets the next text element from the reader, when you've already opened the
-	 * element, and you know it has no other children
-	 * @param
-	 * @return
-	 */
-	std::string text( );
-
-	/**
-	 * Handles a set of vitals. The Reader is expected to be at a VitalSigns element
-	 * @param info where to save the data
-	 */
-	void handleVitalsSet( SignalSet& info );
-
-	void handleWaveformSet( SignalSet& info );
-
-	DataRow handleOneVs( std::string& param, std::string& uom );
-
-	ReadResult handleSegmentPatientName( SignalSet& info );
-
-	/**
-	 * Checks if we should rollover given a VitalSigns or Waveforms element. As
-	 * a side-effect, sets currtime, and possibly firsttime
-	 * @param reader
-	 * @return true, if we should rollover
-	 */
-	bool isRollover( bool forVitals );
-
-	std::map<std::string, std::string> getAttrs( );
-	std::map<std::string, std::string> getHeaders( );
-
-	/**
-	 * Gets the next text content of the node and moves the reader to the close tag
-	 * @return
-	 */
-	std::string textAndClose( );
-
-	/**
-	 * Gets the text and any attributes from this node. Assumes the reader is
-	 * on the opening element
-	 * @param attrs
-	 * @return
-	 */
-	std::string textAndAttrsToClose( std::map<std::string, std::string>& attrs );
-
-	/**
-	 * Trims the given string in-place. Also returns that same string
+	 * Trims the given string in-place, and returns it
 	 * @param totrim
-	 * @return the argument
+	 * @return
 	 */
 	static std::string trim( std::string& totrim );
-
-	/**
-	 * Reads the next element, discarding any junk whitespace before it
-	 * @param reader
-	 * @return 
-	 */
-	std::string nextelement( );
-	std::string stringAndFree( xmlChar * chars ) const;
-	int next( );
-
-	static bool waveIsOk( const std::string& wavedata );
 
 	void copysaved( SignalSet& newset );
 	void start( const std::string& element, std::map<std::string, std::string>& attrs );
@@ -132,7 +73,6 @@ private:
 	time_t time( const std::string& val ) const;
 	bool isRollover( const time_t& now, const time_t& then ) const;
 
-	xmlTextReaderPtr reader;
 	XML_Parser parser;
 	time_t prevtime;
 	time_t currvstime;
@@ -143,7 +83,6 @@ private:
 	bool warnJunkData;
 
 	static std::string working;
-	// std::map<std::string, std::string> savedmeta;
 	SignalSet saved;
 	SignalSet * filler;
 	std::ifstream input;
