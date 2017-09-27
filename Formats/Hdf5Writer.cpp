@@ -131,14 +131,14 @@ void Hdf5Writer::writeFileAttributes( H5::H5File file,
 
 void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace&, SignalData& data ) {
   const int rows = data.size( );
-  int buffer[rows] = { 0 };
+  short buffer[rows] = { 0 };
   int scale = data.scale( );
   for ( int row = 0; row < rows; row++ ) {
     const std::unique_ptr<DataRow>& datarow = data.pop( );
-    buffer[row] = (int) ( std::stof( datarow->data ) * scale );
+    buffer[row] = (short) ( std::stof( datarow->data ) * scale );
   }
 
-  ds.write( &buffer, H5::PredType::STD_I32LE );
+  ds.write( &buffer, H5::PredType::STD_I16LE );
 }
 
 void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
@@ -159,7 +159,7 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
 
   for ( int row = 0; row < rows; row++ ) {
     std::unique_ptr<DataRow> datarow = data.pop( );
-    std::vector<int> ints = datarow->ints( );
+    std::vector<short> ints = datarow->shorts( );
     buffer.insert( buffer.end( ), ints.begin( ), ints.end( ) );
 
     if ( buffer.size( ) >= maxslabcnt ) {
@@ -168,7 +168,7 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
       offset[0] += count[0];
 
       H5::DataSpace memspace( 2, count );
-      ds.write( &buffer[0], H5::PredType::STD_I32LE, memspace, space );
+      ds.write( &buffer[0], H5::PredType::STD_I16LE, memspace, space );
       buffer.clear( );
       buffer.reserve( maxslabcnt );
     }
@@ -179,7 +179,7 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
     count[0] = buffer.size( );
     space.selectHyperslab( H5S_SELECT_SET, count, offset );
     H5::DataSpace memspace( 2, count );
-    ds.write( &buffer[0], H5::PredType::STD_I32LE, memspace, space );
+    ds.write( &buffer[0], H5::PredType::STD_I16LE, memspace, space );
   }
 }
 
@@ -303,7 +303,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
       props.setChunk( 2, chunkdims );
       props.setDeflate( compression );
     }
-    H5::DataSet ds = grp.createDataSet( vits.first, H5::PredType::STD_I32LE, space, props );
+    H5::DataSet ds = grp.createDataSet( vits.first, H5::PredType::STD_I16LE, space, props );
     writeAttributes( ds, *( vits.second ) );
     writeAttribute( ds, "Columns", "scaled value" );
     writeAttribute( ds, "Data Label", vits.first );
@@ -327,7 +327,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
       props.setChunk( 2, chunkdims );
       props.setDeflate( compression );
     }
-    H5::DataSet ds = grp.createDataSet( wavs.first, H5::PredType::STD_I32LE, space, props );
+    H5::DataSet ds = grp.createDataSet( wavs.first, H5::PredType::STD_I16LE, space, props );
     writeAttributes( ds, *( wavs.second ) );
     writeAttribute( ds, "Columns", "value" );
     writeAttribute( ds, "Data Label", wavs.first );
