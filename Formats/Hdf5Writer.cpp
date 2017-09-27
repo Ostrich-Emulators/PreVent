@@ -149,7 +149,7 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
   hsize_t offset[] = { 0, 0 };
   hsize_t count[] = { 0, 1 };
 
-  std::vector<int> buffer;
+  std::vector<short> buffer;
   buffer.reserve( maxslabcnt );
 
   // We're keeping a buffer to eventually write to the file. However, this 
