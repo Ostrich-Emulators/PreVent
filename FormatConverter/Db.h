@@ -42,11 +42,12 @@ private:
 	static const std::string CREATE;
 	bool quiet;
 
+	std::map<std::string, int> unitids;
+	std::map<std::string, int> patientids;
 	// unit-bed -> id
 	std::map<std::pair<std::string, std::string>, int> bedids;
-	std::map<std::string, int> unitids;
-	std::map<std::pair<std::string, double>, int> signalids;
-	std::map<std::string, int> patientids;
+	// name-hz-iswave -> id
+	std::map<std::tuple<std::string, double, bool>, int> signalids;
 
 	static int nameidcb( void * a_param, int argc, char ** argv, char ** scolumn );
 	static int bedcb( void * a_param, int argc, char ** argv, char ** column );

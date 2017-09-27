@@ -12,7 +12,7 @@
 #include <iostream>
 #include <exception>
 
-const std::string Db::CREATE = "CREATE TABLE patient (  id INTEGER PRIMARY KEY,  name VARCHAR( 500 ));CREATE TABLE unit (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ));CREATE TABLE bed ( id INTEGER PRIMARY KEY,  unit_id INTEGER,  name VARCHAR( 25 ));CREATE TABLE file (  id INTEGER PRIMARY KEY,  filename VARCHAR( 500 ),  patient_id INTEGER,  bed_id INTEGER,  start INTEGER,  end INTEGER);CREATE TABLE signal (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ),  hz FLOAT,  uom VARCHAR( 25 ));CREATE TABLE file_signal (  file_id INTEGER,  signal_id INTEGER,  start INTEGER,  end INTEGER,  PRIMARY KEY( file_id, signal_id ));";
+const std::string Db::CREATE = "CREATE TABLE patient (  id INTEGER PRIMARY KEY,  name VARCHAR( 500 ));CREATE TABLE unit (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ));CREATE TABLE bed ( id INTEGER PRIMARY KEY,  unit_id INTEGER,  name VARCHAR( 25 ));CREATE TABLE file (  id INTEGER PRIMARY KEY,  filename VARCHAR( 500 ),  patient_id INTEGER,  bed_id INTEGER,  start INTEGER,  end INTEGER);CREATE TABLE signal (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ),  hz FLOAT,  uom VARCHAR( 25 ), iswave INTEGER );CREATE TABLE file_signal (  file_id INTEGER,  signal_id INTEGER,  start INTEGER,  end INTEGER,  PRIMARY KEY( file_id, signal_id ));";
 
 int Db::nameidcb( void * a_param, int argc, char **argv, char ** ) {
   std::map<std::string, int> * map = static_cast<std::map< std::string, int>*> ( a_param );
@@ -28,9 +28,13 @@ int Db::bedcb( void *a_param, int argc, char **argv, char ** ) {
 }
 
 int Db::signalcb( void * a_param, int argc, char ** argv, char ** column ) {
-  std::map<std::pair<std::string, double>, int> * map
-      = static_cast<std::map<std::pair<std::string, double>, int>*> ( a_param );
-  map->insert( std::make_pair( std::make_pair( argv[0], std::stod( argv[1] ) ), std::stoi( argv[2] ) ) );
+  std::map < std::tuple < std::string, double, bool>, int> * map
+      = static_cast<std::map< std::tuple< std::string, double, bool>, int>*> ( a_param );
+  std::string name = argv[0];
+  double hz = std::stod( argv[1] );
+  bool wave = ( "0" == argv[2] );
+  int id = std::stoi( argv[3] );
+  map->insert( std::make_pair( std::make_tuple( name, hz, wave ), id ) );
   return 0;
 }
 
@@ -62,7 +66,7 @@ void Db::init( const std::string& fileloc ) {
   exec( "SELECT u.name, b.name, b.id FROM bed b JOIN unit u ON b.unit_id=u.id",
       &bedcb, &bedids );
 
-  exec( "SELECT name, hz, id FROM signal", &signalcb, &signalids );
+  exec( "SELECT name, hz, id, iswave FROM signal", &signalcb, &signalids );
 
   exec( "SELECT name, id FROM patient", &nameidcb, &patientids );
 }
@@ -123,10 +127,10 @@ int Db::getOrAddUnit( const std::string& name ) {
 int Db::getOrAddSignal( const SignalData& data ) {
   std::string name = data.name( );
   double hz = data.hz( );
-  auto pairkey = std::make_pair( name, hz );
+  auto pairkey = std::make_tuple( name, hz, data.wave() );
 
   if ( 0 == signalids.count( pairkey ) ) {
-    std::string sql = "INSERT INTO signal( name, hz, uom ) VALUES( ?, ?, ? )";
+    std::string sql = "INSERT INTO signal( name, hz, uom, iswave ) VALUES( ?, ?, ?, ? )";
     sqlite3_stmt * stmt = nullptr;
     int rc = sqlite3_prepare_v2( ptr, sql.c_str( ), sql.length( ), &stmt, nullptr );
     if ( rc != SQLITE_OK ) {
@@ -143,6 +147,8 @@ int Db::getOrAddSignal( const SignalData& data ) {
     else {
       sqlite3_bind_text( stmt, 3, data.uom( ).c_str( ), data.uom( ).length( ), nullptr );
     }
+
+    sqlite3_bind_int( stmt, 4, ( data.wave( ) ? 1 : 0 ) );
 
     rc = sqlite3_step( stmt );
     if ( rc != SQLITE_DONE ) {
