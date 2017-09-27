@@ -43,8 +43,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wno-deprecated -O0 -pg `pkg-config --cflags sqlite3` 
-CXXFLAGS=-Wno-deprecated -O0 -pg `pkg-config --cflags sqlite3` 
+CCFLAGS=-Wno-deprecated -O0 -pg
+CXXFLAGS=-Wno-deprecated -O0 -pg
 
 # Fortran Compiler Flags
 FFLAGS=

@@ -18,11 +18,8 @@
 #include <string>
 #include <list>
 #include <set>
-#include <zlib.h>
-
 
 #include "DataRow.h"
-#include "StreamChunkReader.h"
 
 class SignalData;
 

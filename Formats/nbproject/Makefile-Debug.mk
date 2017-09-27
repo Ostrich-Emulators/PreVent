@@ -61,8 +61,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wno-deprecated -O0 -pg -g `wfdb-config --cflags` `pkg-config --cflags expat` 
-CXXFLAGS=-Wno-deprecated -O0 -pg -g `wfdb-config --cflags` `pkg-config --cflags expat` 
+CCFLAGS=-Wno-deprecated -O0 -pg -g `wfdb-config --cflags` 
+CXXFLAGS=-Wno-deprecated -O0 -pg -g `wfdb-config --cflags` 
 
 # Fortran Compiler Flags
 FFLAGS=

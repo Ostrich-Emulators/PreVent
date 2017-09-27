@@ -88,7 +88,7 @@
           <stripSymbols>true</stripSymbols>
           <standard>11</standard>
           <commandlineTool>h5c++</commandlineTool>
-          <commandLine>-Wno-deprecated -O0 -pg -g `wfdb-config --cflags` `pkg-config --cflags expat`</commandLine>
+          <commandLine>-Wno-deprecated -O0 -pg -g `wfdb-config --cflags`</commandLine>
         </ccTool>
         <linkerTool>
           <commandlineTool>g++</commandlineTool>
@@ -201,7 +201,7 @@
           <developmentMode>5</developmentMode>
           <standard>11</standard>
           <commandlineTool>h5c++</commandlineTool>
-          <commandLine>-Wno-deprecated -O2 `wfdb-config --cflags` `pkg-config --cflags expat`</commandLine>
+          <commandLine>-Wno-deprecated `wfdb-config --cflags`</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -215,7 +215,6 @@
             <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
-            <linkerOptionItem>`pkg-config --libs libxml-2.0`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
           </linkerLibItems>
@@ -335,8 +334,8 @@
             <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
             <linkerLibLibItem>hdf5.dll</linkerLibLibItem>
             <linkerLibLibItem>hdf5_cpp.dll</linkerLibLibItem>
-            <linkerOptionItem>`pkg-config --libs libxml-2.0`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
@@ -454,8 +453,8 @@
             <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
             <linkerLibLibItem>hdf5.dll</linkerLibLibItem>
             <linkerLibLibItem>hdf5_cpp.dll</linkerLibLibItem>
-            <linkerOptionItem>`pkg-config --libs libxml-2.0`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>

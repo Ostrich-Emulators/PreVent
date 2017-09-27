@@ -53,7 +53,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-Wl,-rpath,'../Formats/dist/Release/GNU-Linux' -L../Formats/dist/Release/GNU-Linux -lFormats
+LDLIBSOPTIONS=-Wl,-rpath,'../Formats/dist/Release/GNU-Linux' -L../Formats/dist/Release/GNU-Linux -lFormats `pkg-config --libs sqlite3`  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -69,12 +69,12 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ${OBJECTFILES}
 ${OBJECTDIR}/Db.o: Db.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -s -I../Formats -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Db.o Db.cpp
+	$(COMPILE.cc) -O2 -s -I../Formats `pkg-config --cflags sqlite3` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Db.o Db.cpp
 
 ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -s -I../Formats -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -O2 -s -I../Formats `pkg-config --cflags sqlite3` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
 
 # Subprojects
 .build-subprojects:

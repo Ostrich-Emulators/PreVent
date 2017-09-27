@@ -87,6 +87,7 @@
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
+            <linkerOptionItem>`pkg-config --libs sqlite3`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -321,6 +322,18 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libFormats.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
       </packaging>
       <item path="Db.cpp" ex="false" tool="1" flavor2="0">
@@ -348,7 +361,7 @@
           <incDir>
             <pElem>../Formats</pElem>
           </incDir>
-          <commandLine>-Wno-deprecated -O0 -pg `pkg-config --cflags sqlite3`</commandLine>
+          <commandLine>-Wno-deprecated -O0 -pg</commandLine>
         </ccTool>
         <linkerTool>
           <linkerCopySharedLibs>true</linkerCopySharedLibs>
@@ -600,6 +613,18 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libFormats.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
       </packaging>
       <item path="Db.cpp" ex="false" tool="1" flavor2="0">
@@ -656,6 +681,7 @@
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
+            <linkerOptionItem>`pkg-config --libs sqlite3`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -755,6 +781,18 @@
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}.exe"
                             from="${OUTPUT_PATH}.exe"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libFormats.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
                             perm="755"
                             owner="root"
                             group="bin"/>
@@ -944,6 +982,7 @@
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
+            <linkerOptionItem>`pkg-config --libs sqlite3`</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -1043,6 +1082,18 @@
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}.exe"
                             from="${OUTPUT_PATH}.exe"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libFormats.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
                             perm="755"
                             owner="root"
                             group="bin"/>
