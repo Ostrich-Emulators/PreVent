@@ -33,12 +33,13 @@ const int StpXmlReader::INVITAL = 2;
 const int StpXmlReader::INWAVE = 4;
 const int StpXmlReader::INNAME = 8;
 
-StpXmlReader::StpXmlReader( ) : warnMissingName( true ), warnJunkData( true ),
-prevtime( 0 ), currvstime( 0 ), lastvstime( 0 ), currwavetime( 0 ), lastwavetime( 0 ),
+StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ), warnMissingName( true ),
+warnJunkData( true ), prevtime( 0 ), currvstime( 0 ), lastvstime( 0 ),
+currwavetime( 0 ), lastwavetime( 0 ),
 state( INDETERMINATE ) {
 }
 
-StpXmlReader::StpXmlReader( const StpXmlReader& orig ) {
+StpXmlReader::StpXmlReader( const StpXmlReader& orig ) : XmlReaderBase( orig ) {
 }
 
 StpXmlReader::~StpXmlReader( ) {

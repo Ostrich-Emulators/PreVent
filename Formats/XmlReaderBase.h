@@ -37,7 +37,7 @@ public:
 	static const int INNAME;
 	static const int INDETERMINATE;
 
-	XmlReaderBase( );
+	XmlReaderBase( const std::string& name );
 	virtual ~XmlReaderBase( );
 
 protected:

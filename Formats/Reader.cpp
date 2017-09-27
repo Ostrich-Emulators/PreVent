@@ -9,14 +9,18 @@
 
 const std::string Reader::MISSING_VALUESTR( "-32768" );
 
-Reader::Reader( ) : largefile( false ) {
+Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ) {
 }
 
-Reader::Reader( const Reader& ) {
+Reader::Reader( const Reader& ) : rdrname( "x" ) {
 
 }
 
 Reader::~Reader( ) {
+}
+
+std::string Reader::name( ) const {
+  return rdrname;
 }
 
 std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
@@ -53,6 +57,7 @@ int Reader::prepare( const std::string& input, SignalSet& info ) {
   }
 
   info.setFileSupport( largefile );
+  info.addMeta( "Source Reader", name( ) );
 
   return 0;
 }

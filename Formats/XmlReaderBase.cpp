@@ -33,10 +33,10 @@ const int XmlReaderBase::INVITAL = 2;
 const int XmlReaderBase::INWAVE = 4;
 const int XmlReaderBase::INNAME = 8;
 
-XmlReaderBase::XmlReaderBase( ) {
+XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ){
 }
 
-XmlReaderBase::XmlReaderBase( const XmlReaderBase& orig ) {
+XmlReaderBase::XmlReaderBase( const XmlReaderBase& orig ) : Reader( orig ){
 }
 
 XmlReaderBase::~XmlReaderBase( ) {
@@ -101,7 +101,6 @@ void XmlReaderBase::setResult( ReadResult rslt ) {
 int XmlReaderBase::prepare( const std::string& fname, SignalSet& info ) {
   int rr = Reader::prepare( fname, info );
   if ( 0 == rr ) {
-
     parser = XML_ParserCreate( NULL );
     XML_SetUserData( parser, this );
     XML_SetElementHandler( parser, XmlReaderBase::start, XmlReaderBase::end );
@@ -176,7 +175,7 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
   filler = &info;
   setResult( ReadResult::NORMAL );
 
-  const int buffsz = 16384;
+  const int buffsz = 16384 * 16;
   std::vector<char> buffer( buffsz, 0 );
   while ( input.read( buffer.data( ), buffer.size( ) ) ) {
     long gcnt = input.gcount( );
@@ -203,13 +202,19 @@ bool XmlReaderBase::isRollover( const time_t& then, const time_t& now ) const {
 }
 
 time_t XmlReaderBase::time( const std::string& timer ) const {
-  if ( std::string::npos == timer.find( " " ) ) {
+  if ( std::string::npos == timer.find( " " )
+      && std::string::npos == timer.find( "T" ) ) {
     return std::stol( timer );
   }
 
   // we have a local time that we need to convert
+  std::string format = ( std::string::npos == timer.find( "T" )
+      ? "%m/%d/%Y %I:%M:%S %p" // STPXML time string 
+      : "%Y-%m-%dT%H:%M:%S" ); // CPC time string
+
   tm mytime;
-  strptime( timer.c_str( ), "%m/%d/%Y %I:%M:%S %p", &mytime );
+  strptime( timer.c_str( ), format.c_str( ), &mytime );
+
   // now convert our local time to UTC
   time_t local = mktime( &mytime );
   mytime = *gmtime( &local );

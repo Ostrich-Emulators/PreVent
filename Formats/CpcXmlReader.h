@@ -32,12 +32,21 @@ public:
 	CpcXmlReader( );
 	virtual ~CpcXmlReader( );
 
-private:
-	CpcXmlReader( const CpcXmlReader& orig );
-
 protected:
 	virtual void start( const std::string& element, std::map<std::string, std::string>& attrs );
 	virtual void end( const std::string& element, const std::string& text );
+
+private:
+	const static std::set<std::string> ignorables;
+	CpcXmlReader( const CpcXmlReader& orig );
+	time_t currtime;
+	time_t lasttime;
+	std::string label;
+	std::string value;
+	bool inmg;
+	bool inwave;
+	bool inhz;
+
 };
 
 #endif /* CPCXMLREADER_H */

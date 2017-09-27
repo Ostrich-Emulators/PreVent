@@ -11,11 +11,11 @@
 #include <iostream>
 #include <exception>
 
-Hdf5Reader::Hdf5Reader( ) {
+Hdf5Reader::Hdf5Reader( ) : Reader( "HDF5" ) {
 
 }
 
-Hdf5Reader::Hdf5Reader( const Hdf5Reader& ) {
+Hdf5Reader::Hdf5Reader( const Hdf5Reader& ) : Reader( "HDF5" ) {
 
 }
 

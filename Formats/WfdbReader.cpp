@@ -13,6 +13,12 @@
 #include <ctime>
 #include <sys/stat.h>
 
+WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
+}
+
+WfdbReader::~WfdbReader( ) {
+}
+
 time_t WfdbReader::convert( const char * timestr ) {
   // HH:MM:SS format by timstr, with leading zero digits and colons suppressed.
   // If t is zero or negative, it is taken to represent negated elapsed time from

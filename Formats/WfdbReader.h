@@ -20,6 +20,10 @@
 
 class WfdbReader : public Reader {
 public:
+	WfdbReader( );
+
+	virtual ~WfdbReader( );
+
 	static time_t convert( const char * timestr );
 
 protected:

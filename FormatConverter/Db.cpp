@@ -210,6 +210,8 @@ void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
     std::cout << "updating database" << std::endl;
   }
 
+  exec( "BEGIN;" );
+
   int pid = 0;
   int bid = 0;
   if ( 0 != data.metadata( ).count( "Patient Name" ) ) {
@@ -262,6 +264,8 @@ void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
   for ( const std::unique_ptr<SignalData>& signal : data.allsignals( ) ) {
     addSignal( id, *signal );
   }
+
+  exec( "COMMIT;" );
 
   //  std::cout << "file completed: " << filename << std::endl;
   //
