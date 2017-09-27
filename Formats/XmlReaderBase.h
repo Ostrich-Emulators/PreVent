@@ -54,6 +54,7 @@ private:
 	static void end( void * data, const char * el );
 	static void chars( void * data, const char * text, int len );
 	static std::string working;
+    static bool accumulateText;
 
 	XML_Parser parser;
 	std::ifstream input;

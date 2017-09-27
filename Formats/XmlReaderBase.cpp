@@ -26,6 +26,7 @@
 #include <memory>
 
 const std::string XmlReaderBase::MISSING_VALUESTR( "-32768" );
+bool XmlReaderBase::accumulateText = false;
 std::string XmlReaderBase::working;
 const int XmlReaderBase::INDETERMINATE = 0;
 const int XmlReaderBase::INHEADER = 1;
@@ -33,10 +34,10 @@ const int XmlReaderBase::INVITAL = 2;
 const int XmlReaderBase::INWAVE = 4;
 const int XmlReaderBase::INNAME = 8;
 
-XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ){
+XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ) {
 }
 
-XmlReaderBase::XmlReaderBase( const XmlReaderBase& orig ) : Reader( orig ){
+XmlReaderBase::XmlReaderBase( const XmlReaderBase& orig ) : Reader( orig ) {
 }
 
 XmlReaderBase::~XmlReaderBase( ) {
@@ -65,16 +66,20 @@ void XmlReaderBase::start( void * data, const char * el, const char ** attr ) {
 
   XmlReaderBase * rdr = static_cast<XmlReaderBase *> ( data );
   rdr->start( el, attrs );
+  accumulateText = true;
 }
 
 void XmlReaderBase::end( void * data, const char * el ) {
   XmlReaderBase * rdr = static_cast<XmlReaderBase *> ( data );
   rdr->end( el, trim( working ) );
   working.clear( );
+  accumulateText = false;
 }
 
 void XmlReaderBase::chars( void * data, const char * text, int len ) {
-  working.append( text, len );
+  if ( accumulateText ) {
+    working.append( text, len );
+  }
 }
 
 std::string XmlReaderBase::trim( std::string & totrim ) {

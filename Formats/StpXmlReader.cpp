@@ -187,7 +187,6 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           sig->add( DataRow( currwavetime, wavepoints ) );
         }
         else if ( warnJunkData ) {
-
           warnJunkData = false;
           std::cerr << "skipping waveforms with no usable data" << std::endl;
         }

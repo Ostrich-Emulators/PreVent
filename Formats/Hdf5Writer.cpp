@@ -213,9 +213,15 @@ void Hdf5Writer::autochunk( hsize_t* dims, int rank, hsize_t* rslts ) {
 void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
   H5::Group events = file.createGroup( "Events" );
   H5::Group grp = events.createGroup( "Times" );
+  H5::Group wavetimes = grp.createGroup( "Waveforms" );
+  H5::Group vittimes = grp.createGroup( "Vitals" );
 
   for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {
+    std::cout << "writing times for " << m->name( ) << std::endl;
     std::vector<time_t> times( m->times( ).rbegin( ), m->times( ).rend( ) );
+
+    H5::Group * mygrp = ( m->wave( ) ? &wavetimes : &vittimes );
+
     if ( m->wave( ) ) {
       std::vector<time_t> alltimes;
       alltimes.reserve( times.size( )*2 );
@@ -230,10 +236,11 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
     hsize_t dims[] = { times.size( ), 1 };
     H5::DataSpace space( 2, dims );
 
-    H5::DataSet ds = grp.createDataSet( m->name( ).c_str( ), H5::PredType::STD_I64LE, space );
+    H5::DataSet ds = mygrp->createDataSet( m->name( ).c_str( ),
+        H5::PredType::STD_I64LE, space );
     ds.write( &times[0], H5::PredType::STD_I64LE );
     writeAttribute( ds, "Time Source", "raw" );
-    int hz = ( m->hz() < 1 ? 1 : (int)m->hz() );
+    int hz = ( m->hz( ) < 1 ? 1 : (int) m->hz( ) );
     writeAttribute( ds, "Readings Per Time", hz );
   }
 }
@@ -274,7 +281,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     return ret;
   }
 
-  output() << "Writing to " << outy << std::endl;
+  output( ) << "Writing to " << outy << std::endl;
 
   H5::H5File file( outy, H5F_ACC_TRUNC );
   writeFileAttributes( file, data.metadata( ), firstTime, lastTime );
@@ -283,9 +290,9 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 
   H5::Group grp = file.createGroup( "Vital Signs" );
 
-  output() << "Writing " << data.vitals( ).size( ) << " Vitals" << std::endl;
+  output( ) << "Writing " << data.vitals( ).size( ) << " Vitals" << std::endl;
   for ( auto& vits : data.vitals( ) ) {
-    output() << "Writing Vital: " << vits.first << std::endl;
+    output( ) << "Writing Vital: " << vits.first << std::endl;
     hsize_t sz = vits.second->size( );
     hsize_t dims[] = { sz, 1 };
     H5::DataSpace space( 2, dims );
@@ -304,9 +311,9 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   }
 
   grp = file.createGroup( "Waveforms" );
-  output() << "Writing " << data.waves( ).size( ) << " Waveforms" << std::endl;
+  output( ) << "Writing " << data.waves( ).size( ) << " Waveforms" << std::endl;
   for ( auto& wavs : data.waves( ) ) {
-    output() << "Writing Wave: " << wavs.first;
+    output( ) << "Writing Wave: " << wavs.first;
     int hz = wavs.second->metad( ).at( SignalData::HERTZ );
     auto st = std::chrono::high_resolution_clock::now( );
 
@@ -329,7 +336,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 
     auto en = std::chrono::high_resolution_clock::now( );
     std::chrono::duration<float> dur = en - st;
-    output() << " (complete in " << dur.count( ) << "ms)" << std::endl;
+    output( ) << " (complete in " << dur.count( ) << "ms)" << std::endl;
   }
 
   ret.push_back( outy );
