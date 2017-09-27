@@ -52,6 +52,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/WfdbReader.o \
 	${OBJECTDIR}/WfdbWriter.o \
 	${OBJECTDIR}/Writer.o \
+	${OBJECTDIR}/XmlReaderBase.o \
 	${OBJECTDIR}/ZlReader.o \
 	${OBJECTDIR}/ZlWriter.o
 
@@ -164,6 +165,11 @@ ${OBJECTDIR}/Writer.o: Writer.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` `pkg-config --cflags matio` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Writer.o Writer.cpp
+
+${OBJECTDIR}/XmlReaderBase.o: XmlReaderBase.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g `pkg-config --cflags zlib` `pkg-config --cflags libxml-2.0` `pkg-config --cflags matio` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/XmlReaderBase.o XmlReaderBase.cpp
 
 ${OBJECTDIR}/ZlReader.o: ZlReader.cpp
 	${MKDIR} -p ${OBJECTDIR}

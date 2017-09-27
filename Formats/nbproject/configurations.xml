@@ -10,6 +10,7 @@
         <itemPath>StpXmlReader.h</itemPath>
         <itemPath>StreamChunkReader.h</itemPath>
         <itemPath>WfdbReader.h</itemPath>
+        <itemPath>XmlReaderBase.h</itemPath>
         <itemPath>ZlReader.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Writers" projectFiles="true">
@@ -43,6 +44,7 @@
         <itemPath>StpXmlReader.cpp</itemPath>
         <itemPath>StreamChunkReader.cpp</itemPath>
         <itemPath>WfdbReader.cpp</itemPath>
+        <itemPath>XmlReaderBase.cpp</itemPath>
         <itemPath>ZlReader.cpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Writers" projectFiles="true">
@@ -94,7 +96,6 @@
             <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
-            <linkerOptionItem>`pkg-config --libs libxml-2.0`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
           </linkerLibItems>
@@ -170,6 +171,10 @@
       <item path="Writer.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Writer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="XmlReaderBase.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="XmlReaderBase.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -287,6 +292,10 @@
       </item>
       <item path="Writer.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="XmlReaderBase.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="XmlReaderBase.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="ZlReader.h" ex="false" tool="3" flavor2="0">
@@ -402,6 +411,10 @@
       </item>
       <item path="Writer.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="XmlReaderBase.cpp" ex="false" tool="1" flavor2="11">
+      </item>
+      <item path="XmlReaderBase.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="ZlReader.h" ex="false" tool="3" flavor2="0">
@@ -516,6 +529,10 @@
       <item path="Writer.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="Writer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="XmlReaderBase.cpp" ex="false" tool="1" flavor2="11">
+      </item>
+      <item path="XmlReaderBase.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="11">
       </item>

@@ -7,6 +7,8 @@
 #include "StpXmlReader.h"
 #include "CpcXmlReader.h"
 
+const std::string Reader::MISSING_VALUESTR( "-32768" );
+
 Reader::Reader( ) : largefile( false ) {
 }
 

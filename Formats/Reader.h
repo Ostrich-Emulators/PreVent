@@ -22,6 +22,9 @@ public:
   Reader();
   virtual ~Reader();
 
+	static const std::string MISSING_VALUESTR;
+
+
   static std::unique_ptr<Reader> get(const Format& fmt);
 
   /**

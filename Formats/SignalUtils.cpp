@@ -8,11 +8,13 @@
 
 #include "SignalData.h"
 #include "DataRow.h"
-#include "StpXmlReader.h"
+#include "Reader.h"
 
+#include <set>
 #include <limits>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 SignalUtils::SignalUtils( ) {
 }
@@ -264,11 +266,11 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
 }
 
 DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const time_t& time ) {
-  std::string dummy = StpXmlReader::MISSING_VALUESTR;
+  std::string dummy = Reader::MISSING_VALUESTR;
 
   if ( signal->wave( ) ) {
     for ( int i = 1; i < signal->hz( ); i++ ) {
-      dummy.append( "," ).append( StpXmlReader::MISSING_VALUESTR );
+      dummy.append( "," ).append( Reader::MISSING_VALUESTR );
     }
   }
   return DataRow( time, dummy );

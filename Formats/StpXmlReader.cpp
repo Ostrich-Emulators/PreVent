@@ -25,10 +25,8 @@
 #include <map>
 #include <memory>
 
-const std::string StpXmlReader::MISSING_VALUESTR( "-32768" );
 const std::set<std::string> StpXmlReader::Hz60({ "RR", "VNT_PRES", "VNT_FLOW" } );
 const std::set<std::string> StpXmlReader::Hz120({ "ICP1", "ICP2", "ICP4", "LA4" } );
-std::string StpXmlReader::working;
 const int StpXmlReader::INDETERMINATE = 0;
 const int StpXmlReader::INHEADER = 1;
 const int StpXmlReader::INVITAL = 2;
@@ -46,53 +44,6 @@ StpXmlReader::StpXmlReader( const StpXmlReader& orig ) {
 StpXmlReader::~StpXmlReader( ) {
 }
 
-void StpXmlReader::finish( ) {
-  XML_ParserFree( parser );
-}
-
-size_t StpXmlReader::getSize( const std::string& input ) const {
-  struct stat info;
-
-  if ( stat( input.c_str( ), &info ) < 0 ) {
-    perror( input.c_str( ) );
-    return 0;
-  }
-
-  return info.st_size;
-}
-
-void StpXmlReader::start( void * data, const char * el, const char ** attr ) {
-  std::map<std::string, std::string> attrs;
-  for ( int i = 0; attr[i]; i += 2 ) {
-    attrs[attr[i]] = attr[i + 1];
-  }
-
-  StpXmlReader * rdr = static_cast<StpXmlReader *> ( data );
-  rdr->start( el, attrs );
-}
-
-void StpXmlReader::end( void * data, const char * el ) {
-  StpXmlReader * rdr = static_cast<StpXmlReader *> ( data );
-  rdr->end( el, trim( working ) );
-  working.clear( );
-}
-
-void StpXmlReader::chars( void * data, const char * text, int len ) {
-  working.append( text, len );
-}
-
-std::string StpXmlReader::trim( std::string & totrim ) {
-  // ltrim
-  totrim.erase( totrim.begin( ), std::find_if( totrim.begin( ), totrim.end( ),
-      std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
-
-  // rtrim
-  totrim.erase( std::find_if( totrim.rbegin( ), totrim.rend( ),
-      std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
-
-  return totrim;
-}
-
 void StpXmlReader::setstate( int st ) {
   state = st;
 }
@@ -106,10 +57,9 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     lastvstime = currvstime;
     currvstime = time( attrs["Time"] );
     if ( isRollover( lastvstime, currvstime ) ) {
-      rslt = ReadResult::END_OF_DAY;
+      setResult( ReadResult::END_OF_DAY );
       prevtime = currvstime;
-      saved.setMetadataFrom( *filler );
-      filler = &saved;
+      startSaving( );
     }
   }
   else if ( "Waveforms" == element ) {
@@ -117,10 +67,9 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     lastwavetime = currwavetime;
     currwavetime = time( attrs["Time"] );
     if ( isRollover( lastwavetime, currwavetime ) ) {
-      rslt = ReadResult::END_OF_DAY;
+      setResult( ReadResult::END_OF_DAY );
       prevtime = currwavetime;
-      saved.setMetadataFrom( *filler );
-      filler = &saved;
+      startSaving( );
     }
   }
   else if ( "PatientName" == element ) {
@@ -163,12 +112,11 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
     else {
       std::string pname = filler->metadata( )["Patient Name"];
       if ( text != pname ) {
-        rslt = ReadResult::END_OF_PATIENT;
+        setResult( ReadResult::END_OF_PATIENT );
         // we've cut over to a new set of data, so
         // save the data we parse now to a different SignalSet
-        saved.setMetadataFrom( *filler );
+        startSaving( );
         saved.metadata( )["Patient Name"] = text;
-        filler = &saved;
       }
     }
     setstate( INDETERMINATE );
@@ -250,125 +198,6 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
   }
 
   // std::cout << "end " << element << std::endl; //"(" << text << ")" << std::endl;
-}
-
-int StpXmlReader::prepare( const std::string& fname, SignalSet& info ) {
-  int rr = Reader::prepare( fname, info );
-  if ( 0 == rr ) {
-
-    parser = XML_ParserCreate( NULL );
-    XML_SetUserData( parser, this );
-    XML_SetElementHandler( parser, StpXmlReader::start, StpXmlReader::end );
-    XML_SetCharacterDataHandler( parser, StpXmlReader::chars );
-    input.open( fname, std::ifstream::in );
-    rslt = ReadResult::NORMAL;
-  }
-  return rr;
-}
-
-void StpXmlReader::copysaved( SignalSet& tgt ) {
-  tgt.setMetadataFrom( saved );
-  saved.metadata( ).clear( );
-
-  for ( auto& m : saved.vitals( ) ) {
-    std::unique_ptr<SignalData>& savedsignal = m.second;
-
-    bool added = false;
-    std::unique_ptr<SignalData>& infodata = tgt.addVital( m.first, &added );
-
-    if ( added ) {
-      auto& smap = savedsignal->metas( );
-      infodata->metas( ).insert( smap.begin( ), smap.end( ) );
-
-      auto& dmap = savedsignal->metad( );
-      infodata->metad( ).insert( dmap.begin( ), dmap.end( ) );
-
-      auto& imap = savedsignal->metai( );
-      infodata->metai( ).insert( imap.begin( ), imap.end( ) );
-    }
-
-    int rows = savedsignal->size( );
-    for ( int row = 0; row < rows; row++ ) {
-      const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
-      infodata->add( *datarow );
-    }
-  }
-
-  for ( auto& m : saved.waves( ) ) {
-    std::unique_ptr<SignalData>& savedsignal = m.second;
-
-    bool added = false;
-    std::unique_ptr<SignalData>& infodata = tgt.addWave( m.first, &added );
-
-    if ( added ) {
-      auto& smap = savedsignal->metas( );
-      infodata->metas( ).insert( smap.begin( ), smap.end( ) );
-
-      auto& dmap = savedsignal->metad( );
-      infodata->metad( ).insert( dmap.begin( ), dmap.end( ) );
-
-      auto& imap = savedsignal->metai( );
-      infodata->metai( ).insert( imap.begin( ), imap.end( ) );
-    }
-
-    int rows = savedsignal->size( );
-    for ( int row = 0; row < rows; row++ ) {
-
-      const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
-      infodata->add( *datarow );
-    }
-  }
-
-  saved.vitals( ).clear( );
-  saved.waves( ).clear( );
-}
-
-ReadResult StpXmlReader::fill( SignalSet & info, const ReadResult& lastfill ) {
-  if ( ReadResult::END_OF_DAY == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
-    copysaved( info );
-  }
-  filler = &info;
-  rslt = ReadResult::NORMAL;
-
-  const int buffsz = 16384;
-  std::vector<char> buffer( buffsz, 0 );
-  while ( input.read( buffer.data( ), buffer.size( ) ) ) {
-    long gcnt = input.gcount( );
-    XML_Parse( parser, &buffer[0], buffer.size( ), gcnt < buffsz );
-    if ( ReadResult::NORMAL != rslt ) {
-      return rslt;
-    }
-  }
-
-  return ReadResult::END_OF_FILE;
-}
-
-bool StpXmlReader::isRollover( const time_t& then, const time_t& now ) const {
-  if ( 0 != then ) {
-    const int cdoy = gmtime( &now )->tm_yday;
-    const int pdoy = gmtime( &then )->tm_yday;
-    if ( cdoy != pdoy ) {
-
-      return true;
-    }
-  }
-
-  return false;
-}
-
-time_t StpXmlReader::time( const std::string& timer ) const {
-  if ( std::string::npos == timer.find( " " ) ) {
-    return std::stol( timer );
-  }
-
-  // we have a local time that we need to convert
-  tm mytime;
-  strptime( timer.c_str( ), "%m/%d/%Y %I:%M:%S %p", &mytime );
-  // now convert our local time to UTC
-  time_t local = mktime( &mytime );
-  mytime = *gmtime( &local );
-
-  return mktime( &mytime );
 }
 
 std::string StpXmlReader::resample( const std::string& data, int hz ) {
