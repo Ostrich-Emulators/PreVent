@@ -28,11 +28,7 @@
 const std::string XmlReaderBase::MISSING_VALUESTR( "-32768" );
 bool XmlReaderBase::accumulateText = false;
 std::string XmlReaderBase::working;
-const int XmlReaderBase::INDETERMINATE = 0;
-const int XmlReaderBase::INHEADER = 1;
-const int XmlReaderBase::INVITAL = 2;
-const int XmlReaderBase::INWAVE = 4;
-const int XmlReaderBase::INNAME = 8;
+const int XmlReaderBase::READCHUNK = 16384 * 16;
 
 XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ) {
 }
@@ -180,11 +176,10 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
   filler = &info;
   setResult( ReadResult::NORMAL );
 
-  const int buffsz = 16384 * 16;
-  std::vector<char> buffer( buffsz, 0 );
+  std::vector<char> buffer( READCHUNK, 0 );
   while ( input.read( buffer.data( ), buffer.size( ) ) ) {
     long gcnt = input.gcount( );
-    XML_Parse( parser, &buffer[0], buffer.size( ), gcnt < buffsz );
+    XML_Parse( parser, &buffer[0], buffer.size( ), gcnt < READCHUNK );
     if ( ReadResult::NORMAL != rslt ) {
       return rslt;
     }

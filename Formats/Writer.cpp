@@ -76,7 +76,6 @@ void Writer::setOutputDir( const std::string& _outdir ) {
 
 std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     SignalSet& data ) {
-  std::string lastPatientName = "";
   int patientno = 1;
 
   std::string namestart = ( "" == prefix ? "p" : prefix + "-p" );
@@ -110,11 +109,8 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
         list.insert( list.end( ), files.begin( ), files.end( ) );
       }
 
-      // if our patient name changed, increment our patient number
-      if ( 0 != data.metadata( ).count( "Patient Name" ) &&
-          data.metadata( )["Patient Name"] != lastPatientName ) {
+      if( ReadResult::END_OF_PATIENT == retcode ){
         patientno++;
-        lastPatientName = data.metadata( )["Patient Name"];
       }
 
       data.reset( false );

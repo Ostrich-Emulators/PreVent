@@ -30,8 +30,8 @@ public:
 	virtual ~CpcXmlReader( );
 
 protected:
-	virtual void start( const std::string& element, std::map<std::string, std::string>& attrs );
-	virtual void end( const std::string& element, const std::string& text );
+	virtual void start( const std::string& element, std::map<std::string, std::string>& attrs ) override;
+	virtual void end( const std::string& element, const std::string& text ) override;
 
 private:
 	const static std::set<std::string> ignorables;
@@ -40,6 +40,7 @@ private:
 	time_t lasttime;
 	std::string label;
 	std::string value;
+	double wavehz;
 	bool inmg;
 	bool inwave;
 	bool inhz;

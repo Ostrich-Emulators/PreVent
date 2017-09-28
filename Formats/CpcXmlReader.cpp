@@ -74,6 +74,29 @@ void CpcXmlReader::start( const std::string& element,
 
 void CpcXmlReader::end( const std::string& element, const std::string& text ) {
   if ( "mg" == element ) {
+    bool added = false;
+
+    std::vector<BYTE> data = base64_decode( value );
+    std::string vals;
+    for ( int i = 0; i < data.size( ); i += 2 ) {
+      BYTE one = data[i];
+      BYTE two = data[i + 1];
+      short val = ( ( two << 8 ) | one ); // litle-endian (from trial-and-error)
+
+      if ( !vals.empty( ) ) {
+        vals.append( "," );
+      }
+      vals.append( std::to_string( val ) );
+    }
+
+    std::unique_ptr<SignalData>& signal = filler->addWave( label, &added );
+    signal->add( DataRow( currtime, vals ) );
+    if ( added ) {
+      signal->metad( )[SignalData::HERTZ] = wavehz;
+      signal->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
+      signal->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
+    }
+
     inmg = false;
     label.clear( );
   }
@@ -82,38 +105,17 @@ void CpcXmlReader::end( const std::string& element, const std::string& text ) {
       return;
     }
 
-    bool added = false;
-
     if ( inmg ) {
       if ( inwave ) {
         // we have wave data to decode
         value = text;
       }
       else if ( inhz ) {
-        std::vector<BYTE> data = base64_decode( value );
-        std::string vals;
-        for ( int i = 0; i < data.size( ); i += 2 ) {
-          BYTE one = data[i];
-          BYTE two = data[i + 1];
-          short val = ( ( two << 8 ) | one ); // litle-endian (from trial-and-error)
-
-          if ( !vals.empty( ) ) {
-            vals.append( "," );
-          }
-          vals.append( std::to_string( val ) );
-        }
-
-        std::unique_ptr<SignalData>& signal = filler->addWave( label, &added );
-        signal->add( DataRow( currtime, vals ) );
-        if ( added ) {
-          signal->metad( )[SignalData::HERTZ] = std::stod( text );
-          signal->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
-          signal->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
-        }
-
+        wavehz = std::stod( text );
       }
     }
     else {
+      bool added = false;
       std::unique_ptr<SignalData>& signal = filler->addVital( label, &added );
       signal->add( DataRow( currtime, text ) );
 
