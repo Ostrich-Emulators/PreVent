@@ -234,6 +234,6 @@ void SignalData::setScale( int x ) {
   metadatai[SCALE] = x;
 }
 
-const std::deque<time_t>& SignalData::times() const{
+const std::deque<time_t>& SignalData::times( ) const {
   return dates;
 }
