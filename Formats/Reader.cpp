@@ -7,12 +7,14 @@
 #include "StpXmlReader.h"
 #include "CpcXmlReader.h"
 
+#include <iostream>
+
 const std::string Reader::MISSING_VALUESTR( "-32768" );
 
-Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ) {
+Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ), quiet( false ) {
 }
 
-Reader::Reader( const Reader& ) : rdrname( "x" ) {
+Reader::Reader( const Reader& ) : rdrname( "x" ), quiet( false ) {
 
 }
 
@@ -63,7 +65,7 @@ int Reader::prepare( const std::string& input, SignalSet& info ) {
 }
 
 void Reader::finish( ) {
-
+  ss.clear();
 }
 
 void Reader::extractOnly( const std::string& toExtract ) {
@@ -72,4 +74,12 @@ void Reader::extractOnly( const std::string& toExtract ) {
 
 bool Reader::shouldExtract( const std::string& q ) const {
   return ( toextract.empty( ) ? true : toextract == q );
+}
+
+void Reader::setQuiet( bool q ) {
+  quiet = q;
+}
+
+std::ostream& Reader::output( ) const {
+  return ( quiet ? ( std::ostream& ) ss : std::cout );
 }

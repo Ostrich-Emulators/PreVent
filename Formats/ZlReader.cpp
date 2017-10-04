@@ -178,7 +178,7 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       std::unique_ptr<SignalData>& dataset = info.addVital( vital );
 
       if ( val.empty( ) ) {
-        std::cout << "empty val? " << chunk << std::endl;
+        output() << "empty val? " << chunk << std::endl;
       }
 
       dataset->setUom( uom );

@@ -147,6 +147,8 @@ int main( int argc, char** argv ) {
   try {
     from = Reader::get( fromfmt );
     to = Writer::get( tofmt );
+    to->setQuiet( quiet );
+    from->setQuiet( quiet );
 
     if ( !exp.empty( ) ) {
       from->extractOnly( exp );
@@ -185,10 +187,8 @@ int main( int argc, char** argv ) {
       std::vector<std::string> files = to->write( from, data );
       from->finish( );
 
-      if ( !quiet ) {
-        for ( const auto& f : files ) {
-          std::cout << " written to " << f << std::endl;
-        }
+      for ( const auto& f : files ) {
+        std::cout << " written to " << f << std::endl;
       }
 
       if ( db ) {

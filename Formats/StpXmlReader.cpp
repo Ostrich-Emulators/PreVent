@@ -153,7 +153,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
     if ( "WaveformData" == element ) {
       if ( label.empty( ) ) {
         if ( warnMissingName ) {
-          std::cerr << "ignoring unnamed waveforms" << std::endl;
+          std::cerr << "skipping unnamed waveforms" << std::endl;
           warnMissingName = false;
         }
       }
