@@ -151,6 +151,11 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
 
   std::vector<std::unique_ptr < SignalData>> signals = SignalUtils::vectorize( oldmap );
 
+  // the call to vectorize moves the signaldata, so re-add some skeletons
+  for ( const auto& sd : signals ) {
+    oldmap[sd->name( )] = sd->shallowcopy( true );
+  }
+
   SignalUtils::firstlast( signals, &earliest, &latest );
 
   float freq = ( *signals.begin( ) )->hz( );
@@ -232,9 +237,6 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   const std::string sfx = std::to_string( freq ) + "hz";
 
   std::vector<std::unique_ptr < SignalData>> signals = SignalUtils::sync( oldsignals );
-  for ( const auto& s : signals ) {
-    std::cout << s->name( ) << "\t" << s->hz( ) << "\t" << s->size( ) << std::endl;
-  }
   SignalUtils::firstlast( signals, &earliest, &latest );
 
   std::vector<time_t> alltimes64( signals[0]->times( ).rbegin( ), signals[0]->times( ).rend( ) );
@@ -249,6 +251,9 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   for ( auto& m : signals ) {
     labels.push_back( m->name( ) );
     uoms.push_back( m->uom( ) );
+
+    // re-add signals (metadata only) to dataptr
+    dataptr->waves( )[m->name( )] = m->shallowcopy( true );
   }
 
   // units of measure
@@ -273,41 +278,44 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   std::vector<std::vector<short>> datas( cols );
 
   int start[2] = { 0, 0 };
-  int stride[2] = { 1, 1 };
   int edge[2] = { datachunksz, 1 };
+  int stride[2] = { 1, 1 };
   for ( int col = 0; col < signals.size( ); col++ ) {
     std::unique_ptr<SignalData>& signal = signals[col];
-    datas[col].reserve( datachunksz );
+    std::vector<short> data;
+    data.reserve( datachunksz );
+
+    start[0] = 0;
+    edge[0] = { datachunksz };
 
     while ( !signal->empty( ) ) {
       const auto& datarow = signal->pop( );
 
       std::vector<short> slices = datarow->shorts( );
-      datas[col].insert( datas[col].end( ), slices.begin( ), slices.end( ) );
+      data.insert( data.end( ), slices.begin( ), slices.end( ) );
 
-      if ( datachunksz == datas[col].size( ) ) {
-        Mat_VarWriteData( matfile, vars[col], &( datas[col] )[0], start, stride, edge );
-        datas[col].clear( );
-        datas[col].reserve( datachunksz );
+      if ( datachunksz == data.size( ) ) {
+        Mat_VarWriteData( matfile, vars[col], &data[0], start, stride, edge );
+        data.clear( );
+        data.reserve( datachunksz );
         start[0] += datachunksz;
       }
     }
-  }
 
-  // write any leftover values
-  edge[0] = datas[0].size( );
-  for ( int col = 0; col < cols; col++ ) {
-    Mat_VarWriteData( matfile, vars[col], &( datas[col] )[0], start, stride, edge );
-    datas[col].clear( );
+    // write any leftover values
+    edge[0] = data.size( );
+    Mat_VarWriteData( matfile, vars[col], &data[0], start, stride, edge );
+    data.clear( );
     Mat_VarFree( vars[col] );
   }
+
 
   // timestamps
   // we can write these all in one go, because we're only writing the second for 
   // each hz readings, not the fractional seconds
   start[0] = 0;
   start[1] = 0;
-  dims[0] = alltimes.size();
+  dims[0] = alltimes.size( );
 
   matvar_t * var = Mat_VarCreate( std::string( "wt" + sfx ).c_str( ),
       MAT_C_INT32, MAT_T_INT32, 2, dims, &alltimes[0], 0 );

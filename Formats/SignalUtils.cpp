@@ -99,17 +99,11 @@ std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::vector<std::u
     if ( !( m->startTime( ) == earliest
         && m->endTime( ) == latest
         && m->size( ) == size ) ) {
-      std::cout << "syncing signals" << std::endl;
+      //std::cout << "syncing signals" << std::endl;
       tmp = sync( signals );
       working = &tmp;
       break;
     }
-  }
-
-
-  for ( const auto& s : *working ) {
-    std::cout << s->name( ) << "\t" << s->startTime( ) << "\t"
-        << s->endTime( ) << "\t" << s->size( ) << std::endl;
   }
 
   std::vector<std::vector < std::string>> rows;
@@ -183,7 +177,7 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
 
   std::unique_ptr<DataRow> currenttimes[data.size( )];
   for ( int i = 0; i < data.size( ); i++ ) {
-    ret.push_back( std::move( data[i]->shallowcopy( ) ) );
+    ret.push_back( data[i]->shallowcopy( ) );
 
     // load the first row for each signal into our current array
     currenttimes[i] = std::move( data[i]->pop( ) );

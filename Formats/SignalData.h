@@ -33,7 +33,7 @@ public:
 	static const int MISSING_VALUE;
 
 	SignalData( const std::string& name, bool largefilesupport = false, bool iswave = false );
-	std::unique_ptr<SignalData> shallowcopy( );
+	std::unique_ptr<SignalData> shallowcopy( bool includedates = false );
 	virtual ~SignalData( );
 
 	void add( const DataRow& row );
@@ -57,7 +57,7 @@ public:
 	const std::map<std::string, std::string>& metas( ) const;
 	const std::map<std::string, int>& metai( ) const;
 	const std::map<std::string, double>& metad( ) const;
-	const std::deque<time_t>& times() const;
+	const std::deque<time_t>& times( ) const;
 
 private:
 	SignalData( const SignalData& orig );

@@ -49,14 +49,19 @@ iswave( orig.iswave ) {
   }
 }
 
-std::unique_ptr<SignalData> SignalData::shallowcopy( ) {
+std::unique_ptr<SignalData> SignalData::shallowcopy( bool includedates ) {
   std::unique_ptr<SignalData> copy( new SignalData( label, ( NULL != file ) ) );
+
+  if ( includedates ) {
+    copy->firstdata = this->firstdata;
+    copy->lastdata = this->lastdata;
+  }
 
   copy->metad( ).insert( metadatad.begin( ), metadatad.end( ) );
   copy->metai( ).insert( metadatai.begin( ), metadatai.end( ) );
   copy->metas( ).insert( metadatas.begin( ), metadatas.end( ) );
   copy->popping = this->popping;
-  return copy;
+  return std::move( copy );
 }
 
 std::map<std::string, std::string>& SignalData::metas( ) {
