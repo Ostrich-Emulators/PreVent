@@ -90,8 +90,8 @@ const std::map<std::string, double>& SignalData::metad( ) const {
 
 double SignalData::hz( ) const {
   return ( 0 == metadatad.count( SignalData::HERTZ )
-      ? 1
-      : metadatad.at( SignalData::HERTZ ) );
+        ? 1
+        : metadatad.at( SignalData::HERTZ ) );
 }
 
 const time_t& SignalData::startTime( ) const {
@@ -162,7 +162,7 @@ void SignalData::cache( ) {
     std::unique_ptr<DataRow> a = std::move( data.front( ) );
     data.pop_front( );
     std::string filedata = std::to_string( a->time ) + " " + a->data
-        + " " + a->high + " " + a->low + "\n";
+          + " " + a->high + " " + a->low + "\n";
     std::fputs( filedata.c_str( ), file );
   }
 }

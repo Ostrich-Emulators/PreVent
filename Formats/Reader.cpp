@@ -11,10 +11,11 @@
 
 const std::string Reader::MISSING_VALUESTR( "-32768" );
 
-Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ), quiet( false ) {
+Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ),
+quiet( false ), anon( false ) {
 }
 
-Reader::Reader( const Reader& ) : rdrname( "x" ), quiet( false ) {
+Reader::Reader( const Reader& ) : rdrname( "x" ), quiet( false ), anon( false ) {
 
 }
 
@@ -65,7 +66,7 @@ int Reader::prepare( const std::string& input, SignalSet& info ) {
 }
 
 void Reader::finish( ) {
-  ss.clear();
+  ss.clear( );
 }
 
 void Reader::extractOnly( const std::string& toExtract ) {
@@ -78,6 +79,14 @@ bool Reader::shouldExtract( const std::string& q ) const {
 
 void Reader::setQuiet( bool q ) {
   quiet = q;
+}
+
+void Reader::setAnonymous( bool a ) {
+  anon = a;
+}
+
+bool Reader::anonymizing( ) const {
+  return anon;
 }
 
 std::ostream& Reader::output( ) const {

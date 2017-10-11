@@ -57,6 +57,10 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     setstate( INVITAL );
     lastvstime = currvstime;
     currvstime = time( attrs["Time"] );
+    if ( anonymizing( ) && isFirstRead( ) ) {
+      setDateModifier( currvstime );
+    }
+
     if ( isRollover( lastvstime, currvstime ) ) {
       setResult( ReadResult::END_OF_DAY );
       prevtime = currvstime;
@@ -67,6 +71,10 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     setstate( INWAVE );
     lastwavetime = currwavetime;
     currwavetime = time( attrs["Time"] );
+    if ( anonymizing( ) && isFirstRead( ) ) {
+      setDateModifier( currvstime );
+    }
+
     if ( isRollover( lastwavetime, currwavetime ) ) {
       setResult( ReadResult::END_OF_DAY );
       prevtime = currwavetime;
@@ -143,7 +151,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
         }
       }
 
-      sig->add( DataRow( currvstime, value ) );
+      sig->add( DataRow( datemod( currvstime ), value ) );
     }
     else if ( "VitalSigns" == element ) {
       setstate( INDETERMINATE );
@@ -184,7 +192,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           }
 
           sig->metad( )[SignalData::HERTZ] = hz;
-          sig->add( DataRow( currwavetime, wavepoints ) );
+          sig->add( DataRow( datemod( currwavetime ), wavepoints ) );
         }
         else if ( warnJunkData ) {
           warnJunkData = false;

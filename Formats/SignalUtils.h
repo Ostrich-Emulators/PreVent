@@ -52,7 +52,7 @@ public:
 
   static std::map<std::string, std::unique_ptr<SignalData>> mapify(
           std::vector<std::unique_ptr<SignalData>>&data);
-
+  
   /**
    * Gets all times in the given SignalSet. This is the superset of all 
    * SignalData's timeseries.

@@ -75,17 +75,17 @@ void Writer::setOutputDir( const std::string& _outdir ) {
 }
 
 std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
-    SignalSet& data ) {
+      SignalSet& data ) {
   int patientno = 1;
 
   std::string namestart = ( "" == prefix ? "p" : prefix + "-p" );
 
   int initrslt = initDataSet( outdir, namestart + std::to_string( patientno ),
-      compression );
+        compression );
   std::vector<std::string> list;
   if ( initrslt < 0 ) {
     std::cerr << "cannot init dataset: " + outdir + prefix + "-p"
-        + std::to_string( patientno ) << std::endl;
+          + std::to_string( patientno ) << std::endl;
     return list;
   }
 
@@ -109,7 +109,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
         list.insert( list.end( ), files.begin( ), files.end( ) );
       }
 
-      if( ReadResult::END_OF_PATIENT == retcode ){
+      if ( ReadResult::END_OF_PATIENT == retcode ) {
         patientno++;
       }
 
@@ -150,7 +150,7 @@ void Writer::addListener( std::shared_ptr<ConversionListener> l ) {
   listeners.push_back( l );
 }
 
-class NullBuffer : public std::streambuf{
+class NullBuffer : public std::streambuf {
 public:
 
   int overflow( int c ) {

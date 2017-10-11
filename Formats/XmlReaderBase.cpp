@@ -30,10 +30,10 @@ bool XmlReaderBase::accumulateText = false;
 std::string XmlReaderBase::working;
 const int XmlReaderBase::READCHUNK = 16384 * 16;
 
-XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ) {
+XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ), datemodifier( 0 ) {
 }
 
-XmlReaderBase::XmlReaderBase( const XmlReaderBase& orig ) : Reader( orig ) {
+XmlReaderBase::XmlReaderBase( const XmlReaderBase& orig ) : Reader( orig ), datemodifier( 0 ) {
 }
 
 XmlReaderBase::~XmlReaderBase( ) {
@@ -81,11 +81,11 @@ void XmlReaderBase::chars( void * data, const char * text, int len ) {
 std::string XmlReaderBase::trim( std::string & totrim ) {
   // ltrim
   totrim.erase( totrim.begin( ), std::find_if( totrim.begin( ), totrim.end( ),
-      std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
+        std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
 
   // rtrim
   totrim.erase( std::find_if( totrim.rbegin( ), totrim.rend( ),
-      std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
+        std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
 
   return totrim;
 }
@@ -176,11 +176,17 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
   filler = &info;
   setResult( ReadResult::NORMAL );
 
+  firstread = ( ReadResult::FIRST_READ == lastfill );
+
   std::vector<char> buffer( READCHUNK, 0 );
   while ( input.read( buffer.data( ), buffer.size( ) ) ) {
     long gcnt = input.gcount( );
     XML_Parse( parser, &buffer[0], buffer.size( ), gcnt < READCHUNK );
     if ( ReadResult::NORMAL != rslt ) {
+      if ( ReadResult::END_OF_PATIENT == rslt && anonymizing( ) ) {
+        info.metadata( )["Patient Name"] = "Anonymous";
+      }
+
       return rslt;
     }
   }
@@ -190,8 +196,11 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
 
 bool XmlReaderBase::isRollover( const time_t& then, const time_t& now ) const {
   if ( 0 != then ) {
-    const int cdoy = gmtime( &now )->tm_yday;
-    const int pdoy = gmtime( &then )->tm_yday;
+    time_t modnow = datemod( now );
+    time_t modthen = datemod( then );
+    
+    const int cdoy = gmtime( &modnow )->tm_yday;
+    const int pdoy = gmtime( &modthen )->tm_yday;
     if ( cdoy != pdoy ) {
 
       return true;
@@ -203,14 +212,14 @@ bool XmlReaderBase::isRollover( const time_t& then, const time_t& now ) const {
 
 time_t XmlReaderBase::time( const std::string& timer ) const {
   if ( std::string::npos == timer.find( " " )
-      && std::string::npos == timer.find( "T" ) ) {
+        && std::string::npos == timer.find( "T" ) ) {
     return std::stol( timer );
   }
 
   // we have a local time that we need to convert
   std::string format = ( std::string::npos == timer.find( "T" )
-      ? "%m/%d/%Y %I:%M:%S %p" // STPXML time string 
-      : "%Y-%m-%dT%H:%M:%S" ); // CPC time string
+        ? "%m/%d/%Y %I:%M:%S %p" // STPXML time string 
+        : "%Y-%m-%dT%H:%M:%S" ); // CPC time string
 
   tm mytime;
   strptime( timer.c_str( ), format.c_str( ), &mytime );
@@ -220,4 +229,18 @@ time_t XmlReaderBase::time( const std::string& timer ) const {
   mytime = *gmtime( &local );
 
   return mktime( &mytime );
+}
+
+bool XmlReaderBase::isFirstRead( ) const {
+  return firstread;
+}
+
+void XmlReaderBase::setDateModifier( const time_t& mod ) {
+  firstread = false;
+  datemodifier = mod;
+}
+
+time_t XmlReaderBase::datemod( const time_t& rawdate ) const {
+  time_t timer = ( rawdate - datemodifier );
+  return timer;
 }

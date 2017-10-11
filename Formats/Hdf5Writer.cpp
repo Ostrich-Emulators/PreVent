@@ -217,7 +217,7 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
   H5::Group vittimes = grp.createGroup( "Vitals" );
 
   for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {
-    output() << "writing times for " << m->name( ) << std::endl;
+    // output() << "writing times for " << m->name( ) << std::endl;
     std::vector<time_t> times( m->times( ).rbegin( ), m->times( ).rend( ) );
 
     H5::Group * mygrp = ( m->wave( ) ? &wavetimes : &vittimes );
