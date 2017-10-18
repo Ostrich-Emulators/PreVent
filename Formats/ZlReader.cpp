@@ -37,10 +37,10 @@ const std::string ZlReader::VITAL = "VITAL";
 const std::string ZlReader::WAVE = "WAVE";
 const std::string ZlReader::TIME = "TIME";
 
-ZlReader::ZlReader( ) : firstread( true ) {
+ZlReader::ZlReader( ) : Reader( "Zl" ), firstread( true ) {
 }
 
-ZlReader::ZlReader( const ZlReader& orig ) : firstread( orig.firstread ) {
+ZlReader::ZlReader( const ZlReader& orig ) : Reader( orig ), firstread( orig.firstread ) {
 }
 
 ZlReader::~ZlReader( ) {
@@ -178,7 +178,7 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       std::unique_ptr<SignalData>& dataset = info.addVital( vital );
 
       if ( val.empty( ) ) {
-        std::cout << "empty val? " << chunk << std::endl;
+        output() << "empty val? " << chunk << std::endl;
       }
 
       dataset->setUom( uom );
@@ -199,7 +199,7 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       if ( first ) {
         //dataset->metad( )[SignalData::HERTZ] = 240;
       }
-      
+
       points >> wavename >> uom >> val;
 
       dataset->setUom( uom );

@@ -8,9 +8,13 @@
 
 #include "SignalData.h"
 #include "DataRow.h"
-#include "StpXmlReader.h"
+#include "Reader.h"
+
+#include <set>
 #include <limits>
 #include <vector>
+#include <algorithm>
+#include <iostream>
 
 SignalUtils::SignalUtils( ) {
 }
@@ -95,17 +99,11 @@ std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::vector<std::u
     if ( !( m->startTime( ) == earliest
         && m->endTime( ) == latest
         && m->size( ) == size ) ) {
-      std::cout << "syncing signals" << std::endl;
+      //std::cout << "syncing signals" << std::endl;
       tmp = sync( signals );
       working = &tmp;
       break;
     }
-  }
-
-
-  for ( const auto& s : *working ) {
-    std::cout << s->name( ) << "\t" << s->startTime( ) << "\t"
-        << s->endTime( ) << "\t" << s->size( ) << std::endl;
   }
 
   std::vector<std::vector < std::string>> rows;
@@ -168,49 +166,61 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
   time_t latest;
   firstlast( data, &earliest, &latest );
 
-  std::cout << "f/l:\t" << earliest << "\t" << latest << std::endl;
-  for ( const auto& s : data ) {
-    std::cout << s->name( ) << "\t" << s->startTime( ) << "\t"
-        << s->endTime( ) << "\t" << s->size( ) << std::endl;
-  }
-
+//  std::cout << "f/l:\t" << earliest << "\t" << latest << std::endl;
+//  for ( const auto& s : data ) {
+//    std::cout << s->name( ) << "\t" << s->startTime( ) << "\t"
+//        << s->endTime( ) << "\t" << s->size( ) << std::endl;
+//  }
 
   float freq = ( *data.begin( ) )->hz( );
   int timestep = ( freq < 1 ? 1 / freq : 1 );
 
-  // start a-poppin'!
-  for ( auto& signal : data ) {
-    std::unique_ptr<SignalData> copy = std::move( signal->shallowcopy( ) );
+  std::unique_ptr<DataRow> currenttimes[data.size( )];
+  for ( int i = 0; i < data.size( ); i++ ) {
+    ret.push_back( data[i]->shallowcopy( ) );
 
-    // const std::string& name = signal->name( );
-    //std::cout << "syncing " << name << std::endl;
+    // load the first row for each signal into our current array
+    currenttimes[i] = std::move( data[i]->pop( ) );
+  }
 
-    time_t nexttime = earliest;
+  std::set<int> empties;
+  while ( empties.size( ) < data.size( ) ) {
 
-    while ( 0 != signal->size( ) ) {
-      auto row = std::move( signal->pop( ) );
-      //std::cout << "  popped row at " << row->time << "; "
-      //    << signal->size( ) << " rows left" << std::endl;
+    // see if any of our current times match our "earliest" time
+    // if they do, add it to the SignalData and replace that time with
+    // a new datarow
+    for ( int i = 0; i < data.size( ); i++ ) {
+      if ( currenttimes[i] ) {
+        // we have a time to check
+        if ( currenttimes[i]->time == earliest ) {
+          ret[i]->add( *currenttimes[i] );
 
-      // fill in any rows between this signal's current time and our expected next time
-      fillGap( copy, row, nexttime, timestep );
-
-      copy->add( *row );
-      nexttime = row->time + timestep;
+          if ( data[i]->empty( ) ) {
+            empties.insert( i );
+            currenttimes[i].release( );
+          }
+          else {
+            currenttimes[i] = std::move( data[i]->pop( ) );
+          }
+        }
+        else if ( currenttimes[i]->time > earliest ) {
+          // don't have a datapoint for this time, so make a dummy one
+          ret[i]->add( dummyfill( data[i], earliest ) );
+        }
+      }
+      else {
+        // ran out of times fo this signal, so make dummy data for this time
+        ret[i]->add( dummyfill( data[i], earliest ) );
+      }
     }
 
-    // fill in any rows after our signal's last time, but before the set's end time
-    time_t firsttime = nexttime;
-    for ( nexttime; nexttime < latest + timestep; nexttime += timestep ) {
-      copy->add( dummyfill( signal, nexttime ) );
+    // go through again and figure out which is our new earliest time
+    earliest = std::numeric_limits<time_t>::max( );
+    for ( int i = 0; i < data.size( ); i++ ) {
+      if ( currenttimes[i] && currenttimes[i]->time < earliest ) {
+        earliest = currenttimes[i]->time;
+      }
     }
-    if ( firsttime != nexttime ) {
-      std::cout << "    filled ending rows from " << firsttime
-          << " to " << nexttime << std::endl;
-    }
-
-    // std::cout << signal->name( ) << " rows: " << copy->size( ) << std::endl;
-    ret.push_back( std::move( copy ) );
   }
 
   //  for ( auto& x : ret ) {
@@ -262,13 +272,56 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
 }
 
 DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const time_t& time ) {
-  std::string dummy = StpXmlReader::MISSING_VALUESTR;
+  std::string dummy = Reader::MISSING_VALUESTR;
 
   if ( signal->wave( ) ) {
     for ( int i = 1; i < signal->hz( ); i++ ) {
-      dummy.append( "," ).append( StpXmlReader::MISSING_VALUESTR );
+      dummy.append( "," ).append( Reader::MISSING_VALUESTR );
     }
   }
   return DataRow( time, dummy );
 }
+
+std::vector<time_t> SignalUtils::alltimes( const SignalSet& ss ) {
+  std::set<time_t> times;
+  for ( const auto& signal : ss.vitals( ) ) {
+    times.insert( signal.second->times( ).begin( ), signal.second->times( ).end( ) );
+  }
+  for ( const auto& signal : ss.waves( ) ) {
+    times.insert( signal.second->times( ).begin( ), signal.second->times( ).end( ) );
+  }
+
+  std::vector<time_t> vec( times.begin( ), times.end( ) );
+  std::sort( vec.begin( ), vec.end( ) );
+
+  return vec;
+}
+
+std::vector<size_t> SignalUtils::index( const std::vector<time_t>& alltimes,
+    const SignalData& signal ) {
+
+  std::cout << "signaltimes values: " << signal.times( ).size( ) << std::endl;
+  std::deque<time_t> signaltimes( signal.times( ).begin( ), signal.times( ).end( ) );
+  std::sort( signaltimes.begin( ), signaltimes.end( ) );
+  const double hz = signal.hz( );
+  const int rowsPerTime = ( hz < 1.0 ? 1 : (int) hz );
+  std::cout << "signaltimes values (2): " << signaltimes.size( ) << std::endl;
+
+  std::vector<size_t> indexes;
+
+  size_t currentIndex = 0;
+  for ( time_t all : alltimes ) {
+    std::cout << "all: " << all << "\t front: " << signaltimes.front( ) << std::endl;
+    indexes.push_back( currentIndex );
+    if ( !signaltimes.empty( ) && signaltimes.front( ) == all ) {
+      currentIndex += rowsPerTime;
+      signaltimes.pop_front( );
+    }
+
+    // else skip ahead until we find the time from the
+  }
+
+  return indexes;
+}
+
 

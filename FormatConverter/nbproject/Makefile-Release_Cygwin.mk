@@ -23,7 +23,7 @@ AS=as
 # Macros
 CND_PLATFORM=GNU-Linux
 CND_DLIB_EXT=so
-CND_CONF=Debug
+CND_CONF=Release_Cygwin
 CND_DISTDIR=dist
 CND_BUILDDIR=build
 
@@ -43,8 +43,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wno-deprecated -O0 -pg
-CXXFLAGS=-Wno-deprecated -O0 -pg
+CCFLAGS=-Wno-deprecated -O2
+CXXFLAGS=-Wno-deprecated -O2
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -53,32 +53,32 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-Wl,-rpath,'../Formats/dist/Debug/GNU-Linux' -L../Formats/dist/Debug/GNU-Linux -lFormats `pkg-config --libs sqlite3`  
+LDLIBSOPTIONS=-Wl,-rpath,'../Formats/dist/Release_Cygwin/GNU-Linux' -L../Formats/dist/Release_Cygwin/GNU-Linux -lFormats `pkg-config --libs sqlite3`  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter
-	${CP} ../Formats/dist/Debug/GNU-Linux/libFormats.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
+	${CP} ../Formats/dist/Release_Cygwin/GNU-Linux/libFormats.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ../Formats/dist/Debug/GNU-Linux/libFormats.so
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ../Formats/dist/Release_Cygwin/GNU-Linux/libFormats.so
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter ${OBJECTFILES} ${LDLIBSOPTIONS}
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter ${OBJECTFILES} ${LDLIBSOPTIONS} -s
 
-${OBJECTDIR}/Db.o: Db.cpp nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/Db.o: Db.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I../Formats `pkg-config --cflags sqlite3` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Db.o Db.cpp
+	$(COMPILE.cc) -O2 -s -I../Formats `pkg-config --cflags sqlite3` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Db.o Db.cpp
 
-${OBJECTDIR}/main.o: main.cpp nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I../Formats `pkg-config --cflags sqlite3` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -O2 -s -I../Formats `pkg-config --cflags sqlite3` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
 
 # Subprojects
 .build-subprojects:
-	cd ../Formats && ${MAKE}  -f Makefile CONF=Debug
+	cd ../Formats && ${MAKE}  -f Makefile CONF=Release_Cygwin
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
@@ -88,7 +88,7 @@ ${OBJECTDIR}/main.o: main.cpp nbproject/Makefile-${CND_CONF}.mk
 
 # Subprojects
 .clean-subprojects:
-	cd ../Formats && ${MAKE}  -f Makefile CONF=Debug clean
+	cd ../Formats && ${MAKE}  -f Makefile CONF=Release_Cygwin clean
 
 # Enable dependency checking
 .dep.inc: .depcheck-impl

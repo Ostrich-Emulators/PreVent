@@ -40,6 +40,11 @@ protected:
 private:
 	MatWriter( const MatWriter& orig );
 
+	/**
+	 * Consumes the given data and writes to the file
+	 * @param data
+	 * @return
+	 */
 	int writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&data );
 	int writeWaves( const int& freq, std::vector<std::unique_ptr<SignalData>>&data );
 

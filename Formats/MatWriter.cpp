@@ -151,6 +151,11 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
 
   std::vector<std::unique_ptr < SignalData>> signals = SignalUtils::vectorize( oldmap );
 
+  // the call to vectorize moves the signaldata, so re-add some skeletons
+  for ( const auto& sd : signals ) {
+    oldmap[sd->name( )] = sd->shallowcopy( true );
+  }
+
   SignalUtils::firstlast( signals, &earliest, &latest );
 
   float freq = ( *signals.begin( ) )->hz( );
@@ -232,18 +237,23 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   const std::string sfx = std::to_string( freq ) + "hz";
 
   std::vector<std::unique_ptr < SignalData>> signals = SignalUtils::sync( oldsignals );
-  for ( const auto& s : signals ) {
-    std::cout << s->name( ) << "\t" << s->hz( ) << "\t" << s->size( ) << std::endl;
-  }
   SignalUtils::firstlast( signals, &earliest, &latest );
 
-  const int timestep = 1;
+  std::vector<time_t> alltimes64( signals[0]->times( ).rbegin( ), signals[0]->times( ).rend( ) );
+  std::vector<int> alltimes;
+  alltimes.reserve( alltimes64.size( ) );
+  for ( time_t& t64 : alltimes64 ) {
+    alltimes.push_back( (int) t64 );
+  }
 
   std::vector<std::string> labels;
   std::vector<std::string> uoms;
   for ( auto& m : signals ) {
     labels.push_back( m->name( ) );
     uoms.push_back( m->uom( ) );
+
+    // re-add signals (metadata only) to dataptr
+    dataptr->waves( )[m->name( )] = m->shallowcopy( true );
   }
 
   // units of measure
@@ -268,69 +278,48 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   std::vector<std::vector<short>> datas( cols );
 
   int start[2] = { 0, 0 };
-  int stride[2] = { 1, 1 };
   int edge[2] = { datachunksz, 1 };
+  int stride[2] = { 1, 1 };
   for ( int col = 0; col < signals.size( ); col++ ) {
     std::unique_ptr<SignalData>& signal = signals[col];
-    datas[col].reserve( datachunksz );
+    std::vector<short> data;
+    data.reserve( datachunksz );
+
+    start[0] = 0;
+    edge[0] = { datachunksz };
 
     while ( !signal->empty( ) ) {
       const auto& datarow = signal->pop( );
 
       std::vector<short> slices = datarow->shorts( );
-      datas[col].insert( datas[col].end( ), slices.begin( ), slices.end( ) );
+      data.insert( data.end( ), slices.begin( ), slices.end( ) );
 
-      if ( datachunksz == datas[col].size( ) ) {
-        Mat_VarWriteData( matfile, vars[col], &( datas[col] )[0], start, stride, edge );
-        datas[col].clear( );
-        datas[col].reserve( datachunksz );
+      if ( datachunksz == data.size( ) ) {
+        Mat_VarWriteData( matfile, vars[col], &data[0], start, stride, edge );
+        data.clear( );
+        data.reserve( datachunksz );
+        start[0] += datachunksz;
       }
     }
 
-    start[0] += datachunksz;
-  }
-
-  // write any leftover values
-  edge[0] = datas[0].size( );
-  for ( int col = 0; col < cols; col++ ) {
-    Mat_VarWriteData( matfile, vars[col], &( datas[col] )[0], start, stride, edge );
-    datas[col].clear( );
+    // write any leftover values
+    edge[0] = data.size( );
+    Mat_VarWriteData( matfile, vars[col], &data[0], start, stride, edge );
+    data.clear( );
     Mat_VarFree( vars[col] );
   }
 
+
   // timestamps
-  // use incremental writing here too, because if we have 24 hours of >240hz
-  // samples, it's too much data to fit in memory
+  // we can write these all in one go, because we're only writing the second for 
+  // each hz readings, not the fractional seconds
   start[0] = 0;
   start[1] = 0;
-  edge[0] = datachunksz;
+  dims[0] = alltimes.size( );
 
   matvar_t * var = Mat_VarCreate( std::string( "wt" + sfx ).c_str( ),
-      MAT_C_DOUBLE, MAT_T_DOUBLE, 2, dims, NULL, 0 );
-  Mat_VarWriteInfo( matfile, var );
-
-  std::vector<double> timestamps( datachunksz );
-  double currenttime = earliest;
-  double slicetime = 1.0 / (double) freq;
-
-  for ( size_t row = 0; row < rows; row++ ) {
-    for ( int slice = 0; slice < freq; slice++ ) {
-      timestamps.push_back( currenttime + slicetime * slice );
-
-      if ( timestamps.size( ) == datachunksz ) {
-        Mat_VarWriteData( matfile, var, &timestamps[0], start, stride, edge );
-        start[0] += datachunksz;
-        timestamps.clear( );
-        timestamps.reserve( datachunksz );
-      }
-    }
-
-    currenttime += timestep;
-  }
-
-  // write anything left in our data array
-  edge[0] = timestamps.size( );
-  Mat_VarWriteData( matfile, var, &timestamps[0], start, stride, edge );
+      MAT_C_INT32, MAT_T_INT32, 2, dims, &alltimes[0], 0 );
+  Mat_VarWrite( matfile, var, compression );
   Mat_VarFree( var );
 
   // FIXME: (metadata?)

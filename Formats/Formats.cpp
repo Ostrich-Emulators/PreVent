@@ -42,6 +42,9 @@ Format Formats::getValue( const std::string& fmt ) {
   if ( "csv" == fmt ) {
     return CSV;
   }
+  if( "cpcxml" == fmt ){
+    return CPCXML;
+  }
 
   return UNRECOGNIZED;
 }

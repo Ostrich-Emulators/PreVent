@@ -17,7 +17,9 @@
 #include "DataRow.h"
 #include <memory>
 #include <string>
+#include <vector>
 #include <map>
+#include <functional>
 
 class SignalData;
 
@@ -29,9 +31,13 @@ class SignalSet {
 public:
 	SignalSet( );
 	virtual ~SignalSet( );
+	const std::map<std::string, std::unique_ptr<SignalData>>&vitals( ) const;
+	const std::map<std::string, std::unique_ptr<SignalData>>&waves( ) const;
+	std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const;
 	std::map<std::string, std::unique_ptr<SignalData>>&vitals( );
 	std::map<std::string, std::unique_ptr<SignalData>>&waves( );
 	std::map<std::string, std::string>& metadata( );
+	const std::map<std::string, std::string>& metadata( ) const;
 
 	/**
 	 * Adds a new vital sign if it has not already been added. If it already
@@ -56,6 +62,7 @@ public:
 	void setFileSupport( bool );
 	time_t earliest( const TimeCounter& tc = EITHER ) const;
 	time_t latest( const TimeCounter& tc = EITHER ) const;
+	void setMetadataFrom( const SignalSet& target );
 
 private:
 	SignalSet( const SignalSet& );

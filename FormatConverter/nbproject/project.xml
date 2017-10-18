@@ -6,7 +6,7 @@
             <name>FormatConverter</name>
             <c-extensions/>
             <cpp-extensions>cpp</cpp-extensions>
-            <header-extensions/>
+            <header-extensions>h</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects>
                 <make-dep-project>../Formats</make-dep-project>
@@ -19,6 +19,14 @@
                 </confElem>
                 <confElem>
                     <name>Debug</name>
+                    <type>1</type>
+                </confElem>
+                <confElem>
+                    <name>Release_Cygwin</name>
+                    <type>1</type>
+                </confElem>
+                <confElem>
+                    <name>Debug_Cygwin</name>
                     <type>1</type>
                 </confElem>
             </confList>
