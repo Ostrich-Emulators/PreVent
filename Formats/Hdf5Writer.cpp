@@ -240,8 +240,7 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
         H5::PredType::STD_I64LE, space );
     ds.write( &times[0], H5::PredType::STD_I64LE );
     writeAttribute( ds, "Time Source", "raw" );
-    int hz = ( m->hz( ) < 1 ? 1 : (int) m->hz( ) );
-    writeAttribute( ds, "Readings Per Time", hz );
+    writeAttribute( ds, SignalData::VALS_PER_DR, m->valuesPerDataRow() );
   }
 }
 

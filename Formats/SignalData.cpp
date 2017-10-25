@@ -29,13 +29,16 @@ const std::string SignalData::SCALE = "Scale";
 const std::string SignalData::UOM = "Unit of Measure";
 const std::string SignalData::MSM = "Missing Value Marker";
 const std::string SignalData::TIMEZONE = "Timezone";
+const std::string SignalData::VALS_PER_DR = "Readings Per Time";
 const int SignalData::MISSING_VALUE = -32768;
+
 
 SignalData::SignalData( const std::string& name, bool largefile, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<time_t>::max( ) ), lastdata( 0 ),
 datacount( 0 ), popping( false ), iswave( wavedata ) {
   file = ( largefile ? std::tmpfile( ) : NULL );
   setScale( 1 );
+  setValuesPerDataRow( 1 );
   setUom( "Uncalib" );
 }
 
@@ -241,4 +244,12 @@ void SignalData::setScale( int x ) {
 
 const std::deque<time_t>& SignalData::times( ) const {
   return dates;
+}
+
+void SignalData::setValuesPerDataRow(int x){
+  metadatai[VALS_PER_DR] = x;
+}
+
+int SignalData::valuesPerDataRow() const {
+  return metadatai.at( VALS_PER_DR );
 }

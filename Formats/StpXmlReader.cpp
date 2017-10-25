@@ -185,6 +185,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           if ( first ) {
             sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
             sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
+            sig->setValuesPerDataRow( 2 * hz ); // Stp always reads in 2s increments
 
             if ( sig->uom( ).empty( ) && !uom.empty( ) ) {
               sig->setUom( uom );
