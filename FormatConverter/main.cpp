@@ -30,7 +30,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
         << std::endl << "\t-e or --export <vital/wave to export>"
         << std::endl << "\t-s or --sqlite <db file>"
         << std::endl << "\t-q or --quiet"
-        << std::endl << "\t-a or --anonymize"
+        << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
         << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml"
         << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
         << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
@@ -49,6 +49,8 @@ struct option longopts[] = {
   { "sqlite", required_argument, NULL, 's' },
   { "quiet", no_argument, NULL, 'q' },
   { "anonymize", no_argument, NULL, 'a' },
+  { "anon", no_argument, NULL, 'a' },
+  { "anonymous", no_argument, NULL, 'a' },
   { 0, 0, 0, 0 }
 };
 
