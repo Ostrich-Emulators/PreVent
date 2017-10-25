@@ -48,6 +48,7 @@ public:
   const std::string& name( ) const;
   void setValuesPerDataRow( int );
   int valuesPerDataRow() const;
+  void setMetadataFrom( const SignalData& model );
 
   std::unique_ptr<DataRow> pop( );
   bool empty( ) const;

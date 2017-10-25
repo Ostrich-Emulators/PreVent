@@ -253,3 +253,14 @@ void SignalData::setValuesPerDataRow(int x){
 int SignalData::valuesPerDataRow() const {
   return metadatai.at( VALS_PER_DR );
 }
+
+void SignalData::setMetadataFrom( const SignalData& model ){
+    metadatai.clear();
+    metadatai.insert(model.metai().begin(), model.metai().end() );
+    
+    metadatas.clear();
+    metadatas.insert(model.metas().begin(), model.metas().end() );
+
+    metadatad.clear();
+    metadatad.insert(model.metad().begin(), model.metad().end() );
+}

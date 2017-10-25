@@ -122,17 +122,7 @@ void XmlReaderBase::copysaved( SignalSet& tgt ) {
     bool added = false;
     std::unique_ptr<SignalData>& infodata = tgt.addVital( m.first, &added );
 
-    if ( added ) {
-      auto& smap = savedsignal->metas( );
-      infodata->metas( ).insert( smap.begin( ), smap.end( ) );
-
-      auto& dmap = savedsignal->metad( );
-      infodata->metad( ).insert( dmap.begin( ), dmap.end( ) );
-
-      auto& imap = savedsignal->metai( );
-      infodata->metai( ).insert( imap.begin( ), imap.end( ) );
-    }
-
+    infodata->setMetadataFrom( *savedsignal );
     int rows = savedsignal->size( );
     for ( int row = 0; row < rows; row++ ) {
       const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
@@ -146,20 +136,9 @@ void XmlReaderBase::copysaved( SignalSet& tgt ) {
     bool added = false;
     std::unique_ptr<SignalData>& infodata = tgt.addWave( m.first, &added );
 
-    if ( added ) {
-      auto& smap = savedsignal->metas( );
-      infodata->metas( ).insert( smap.begin( ), smap.end( ) );
-
-      auto& dmap = savedsignal->metad( );
-      infodata->metad( ).insert( dmap.begin( ), dmap.end( ) );
-
-      auto& imap = savedsignal->metai( );
-      infodata->metai( ).insert( imap.begin( ), imap.end( ) );
-    }
-
+    infodata->setMetadataFrom( *savedsignal );
     int rows = savedsignal->size( );
     for ( int row = 0; row < rows; row++ ) {
-
       const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
       infodata->add( *datarow );
     }
