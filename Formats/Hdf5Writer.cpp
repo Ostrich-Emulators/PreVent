@@ -75,7 +75,7 @@ void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
 
   std::string duration = "";
   if ( t->tm_yday ) {
-    duration += std::to_string( t->tm_yday ) + " days,";
+    duration += std::to_string( t->tm_yday ) + ( t->tm_yday > 1 ? " days, " : " day, " );
   }
   if ( t->tm_hour < 10 ) {
     duration += "0";
@@ -224,11 +224,10 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
 
     if ( m->wave( ) ) {
       std::vector<time_t> alltimes;
-      alltimes.reserve( times.size( )*2 );
+      alltimes.reserve( times.size( ) );
 
       for ( auto& t : times ) {
         alltimes.push_back( t );
-        alltimes.push_back( t + 1 );
       }
       times = alltimes;
     }

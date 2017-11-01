@@ -96,6 +96,11 @@ void XmlReaderBase::startSaving( ) {
 }
 
 void XmlReaderBase::setResult( ReadResult rslt ) {
+  // if we're not breaking our output, then ignore End of Day and End of Patient
+  if ( nonbreaking( ) &&
+        ( ReadResult::END_OF_DAY == rslt || ReadResult::END_OF_PATIENT == rslt ) ) {
+    return;
+  }
   this->rslt = rslt;
 }
 
@@ -174,10 +179,14 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
 }
 
 bool XmlReaderBase::isRollover( const time_t& then, const time_t& now ) const {
+  if ( nonbreaking( ) ) {
+    return false;
+  }
+
   if ( 0 != then ) {
     time_t modnow = datemod( now );
     time_t modthen = datemod( then );
-    
+
     const int cdoy = gmtime( &modnow )->tm_yday;
     const int pdoy = gmtime( &modthen )->tm_yday;
     if ( cdoy != pdoy ) {

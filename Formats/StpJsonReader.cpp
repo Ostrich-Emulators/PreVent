@@ -13,7 +13,7 @@
  * Almost all the zlib code was taken from http://www.zlib.net/zlib_how.html
  */
 
-#include "ZlReader.h"
+#include "StpJsonReader.h"
 #include "SignalData.h"
 #include "DataRow.h"
 #include "Hdf5Writer.h"
@@ -32,26 +32,26 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-const std::string ZlReader::HEADER = "HEADER";
-const std::string ZlReader::VITAL = "VITAL";
-const std::string ZlReader::WAVE = "WAVE";
-const std::string ZlReader::TIME = "TIME";
+const std::string StpJsonReader::HEADER = "HEADER";
+const std::string StpJsonReader::VITAL = "VITAL";
+const std::string StpJsonReader::WAVE = "WAVE";
+const std::string StpJsonReader::TIME = "TIME";
 
-ZlReader::ZlReader( ) : Reader( "Zl" ), firstread( true ) {
+StpJsonReader::StpJsonReader( ) : Reader( "STPJSON" ), firstread( true ) {
 }
 
-ZlReader::ZlReader( const ZlReader& orig ) : Reader( orig ), firstread( orig.firstread ) {
+StpJsonReader::StpJsonReader( const StpJsonReader& orig ) : Reader( orig ), firstread( orig.firstread ) {
 }
 
-ZlReader::~ZlReader( ) {
+StpJsonReader::~StpJsonReader( ) {
 }
 
-void ZlReader::finish( ) {
+void StpJsonReader::finish( ) {
   stream->close( );
   stream.release( );
 }
 
-size_t ZlReader::getSize( const std::string& input ) const {
+size_t StpJsonReader::getSize( const std::string& input ) const {
   struct stat info;
 
   if ( stat( input.c_str( ), &info ) < 0 ) {
@@ -62,7 +62,7 @@ size_t ZlReader::getSize( const std::string& input ) const {
   return info.st_size;
 }
 
-int ZlReader::prepare( const std::string& input, SignalSet& info ) {
+int StpJsonReader::prepare( const std::string& input, SignalSet& info ) {
   int rslt = Reader::prepare( input, info );
   if ( 0 != rslt ) {
     return rslt;
@@ -90,7 +90,7 @@ int ZlReader::prepare( const std::string& input, SignalSet& info ) {
   return 0;
 }
 
-ReadResult ZlReader::fill( SignalSet& info, const ReadResult& ) {
+ReadResult StpJsonReader::fill( SignalSet& info, const ReadResult& ) {
   // for this class we say a chunk is a full data set for one patient,
   // so read until we see another HEADER line in the text
   std::string onepatientdata = leftoverText + stream->readNextChunk( );
@@ -152,15 +152,15 @@ ReadResult ZlReader::fill( SignalSet& info, const ReadResult& ) {
   return retcode;
 }
 
-void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
+void StpJsonReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
   if ( HEADER == chunk ) {
-    state = zlReaderState::ZIN_HEADER;
+    state = jsonReaderState::JIN_HEADER;
   }
   else {
     const int pos = chunk.find( ' ' );
     const std::string firstword = chunk.substr( 0, pos );
     if ( VITAL == firstword ) {
-      state = zlReaderState::ZIN_VITAL;
+      state = jsonReaderState::JIN_VITAL;
 
       std::stringstream points( chunk.substr( pos + 1 ) );
       std::string vital;
@@ -189,7 +189,7 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       dataset->add( DataRow( currentTime, val, high, low ) );
     }
     else if ( WAVE == firstword ) {
-      state = zlReaderState::ZIN_WAVE;
+      state = jsonReaderState::JIN_WAVE;
       std::stringstream points( chunk.substr( pos + 1 ) );
       std::string wavename;
       std::string uom;
@@ -211,10 +211,10 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       dataset->add( DataRow( currentTime, val ) );
     }
     else if ( TIME == firstword ) {
-      state = zlReaderState::ZIN_TIME;
+      state = jsonReaderState::JIN_TIME;
       currentTime = std::stoi( chunk.substr( pos + 1 ) );
     }
-    else if ( state == zlReaderState::ZIN_HEADER ) {
+    else if ( state == jsonReaderState::JIN_HEADER ) {
       const int epos = chunk.find( '=' );
       std::string key = chunk.substr( 0, epos );
       std::string val = chunk.substr( epos + 1 );

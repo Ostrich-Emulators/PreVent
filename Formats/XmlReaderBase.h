@@ -44,18 +44,6 @@ protected:
   virtual ReadResult fill( SignalSet & info, const ReadResult& lastfill ) override;
   virtual void finish( ) override;
 
-private:
-
-  static void start( void * data, const char * el, const char ** attr );
-  static void end( void * data, const char * el );
-  static void chars( void * data, const char * text, int len );
-  static std::string working;
-  static bool accumulateText;
-
-  XML_Parser parser;
-  std::ifstream input;
-  ReadResult rslt;
-
 protected:
   /**
    * modify the given date. This is important when anonymizing data
@@ -83,6 +71,17 @@ protected:
   SignalSet saved;
   SignalSet * filler;
 private:
+
+  static void start( void * data, const char * el, const char ** attr );
+  static void end( void * data, const char * el );
+  static void chars( void * data, const char * text, int len );
+  static std::string working;
+  static bool accumulateText;
+
+  XML_Parser parser;
+  std::ifstream input;
+  ReadResult rslt;
+
   time_t datemodifier;
   bool firstread;
 };
