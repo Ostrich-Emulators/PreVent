@@ -19,6 +19,7 @@
         <itemPath>MatWriter.h</itemPath>
         <itemPath>WfdbWriter.h</itemPath>
         <itemPath>ZlWriter.h</itemPath>
+        <itemPath>json.hpp</itemPath>
       </logicalFolder>
       <itemPath>Base64.h</itemPath>
       <itemPath>ConversionListener.h</itemPath>
@@ -186,6 +187,8 @@
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="json.hpp" ex="false" tool="3" flavor2="0">
+      </item>
     </conf>
     <conf name="Release" type="2">
       <toolsSet>
@@ -304,6 +307,8 @@
       <item path="ZlWriter.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="json.hpp" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Release_Cygwin" type="2">
@@ -424,6 +429,8 @@
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="json.hpp" ex="false" tool="3" flavor2="0">
+      </item>
     </conf>
     <conf name="Debug_Cygwin" type="2">
       <toolsSet>
@@ -542,6 +549,8 @@
       <item path="ZlWriter.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="json.hpp" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

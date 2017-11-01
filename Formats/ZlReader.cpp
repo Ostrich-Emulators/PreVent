@@ -175,13 +175,17 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       std::getline( points, high, '|' );
       std::getline( points, low, '|' );
 
-      std::unique_ptr<SignalData>& dataset = info.addVital( vital );
+      bool added;
+      std::unique_ptr<SignalData>& dataset = info.addVital( vital, &added );
 
       if ( val.empty( ) ) {
-        output() << "empty val? " << chunk << std::endl;
+        output( ) << "empty val? " << chunk << std::endl;
       }
 
-      dataset->setUom( uom );
+      if ( added ) {
+        dataset->setUom( uom );
+        dataset->metad( )[SignalData::HERTZ] = 0.5;
+      }
       dataset->add( DataRow( currentTime, val, high, low ) );
     }
     else if ( WAVE == firstword ) {
@@ -196,13 +200,14 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
 
       bool first;
       std::unique_ptr<SignalData>& dataset = info.addWave( wavename, &first );
-      if ( first ) {
-        //dataset->metad( )[SignalData::HERTZ] = 240;
-      }
-
       points >> wavename >> uom >> val;
 
-      dataset->setUom( uom );
+      if ( first ) {
+        dataset->metad( )[SignalData::HERTZ] = 240;
+        dataset->setUom( uom );
+        dataset->setValuesPerDataRow( 480 );
+      }
+
       dataset->add( DataRow( currentTime, val ) );
     }
     else if ( TIME == firstword ) {
