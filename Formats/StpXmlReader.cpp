@@ -49,14 +49,14 @@ void StpXmlReader::setstate( int st ) {
   state = st;
 }
 
-void StpXmlReader::start( const std::string& element, std::map<std::string, std::string>& attrs ) {
+void StpXmlReader::start( const std::string& element, std::map<std::string, std::string>& attributes ) {
   if ( "FileInfo" == element ) {
     setstate( INHEADER );
   }
   else if ( "VitalSigns" == element ) {
     setstate( INVITAL );
     lastvstime = currvstime;
-    currvstime = time( attrs["Time"] );
+    currvstime = time( attributes["Time"] );
     if ( anonymizing( ) && isFirstRead( ) ) {
       setDateModifier( currvstime );
     }
@@ -70,7 +70,7 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
   else if ( "Waveforms" == element ) {
     setstate( INWAVE );
     lastwavetime = currwavetime;
-    currwavetime = time( attrs["Time"] );
+    currwavetime = time( attributes["Time"] );
     if ( anonymizing( ) && isFirstRead( ) ) {
       setDateModifier( currvstime );
     }
@@ -85,16 +85,16 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     setstate( INNAME );
   }
   else if ( "Value" == element ) {
-    if ( 0 != attrs.count( "UOM" ) ) {
-      uom = attrs["UOM"];
+    if ( 0 != attributes.count( "UOM" ) ) {
+      uom = attributes["UOM"];
     }
-    if ( 0 != attrs.count( "Q" ) ) {
-      q = attrs["Q"];
-    }
+
+    attrs = attributes;
+    attrs.erase( "UOM" );
   }
   else if ( "WaveformData" == element ) {
-    label = attrs["Channel"];
-    uom = attrs["UOM"];
+    label = attributes["Channel"];
+    uom = attributes["UOM"];
   }
 
   //  std::cout << "start " << element << std::endl;
@@ -150,8 +150,8 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           sig->setUom( uom );
         }
       }
-
-      sig->add( DataRow( datemod( currvstime ), value ) );
+      
+      sig->add( DataRow( datemod( currvstime ), value, "", "", attrs ) );
     }
     else if ( "VitalSigns" == element ) {
       setstate( INDETERMINATE );
@@ -192,7 +192,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           }
 
           sig->metad( )[SignalData::HERTZ] = hz;
-          sig->add( DataRow( datemod( currwavetime ), wavepoints ) );
+          sig->add( DataRow( datemod( currwavetime ), wavepoints, "", "", attrs ) );
         }
         else if ( warnJunkData ) {
           warnJunkData = false;

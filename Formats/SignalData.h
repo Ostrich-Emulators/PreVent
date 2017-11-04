@@ -20,6 +20,8 @@
 #include <time.h>
 #include <map>
 #include <deque>
+#include <set>
+#include <vector>
 
 class DataRow;
 
@@ -58,6 +60,7 @@ public:
   const std::map<std::string, int>& metai( ) const;
   const std::map<std::string, double>& metad( ) const;
   const std::deque<time_t>& times( ) const;
+	std::vector<std::string> extras() const;
 
 private:
   SignalData( const SignalData& orig );
@@ -86,6 +89,7 @@ private:
   std::FILE * file;
   bool popping;
   bool iswave;
+	std::set<std::string> extrafields;
 
   static const int CACHE_LIMIT;
 };

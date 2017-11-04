@@ -57,7 +57,7 @@ private:
 	std::string label;
 	std::string value;
 	std::string uom;
-	std::string q;
+	std::map<std::string, std::string> attrs;
 };
 
 #endif /* STPXMLREADER_H */

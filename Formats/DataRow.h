@@ -17,11 +17,13 @@
 #include <ctime>
 #include <string>
 #include <vector>
+#include <map>
 
 class DataRow {
 public:
 	DataRow( const time_t& time, const std::string& data,
-			const std::string& high = "", const std::string& low = "" );
+			const std::string& high = "", const std::string& low = "",
+			std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
 	DataRow( );
 	DataRow( const DataRow& orig );
 	DataRow& operator=(const DataRow& orig );
@@ -35,7 +37,7 @@ public:
 	 * @return
 	 */
 	std::vector<int> ints( ) const;
-	std::vector<short> shorts() const;
+	std::vector<short> shorts( ) const;
 	static std::vector<int> ints( const std::string& );
 	static std::vector<short> shorts( const std::string& );
 
@@ -47,6 +49,7 @@ public:
 	std::string data;
 	std::string high;
 	std::string low;
+	std::map<std::string, std::string> extras;
 	time_t time;
 };
 

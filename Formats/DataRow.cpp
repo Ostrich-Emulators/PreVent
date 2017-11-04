@@ -17,14 +17,16 @@
 #include <vector>
 
 DataRow::DataRow( const time_t& t, const std::string& d, const std::string& hi,
-    const std::string& lo ) : time( t ), data( d ), high( hi ), low( lo ) {
+    const std::string& lo, std::map<std::string, std::string> exts ) : time( t ),
+data( d ), high( hi ), low( lo ), extras( exts ) {
 }
 
 DataRow::DataRow( ) : time( 0 ), data( "" ), high( "" ), low( "" ) {
 }
 
 DataRow::DataRow( const DataRow& orig )
-: time( orig.time ), data( orig.data ), high( orig.high ), low( orig.low ) {
+: time( orig.time ), data( orig.data ), high( orig.high ), low( orig.low ),
+extras( orig.extras ) {
 }
 
 DataRow& DataRow::operator=(const DataRow& orig ) {
@@ -33,6 +35,7 @@ DataRow& DataRow::operator=(const DataRow& orig ) {
     this->low = orig.low;
     this->data = orig.data;
     this->time = orig.time;
+    this->extras = orig.extras;
   }
 
   return *this;
@@ -46,6 +49,7 @@ void DataRow::clear( ) {
   high = "";
   low = "";
   data = "";
+  extras.clear();
 }
 
 int DataRow::scale( const std::string& val ) {

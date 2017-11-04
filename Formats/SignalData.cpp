@@ -61,6 +61,7 @@ std::unique_ptr<SignalData> SignalData::shallowcopy( bool includedates ) {
   copy->metai( ).insert( metadatai.begin( ), metadatai.end( ) );
   copy->metas( ).insert( metadatas.begin( ), metadatas.end( ) );
   copy->popping = this->popping;
+  copy->extrafields.insert( this->extrafields.begin( ), this->extrafields.end( ) );
   return std::move( copy );
 }
 
@@ -90,8 +91,8 @@ const std::map<std::string, double>& SignalData::metad( ) const {
 
 double SignalData::hz( ) const {
   return ( 0 == metadatad.count( SignalData::HERTZ )
-        ? 1
-        : metadatad.at( SignalData::HERTZ ) );
+      ? 1
+      : metadatad.at( SignalData::HERTZ ) );
 }
 
 const time_t& SignalData::startTime( ) const {
@@ -100,6 +101,10 @@ const time_t& SignalData::startTime( ) const {
 
 const time_t& SignalData::endTime( ) const {
   return lastdata;
+}
+
+std::vector<std::string> SignalData::extras( ) const {
+  return std::vector<std::string>( extrafields.begin(), extrafields.end() );
 }
 
 bool SignalData::empty( ) const {
@@ -162,7 +167,7 @@ void SignalData::cache( ) {
     std::unique_ptr<DataRow> a = std::move( data.front( ) );
     data.pop_front( );
     std::string filedata = std::to_string( a->time ) + " " + a->data
-          + " " + a->high + " " + a->low + "\n";
+        + " " + a->high + " " + a->low + "\n";
     std::fputs( filedata.c_str( ), file );
   }
 }
@@ -178,6 +183,12 @@ void SignalData::add( const DataRow& row ) {
   int rowscale = DataRow::scale( row.data );
   if ( rowscale > scale( ) ) {
     setScale( rowscale );
+  }
+
+  if ( !row.extras.empty( ) ) {
+    for ( const auto& x : row.extras ) {
+      extrafields.insert( x.first );
+    }
   }
 
   DataRow * lastins = new DataRow( row );

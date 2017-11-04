@@ -131,11 +131,22 @@ void Hdf5Writer::writeFileAttributes( H5::H5File file,
 
 void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace&, SignalData& data ) {
   const int rows = data.size( );
-  short buffer[rows] = { 0 };
+  std::vector<std::string> extras = data.extras( );
+  const size_t exc = extras.size( );
+  short buffer[rows * ( exc + 1 )] = { 0 };
   int scale = data.scale( );
   for ( int row = 0; row < rows; row++ ) {
     const std::unique_ptr<DataRow>& datarow = data.pop( );
-    buffer[row] = (short) ( std::stof( datarow->data ) * scale );
+
+    long baseidx = ( exc + 1 ) * row;
+    buffer[baseidx] = (short) ( std::stof( datarow->data ) * scale );
+
+    if ( !extras.empty( ) ) {
+      for ( int i = 0; i < exc; i++ ) {
+        const auto& x = datarow->extras.at( extras.at( i ) );
+        buffer[baseidx + ( i + 1 )] = (short) ( std::stof( x ) );
+      }
+    }
   }
 
   ds.write( &buffer, H5::PredType::STD_I16LE );
@@ -293,8 +304,9 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   output( ) << "Writing " << data.vitals( ).size( ) << " Vitals" << std::endl;
   for ( auto& vits : data.vitals( ) ) {
     output( ) << "Writing Vital: " << vits.first << std::endl;
+    std::vector<std::string> extras = vits.second->extras( );
     hsize_t sz = vits.second->size( );
-    hsize_t dims[] = { sz, 1 };
+    hsize_t dims[] = { sz, 1 + extras.size( ) };
     H5::DataSpace space( 2, dims );
     H5::DSetCreatPropList props;
     if ( compression > 0 ) {
@@ -305,7 +317,13 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     }
     H5::DataSet ds = grp.createDataSet( vits.first, H5::PredType::STD_I16LE, space, props );
     writeAttributes( ds, *( vits.second ) );
-    writeAttribute( ds, "Columns", "scaled value" );
+
+    std::string cols = "scaled value";
+    for ( auto& x : extras ) {
+      cols.append( ", " ).append( x );
+    }
+
+    writeAttribute( ds, "Columns", cols );
     writeAttribute( ds, "Data Label", vits.first );
     writeVital( ds, space, *( vits.second ) );
   }
