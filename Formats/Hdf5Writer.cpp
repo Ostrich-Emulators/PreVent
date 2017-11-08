@@ -227,12 +227,12 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
   H5::Group wavetimes = grp.createGroup( "Waveforms" );
   H5::Group vittimes = grp.createGroup( "Vitals" );
 
-  std::map<long, time_t> segmentsizes = data.segments( );
+  std::map<long, time_t> segmentsizes = data.offsets( );
   if ( !segmentsizes.empty( ) ) {
     hsize_t dims[] = { segmentsizes.size( ), 2 };
     H5::DataSpace space( 2, dims );
 
-    H5::DataSet ds = events.createDataSet( "Segments",
+    H5::DataSet ds = events.createDataSet( "Segment Offsets",
         H5::PredType::STD_I64LE, space );
     long indexes[segmentsizes.size( ) * 2] = { 0 };
     int row = 0;
@@ -242,6 +242,8 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
       row++;
     }
     ds.write( indexes, H5::PredType::STD_I64LE );
+    writeAttribute( ds, "Columns", "time, segment offset" );
+    writeAttribute( ds, "Timezone", "UTC" );
   }
 
   for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {

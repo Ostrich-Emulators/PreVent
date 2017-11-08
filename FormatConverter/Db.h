@@ -61,6 +61,7 @@ private:
 	int getOrAddSignal( const SignalData& data );
 	int addLookup( const std::string& sql, const std::string& name );
 	void addSignal( int fileid, const SignalData& sig );
+	void addOffsets( int fileid, const SignalSet& sig );
 };
 
 

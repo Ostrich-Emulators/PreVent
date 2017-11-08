@@ -61,6 +61,9 @@ void SignalSet::setMetadataFrom( const SignalSet& src ) {
   if ( this != &src ) {
     metamap.clear( );
     metamap.insert( src.metadata( ).begin( ), src.metadata( ).end( ) );
+
+    segs.clear( );
+    segs.insert( src.offsets( ).begin( ), src.offsets( ).end( ) );
   }
 }
 
@@ -148,10 +151,14 @@ void SignalSet::reset( bool signalDataOnly ) {
   }
 }
 
-std::map<long, time_t> SignalSet::segments( ) const {
-  return std::map<long, time_t>( segs.begin( ), segs.end( ) );
+const std::map<long, time_t>& SignalSet::offsets( ) const {
+  return segs;
 }
 
-void SignalSet::addSegment( long seg, time_t time ) {
+void SignalSet::addOffset( long seg, time_t time ) {
   segs[seg] = time;
+}
+
+void SignalSet::clearOffsets(){
+  segs.clear();
 }

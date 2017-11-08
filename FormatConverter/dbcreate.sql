@@ -24,6 +24,12 @@ CREATE TABLE file (
   end INTEGER
 );
 
+CREATE TABLE offset (
+  file_id INTEGER,
+  time INTEGER,
+  offset INTEGER
+);
+
 CREATE TABLE signal (
   id INTEGER PRIMARY KEY,
   name VARCHAR( 25 ),

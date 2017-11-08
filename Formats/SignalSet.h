@@ -63,8 +63,9 @@ public:
 	time_t earliest( const TimeCounter& tc = EITHER ) const;
 	time_t latest( const TimeCounter& tc = EITHER ) const;
 	void setMetadataFrom( const SignalSet& target );
-	std::map<long, time_t> segments() const;
-	void addSegment( long seg, time_t time );
+	const std::map<long, time_t>& offsets() const;
+	void addOffset( long seg, time_t time );
+	void clearOffsets();
 
 private:
 	SignalSet( const SignalSet& );

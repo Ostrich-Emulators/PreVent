@@ -12,7 +12,7 @@
 #include <iostream>
 #include <exception>
 
-const std::string Db::CREATE = "CREATE TABLE patient (  id INTEGER PRIMARY KEY,  name VARCHAR( 500 ));CREATE TABLE unit (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ));CREATE TABLE bed ( id INTEGER PRIMARY KEY,  unit_id INTEGER,  name VARCHAR( 25 ));CREATE TABLE file (  id INTEGER PRIMARY KEY,  filename VARCHAR( 500 ),  patient_id INTEGER,  bed_id INTEGER,  start INTEGER,  end INTEGER);CREATE TABLE signal (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ),  hz FLOAT,  uom VARCHAR( 25 ), iswave INTEGER );CREATE TABLE file_signal (  file_id INTEGER,  signal_id INTEGER,  start INTEGER,  end INTEGER,  PRIMARY KEY( file_id, signal_id ));";
+const std::string Db::CREATE = "CREATE TABLE patient (  id INTEGER PRIMARY KEY,  name VARCHAR( 500 ));CREATE TABLE unit (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ));CREATE TABLE bed ( id INTEGER PRIMARY KEY,  unit_id INTEGER,  name VARCHAR( 25 )); CREATE TABLE file (  id INTEGER PRIMARY KEY,  filename VARCHAR( 500 ),  patient_id INTEGER,  bed_id INTEGER,  start INTEGER,  end INTEGER);CREATE TABLE signal (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ),  hz FLOAT,  uom VARCHAR( 25 ), iswave INTEGER );CREATE TABLE file_signal (  file_id INTEGER,  signal_id INTEGER,  start INTEGER,  end INTEGER,  PRIMARY KEY( file_id, signal_id ));CREATE TABLE offset ( file_id INTEGER, time INTEGER, offset INTEGER );";
 
 int Db::nameidcb( void * a_param, int argc, char **argv, char ** ) {
   std::map<std::string, int> * map = static_cast<std::map< std::string, int>*> ( a_param );
@@ -29,7 +29,7 @@ int Db::bedcb( void *a_param, int argc, char **argv, char ** ) {
 
 int Db::signalcb( void * a_param, int argc, char ** argv, char ** column ) {
   std::map < std::tuple < std::string, double, bool>, int> * map
-      = static_cast<std::map< std::tuple< std::string, double, bool>, int>*> ( a_param );
+      = static_cast<std::map < std::tuple < std::string, double, bool>, int>*> ( a_param );
   std::string name = argv[0];
   double hz = std::stod( argv[1] );
   bool wave = ( "0" == argv[2] );
@@ -127,7 +127,7 @@ int Db::getOrAddUnit( const std::string& name ) {
 int Db::getOrAddSignal( const SignalData& data ) {
   std::string name = data.name( );
   double hz = data.hz( );
-  auto pairkey = std::make_tuple( name, hz, data.wave() );
+  auto pairkey = std::make_tuple( name, hz, data.wave( ) );
 
   if ( 0 == signalids.count( pairkey ) ) {
     std::string sql = "INSERT INTO signal( name, hz, uom, iswave ) VALUES( ?, ?, ?, ? )";
@@ -205,6 +205,32 @@ int Db::getOrAddBed( const std::string& name, const std::string& unitname ) {
   return bedids.at( pairkey );
 }
 
+void Db::addOffsets( int fileid, const SignalSet& sig ) {
+  std::map<long, time_t> offsets = sig.offsets( );
+  if ( !offsets.empty( ) ) {
+    sqlite3_stmt * stmt = nullptr;
+    std::string sql = "INSERT INTO offset( file_id, time, offset ) VALUES ( ?, ?, ? )";
+    int rc = sqlite3_prepare_v2( ptr, sql.c_str( ), sql.length( ), &stmt, nullptr );
+    if ( rc != SQLITE_OK ) {
+      sqlite3_finalize( stmt );
+      throw std::domain_error( sqlite3_errmsg( ptr ) );
+    }
+
+    sqlite3_bind_int( stmt, 1, fileid );
+    for ( const auto& x : offsets ) {
+      sqlite3_reset( stmt );
+      sqlite3_bind_int( stmt, 2, x.second );
+      sqlite3_bind_int( stmt, 3, x.first );
+
+      rc = sqlite3_step( stmt );
+      if ( rc != SQLITE_DONE ) {
+        sqlite3_finalize( stmt );
+        throw std::domain_error( sqlite3_errmsg( ptr ) );
+      }
+    }
+  }
+}
+
 void Db::setProperty( ConversionProperty key, const std::string& val ) {
   if ( ConversionProperty::QUIET == key ) {
     quiet = ( "TRUE" == val );
@@ -264,11 +290,13 @@ void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
     throw std::domain_error( sqlite3_errmsg( ptr ) );
   }
 
-  int id = sqlite3_last_insert_rowid( ptr );
+  int fileid = sqlite3_last_insert_rowid( ptr );
   sqlite3_finalize( stmt );
 
+  addOffsets( fileid, data );
+
   for ( const std::unique_ptr<SignalData>& signal : data.allsignals( ) ) {
-    addSignal( id, *signal );
+    addSignal( fileid, *signal );
   }
 
   exec( "COMMIT;" );

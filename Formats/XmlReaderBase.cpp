@@ -93,6 +93,7 @@ std::string XmlReaderBase::trim( std::string & totrim ) {
 void XmlReaderBase::startSaving( ) {
   saved.setMetadataFrom( *filler );
   filler = &saved;
+  filler->clearOffsets();
 }
 
 void XmlReaderBase::setResult( ReadResult rslt ) {

@@ -63,8 +63,8 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
       setDateModifier( currvstime );
     }
 
-    if ( 0 == filler->segments( ).count( currsegidx ) ) {
-      filler->addSegment( currsegidx, datemod( currvstime ) );
+    if ( 0 == filler->offsets( ).count( currsegidx ) ) {
+      filler->addOffset( currsegidx, datemod( currvstime ) );
     }
 
     if ( isRollover( lastvstime, currvstime ) ) {
@@ -81,8 +81,8 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
       setDateModifier( currvstime );
     }
 
-    if ( 0 == filler->segments( ).count( currsegidx ) ) {
-      filler->addSegment( currsegidx, datemod( currwavetime ) );
+    if ( 0 == filler->offsets( ).count( currsegidx ) ) {
+      filler->addOffset( currsegidx, datemod( currwavetime ) );
     }
 
     if ( isRollover( lastwavetime, currwavetime ) ) {
