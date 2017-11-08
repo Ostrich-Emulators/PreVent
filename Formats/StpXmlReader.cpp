@@ -35,8 +35,7 @@ const int StpXmlReader::INNAME = 8;
 
 StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ), warnMissingName( true ),
 warnJunkData( true ), prevtime( 0 ), currvstime( 0 ), lastvstime( 0 ),
-currwavetime( 0 ), lastwavetime( 0 ),
-state( INDETERMINATE ) {
+currwavetime( 0 ), lastwavetime( 0 ), state( INDETERMINATE ), currsegidx( 0 ) {
 }
 
 StpXmlReader::StpXmlReader( const StpXmlReader& orig ) : XmlReaderBase( orig ) {
@@ -53,12 +52,19 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
   if ( "FileInfo" == element ) {
     setstate( INHEADER );
   }
+  else if ( std::string::npos != element.find( "Segment_" ) ) {
+    currsegidx = std::stol( attributes["Offset"] );
+  }
   else if ( "VitalSigns" == element ) {
     setstate( INVITAL );
     lastvstime = currvstime;
     currvstime = time( attributes["Time"] );
     if ( anonymizing( ) && isFirstRead( ) ) {
       setDateModifier( currvstime );
+    }
+
+    if ( 0 == filler->segments( ).count( currsegidx ) ) {
+      filler->addSegment( currsegidx, datemod( currvstime ) );
     }
 
     if ( isRollover( lastvstime, currvstime ) ) {
@@ -73,6 +79,10 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     currwavetime = time( attributes["Time"] );
     if ( anonymizing( ) && isFirstRead( ) ) {
       setDateModifier( currvstime );
+    }
+
+    if ( 0 == filler->segments( ).count( currsegidx ) ) {
+      filler->addSegment( currsegidx, datemod( currwavetime ) );
     }
 
     if ( isRollover( lastwavetime, currwavetime ) ) {
@@ -150,7 +160,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           sig->setUom( uom );
         }
       }
-      
+
       sig->add( DataRow( datemod( currvstime ), value, "", "", attrs ) );
     }
     else if ( "VitalSigns" == element ) {
@@ -185,6 +195,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           if ( first ) {
             sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
             sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
+            sig->setValuesPerDataRow( 2 * hz ); // Stp always reads in 2s increments
 
             if ( sig->uom( ).empty( ) && !uom.empty( ) ) {
               sig->setUom( uom );

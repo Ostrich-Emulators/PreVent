@@ -147,3 +147,11 @@ void SignalSet::reset( bool signalDataOnly ) {
     metamap.clear( );
   }
 }
+
+std::map<long, time_t> SignalSet::segments( ) const {
+  return std::map<long, time_t>( segs.begin( ), segs.end( ) );
+}
+
+void SignalSet::addSegment( long seg, time_t time ) {
+  segs[seg] = time;
+}

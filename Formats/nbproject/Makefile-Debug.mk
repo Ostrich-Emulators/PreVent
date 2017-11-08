@@ -47,6 +47,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/SignalData.o \
 	${OBJECTDIR}/SignalSet.o \
 	${OBJECTDIR}/SignalUtils.o \
+	${OBJECTDIR}/StpJsonReader.o \
 	${OBJECTDIR}/StpXmlReader.o \
 	${OBJECTDIR}/StreamChunkReader.o \
 	${OBJECTDIR}/WfdbReader.o \
@@ -144,6 +145,11 @@ ${OBJECTDIR}/SignalUtils.o: SignalUtils.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -s `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SignalUtils.o SignalUtils.cpp
+
+${OBJECTDIR}/StpJsonReader.o: StpJsonReader.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -s `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/StpJsonReader.o StpJsonReader.cpp
 
 ${OBJECTDIR}/StpXmlReader.o: StpXmlReader.cpp
 	${MKDIR} -p ${OBJECTDIR}

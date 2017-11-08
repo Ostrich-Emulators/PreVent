@@ -71,6 +71,9 @@ Format Formats::guess( const std::string& filename ) {
     else if ( "csv" == suffix ) {
       return Format::CSV;
     }
+    else if ( "json" == suffix ) {
+      return Format::STPJSON;
+    }
   }
   return Format::UNRECOGNIZED;
 }

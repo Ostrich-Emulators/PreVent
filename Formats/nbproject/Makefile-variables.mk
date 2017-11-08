@@ -38,6 +38,14 @@ CND_ARTIFACT_PATH_Debug_Cygwin=dist/Debug_Cygwin/GNU-Linux/libFormats.so
 CND_PACKAGE_DIR_Debug_Cygwin=dist/Debug_Cygwin/GNU-Linux/package
 CND_PACKAGE_NAME_Debug_Cygwin=libFormats.so.tar
 CND_PACKAGE_PATH_Debug_Cygwin=dist/Debug_Cygwin/GNU-Linux/package/libFormats.so.tar
+# Debug-json configuration
+CND_PLATFORM_Debug-json=GNU-Linux
+CND_ARTIFACT_DIR_Debug-json=dist/Debug-json/GNU-Linux
+CND_ARTIFACT_NAME_Debug-json=libFormats.so
+CND_ARTIFACT_PATH_Debug-json=dist/Debug-json/GNU-Linux/libFormats.so
+CND_PACKAGE_DIR_Debug-json=dist/Debug-json/GNU-Linux/package
+CND_PACKAGE_NAME_Debug-json=libFormats.so.tar
+CND_PACKAGE_PATH_Debug-json=dist/Debug-json/GNU-Linux/package/libFormats.so.tar
 #
 # include compiler specific variables
 #

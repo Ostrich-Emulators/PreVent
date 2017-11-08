@@ -7,6 +7,7 @@
       <logicalFolder name="f1" displayName="Readers" projectFiles="true">
         <itemPath>CpcXmlReader.h</itemPath>
         <itemPath>Hdf5Reader.h</itemPath>
+        <itemPath>StpJsonReader.h</itemPath>
         <itemPath>StpXmlReader.h</itemPath>
         <itemPath>StreamChunkReader.h</itemPath>
         <itemPath>WfdbReader.h</itemPath>
@@ -19,6 +20,7 @@
         <itemPath>MatWriter.h</itemPath>
         <itemPath>WfdbWriter.h</itemPath>
         <itemPath>ZlWriter.h</itemPath>
+        <itemPath>json.hpp</itemPath>
       </logicalFolder>
       <itemPath>Base64.h</itemPath>
       <itemPath>ConversionListener.h</itemPath>
@@ -41,6 +43,7 @@
       <logicalFolder name="f1" displayName="Readers" projectFiles="true">
         <itemPath>CpcXmlReader.cpp</itemPath>
         <itemPath>Hdf5Reader.cpp</itemPath>
+        <itemPath>StpJsonReader.cpp</itemPath>
         <itemPath>StpXmlReader.cpp</itemPath>
         <itemPath>StreamChunkReader.cpp</itemPath>
         <itemPath>WfdbReader.cpp</itemPath>
@@ -152,6 +155,10 @@
       </item>
       <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="StpJsonReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="StpJsonReader.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
@@ -185,6 +192,8 @@
       <item path="ZlWriter.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="json.hpp" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Release" type="2">
@@ -271,6 +280,10 @@
       </item>
       <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="StpJsonReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="StpJsonReader.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
@@ -304,6 +317,8 @@
       <item path="ZlWriter.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="json.hpp" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Release_Cygwin" type="2">
@@ -390,6 +405,10 @@
       </item>
       <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="StpJsonReader.cpp" ex="false" tool="1" flavor2="11">
+      </item>
+      <item path="StpJsonReader.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
@@ -423,6 +442,8 @@
       <item path="ZlWriter.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="json.hpp" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Debug_Cygwin" type="2">
@@ -509,6 +530,10 @@
       </item>
       <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="StpJsonReader.cpp" ex="false" tool="1" flavor2="11">
+      </item>
+      <item path="StpJsonReader.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
@@ -542,6 +567,124 @@
       <item path="ZlWriter.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="json.hpp" ex="false" tool="3" flavor2="0">
+      </item>
+    </conf>
+    <conf name="Debug-json" type="2">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <stripSymbols>true</stripSymbols>
+          <standard>11</standard>
+          <commandlineTool>h5c++</commandlineTool>
+          <commandLine>-Wno-deprecated -O0 -pg -g `wfdb-config --cflags`</commandLine>
+        </ccTool>
+        <linkerTool>
+          <commandlineTool>g++</commandlineTool>
+          <linkerLibItems>
+            <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+            <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
+            <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
+          </linkerLibItems>
+          <commandLine>`wfdb-config --libs`</commandLine>
+        </linkerTool>
+      </compileType>
+      <item path="Base64.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Base64.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ConversionListener.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="CpcXmlReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="CpcXmlReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="CsvWriter.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="CsvWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="DataRow.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="DataRow.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Formats.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Formats.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Hdf5Reader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Hdf5Reader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="MatWriter.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="MatWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Reader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Reader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalData.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalData.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalSet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StpJsonReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="StpJsonReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StpXmlReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="StpXmlReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="StreamChunkReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="StreamChunkReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="WfdbWriter.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="WfdbWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Writer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Writer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="XmlReaderBase.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="XmlReaderBase.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ZlReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ZlReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="ZlWriter.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="ZlWriter.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="json.hpp" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

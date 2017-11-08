@@ -96,6 +96,11 @@ void XmlReaderBase::startSaving( ) {
 }
 
 void XmlReaderBase::setResult( ReadResult rslt ) {
+  // if we're not breaking our output, then ignore End of Day and End of Patient
+  if ( nonbreaking( ) &&
+        ( ReadResult::END_OF_DAY == rslt || ReadResult::END_OF_PATIENT == rslt ) ) {
+    return;
+  }
   this->rslt = rslt;
 }
 
@@ -122,17 +127,7 @@ void XmlReaderBase::copysaved( SignalSet& tgt ) {
     bool added = false;
     std::unique_ptr<SignalData>& infodata = tgt.addVital( m.first, &added );
 
-    if ( added ) {
-      auto& smap = savedsignal->metas( );
-      infodata->metas( ).insert( smap.begin( ), smap.end( ) );
-
-      auto& dmap = savedsignal->metad( );
-      infodata->metad( ).insert( dmap.begin( ), dmap.end( ) );
-
-      auto& imap = savedsignal->metai( );
-      infodata->metai( ).insert( imap.begin( ), imap.end( ) );
-    }
-
+    infodata->setMetadataFrom( *savedsignal );
     int rows = savedsignal->size( );
     for ( int row = 0; row < rows; row++ ) {
       const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
@@ -146,20 +141,9 @@ void XmlReaderBase::copysaved( SignalSet& tgt ) {
     bool added = false;
     std::unique_ptr<SignalData>& infodata = tgt.addWave( m.first, &added );
 
-    if ( added ) {
-      auto& smap = savedsignal->metas( );
-      infodata->metas( ).insert( smap.begin( ), smap.end( ) );
-
-      auto& dmap = savedsignal->metad( );
-      infodata->metad( ).insert( dmap.begin( ), dmap.end( ) );
-
-      auto& imap = savedsignal->metai( );
-      infodata->metai( ).insert( imap.begin( ), imap.end( ) );
-    }
-
+    infodata->setMetadataFrom( *savedsignal );
     int rows = savedsignal->size( );
     for ( int row = 0; row < rows; row++ ) {
-
       const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
       infodata->add( *datarow );
     }
@@ -195,10 +179,14 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
 }
 
 bool XmlReaderBase::isRollover( const time_t& then, const time_t& now ) const {
+  if ( nonbreaking( ) ) {
+    return false;
+  }
+
   if ( 0 != then ) {
     time_t modnow = datemod( now );
     time_t modthen = datemod( then );
-    
+
     const int cdoy = gmtime( &modnow )->tm_yday;
     const int pdoy = gmtime( &modthen )->tm_yday;
     if ( cdoy != pdoy ) {

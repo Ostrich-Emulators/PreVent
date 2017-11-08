@@ -75,7 +75,7 @@ void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
 
   std::string duration = "";
   if ( t->tm_yday ) {
-    duration += std::to_string( t->tm_yday ) + " days,";
+    duration += std::to_string( t->tm_yday ) + ( t->tm_yday > 1 ? " days, " : " day, " );
   }
   if ( t->tm_hour < 10 ) {
     duration += "0";
@@ -227,6 +227,23 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
   H5::Group wavetimes = grp.createGroup( "Waveforms" );
   H5::Group vittimes = grp.createGroup( "Vitals" );
 
+  std::map<long, time_t> segmentsizes = data.segments( );
+  if ( !segmentsizes.empty( ) ) {
+    hsize_t dims[] = { segmentsizes.size( ), 2 };
+    H5::DataSpace space( 2, dims );
+
+    H5::DataSet ds = events.createDataSet( "Segments",
+        H5::PredType::STD_I64LE, space );
+    long indexes[segmentsizes.size( ) * 2] = { 0 };
+    int row = 0;
+    for ( const auto& e : segmentsizes ) {
+      indexes[ 2 * row ] = e.second;
+      indexes[2 * row + 1] = e.first;
+      row++;
+    }
+    ds.write( indexes, H5::PredType::STD_I64LE );
+  }
+
   for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {
     // output() << "writing times for " << m->name( ) << std::endl;
     std::vector<time_t> times( m->times( ).rbegin( ), m->times( ).rend( ) );
@@ -235,11 +252,10 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
 
     if ( m->wave( ) ) {
       std::vector<time_t> alltimes;
-      alltimes.reserve( times.size( )*2 );
+      alltimes.reserve( times.size( ) );
 
       for ( auto& t : times ) {
         alltimes.push_back( t );
-        alltimes.push_back( t + 1 );
       }
       times = alltimes;
     }
@@ -251,8 +267,7 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
         H5::PredType::STD_I64LE, space );
     ds.write( &times[0], H5::PredType::STD_I64LE );
     writeAttribute( ds, "Time Source", "raw" );
-    int hz = ( m->hz( ) < 1 ? 1 : (int) m->hz( ) );
-    writeAttribute( ds, "Readings Per Time", hz );
+    writeAttribute( ds, SignalData::VALS_PER_DR, m->valuesPerDataRow( ) );
   }
 }
 

@@ -118,8 +118,9 @@ void WfdbWriter::syncAndWrite( double freq, std::vector<std::unique_ptr<SignalDa
 
   std::vector<std::vector < std::string>> data = SignalUtils::syncDatas( olddata );
 
-  if ( freq > 1 ) {
-    int ifrq = (int) freq;
+  const auto& first = (olddata.begin()->get() );  
+  if ( first->wave() ) {
+    int ifrq = (olddata.begin())->get()->valuesPerDataRow();
 
     // waveforms
 
@@ -134,8 +135,8 @@ void WfdbWriter::syncAndWrite( double freq, std::vector<std::unique_ptr<SignalDa
       WFDB_Sample samples[cols][ifrq] = { 0 };
       for ( int col = 0; col < cols; col++ ) {
         std::vector<int> slices = DataRow::ints( rowcols[col] );
-
-        for ( int slice = 0; slice < slices.size( ); slice++ ) {
+        size_t numslices = slices.size();
+        for ( size_t slice = 0; slice < numslices; slice++ ) {
           samples[col][slice] = slices[slice];
         }
       }

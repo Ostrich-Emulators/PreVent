@@ -68,8 +68,9 @@ public:
 
   void setQuiet( bool quiet = true );
   void setAnonymous( bool anon = true );
+  void setNonbreaking( bool nb = false );
   bool anonymizing( ) const;
-  
+
 protected:
   Reader( const Reader& );
 
@@ -86,6 +87,8 @@ protected:
    */
   bool shouldExtract( const std::string& vitalOrWave ) const;
 
+  bool nonbreaking() const;
+  
   std::ostream& output( ) const;
 private:
 
@@ -94,6 +97,7 @@ private:
   const std::string rdrname;
   bool quiet;
   bool anon;
+  bool onefile;
   std::stringstream ss;
 
 };

@@ -5,6 +5,7 @@
 #include "ZlReader.h"
 #include "Hdf5Reader.h"
 #include "StpXmlReader.h"
+#include "StpJsonReader.h"
 #include "CpcXmlReader.h"
 
 #include <iostream>
@@ -12,10 +13,11 @@
 const std::string Reader::MISSING_VALUESTR( "-32768" );
 
 Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ),
-quiet( false ), anon( false ) {
+quiet( false ), anon( false ), onefile( false ) {
 }
 
-Reader::Reader( const Reader& ) : rdrname( "x" ), quiet( false ), anon( false ) {
+Reader::Reader( const Reader& ) : rdrname( "x" ), quiet( false ), anon( false ),
+onefile( false ) {
 
 }
 
@@ -31,13 +33,15 @@ std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
     case WFDB:
       return std::unique_ptr<Reader>( new WfdbReader( ) );
     case DSZL:
-      return std::unique_ptr<Reader>( new ZlReader( ) );
+      return std::unique_ptr<Reader>( new StpJsonReader( ) );
     case STPXML:
       return std::unique_ptr<Reader>( new StpXmlReader( ) );
     case HDF5:
       return std::unique_ptr<Reader>( new Hdf5Reader( ) );
     case CPCXML:
       return std::unique_ptr<Reader>( new CpcXmlReader( ) );
+    case STPJSON:
+      return std::unique_ptr<Reader>( new StpJsonReader( ) );
     default:
       throw "reader not yet implemented";
   }
@@ -87,6 +91,14 @@ void Reader::setAnonymous( bool a ) {
 
 bool Reader::anonymizing( ) const {
   return anon;
+}
+
+void Reader::setNonbreaking( bool nb ) {
+  onefile = nb;
+}
+
+bool Reader::nonbreaking( ) const {
+  return onefile;
 }
 
 std::ostream& Reader::output( ) const {

@@ -63,6 +63,8 @@ public:
 	time_t earliest( const TimeCounter& tc = EITHER ) const;
 	time_t latest( const TimeCounter& tc = EITHER ) const;
 	void setMetadataFrom( const SignalSet& target );
+	std::map<long, time_t> segments() const;
+	void addSegment( long seg, time_t time );
 
 private:
 	SignalSet( const SignalSet& );
@@ -71,6 +73,7 @@ private:
 	std::map<std::string, std::unique_ptr<SignalData>> vmap;
 	std::map<std::string, std::unique_ptr<SignalData>> wmap;
 	std::map<std::string, std::string> metamap;
+	std::map<long, time_t> segs; // segment index->time
 	bool largefile;
 };
 

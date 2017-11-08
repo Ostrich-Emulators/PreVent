@@ -11,8 +11,8 @@
  * Created on August 26, 2016, 12:55 PM
  */
 
-#ifndef ZLREADER_H
-#define ZLREADER_H
+#ifndef STPJSONREADER_H
+#define STPJSONREADER_H
 
 #include "Reader.h"
 #include <map>
@@ -24,16 +24,16 @@
 class SignalData;
 class StreamChunkReader;
 
-enum zlReaderState {
-	ZIN_HEADER, ZIN_VITAL, ZIN_WAVE, ZIN_TIME
+enum jsonReaderState {
+	JIN_HEADER, JIN_VITAL, JIN_WAVE, JIN_TIME
 };
 
-class ZlReader : public Reader {
+class StpJsonReader : public Reader {
 public:
 	static const int CHUNKSIZE;
 
-	ZlReader( );
-	virtual ~ZlReader( );
+	StpJsonReader( );
+	virtual ~StpJsonReader( );
 
 protected:
 	ReadResult fill( SignalSet&, const ReadResult& lastfill ) override;
@@ -44,12 +44,12 @@ protected:
 
 private:
 
-	ZlReader( const ZlReader& orig );
+	StpJsonReader( const StpJsonReader& orig );
 
 	bool firstread;
 	std::string leftoverText;
 	time_t currentTime;
-	zlReaderState state;
+	jsonReaderState state;
 	std::unique_ptr<StreamChunkReader> stream;
 
 	void handleInputChunk( std::string& chunk, SignalSet& info );
@@ -61,5 +61,5 @@ private:
 	static const std::string TIME;
 };
 
-#endif /* ZLREADER_H */
+#endif /* STPJSONREADER_H */
 

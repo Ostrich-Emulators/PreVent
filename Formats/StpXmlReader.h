@@ -50,6 +50,7 @@ private:
 	time_t lastvstime;
 	time_t currwavetime;
 	time_t lastwavetime;
+	long currsegidx;
 	bool warnMissingName;
 	bool warnJunkData;
 

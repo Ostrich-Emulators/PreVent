@@ -30,10 +30,12 @@ void helpAndExit( char * progname, std::string msg = "" ) {
         << std::endl << "\t-e or --export <vital/wave to export>"
         << std::endl << "\t-s or --sqlite <db file>"
         << std::endl << "\t-q or --quiet"
+        << std::endl << "\t-n or --no-break or --one-file"
         << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
-        << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml"
+        << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml, stpjson"
         << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
         << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
+        << std::endl << "\tthe --no-break option will ignore end of day/end of patient events"
         //<< std::endl << "\tIf file is -, stdin is read for input, and the format is assumed to be our zl format, regardless of --from option"
         << std::endl << std::endl;
   exit( 1 );
@@ -51,6 +53,8 @@ struct option longopts[] = {
   { "anonymize", no_argument, NULL, 'a' },
   { "anon", no_argument, NULL, 'a' },
   { "anonymous", no_argument, NULL, 'a' },
+  { "no-break", no_argument, NULL, 'n' },
+  { "one-file", no_argument, NULL, 'n' },
   { 0, 0, 0, 0 }
 };
 
@@ -66,9 +70,10 @@ int main( int argc, char** argv ) {
   std::string sqlitedb = "";
   bool anonymize = false;
   bool quiet = false;
+  bool nobreak = false;
   int compression = 6;
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qa", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qan", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -96,6 +101,13 @@ int main( int argc, char** argv ) {
         break;
       case 'a':
         anonymize = true;
+        break;
+      case 'n':
+        nobreak = true;
+        break;
+      case ':':
+        std::cerr << "missing option argument" << std::endl;
+        helpAndExit( argv[0] );
         break;
       case '?':
       default:
@@ -130,6 +142,9 @@ int main( int argc, char** argv ) {
       case DSZL:
         fromstr = "zl";
         break;
+      case STPJSON:
+        fromstr = "stpjson";
+        break;
     }
   }
 
@@ -156,8 +171,10 @@ int main( int argc, char** argv ) {
     from = Reader::get( fromfmt );
     to = Writer::get( tofmt );
     to->setQuiet( quiet );
+    
     from->setQuiet( quiet );
     from->setAnonymous( anonymize );
+    from->setNonbreaking( nobreak );
 
     if ( !exp.empty( ) ) {
       from->extractOnly( exp );

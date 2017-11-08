@@ -32,6 +32,7 @@ public:
   static const std::string UOM;
   static const std::string MSM;
   static const std::string TIMEZONE;
+  static const std::string VALS_PER_DR;
   static const int MISSING_VALUE;
 
   SignalData( const std::string& name, bool largefilesupport = false, bool iswave = false );
@@ -47,6 +48,9 @@ public:
   const time_t& startTime( ) const;
   const time_t& endTime( ) const;
   const std::string& name( ) const;
+  void setValuesPerDataRow( int );
+  int valuesPerDataRow() const;
+  void setMetadataFrom( const SignalData& model );
 
   std::unique_ptr<DataRow> pop( );
   bool empty( ) const;
