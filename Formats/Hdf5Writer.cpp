@@ -22,6 +22,7 @@
 #include "SignalData.h"
 #include "DataRow.h"
 #include "SignalUtils.h"
+#include "Reader.h"
 
 Hdf5Writer::Hdf5Writer( ) {
 }
@@ -33,7 +34,7 @@ Hdf5Writer::~Hdf5Writer( ) {
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-    const std::string& attr, const std::string& val ) {
+      const std::string& attr, const std::string& val ) {
   if ( !val.empty( ) ) {
     H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
     H5::StrType st( H5::PredType::C_S1, H5T_VARIABLE );
@@ -44,21 +45,21 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-    const std::string& attr, int val ) {
+      const std::string& attr, int val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I32LE, space );
   attrib.write( H5::PredType::STD_I32LE, &val );
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-    const std::string& attr, double val ) {
+      const std::string& attr, double val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::IEEE_F64LE, space );
   attrib.write( H5::PredType::IEEE_F64LE, &val );
 }
 
 void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
-    const time_t& start, const time_t& end ) {
+      const time_t& start, const time_t& end ) {
   writeAttribute( loc, "Start Time", (int) start );
   writeAttribute( loc, "End Time", (int) end );
 
@@ -118,13 +119,13 @@ void Hdf5Writer::writeAttributes( H5::DataSet& ds, const SignalData& data ) {
 }
 
 void Hdf5Writer::writeFileAttributes( H5::H5File file,
-    std::map<std::string, std::string> datasetattrs,
-    const time_t& firstTime, const time_t& lastTime ) {
+      std::map<std::string, std::string> datasetattrs,
+      const time_t& firstTime, const time_t& lastTime ) {
 
   writeTimesAndDurationAttributes( file, firstTime, lastTime );
 
   for ( std::map<std::string, std::string>::const_iterator it = datasetattrs.begin( );
-      it != datasetattrs.end( ); ++it ) {
+        it != datasetattrs.end( ); ++it ) {
     writeAttribute( file, it->first, it->second );
   }
 }
@@ -143,8 +144,13 @@ void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace&, SignalData& data )
 
     if ( !extras.empty( ) ) {
       for ( int i = 0; i < exc; i++ ) {
-        const auto& x = datarow->extras.at( extras.at( i ) );
-        buffer[baseidx + ( i + 1 )] = (short) ( std::stof( x ) );
+        short val = SignalData::MISSING_VALUE;
+        const std::string xkey = extras.at( i );
+        if ( 0 != datarow->extras.count( xkey ) ) {
+          const auto& x = datarow->extras.at( xkey );
+          val = (short) ( std::stoi( x ) );
+        }
+        buffer[baseidx + ( i + 1 )] = val;
       }
     }
   }
@@ -153,7 +159,7 @@ void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace&, SignalData& data )
 }
 
 void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
-    SignalData& data ) {
+      SignalData& data ) {
 
   const size_t rows = data.size( );
   const hsize_t maxslabcnt = 125000;
@@ -233,7 +239,7 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
     H5::DataSpace space( 2, dims );
 
     H5::DataSet ds = events.createDataSet( "Segment Offsets",
-        H5::PredType::STD_I64LE, space );
+          H5::PredType::STD_I64LE, space );
     long indexes[segmentsizes.size( ) * 2] = { 0 };
     int row = 0;
     for ( const auto& e : segmentsizes ) {
@@ -266,7 +272,7 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
     H5::DataSpace space( 2, dims );
 
     H5::DataSet ds = mygrp->createDataSet( m->name( ).c_str( ),
-        H5::PredType::STD_I64LE, space );
+          H5::PredType::STD_I64LE, space );
     ds.write( &times[0], H5::PredType::STD_I64LE );
     writeAttribute( ds, "Time Source", "raw" );
     writeAttribute( ds, SignalData::VALS_PER_DR, m->valuesPerDataRow( ) );
@@ -274,7 +280,7 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
 }
 
 int Hdf5Writer::initDataSet( const std::string& directory, const std::string& namestart,
-    int compression ) {
+      int compression ) {
   tempfileloc = directory + namestart;
   this->compression = compression;
   return 0;
@@ -302,7 +308,11 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   //  }
 
   std::vector<std::string> ret;
-  std::string outy = tempfileloc + getDateSuffix( firstTime ) + ".hdf5";
+  std::string outy = getNonbreakingOutputName( );
+  if ( outy.empty( ) ) {
+    outy = tempfileloc + getDateSuffix( firstTime );
+  }
+  outy.append( ".hdf5" );
 
   if ( data.vitals( ).empty( ) && data.waves( ).empty( ) ) {
     std::cerr << "Nothing to write to " << outy << std::endl;

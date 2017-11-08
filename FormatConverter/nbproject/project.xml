@@ -18,7 +18,7 @@
                     <type>1</type>
                 </confElem>
                 <confElem>
-                    <name>Debug</name>
+                    <name>Debug_big</name>
                     <type>1</type>
                 </confElem>
                 <confElem>
@@ -27,6 +27,10 @@
                 </confElem>
                 <confElem>
                     <name>Debug_Cygwin</name>
+                    <type>1</type>
+                </confElem>
+                <confElem>
+                    <name>Debug</name>
                     <type>1</type>
                 </confElem>
             </confList>

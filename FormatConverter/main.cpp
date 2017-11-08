@@ -18,6 +18,7 @@
 #include "DataRow.h"
 #include "SignalSet.h"
 #include "Db.h"
+#include "config.h"
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
@@ -35,7 +36,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
         << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml, stpjson"
         << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
         << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
-        << std::endl << "\tthe --no-break option will ignore end of day/end of patient events"
+        << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file"
         //<< std::endl << "\tIf file is -, stdin is read for input, and the format is assumed to be our zl format, regardless of --from option"
         << std::endl << std::endl;
   exit( 1 );
@@ -171,7 +172,7 @@ int main( int argc, char** argv ) {
     from = Reader::get( fromfmt );
     to = Writer::get( tofmt );
     to->setQuiet( quiet );
-    
+
     from->setQuiet( quiet );
     from->setAnonymous( anonymize );
     from->setNonbreaking( nobreak );
@@ -197,19 +198,33 @@ int main( int argc, char** argv ) {
   // send the files through
   for ( int i = optind; i < argc; i++ ) {
     SignalSet data;
-    std::cout << "converting " << argv[i]
+    std::string input( argv[i] );
+    std::cout << "converting " << input
           << " from " << fromstr
           << " to " << tostr << std::endl;
     to->setOutputDir( outdir );
     to->setCompression( compression );
     to->setOutputPrefix( prefix );
 
-    if ( from->prepare( argv[i], data ) < 0 ) {
+    if ( from->prepare( input, data ) < 0 ) {
       std::cerr << "could not prepare file for reading" << std::endl;
       returncode = -1;
       continue;
     }
     else {
+      if ( nobreak ) {
+        const size_t sfxpos = input.rfind( "." );
+        if ( std::string::npos != sfxpos ) {
+          input = input.substr( 0, sfxpos );
+        }
+
+        const size_t basepos = input.rfind( dirsep );
+        if ( std::string::npos != basepos ) {
+          input = input.substr( basepos + 1 );
+        }
+        to->setNonbreakingOutputName( outdir + dirsep + input );
+      }
+
       std::vector<std::string> files = to->write( from, data );
       from->finish( );
 

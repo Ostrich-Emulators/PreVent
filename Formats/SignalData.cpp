@@ -30,12 +30,15 @@ const std::string SignalData::UOM = "Unit of Measure";
 const std::string SignalData::MSM = "Missing Value Marker";
 const std::string SignalData::TIMEZONE = "Timezone";
 const std::string SignalData::VALS_PER_DR = "Readings Per Time";
-const int SignalData::MISSING_VALUE = -32768;
-
+const short SignalData::MISSING_VALUE = -32768;
 
 SignalData::SignalData( const std::string& name, bool largefile, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<time_t>::max( ) ), lastdata( 0 ),
 datacount( 0 ), popping( false ), iswave( wavedata ) {
+  //file = ( largefile ? fopen( std::tmpnam( nullptr ), "w+" ) : NULL );
+  //std::string fname = "/tmp/cache-" + name + ".prevent";
+  //file = fopen( fname.c_str( ), "wb+" );
+
   file = ( largefile ? std::tmpfile( ) : NULL );
   setScale( 1 );
   setValuesPerDataRow( 1 );
@@ -94,8 +97,8 @@ const std::map<std::string, double>& SignalData::metad( ) const {
 
 double SignalData::hz( ) const {
   return ( 0 == metadatad.count( SignalData::HERTZ )
-      ? 1
-      : metadatad.at( SignalData::HERTZ ) );
+        ? 1
+        : metadatad.at( SignalData::HERTZ ) );
 }
 
 const time_t& SignalData::startTime( ) const {
@@ -107,7 +110,7 @@ const time_t& SignalData::endTime( ) const {
 }
 
 std::vector<std::string> SignalData::extras( ) const {
-  return std::vector<std::string>( extrafields.begin(), extrafields.end() );
+  return std::vector<std::string>( extrafields.begin( ), extrafields.end( ) );
 }
 
 bool SignalData::empty( ) const {
@@ -169,9 +172,16 @@ void SignalData::cache( ) {
   while ( !data.empty( ) ) {
     std::unique_ptr<DataRow> a = std::move( data.front( ) );
     data.pop_front( );
-    std::string filedata = std::to_string( a->time ) + " " + a->data
-        + " " + a->high + " " + a->low + "\n";
-    std::fputs( filedata.c_str( ), file );
+
+    std::stringstream ss;
+    ss << a->time << " " << a->data << " " << a->high << " " << a->low << " ";
+    if ( !a->extras.empty( ) ) {
+      for ( const auto& x : a->extras ) {
+        ss << "|" << x.first << "=" << x.second;
+      }
+    }
+    ss << "\n";
+    std::fputs( ss.str( ).c_str( ), file );
   }
 }
 
@@ -225,9 +235,18 @@ int SignalData::uncache( int max ) {
       break;
     }
     std::string read( justread );
+
+    // first things first: if we have attributes, cut them out 
+    const size_t barpos = read.find( "|" );
+    std::string extras;
+    if ( std::string::npos != barpos ) {
+      // we have attributes!
+      extras = read.substr( barpos + 1 );
+      read = read.substr( 0, barpos );
+    }
+
     std::stringstream ss( read );
     time_t t;
-
     std::string val;
     std::string high;
     std::string low;
@@ -235,9 +254,30 @@ int SignalData::uncache( int max ) {
     ss >> t;
     ss >> val;
     ss >> high;
-    ss >>low;
+    ss >> low;
 
-    data.push_back( std::unique_ptr<DataRow>( new DataRow( t, val, high, low ) ) );
+    std::map<std::string, std::string> attrs;
+    if ( !extras.empty( ) ) {
+      // split on |, then split again on "="
+      std::string token;
+      std::stringstream extrastream( extras );
+      while ( std::getline( extrastream, token, '|' ) ) {
+        // now split on =
+        int eqpos = token.find( "=" );
+        std::string key = token.substr( 0, eqpos );
+        std::string val = token.substr( eqpos + 1 );
+
+        // strip the \n if it's there
+        const size_t newlinepos = val.rfind( "\n" );
+        if ( std::string::npos != newlinepos ) {
+          val = val.substr( 0, newlinepos );
+        }
+        attrs[key] = val;
+      }
+    }
+
+
+    data.push_back( std::unique_ptr<DataRow>( new DataRow( t, val, high, low, attrs ) ) );
 
     loop++;
   }
@@ -257,21 +297,21 @@ const std::deque<time_t>& SignalData::times( ) const {
   return dates;
 }
 
-void SignalData::setValuesPerDataRow(int x){
+void SignalData::setValuesPerDataRow( int x ) {
   metadatai[VALS_PER_DR] = x;
 }
 
-int SignalData::valuesPerDataRow() const {
+int SignalData::valuesPerDataRow( ) const {
   return metadatai.at( VALS_PER_DR );
 }
 
-void SignalData::setMetadataFrom( const SignalData& model ){
-    metadatai.clear();
-    metadatai.insert(model.metai().begin(), model.metai().end() );
-    
-    metadatas.clear();
-    metadatas.insert(model.metas().begin(), model.metas().end() );
+void SignalData::setMetadataFrom( const SignalData& model ) {
+  metadatai.clear( );
+  metadatai.insert( model.metai( ).begin( ), model.metai( ).end( ) );
 
-    metadatad.clear();
-    metadatad.insert(model.metad().begin(), model.metad().end() );
+  metadatas.clear( );
+  metadatas.insert( model.metas( ).begin( ), model.metas( ).end( ) );
+
+  metadatad.clear( );
+  metadatad.insert( model.metad( ).begin( ), model.metad( ).end( ) );
 }

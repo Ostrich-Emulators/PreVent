@@ -26,6 +26,13 @@ public:
   void setCompression( int lev );
   void addListener( std::shared_ptr<ConversionListener> listener );
   void setQuiet( bool = true );
+  
+  /**
+   * Sets a single name for non-breaking output file
+   * @param name
+   */
+  void setNonbreakingOutputName( const std::string& name );
+  std::string getNonbreakingOutputName() const;
 
   virtual std::vector<std::string> write( std::unique_ptr<Reader>& from,
         SignalSet& data );
@@ -59,8 +66,8 @@ protected:
    * @param info The data to drain
    * @return 0 (success) -1 (error)
    */
-  virtual int drain( SignalSet& info ) = 0;
-
+  virtual int drain( SignalSet& info ) = 0;  
+  
 private:
   Writer( const Writer& );
 
@@ -70,6 +77,7 @@ private:
   int compression;
   bool quiet;
   std::stringstream ss;
+  std::string outputname;
 };
 
 #endif /* WRITER_H */

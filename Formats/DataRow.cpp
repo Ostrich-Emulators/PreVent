@@ -15,6 +15,7 @@
 #include <cmath>
 #include <sstream>
 #include <vector>
+#include <iostream>
 
 DataRow::DataRow( const time_t& t, const std::string& d, const std::string& hi,
     const std::string& lo, std::map<std::string, std::string> exts ) : time( t ),

@@ -150,6 +150,14 @@ void Writer::addListener( std::shared_ptr<ConversionListener> l ) {
   listeners.push_back( l );
 }
 
+void Writer::setNonbreakingOutputName( const std::string& name ) {
+  outputname = name;
+}
+
+std::string Writer::getNonbreakingOutputName( ) const {
+  return outputname;
+}
+
 class NullBuffer : public std::streambuf {
 public:
 

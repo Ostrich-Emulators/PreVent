@@ -33,7 +33,7 @@ public:
   static const std::string MSM;
   static const std::string TIMEZONE;
   static const std::string VALS_PER_DR;
-  static const int MISSING_VALUE;
+  static const short MISSING_VALUE;
 
   SignalData( const std::string& name, bool largefilesupport = false, bool iswave = false );
   std::unique_ptr<SignalData> shallowcopy( bool includedates = false );
