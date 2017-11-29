@@ -134,9 +134,8 @@ ReadResult ZlReader::fill( SignalSet& info, const ReadResult& ) {
   // we either ran out of file, or we hit a HEADER line...figure out which
   if ( ReadResult::NORMAL == retcode ) {
     // we hit a new HEADER
-    retcode = ReadResult::END_OF_PATIENT;
+    retcode = ( this->nonbreaking() ? ReadResult::NORMAL : ReadResult::END_OF_PATIENT );
   }
-
 
   if ( retcode != ReadResult::ERROR ) {
     std::stringstream ss( onepatientdata.substr( 0, pos ) );

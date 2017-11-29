@@ -7,7 +7,7 @@ core
 *.atr
 *.ann
 gmon.out
-test.zl*
+*.zl*
 big.xml
 small.xml
 test.xml

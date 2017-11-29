@@ -46,6 +46,14 @@ CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux/formatconverter
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux/package
 CND_PACKAGE_NAME_Debug=formatconverter.tar
 CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/formatconverter.tar
+# Debug_zl configuration
+CND_PLATFORM_Debug_zl=GNU-Linux
+CND_ARTIFACT_DIR_Debug_zl=dist/Debug_zl/GNU-Linux
+CND_ARTIFACT_NAME_Debug_zl=formatconverter
+CND_ARTIFACT_PATH_Debug_zl=dist/Debug_zl/GNU-Linux/formatconverter
+CND_PACKAGE_DIR_Debug_zl=dist/Debug_zl/GNU-Linux/package
+CND_PACKAGE_NAME_Debug_zl=formatconverter.tar
+CND_PACKAGE_PATH_Debug_zl=dist/Debug_zl/GNU-Linux/package/formatconverter.tar
 #
 # include compiler specific variables
 #

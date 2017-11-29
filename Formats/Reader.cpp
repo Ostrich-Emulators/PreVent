@@ -33,7 +33,7 @@ std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
     case WFDB:
       return std::unique_ptr<Reader>( new WfdbReader( ) );
     case DSZL:
-      return std::unique_ptr<Reader>( new StpJsonReader( ) );
+      return std::unique_ptr<Reader>( new ZlReader( ) );
     case STPXML:
       return std::unique_ptr<Reader>( new StpXmlReader( ) );
     case HDF5:

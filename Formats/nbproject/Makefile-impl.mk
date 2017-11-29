@@ -31,7 +31,7 @@ DEFAULTCONF=Debug
 CONF=${DEFAULTCONF}
 
 # All Configurations
-ALLCONFS=Debug Release Release_Cygwin Debug_Cygwin Debug-json 
+ALLCONFS=Debug Release Release_Cygwin Debug_Cygwin 
 
 
 # build
