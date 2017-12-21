@@ -136,6 +136,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     }
 
     // carry on with next data chunk
+    output()<<"reading next file chunk";
     retcode = from->fill( data, retcode );
   }
 

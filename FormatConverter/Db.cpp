@@ -245,7 +245,7 @@ void Db::setProperty( ConversionProperty key, const std::string& val ) {
 
 void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
   if ( !quiet ) {
-    std::cout << "updating database" << std::endl;
+    std::cout << "updating database...";
   }
 
   exec( "BEGIN;" );
@@ -306,6 +306,9 @@ void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
   }
 
   exec( "COMMIT;" );
+  if( !quiet ){
+     std::cout<<"complete"<< std::endl;
+  }
 
   //  std::cout << "file completed: " << filename << std::endl;
   //
