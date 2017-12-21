@@ -296,6 +296,11 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 
   time_t firstTime = data.earliest( );
   time_t lastTime = data.latest( );
+  std::vector<std::string> ret;
+  if( 0 == lastTime ){
+    // we don't have any data at all!
+    return ret;
+  }
 
   //  std::vector<time_t> alltimes = SignalUtils::alltimes( data );
   //  for ( const auto& m : data.waves( ) ) {
@@ -307,7 +312,6 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   //    }
   //  }
 
-  std::vector<std::string> ret;
   std::string outy = getNonbreakingOutputName( );
   if ( outy.empty( ) ) {
     outy = tempfileloc + getDateSuffix( firstTime );
