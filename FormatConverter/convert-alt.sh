@@ -21,7 +21,7 @@ cat $1 | while read line; do
     continue
   fi
 
-
+  echo "$line" > current.log
   echo "$STP2XML $(cygpath -w $line) -utc -o $(cygpath -w $TMPXML)"
   $STP2XML $(cygpath -w $line) -utc -o $(cygpath -w $TMPXML)
   if [ $? -ne 0 ]; then

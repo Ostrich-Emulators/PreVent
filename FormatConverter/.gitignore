@@ -1,4 +1,5 @@
 nbproject/private
+*.stackdump
 core
 .dep.inc
 *.dat
@@ -11,3 +12,6 @@ gmon.out
 big.xml
 small.xml
 test.xml
+problem.xml
+xml.xml
+*.hdf5
