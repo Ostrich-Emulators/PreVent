@@ -137,8 +137,6 @@ int Db::getOrAddSignal( const SignalData& data ) {
   auto pairkey = std::make_tuple( name, hz, data.wave( ) );
 
   if ( 0 == signalids.count( pairkey ) ) {
-    std::cout << "creating signal: " << data.name( ) << std::endl;
-
     std::string sql = "INSERT INTO signal( name, hz, uom, iswave ) VALUES( ?, ?, ?, ? )";
     sqlite3_stmt * stmt = nullptr;
     int rc = sqlite3_prepare_v2( ptr, sql.c_str( ), sql.length( ), &stmt, nullptr );
@@ -184,7 +182,6 @@ void Db::addSignal( int fileid, const SignalData& sig ) {
     sqlite3_finalize( stmt );
     throw std::domain_error( sqlite3_errmsg( ptr ) );
   }
-  std::cout << "adding signal: " << sig.name( ) << std::endl;
   sqlite3_bind_int( stmt, 1, fileid );
   sqlite3_bind_int( stmt, 2, sid );
   sqlite3_bind_int( stmt, 3, sig.startTime( ) );
