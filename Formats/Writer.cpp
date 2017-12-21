@@ -75,20 +75,22 @@ void Writer::setOutputDir( const std::string& _outdir ) {
 }
 
 std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
-      SignalSet& data ) {
+        SignalSet& data ) {
   int patientno = 1;
 
   std::string namestart = ( "" == prefix ? "p" : prefix + "-p" );
 
+  output( ) << "init data set" << std::endl;
   int initrslt = initDataSet( outdir, namestart + std::to_string( patientno ),
-        compression );
+          compression );
   std::vector<std::string> list;
   if ( initrslt < 0 ) {
     std::cerr << "cannot init dataset: " + outdir + prefix + "-p"
-          + std::to_string( patientno ) << std::endl;
+            + std::to_string( patientno ) << std::endl;
     return list;
   }
 
+  output( ) << "filling data" << std::endl;
   ReadResult retcode = from->fill( data );
 
   while ( retcode != ReadResult::ERROR ) {
@@ -114,6 +116,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
       }
 
       data.reset( false );
+      output( ) << "init data set" << std::endl;
       initDataSet( outdir, namestart + std::to_string( patientno ), compression );
     }
     else if ( ReadResult::END_OF_FILE == retcode ) {
@@ -136,7 +139,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     }
 
     // carry on with next data chunk
-    output()<<"reading next file chunk";
+    output( ) << "reading next file chunk" << std::endl;
     retcode = from->fill( data, retcode );
   }
 
