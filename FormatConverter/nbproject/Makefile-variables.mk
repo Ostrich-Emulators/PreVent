@@ -7,13 +7,13 @@ CND_BASEDIR=`pwd`
 CND_BUILDDIR=build
 CND_DISTDIR=dist
 # Release configuration
-CND_PLATFORM_Release=GNU-Linux
-CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux
+CND_PLATFORM_Release=Cygwin-Windows
+CND_ARTIFACT_DIR_Release=dist/Release/Cygwin-Windows
 CND_ARTIFACT_NAME_Release=formatconverter
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/formatconverter
-CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
+CND_ARTIFACT_PATH_Release=dist/Release/Cygwin-Windows/formatconverter
+CND_PACKAGE_DIR_Release=dist/Release/Cygwin-Windows/package
 CND_PACKAGE_NAME_Release=formatconverter.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/formatconverter.tar
+CND_PACKAGE_PATH_Release=dist/Release/Cygwin-Windows/package/formatconverter.tar
 # Debug_big configuration
 CND_PLATFORM_Debug_big=GNU-Linux
 CND_ARTIFACT_DIR_Debug_big=dist/Debug_big/GNU-Linux
@@ -23,13 +23,13 @@ CND_PACKAGE_DIR_Debug_big=dist/Debug_big/GNU-Linux/package
 CND_PACKAGE_NAME_Debug_big=formatconverter.tar
 CND_PACKAGE_PATH_Debug_big=dist/Debug_big/GNU-Linux/package/formatconverter.tar
 # Release_Cygwin configuration
-CND_PLATFORM_Release_Cygwin=GNU-Linux
-CND_ARTIFACT_DIR_Release_Cygwin=dist/Release_Cygwin/GNU-Linux
+CND_PLATFORM_Release_Cygwin=Cygwin-Windows
+CND_ARTIFACT_DIR_Release_Cygwin=dist/Release_Cygwin/Cygwin-Windows
 CND_ARTIFACT_NAME_Release_Cygwin=formatconverter
-CND_ARTIFACT_PATH_Release_Cygwin=dist/Release_Cygwin/GNU-Linux/formatconverter
-CND_PACKAGE_DIR_Release_Cygwin=dist/Release_Cygwin/GNU-Linux/package
+CND_ARTIFACT_PATH_Release_Cygwin=dist/Release_Cygwin/Cygwin-Windows/formatconverter
+CND_PACKAGE_DIR_Release_Cygwin=dist/Release_Cygwin/Cygwin-Windows/package
 CND_PACKAGE_NAME_Release_Cygwin=formatconverter.tar
-CND_PACKAGE_PATH_Release_Cygwin=dist/Release_Cygwin/GNU-Linux/package/formatconverter.tar
+CND_PACKAGE_PATH_Release_Cygwin=dist/Release_Cygwin/Cygwin-Windows/package/formatconverter.tar
 # Debug_Cygwin configuration
 CND_PLATFORM_Debug_Cygwin=Cygwin-Windows
 CND_ARTIFACT_DIR_Debug_Cygwin=dist/Debug_Cygwin/Cygwin-Windows

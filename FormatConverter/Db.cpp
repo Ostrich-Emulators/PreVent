@@ -22,17 +22,17 @@ int Db::nameidcb( void * a_param, int argc, char **argv, char ** ) {
 
 int Db::bedcb( void *a_param, int argc, char **argv, char ** ) {
   std::map<std::pair<std::string, std::string>, int> * map
-      = static_cast<std::map<std::pair<std::string, std::string>, int>*> ( a_param );
+          = static_cast<std::map<std::pair<std::string, std::string>, int>*> ( a_param );
   map->insert( std::make_pair( std::make_pair( argv[0], argv[1] ), std::stoi( argv[2] ) ) );
   return 0;
 }
 
 int Db::signalcb( void * a_param, int argc, char ** argv, char ** column ) {
   std::map < std::tuple < std::string, double, bool>, int> * map
-      = static_cast<std::map < std::tuple < std::string, double, bool>, int>*> ( a_param );
+          = static_cast<std::map < std::tuple < std::string, double, bool>, int>*> ( a_param );
   std::string name = argv[0];
   double hz = std::stod( argv[1] );
-  bool wave = ( "0" == argv[2] );
+  bool wave = ( 0 != std::stoi( argv[2] ) );
   int id = std::stoi( argv[3] );
   map->insert( std::make_pair( std::make_tuple( name, hz, wave ), id ) );
   return 0;
@@ -64,11 +64,18 @@ void Db::init( const std::string& fileloc ) {
   exec( "SELECT name, id FROM unit", &nameidcb, &unitids );
 
   exec( "SELECT u.name, b.name, b.id FROM bed b JOIN unit u ON b.unit_id=u.id",
-      &bedcb, &bedids );
+          &bedcb, &bedids );
 
-  exec( "SELECT name, hz, id, iswave FROM signal", &signalcb, &signalids );
+  exec( "SELECT name, hz, iswave, id FROM signal", &signalcb, &signalids );
 
   exec( "SELECT name, id FROM patient", &nameidcb, &patientids );
+
+
+//  for ( auto x : signalids ) {
+//    std::cout << " signal id: [" << std::get<0>( x.first ) << ","
+//            << std::get<1>( x.first ) << "," << std::get<2>( x.first ) << "]=>"
+//            << x.second << ": " << std::endl;
+//  }
 }
 
 void Db::exec( const std::string& sql, int (*cb )(void*, int, char**, char**), void * param ) {
@@ -130,6 +137,8 @@ int Db::getOrAddSignal( const SignalData& data ) {
   auto pairkey = std::make_tuple( name, hz, data.wave( ) );
 
   if ( 0 == signalids.count( pairkey ) ) {
+    std::cout << "creating signal: " << data.name( ) << std::endl;
+
     std::string sql = "INSERT INTO signal( name, hz, uom, iswave ) VALUES( ?, ?, ?, ? )";
     sqlite3_stmt * stmt = nullptr;
     int rc = sqlite3_prepare_v2( ptr, sql.c_str( ), sql.length( ), &stmt, nullptr );
@@ -175,7 +184,7 @@ void Db::addSignal( int fileid, const SignalData& sig ) {
     sqlite3_finalize( stmt );
     throw std::domain_error( sqlite3_errmsg( ptr ) );
   }
-
+  std::cout << "adding signal: " << sig.name( ) << std::endl;
   sqlite3_bind_int( stmt, 1, fileid );
   sqlite3_bind_int( stmt, 2, sid );
   sqlite3_bind_int( stmt, 3, sig.startTime( ) );
@@ -198,7 +207,7 @@ int Db::getOrAddBed( const std::string& name, const std::string& unitname ) {
     // since we're constructing the SQL from a generated id, it's safe
     // to "inject" one of the bind variables
     int id = addLookup( "INSERT INTO bed( unit_id, name ) VALUES( "
-        + std::to_string( unitid ) + ", ? )", name );
+            + std::to_string( unitid ) + ", ? )", name );
     bedids.insert( std::make_pair( pairkey, id ) );
   }
 
@@ -258,7 +267,7 @@ void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
   }
 
   std::string sql
-      = "INSERT INTO file( filename, bed_id, patient_id, start, end ) VALUES( ?, ?, ?, ?, ? )";
+          = "INSERT INTO file( filename, bed_id, patient_id, start, end ) VALUES( ?, ?, ?, ?, ? )";
   sqlite3_stmt * stmt = nullptr;
   int rc = sqlite3_prepare_v2( ptr, sql.c_str( ), sql.length( ), &stmt, nullptr );
   if ( rc != SQLITE_OK ) {
@@ -326,5 +335,5 @@ void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
 }
 
 void Db::onConversionCompleted( const std::string& input,
-    const std::vector<std::string>& outputs ) {
+        const std::vector<std::string>& outputs ) {
 }
