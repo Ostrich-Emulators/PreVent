@@ -315,6 +315,30 @@ cd "${TOP}"
 makeDirectory "${NBTMPDIR}/formatconverter/bin"
 copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}" 0755
 
+cd "${TOP}"
+makeDirectory "${NBTMPDIR}/formatconverter/bin"
+copyFileToTmpDir "${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.dll" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/libFormats.dll" 0755
+
+cd "${TOP}"
+makeDirectory "${NBTMPDIR}/formatconverter/bin"
+copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}" 0755
+
+cd "${TOP}"
+makeDirectory "${NBTMPDIR}/formatconverter/bin"
+copyFileToTmpDir "${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.dll" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/libFormats.dll" 0755
+
+cd "${TOP}"
+makeDirectory "${NBTMPDIR}/formatconverter/bin"
+copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}" 0755
+
+cd "${TOP}"
+makeDirectory "${NBTMPDIR}/formatconverter/bin"
+copyFileToTmpDir "${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/libFormats.so" 0755
+
+cd "${TOP}"
+makeDirectory "${NBTMPDIR}/formatconverter/bin"
+copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}" 0755
+
 
 # Generate tar file
 cd "${TOP}"

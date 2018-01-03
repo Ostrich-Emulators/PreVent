@@ -1,0 +1,17 @@
+nbproject/private
+*.stackdump
+core
+.dep.inc
+*.dat
+*.hea
+*.ari
+*.atr
+*.ann
+gmon.out
+*.zl*
+big.xml
+small.xml
+test.xml
+problem.xml
+xml.xml
+*.hdf5
