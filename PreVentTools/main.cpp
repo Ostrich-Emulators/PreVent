@@ -131,7 +131,7 @@ int main( int argc, char** argv ) {
   if ( "" == outfilename ) {
     // infile and outfile are the same
     if ( clobber ) {
-      outfile.reset( new H5::H5File( outfilename, H5F_ACC_RDWR ) );
+      outfile.reset( new H5::H5File( infilename, H5F_ACC_RDWR ) );
     }
     else {
       std::cerr << "will not overwrite " << infilename << " (use --clobber)" << std::endl;
@@ -141,12 +141,9 @@ int main( int argc, char** argv ) {
   else {
     // if file exists,  worry about clobbering it
     struct stat buffer;
-    if ( stat( outfilename.c_str( ), &buffer ) == 0 ) {
-      // file exists
-      if ( !clobber ) {
-        std::cerr << "will not overwrite " << outfilename << " (use --clobber)" << std::endl;
-        exit( 1 );
-      }
+    if ( stat( outfilename.c_str( ), &buffer ) == 0 && !clobber ) {
+      std::cerr << "will not overwrite " << outfilename << " (use --clobber)" << std::endl;
+      exit( 1 );
     }
 
     infile.reset( new H5::H5File( infilename, H5F_ACC_RDONLY ) );
