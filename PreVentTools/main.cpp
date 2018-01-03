@@ -14,8 +14,13 @@
 #include <cstdlib>
 #include <string>
 #include <map>
+#include <memory>
 #include <iostream>
 #include <getopt.h>
+#include <sys/stat.h>
+
+#include <H5Cpp.h>
+#include <H5Opublic.h>
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
@@ -32,11 +37,38 @@ void helpAndExit( char * progname, std::string msg = "" ) {
 struct option longopts[] = {
   { "mrn", required_argument, NULL, 'm' },
   { "name", required_argument, NULL, 'n' },
-  { "clobber", required_argument, NULL, 'C' },
+  { "clobber", no_argument, NULL, 'C' },
   { "output", required_argument, NULL, 'o' },
   { "attr", required_argument, NULL, 'a' },
   { 0, 0, 0, 0 }
 };
+
+void cloneFile( std::unique_ptr<H5::H5File>&infile,
+      std::unique_ptr<H5::H5File>& outfile ) {
+  hid_t ocpypl_id = H5Pcreate( H5P_OBJECT_COPY );
+  // FIXME: iterate through whatever's in the file
+  H5Ocopy( infile->getId( ), "/Events", outfile->getId( ), "/Events", ocpypl_id, H5P_DEFAULT );
+  H5Ocopy( infile->getId( ), "/Vital Signs", outfile->getId( ), "/Vital Signs", ocpypl_id, H5P_DEFAULT );
+  H5Ocopy( infile->getId( ), "/Waveforms", outfile->getId( ), "/Waveforms", ocpypl_id, H5P_DEFAULT );
+}
+
+void writeAttrs( std::unique_ptr<H5::H5File>& outfile, std::map<std::string, std::string> attrs ) {
+  for ( const auto& kv : attrs ) {
+    H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
+    H5::StrType st( H5::PredType::C_S1, H5T_VARIABLE );
+    st.setCset( H5T_CSET_UTF8 );
+
+    std::string attr = kv.first;
+    std::string val = kv.second;
+
+    if ( outfile->attrExists( attr ) ) {
+      outfile->removeAttr( attr );
+    }
+
+    H5::Attribute attrib = outfile->createAttribute( attr, st, space );
+    attrib.write( st, val );
+  }
+}
 
 /*
  * 
@@ -46,27 +78,20 @@ int main( int argc, char** argv ) {
   extern int optind;
   extern char * optarg;
 
-  std::string mrn = "";
-  bool domrn = false;
-  std::string name = "";
-  bool doname = false;
-  std::string outfile = "";
+  std::string outfilename = "";
   bool clobber = false;
   std::map <std::string, std::string> attrs;
-  bool doattrs = false;
 
   while ( ( c = getopt_long( argc, argv, ":m:n:o:Ca:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'm':
-        mrn = optarg;
-        domrn = true;
+        attrs["MRN"] = optarg;
         break;
       case 'n':
-        name = optarg;
-        domrn = true;
+        attrs["Patient Name"] = optarg;
         break;
       case 'o':
-        outfile = optarg;
+        outfilename = optarg;
         break;
       case 'a':
       {
@@ -79,7 +104,6 @@ int main( int argc, char** argv ) {
         else {
           attrs[kv.substr( 0, idx )] = kv.substr( idx + 1 );
         }
-        doattrs = true;
       }
         break;
       case 'C':
@@ -100,18 +124,43 @@ int main( int argc, char** argv ) {
     helpAndExit( argv[0], "no file specified" );
   }
 
-  if ( !( domrn || doname || doattrs ) ) {
+  std::unique_ptr<H5::H5File> infile;
+  std::unique_ptr<H5::H5File> outfile;
+  std::string infilename = argv[optind];
+
+  if ( "" == outfilename ) {
+    // infile and outfile are the same
+    if ( clobber ) {
+      outfile.reset( new H5::H5File( outfilename, H5F_ACC_RDWR ) );
+    }
+    else {
+      std::cerr << "will not overwrite " << infilename << " (use --clobber)" << std::endl;
+      exit( 1 );
+    }
+  }
+  else {
+    // if file exists,  worry about clobbering it
+    struct stat buffer;
+    if ( stat( outfilename.c_str( ), &buffer ) == 0 ) {
+      // file exists
+      if ( !clobber ) {
+        std::cerr << "will not overwrite " << outfilename << " (use --clobber)" << std::endl;
+        exit( 1 );
+      }
+    }
+
+    infile.reset( new H5::H5File( infilename, H5F_ACC_RDONLY ) );
+    outfile.reset( new H5::H5File( outfilename, H5F_ACC_TRUNC ) );
+    cloneFile( infile, outfile );
+  }
+
+  if ( attrs.empty( ) ) {
     std::cout << "yup...that's a file" << std::endl;
   }
 
-  if ( doattrs ) {
-    for ( const auto&x : attrs ) {
-      std::cout << x.first << " => " << x.second << std::endl;
-    }
-  }
+  writeAttrs( outfile, attrs );
 
-
+  outfile->close( );
 
   return 0;
 }
-
