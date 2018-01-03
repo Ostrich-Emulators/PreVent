@@ -47,9 +47,26 @@ void cloneFile( std::unique_ptr<H5::H5File>&infile,
       std::unique_ptr<H5::H5File>& outfile ) {
   hid_t ocpypl_id = H5Pcreate( H5P_OBJECT_COPY );
   // FIXME: iterate through whatever's in the file
-  H5Ocopy( infile->getId( ), "/Events", outfile->getId( ), "/Events", ocpypl_id, H5P_DEFAULT );
-  H5Ocopy( infile->getId( ), "/Vital Signs", outfile->getId( ), "/Vital Signs", ocpypl_id, H5P_DEFAULT );
-  H5Ocopy( infile->getId( ), "/Waveforms", outfile->getId( ), "/Waveforms", ocpypl_id, H5P_DEFAULT );
+  for ( hsize_t i = 0; i < infile->getNumObjs( ); i++ ) {
+    std::string name = infile->getObjnameByIdx( i );
+    H5Ocopy( infile->getId( ), name.c_str( ),
+          outfile->getId( ), name.c_str( ),
+          ocpypl_id, H5P_DEFAULT );
+  }
+
+  for ( hsize_t i = 0; i < infile->getNumAttrs( ); i++ ) {
+    H5::Attribute attr = infile->openAttribute( i );
+    H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
+    H5::DataType dt = attr.getDataType( );
+
+    std::string val;
+    attr.read( dt, val );
+
+    H5::Attribute newattr = outfile->createAttribute( attr.getName( ), dt, space );
+    newattr.write( dt, val );
+    newattr.close( );
+    attr.close( );
+  }
 }
 
 void writeAttrs( std::unique_ptr<H5::H5File>& outfile, std::map<std::string, std::string> attrs ) {
@@ -130,7 +147,7 @@ int main( int argc, char** argv ) {
     std::cout << "yup...that's a file" << std::endl;
     exit( 0 );
   }
-  
+
   std::unique_ptr<H5::H5File> infile;
   std::unique_ptr<H5::H5File> outfile;
   std::string infilename = argv[optind];
