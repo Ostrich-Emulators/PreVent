@@ -124,6 +124,13 @@ int main( int argc, char** argv ) {
     helpAndExit( argv[0], "no file specified" );
   }
 
+  // something to acknowledge the program did something
+  // (even if the user didn't ask us to do anything)
+  if ( attrs.empty( ) ) {
+    std::cout << "yup...that's a file" << std::endl;
+    exit( 0 );
+  }
+  
   std::unique_ptr<H5::H5File> infile;
   std::unique_ptr<H5::H5File> outfile;
   std::string infilename = argv[optind];
@@ -149,10 +156,6 @@ int main( int argc, char** argv ) {
     infile.reset( new H5::H5File( infilename, H5F_ACC_RDONLY ) );
     outfile.reset( new H5::H5File( outfilename, H5F_ACC_TRUNC ) );
     cloneFile( infile, outfile );
-  }
-
-  if ( attrs.empty( ) ) {
-    std::cout << "yup...that's a file" << std::endl;
   }
 
   writeAttrs( outfile, attrs );
