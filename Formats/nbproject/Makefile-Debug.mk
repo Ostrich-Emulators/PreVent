@@ -50,6 +50,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/StpJsonReader.o \
 	${OBJECTDIR}/StpXmlReader.o \
 	${OBJECTDIR}/StreamChunkReader.o \
+	${OBJECTDIR}/TdmsReader.o \
 	${OBJECTDIR}/WfdbReader.o \
 	${OBJECTDIR}/WfdbWriter.o \
 	${OBJECTDIR}/Writer.o \
@@ -72,7 +73,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=`pkg-config --libs zlib` /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so `pkg-config --libs matio` `pkg-config --libs expat`  
+LDLIBSOPTIONS=`pkg-config --libs zlib` /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so `pkg-config --libs matio` `pkg-config --libs expat` /usr/lib/tdms/libtdms.a  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -81,6 +82,8 @@ LDLIBSOPTIONS=`pkg-config --libs zlib` /usr/lib/x86_64-linux-gnu/hdf5/serial/lib
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so
+
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: /usr/lib/tdms/libtdms.a
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
@@ -160,6 +163,11 @@ ${OBJECTDIR}/StreamChunkReader.o: StreamChunkReader.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -s `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/StreamChunkReader.o StreamChunkReader.cpp
+
+${OBJECTDIR}/TdmsReader.o: TdmsReader.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -s `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsReader.o TdmsReader.cpp
 
 ${OBJECTDIR}/WfdbReader.o: WfdbReader.cpp
 	${MKDIR} -p ${OBJECTDIR}

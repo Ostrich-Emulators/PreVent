@@ -50,6 +50,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/StpJsonReader.o \
 	${OBJECTDIR}/StpXmlReader.o \
 	${OBJECTDIR}/StreamChunkReader.o \
+	${OBJECTDIR}/TdmsReader.o \
 	${OBJECTDIR}/WfdbReader.o \
 	${OBJECTDIR}/WfdbWriter.o \
 	${OBJECTDIR}/Writer.o \
@@ -160,6 +161,11 @@ ${OBJECTDIR}/StreamChunkReader.o: StreamChunkReader.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/StreamChunkReader.o StreamChunkReader.cpp
+
+${OBJECTDIR}/TdmsReader.o: TdmsReader.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsReader.o TdmsReader.cpp
 
 ${OBJECTDIR}/WfdbReader.o: WfdbReader.cpp
 	${MKDIR} -p ${OBJECTDIR}

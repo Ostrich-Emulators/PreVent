@@ -30,7 +30,6 @@ class XmlReaderBase : public Reader {
 public:
   static const std::set<std::string> Hz60;
   static const std::set<std::string> Hz120;
-  static const std::string MISSING_VALUESTR;
   static const int READCHUNK;
 
   XmlReaderBase( const std::string& name );

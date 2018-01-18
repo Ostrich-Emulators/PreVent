@@ -1,3 +1,5 @@
+*.tdms
+*.medi
 nbproject/private
 *.stackdump
 core
