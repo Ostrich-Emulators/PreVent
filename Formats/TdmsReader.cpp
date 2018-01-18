@@ -67,7 +67,9 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
         // unsigned int dataSize = ( dataCount > 0 ) ? dataCount : stringCount;
 
         if ( dataCount ) {
-          output( ) << "reading " << ch->getName( ) << std::endl;
+          std::string name = ch->getName( );
+          name = name.substr( 2, name.length( ) - 3 );
+          output( ) << "reading " << name << std::endl;
           time_t time = 0;
           double timeinc = 1;
           int freq = 0; // waves have an integer frequency
@@ -78,8 +80,8 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
 
           // figure out if this is a wave or a vital
           std::unique_ptr<SignalData>& signal = ( timeinc < 1.024
-                ? info.addWave( ch->getName( ) )
-                : info.addVital( ch->getName( ) ) );
+                ? info.addWave( name )
+                : info.addVital( name ) );
 
           string unit = ch->getUnit( );
           if ( !unit.empty( ) ) {
@@ -130,14 +132,23 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
               std::stringstream vals;
               int cnt = 0;
               for ( auto& d : data ) {
+                bool nan = isnan( d );
+
                 if ( cnt == freq ) {
                   signal->add( DataRow( time++, vals.str( ) ) );
                   vals.clear( );
-                  vals.str( std::to_string( d ) );
+
+                  vals.str( nan ? MISSING_VALUESTR : std::to_string( d ) );
                   cnt = 0;
                 }
                 else {
-                  vals << "," << d;
+                  vals << ",";
+                  if ( nan ) {
+                    vals << MISSING_VALUESTR;
+                  }
+                  else {
+                    vals << d;
+                  }
                 }
                 cnt++;
               }
@@ -154,7 +165,9 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             else {
               // vitals are much easier...
               for ( auto& d : data ) {
-                signal->add( DataRow( time, std::to_string( d ) ) );
+                if ( !isnan( d ) ) {
+                  signal->add( DataRow( time, std::to_string( d ) ) );
+                }
                 time += timeinc;
               }
             }
