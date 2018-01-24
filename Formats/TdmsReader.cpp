@@ -139,7 +139,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                 if ( cnt == freq ) {
                   signal->add( DataRow( time++, vals.str( ) ) );
                   vals.clear( );
-                  vals.str( std::string() );
+                  vals.str( std::string( ) );
                   cnt = 0;
                 }
 
@@ -169,7 +169,15 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
               // vitals are much easier...
               for ( auto& d : data ) {
                 if ( !isnan( d ) ) {
-                  signal->add( DataRow( time, std::to_string( d ) ) );
+                  // check if our number ends in .000000...
+                  int dd = int(d );
+                  bool isint = ( 0 == ( d - dd ) );
+                  if ( isint ) {
+                    signal->add( DataRow( time, std::to_string( dd ) ) );
+                  }
+                  else {
+                    signal->add( DataRow( time, std::to_string( d ) ) );
+                  }
                 }
                 time += timeinc;
               }
