@@ -36,10 +36,15 @@ SignalData::SignalData( const std::string& name, bool largefile, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<time_t>::max( ) ), lastdata( 0 ),
 datacount( 0 ), popping( false ), iswave( wavedata ) {
   //file = ( largefile ? fopen( std::tmpnam( nullptr ), "w+" ) : NULL );
-  //std::string fname = "/tmp/cache-" + name + ".prevent";
-  //file = fopen( fname.c_str( ), "wb+" );
+  if ( largefile ) {
+    std::string fname = "/tmp/cache-" + name + ".prevent";
+    file = fopen( fname.c_str( ), "wb+" );
+  }
+  else {
+    file = NULL;
+  }
 
-  file = ( largefile ? std::tmpfile( ) : NULL );
+  //file = ( largefile ? std::tmpfile( ) : NULL );
   setScale( 1 );
   setValuesPerDataRow( 1 );
   setUom( "Uncalib" );
@@ -122,8 +127,6 @@ std::unique_ptr<DataRow> SignalData::pop( ) {
     startPopping( );
   }
 
-  datacount--;
-  dates.pop_back( );
   if ( NULL != file && data.empty( ) ) {
     int lines = uncache( );
     if ( 0 == lines ) {
@@ -132,8 +135,10 @@ std::unique_ptr<DataRow> SignalData::pop( ) {
     }
   }
 
+  datacount--;
   std::unique_ptr<DataRow> row = std::move( data.front( ) );
   data.pop_front( );
+  dates.pop_front( );
   return row;
 }
 

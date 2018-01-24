@@ -129,6 +129,8 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             if ( signal->wave( ) ) {
               // for waves, we need to construct a string of values that is 
               // {Frequency} items big
+              signal->setScale( 1000 ); // TDMS readouts seem to have 3 decimals
+
               std::stringstream vals;
               int cnt = 0;
               for ( auto& d : data ) {
@@ -137,18 +139,19 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                 if ( cnt == freq ) {
                   signal->add( DataRow( time++, vals.str( ) ) );
                   vals.clear( );
-
-                  vals.str( nan ? MISSING_VALUESTR : std::to_string( d ) );
+                  vals.str( std::string() );
                   cnt = 0;
                 }
-                else {
+
+                if ( 0 != cnt ) {
                   vals << ",";
-                  if ( nan ) {
-                    vals << MISSING_VALUESTR;
-                  }
-                  else {
-                    vals << d;
-                  }
+                }
+
+                if ( nan ) {
+                  vals << MISSING_VALUESTR;
+                }
+                else {
+                  vals << (int) ( d * 1000 );
                 }
                 cnt++;
               }

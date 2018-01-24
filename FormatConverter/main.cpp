@@ -50,7 +50,7 @@ struct option longopts[] = {
   { "prefix", required_argument, NULL, 'p' },
   { "export", required_argument, NULL, 'e' },
   { "sqlite", required_argument, NULL, 's' },
-  { "quiet", no_argument, NULL, 'q' },
+   { "quiet", no_argument, NULL, 'q' },
   { "anonymize", no_argument, NULL, 'a' },
   { "anon", no_argument, NULL, 'a' },
   { "anonymous", no_argument, NULL, 'a' },
