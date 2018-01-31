@@ -25,7 +25,6 @@
 #include <map>
 #include <memory>
 
-const std::string XmlReaderBase::MISSING_VALUESTR( "-32768" );
 bool XmlReaderBase::accumulateText = false;
 std::string XmlReaderBase::working;
 const int XmlReaderBase::READCHUNK = 16384 * 16;

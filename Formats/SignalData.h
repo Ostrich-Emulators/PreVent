@@ -96,6 +96,7 @@ private:
 	std::set<std::string> extrafields;
 
   static const int CACHE_LIMIT;
+  friend class TdmsReader; // needs to set scale
 };
 
 #endif /* DATASETDATACACHE_H */

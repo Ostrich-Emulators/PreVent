@@ -7,6 +7,7 @@
 #include "StpXmlReader.h"
 #include "StpJsonReader.h"
 #include "CpcXmlReader.h"
+#include "TdmsReader.h"
 
 #include <iostream>
 
@@ -42,6 +43,8 @@ std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
       return std::unique_ptr<Reader>( new CpcXmlReader( ) );
     case STPJSON:
       return std::unique_ptr<Reader>( new StpJsonReader( ) );
+    case TDMS:
+      return std::unique_ptr<Reader>( new TdmsReader( ) );
     default:
       throw "reader not yet implemented";
   }

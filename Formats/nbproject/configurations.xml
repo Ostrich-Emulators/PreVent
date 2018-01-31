@@ -10,6 +10,7 @@
         <itemPath>StpJsonReader.h</itemPath>
         <itemPath>StpXmlReader.h</itemPath>
         <itemPath>StreamChunkReader.h</itemPath>
+        <itemPath>TdmsReader.h</itemPath>
         <itemPath>WfdbReader.h</itemPath>
         <itemPath>XmlReaderBase.h</itemPath>
         <itemPath>ZlReader.h</itemPath>
@@ -46,6 +47,7 @@
         <itemPath>StpJsonReader.cpp</itemPath>
         <itemPath>StpXmlReader.cpp</itemPath>
         <itemPath>StreamChunkReader.cpp</itemPath>
+        <itemPath>TdmsReader.cpp</itemPath>
         <itemPath>WfdbReader.cpp</itemPath>
         <itemPath>XmlReaderBase.cpp</itemPath>
         <itemPath>ZlReader.cpp</itemPath>
@@ -94,6 +96,7 @@
           <commandLine>-Wno-deprecated -O0 -pg -g `wfdb-config --cflags`</commandLine>
         </ccTool>
         <linkerTool>
+          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}</output>
           <commandlineTool>g++</commandlineTool>
           <linkerLibItems>
             <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
@@ -101,6 +104,18 @@
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../libtdms"
+                            CT="2"
+                            CN="Debug"
+                            AC="false"
+                            BL="true"
+                            WD="../libtdms"
+                            BC="${MAKE}  -f Makefile CONF=Debug"
+                            CC="${MAKE}  -f Makefile CONF=Debug clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
@@ -166,6 +181,10 @@
       <item path="StreamChunkReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="StreamChunkReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="TdmsReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="TdmsReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -226,6 +245,18 @@
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../libtdms"
+                            CT="2"
+                            CN="Release"
+                            AC="true"
+                            BL="true"
+                            WD="../libtdms"
+                            BC="${MAKE}  -f Makefile CONF=Release"
+                            CC="${MAKE}  -f Makefile CONF=Release clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
@@ -292,6 +323,10 @@
       </item>
       <item path="StreamChunkReader.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="TdmsReader.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="TdmsReader.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="WfdbReader.h" ex="false" tool="3" flavor2="0">
@@ -351,6 +386,18 @@
             <linkerLibLibItem>hdf5_cpp.dll</linkerLibLibItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../libtdms"
+                            CT="2"
+                            CN="Release_cygwin"
+                            AC="false"
+                            BL="true"
+                            WD="../libtdms"
+                            BC="${MAKE}  -f Makefile CONF=Release_cygwin"
+                            CC="${MAKE}  -f Makefile CONF=Release_cygwin clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
@@ -416,6 +463,10 @@
       <item path="StreamChunkReader.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="StreamChunkReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="TdmsReader.cpp" ex="false" tool="1" flavor2="11">
+      </item>
+      <item path="TdmsReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="11">
       </item>
@@ -476,6 +527,18 @@
             <linkerLibLibItem>hdf5_cpp.dll</linkerLibLibItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../libtdms"
+                            CT="2"
+                            CN="Debug_cygwin"
+                            AC="false"
+                            BL="true"
+                            WD="../libtdms"
+                            BC="${MAKE}  -f Makefile CONF=Debug_cygwin"
+                            CC="${MAKE}  -f Makefile CONF=Debug_cygwin clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
@@ -541,6 +604,10 @@
       <item path="StreamChunkReader.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="StreamChunkReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="TdmsReader.cpp" ex="false" tool="1" flavor2="11">
+      </item>
+      <item path="TdmsReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="11">
       </item>

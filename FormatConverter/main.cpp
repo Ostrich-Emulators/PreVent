@@ -33,7 +33,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
         << std::endl << "\t-q or --quiet"
         << std::endl << "\t-n or --no-break or --one-file"
         << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
-        << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml, stpjson"
+        << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml, stpjson, tdms"
         << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
         << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
         << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file"
@@ -50,7 +50,7 @@ struct option longopts[] = {
   { "prefix", required_argument, NULL, 'p' },
   { "export", required_argument, NULL, 'e' },
   { "sqlite", required_argument, NULL, 's' },
-  { "quiet", no_argument, NULL, 'q' },
+   { "quiet", no_argument, NULL, 'q' },
   { "anonymize", no_argument, NULL, 'a' },
   { "anon", no_argument, NULL, 'a' },
   { "anonymous", no_argument, NULL, 'a' },
@@ -145,6 +145,9 @@ int main( int argc, char** argv ) {
         break;
       case STPJSON:
         fromstr = "stpjson";
+        break;
+      case TDMS:
+        fromstr = "tdms";
         break;
     }
   }

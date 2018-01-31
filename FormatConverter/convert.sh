@@ -52,9 +52,9 @@ fi
 
 DIR=$1
 
-PROCLOG=$DIR/processing.log
-ERRLOG=$DIR/errors.log
-DONELOG=$DIR/done.log
+PROCLOG=processing.log
+ERRLOG=errors.log
+DONELOG=done.log
 
 touch PROCLOG
 ls -tr $DIR/*.Stp $DIR/*.xml 1>/dev/null 2>&1
