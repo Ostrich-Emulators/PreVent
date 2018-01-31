@@ -53,14 +53,17 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L../Formats/dist/Debug_Cygwin/Cygwin-Windows -lFormats `pkg-config --libs sqlite3`  
+LDLIBSOPTIONS=-L../Formats/dist/Debug_Cygwin/Cygwin-Windows -lFormats `pkg-config --libs sqlite3` -L../libtdms/dist/Debug_cygwin/Cygwin-Windows -ltdms  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe
 	${CP} ../Formats/dist/Debug_Cygwin/Cygwin-Windows/libFormats.dll ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
+	${CP} ../libtdms/dist/Debug_cygwin/Cygwin-Windows/libtdms.dll ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe: ../Formats/dist/Debug_Cygwin/Cygwin-Windows/libFormats.dll
+
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe: ../libtdms/dist/Debug_cygwin/Cygwin-Windows/libtdms.dll
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
@@ -79,16 +82,18 @@ ${OBJECTDIR}/main.o: main.cpp
 # Subprojects
 .build-subprojects:
 	cd ../Formats && ${MAKE}  -f Makefile CONF=Debug_Cygwin
+	cd ../libtdms && ${MAKE}  -f Makefile CONF=Debug_cygwin
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.dll
+	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.dll ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.dll
 	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe
 
 # Subprojects
 .clean-subprojects:
 	cd ../Formats && ${MAKE}  -f Makefile CONF=Debug_Cygwin clean
+	cd ../libtdms && ${MAKE}  -f Makefile CONF=Debug_cygwin clean
 
 # Enable dependency checking
 .dep.inc: .depcheck-impl

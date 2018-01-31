@@ -21,8 +21,8 @@ FC=gfortran
 AS=as
 
 # Macros
-CND_PLATFORM=GNU-Linux
-CND_DLIB_EXT=so
+CND_PLATFORM=Cygwin-Windows
+CND_DLIB_EXT=dll
 CND_CONF=Release_cygwin
 CND_DISTDIR=dist
 CND_BUILDDIR=build
@@ -65,37 +65,37 @@ LDLIBSOPTIONS=
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
+	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared
 
 ${OBJECTDIR}/TdmsChannel.o: TdmsChannel.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -s -Iinclude -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsChannel.o TdmsChannel.cpp
+	$(COMPILE.cc) -O2 -s -Iinclude  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsChannel.o TdmsChannel.cpp
 
 ${OBJECTDIR}/TdmsGroup.o: TdmsGroup.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -s -Iinclude -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsGroup.o TdmsGroup.cpp
+	$(COMPILE.cc) -O2 -s -Iinclude  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsGroup.o TdmsGroup.cpp
 
 ${OBJECTDIR}/TdmsLeadIn.o: TdmsLeadIn.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -s -Iinclude -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsLeadIn.o TdmsLeadIn.cpp
+	$(COMPILE.cc) -O2 -s -Iinclude  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsLeadIn.o TdmsLeadIn.cpp
 
 ${OBJECTDIR}/TdmsMetaData.o: TdmsMetaData.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -s -Iinclude -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsMetaData.o TdmsMetaData.cpp
+	$(COMPILE.cc) -O2 -s -Iinclude  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsMetaData.o TdmsMetaData.cpp
 
 ${OBJECTDIR}/TdmsObject.o: TdmsObject.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -s -Iinclude -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsObject.o TdmsObject.cpp
+	$(COMPILE.cc) -O2 -s -Iinclude  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsObject.o TdmsObject.cpp
 
 ${OBJECTDIR}/TdmsParser.o: TdmsParser.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -s -Iinclude -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsParser.o TdmsParser.cpp
+	$(COMPILE.cc) -O2 -s -Iinclude  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsParser.o TdmsParser.cpp
 
 # Subprojects
 .build-subprojects:
