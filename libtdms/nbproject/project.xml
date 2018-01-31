@@ -3,14 +3,12 @@
     <type>org.netbeans.modules.cnd.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>Formats</name>
+            <name>libtdms</name>
             <c-extensions/>
             <cpp-extensions>cpp</cpp-extensions>
-            <header-extensions>h,hpp</header-extensions>
+            <header-extensions>h,hh</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
-            <make-dep-projects>
-                <make-dep-project>../libtdms</make-dep-project>
-            </make-dep-projects>
+            <make-dep-projects/>
             <sourceRootList/>
             <confList>
                 <confElem>
@@ -22,11 +20,11 @@
                     <type>2</type>
                 </confElem>
                 <confElem>
-                    <name>Release_Cygwin</name>
+                    <name>Debug_cygwin</name>
                     <type>2</type>
                 </confElem>
                 <confElem>
-                    <name>Debug_Cygwin</name>
+                    <name>Release_cygwin</name>
                     <type>2</type>
                 </confElem>
             </confList>
