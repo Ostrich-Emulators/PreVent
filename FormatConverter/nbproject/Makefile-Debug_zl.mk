@@ -53,14 +53,17 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-Wl,-rpath,'../Formats/dist/Debug/GNU-Linux' -L../Formats/dist/Debug/GNU-Linux -lFormats `pkg-config --libs sqlite3`  
+LDLIBSOPTIONS=-Wl,-rpath,'../Formats/dist/Debug/GNU-Linux' -L../Formats/dist/Debug/GNU-Linux -lFormats `pkg-config --libs sqlite3` -Wl,-rpath,'../libtdms/dist/Debug/GNU-Linux' -L../libtdms/dist/Debug/GNU-Linux -ltdms  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter
 	${CP} ../Formats/dist/Debug/GNU-Linux/libFormats.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
+	${CP} ../libtdms/dist/Debug/GNU-Linux/libtdms.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ../Formats/dist/Debug/GNU-Linux/libFormats.so
+
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ../libtdms/dist/Debug/GNU-Linux/libtdms.so
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
@@ -83,7 +86,7 @@ ${OBJECTDIR}/main.o: main.cpp nbproject/Makefile-${CND_CONF}.mk
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so
+	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.so
 	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter
 
 # Subprojects

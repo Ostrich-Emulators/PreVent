@@ -21,8 +21,8 @@ FC=gfortran
 AS=as
 
 # Macros
-CND_PLATFORM=Cygwin-Windows
-CND_DLIB_EXT=dll
+CND_PLATFORM=GNU-Linux
+CND_DLIB_EXT=so
 CND_CONF=Release_Cygwin
 CND_DISTDIR=dist
 CND_BUILDDIR=build
@@ -53,19 +53,19 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-L../Formats/dist/Release_Cygwin/Cygwin-Windows -lFormats `pkg-config --libs sqlite3` -L../libtdms/dist/Release_cygwin/Cygwin-Windows -ltdms  
+LDLIBSOPTIONS=-Wl,-rpath,'../Formats/dist/Release_Cygwin/GNU-Linux' -L../Formats/dist/Release_Cygwin/GNU-Linux -lFormats `pkg-config --libs sqlite3` -Wl,-rpath,'../libtdms/dist/Release_cygwin/GNU-Linux' -L../libtdms/dist/Release_cygwin/GNU-Linux -ltdms  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe
-	${CP} ../Formats/dist/Release_Cygwin/Cygwin-Windows/libFormats.dll ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${CP} ../libtdms/dist/Release_cygwin/Cygwin-Windows/libtdms.dll ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter
+	${CP} ../Formats/dist/Release_Cygwin/GNU-Linux/libFormats.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
+	${CP} ../libtdms/dist/Release_cygwin/GNU-Linux/libtdms.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe: ../Formats/dist/Release_Cygwin/Cygwin-Windows/libFormats.dll
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ../Formats/dist/Release_Cygwin/GNU-Linux/libFormats.so
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe: ../libtdms/dist/Release_cygwin/Cygwin-Windows/libtdms.dll
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ../libtdms/dist/Release_cygwin/GNU-Linux/libtdms.so
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe: ${OBJECTFILES}
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter ${OBJECTFILES} ${LDLIBSOPTIONS} -s
 
@@ -87,8 +87,8 @@ ${OBJECTDIR}/main.o: main.cpp
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.dll ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.dll
-	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter.exe
+	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.so
+	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter
 
 # Subprojects
 .clean-subprojects:
