@@ -92,7 +92,7 @@ std::string XmlReaderBase::trim( std::string & totrim ) {
 void XmlReaderBase::startSaving( ) {
   saved.setMetadataFrom( *filler );
   filler = &saved;
-  filler->clearOffsets();
+  filler->clearOffsets( );
 }
 
 void XmlReaderBase::setResult( ReadResult rslt ) {
@@ -178,19 +178,18 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
   return ReadResult::END_OF_FILE;
 }
 
-bool XmlReaderBase::isRollover( const time_t& then, const time_t& now ) const {
+bool XmlReaderBase::isRollover( const dr_time& then, const dr_time& now ) const {
   if ( nonbreaking( ) ) {
     return false;
   }
 
   if ( 0 != then ) {
-    time_t modnow = datemod( now );
-    time_t modthen = datemod( then );
+    time_t modnow = datemod( now ) / 1000;
+    time_t modthen = datemod( then ) / 1000;
 
     const int cdoy = gmtime( &modnow )->tm_yday;
     const int pdoy = gmtime( &modthen )->tm_yday;
     if ( cdoy != pdoy ) {
-
       return true;
     }
   }
@@ -198,10 +197,10 @@ bool XmlReaderBase::isRollover( const time_t& then, const time_t& now ) const {
   return false;
 }
 
-time_t XmlReaderBase::time( const std::string& timer ) const {
+dr_time XmlReaderBase::time( const std::string& timer ) const {
   if ( std::string::npos == timer.find( " " )
         && std::string::npos == timer.find( "T" ) ) {
-    return std::stol( timer );
+    return std::stol( timer )* 1000;
   }
 
   // we have a local time that we need to convert
@@ -216,19 +215,19 @@ time_t XmlReaderBase::time( const std::string& timer ) const {
   time_t local = mktime( &mytime );
   mytime = *gmtime( &local );
 
-  return mktime( &mytime );
+  return mktime( &mytime )* 1000; // convert seconds to ms
 }
 
 bool XmlReaderBase::isFirstRead( ) const {
   return firstread;
 }
 
-void XmlReaderBase::setDateModifier( const time_t& mod ) {
+void XmlReaderBase::setDateModifier( const dr_time& mod ) {
   firstread = false;
   datemodifier = mod;
 }
 
-time_t XmlReaderBase::datemod( const time_t& rawdate ) const {
-  time_t timer = ( rawdate - datemodifier );
+dr_time XmlReaderBase::datemod( const dr_time& rawdate ) const {
+  dr_time timer = ( rawdate - datemodifier );
   return timer;
 }

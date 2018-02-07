@@ -146,8 +146,8 @@ int MatWriter::writeStrings( const std::string& label, std::vector<std::string>&
 }
 
 int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&oldmap ) {
-  time_t earliest;
-  time_t latest;
+  dr_time earliest;
+  dr_time latest;
 
   std::vector<std::unique_ptr < SignalData>> signals = SignalUtils::vectorize( oldmap );
 
@@ -231,8 +231,8 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
 }
 
 int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalData>>&oldsignals ) {
-  time_t earliest;
-  time_t latest;
+  dr_time earliest;
+  dr_time latest;
 
   const std::string sfx = std::to_string( freq ) + "hz";
 

@@ -19,6 +19,8 @@
 #include <memory>
 #include <vector>
 
+#include "dr_time.h"
+
 class SignalSet;
 class SignalData;
 class DataRow;
@@ -59,7 +61,7 @@ public:
    * @param ss
    * @return 
    */
-  static std::vector<time_t> alltimes(const SignalSet& ss);
+  static std::vector<dr_time> alltimes(const SignalSet& ss);
 
   /**
    * Creates a vector with index positions for the given signal's data.
@@ -67,7 +69,7 @@ public:
    * @param signal
    * @return a vector the same size as alltimes
    */
-  static std::vector<size_t> index(const std::vector<time_t>& alltimes,
+  static std::vector<size_t> index(const std::vector<dr_time>& alltimes,
           const SignalData& signal);
 
   /**
@@ -77,17 +79,17 @@ public:
    * @param latest the latest date in the SignalData
    * @return the earliest date
    */
-  static time_t firstlast(const std::map<std::string, std::unique_ptr<SignalData>>&map,
-          time_t * first = nullptr, time_t * last = nullptr);
-  static time_t firstlast(const std::vector<std::unique_ptr<SignalData>>&map,
-          time_t * first = nullptr, time_t * last = nullptr);
+  static dr_time firstlast(const std::map<std::string, std::unique_ptr<SignalData>>&map,
+          dr_time * first = nullptr, dr_time * last = nullptr);
+  static dr_time firstlast(const std::vector<std::unique_ptr<SignalData>>&map,
+          dr_time * first = nullptr, dr_time * last = nullptr);
 
 private:
   SignalUtils();
   SignalUtils(const SignalUtils&);
 
   static void fillGap(std::unique_ptr<SignalData>& data,
-          std::unique_ptr<DataRow>& row, time_t& nexttime, const int& timestep);
+          std::unique_ptr<DataRow>& row, dr_time& nexttime, const int& timestep);
   /**
    * Creates a valid "dummy" DataRow for the given signal. (Wave forms need
    * a series of missing values, while vitals only need one.)
@@ -95,7 +97,7 @@ private:
    * @param time
    * @return
    */
-  static DataRow dummyfill(std::unique_ptr<SignalData>& signal, const time_t& time);
+  static DataRow dummyfill(std::unique_ptr<SignalData>& signal, const dr_time& time);
 };
 
 #endif /* SIGNALUTILS_H */

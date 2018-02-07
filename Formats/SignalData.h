@@ -22,6 +22,7 @@
 #include <deque>
 #include <set>
 #include <vector>
+#include "dr_time.h"
 
 class DataRow;
 
@@ -45,11 +46,11 @@ public:
   int scale( ) const;
   size_t size( ) const;
   double hz( ) const;
-  const time_t& startTime( ) const;
-  const time_t& endTime( ) const;
+  const dr_time& startTime( ) const;
+  const dr_time& endTime( ) const;
   const std::string& name( ) const;
   void setValuesPerDataRow( int );
-  int valuesPerDataRow() const;
+  int valuesPerDataRow( ) const;
   void setMetadataFrom( const SignalData& model );
 
   std::unique_ptr<DataRow> pop( );
@@ -63,8 +64,8 @@ public:
   const std::map<std::string, std::string>& metas( ) const;
   const std::map<std::string, int>& metai( ) const;
   const std::map<std::string, double>& metad( ) const;
-  const std::deque<time_t>& times( ) const;
-	std::vector<std::string> extras() const;
+  const std::deque<dr_time>& times( ) const;
+  std::vector<std::string> extras( ) const;
 
 private:
   SignalData( const SignalData& orig );
@@ -82,18 +83,18 @@ private:
 
 
   const std::string label;
-  time_t firstdata;
-  time_t lastdata;
+  dr_time firstdata;
+  dr_time lastdata;
   size_t datacount;
   std::list<std::unique_ptr<DataRow>> data;
-  std::deque<time_t> dates;
+  std::deque<dr_time> dates;
   std::map<std::string, std::string> metadatas;
   std::map<std::string, int> metadatai;
   std::map<std::string, double> metadatad;
   std::FILE * file;
   bool popping;
   bool iswave;
-	std::set<std::string> extrafields;
+  std::set<std::string> extrafields;
 
   static const int CACHE_LIMIT;
   friend class TdmsReader; // needs to set scale

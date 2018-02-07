@@ -211,7 +211,7 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
     }
     else if ( TIME == firstword ) {
       state = zlReaderState::ZIN_TIME;
-      currentTime = std::stoi( chunk.substr( pos + 1 ) );
+      currentTime = std::stoi( chunk.substr( pos + 1 ) )* 1000;
     }
     else if ( state == zlReaderState::ZIN_HEADER ) {
       const int epos = chunk.find( '=' );

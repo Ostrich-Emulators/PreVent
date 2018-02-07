@@ -48,7 +48,7 @@ private:
 
 	bool firstread;
 	std::string leftoverText;
-	time_t currentTime;
+	dr_time currentTime;
 	zlReaderState state;
 	std::unique_ptr<StreamChunkReader> stream;
 

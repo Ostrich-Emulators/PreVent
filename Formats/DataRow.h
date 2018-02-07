@@ -19,9 +19,11 @@
 #include <vector>
 #include <map>
 
+#include "dr_time.h"
+
 class DataRow {
 public:
-	DataRow( const time_t& time, const std::string& data,
+	DataRow( const dr_time& time, const std::string& data,
 			const std::string& high = "", const std::string& low = "",
 			std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
 	DataRow( );
@@ -50,7 +52,7 @@ public:
 	std::string high;
 	std::string low;
 	std::map<std::string, std::string> extras;
-	time_t time;
+	dr_time time;
 };
 
 #endif /* DATAROW_H */

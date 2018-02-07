@@ -18,13 +18,15 @@
 #include <ctime>
 #include <wfdb/wfdb.h>
 
+#include "dr_time.h"
+
 class WfdbReader : public Reader {
 public:
 	WfdbReader( );
 
 	virtual ~WfdbReader( );
 
-	static time_t convert( const char * timestr );
+	static dr_time convert( const char * timestr );
 
 protected:
 	int prepare( const std::string& input, SignalSet& info ) override;

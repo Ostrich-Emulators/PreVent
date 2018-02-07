@@ -19,7 +19,7 @@ WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
 WfdbReader::~WfdbReader( ) {
 }
 
-time_t WfdbReader::convert( const char * timestr ) {
+dr_time WfdbReader::convert( const char * timestr ) {
   // HH:MM:SS format by timstr, with leading zero digits and colons suppressed.
   // If t is zero or negative, it is taken to represent negated elapsed time from
   // the beginning of the record, and it is converted to a time of day using the base
@@ -55,7 +55,7 @@ time_t WfdbReader::convert( const char * timestr ) {
   }
 
   // mktime includes timezone, and we want UTC
-  return timegm( &timeDate );
+  return timegm( &timeDate )* 1000;
 }
 
 int WfdbReader::prepare( const std::string& recordset, SignalSet& info ) {

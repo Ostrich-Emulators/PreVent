@@ -25,13 +25,13 @@ SignalUtils::SignalUtils( const SignalUtils& ) {
 SignalUtils::~SignalUtils( ) {
 }
 
-time_t SignalUtils::firstlast( const std::map<std::string, std::unique_ptr<SignalData>>&map,
-    time_t * first, time_t * last ) {
+dr_time SignalUtils::firstlast( const std::map<std::string, std::unique_ptr<SignalData>>&map,
+    dr_time * first, dr_time * last ) {
 
-  time_t earliest = std::numeric_limits<time_t>::max( );
+  dr_time earliest = std::numeric_limits<dr_time>::max( );
 
   if ( nullptr != first ) {
-    *first = std::numeric_limits<time_t>::max( );
+    *first = std::numeric_limits<dr_time>::max( );
   }
   if ( nullptr != last ) {
     *last = 0;
@@ -54,13 +54,13 @@ time_t SignalUtils::firstlast( const std::map<std::string, std::unique_ptr<Signa
   return earliest;
 }
 
-time_t SignalUtils::firstlast( const std::vector<std::unique_ptr<SignalData>>&signals,
-    time_t * first, time_t * last ) {
+dr_time SignalUtils::firstlast( const std::vector<std::unique_ptr<SignalData>>&signals,
+    dr_time * first, dr_time * last ) {
 
-  time_t earliest = std::numeric_limits<time_t>::max( );
+  dr_time earliest = std::numeric_limits<dr_time>::max( );
 
   if ( nullptr != first ) {
-    *first = std::numeric_limits<time_t>::max( );
+    *first = std::numeric_limits<dr_time>::max( );
   }
   if ( nullptr != last ) {
     *last = 0;
@@ -89,8 +89,8 @@ std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::vector<std::u
   std::vector<std::unique_ptr<SignalData> > tmp;
 
   // figure out if the data is already synced
-  time_t earliest;
-  time_t latest;
+  dr_time earliest;
+  dr_time latest;
   const size_t size = signals[0]->size( );
   firstlast( signals, &earliest, &latest );
   for ( const auto& m : signals ) {
@@ -162,8 +162,8 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
 
   std::vector<std::unique_ptr < SignalData>> ret;
 
-  time_t earliest;
-  time_t latest;
+  dr_time earliest;
+  dr_time latest;
   firstlast( data, &earliest, &latest );
 
 //  std::cout << "f/l:\t" << earliest << "\t" << latest << std::endl;
@@ -173,7 +173,6 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
 //  }
 
   float freq = ( *data.begin( ) )->hz( );
-  int timestep = ( freq < 1 ? 1 / freq : 1 );
 
   std::unique_ptr<DataRow> currenttimes[data.size( )];
   for ( int i = 0; i < data.size( ); i++ ) {
@@ -215,7 +214,7 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
     }
 
     // go through again and figure out which is our new earliest time
-    earliest = std::numeric_limits<time_t>::max( );
+    earliest = std::numeric_limits<dr_time>::max( );
     for ( int i = 0; i < data.size( ); i++ ) {
       if ( currenttimes[i] && currenttimes[i]->time < earliest ) {
         earliest = currenttimes[i]->time;
@@ -231,7 +230,7 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
 }
 
 void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<DataRow>& row,
-    time_t& nexttime, const int& timestep ) {
+    dr_time& nexttime, const int& timestep ) {
   if ( row->time == nexttime ) {
     return;
   }
@@ -249,7 +248,7 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
     return;
   }
 
-  time_t fillstart = nexttime;
+  dr_time fillstart = nexttime;
   for ( nexttime; nexttime < row->time - timestep; nexttime += timestep ) {
     signal->add( dummyfill( signal, nexttime ) );
   }
@@ -271,7 +270,7 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
   }
 }
 
-DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const time_t& time ) {
+DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time ) {
   std::string dummy = Reader::MISSING_VALUESTR;
 
   if ( signal->wave( ) ) {
@@ -282,8 +281,8 @@ DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const time_
   return DataRow( time, dummy );
 }
 
-std::vector<time_t> SignalUtils::alltimes( const SignalSet& ss ) {
-  std::set<time_t> times;
+std::vector<dr_time> SignalUtils::alltimes( const SignalSet& ss ) {
+  std::set<dr_time> times;
   for ( const auto& signal : ss.vitals( ) ) {
     times.insert( signal.second->times( ).begin( ), signal.second->times( ).end( ) );
   }
@@ -291,17 +290,17 @@ std::vector<time_t> SignalUtils::alltimes( const SignalSet& ss ) {
     times.insert( signal.second->times( ).begin( ), signal.second->times( ).end( ) );
   }
 
-  std::vector<time_t> vec( times.begin( ), times.end( ) );
+  std::vector<dr_time> vec( times.begin( ), times.end( ) );
   std::sort( vec.begin( ), vec.end( ) );
 
   return vec;
 }
 
-std::vector<size_t> SignalUtils::index( const std::vector<time_t>& alltimes,
+std::vector<size_t> SignalUtils::index( const std::vector<dr_time>& alltimes,
     const SignalData& signal ) {
 
   std::cout << "signaltimes values: " << signal.times( ).size( ) << std::endl;
-  std::deque<time_t> signaltimes( signal.times( ).begin( ), signal.times( ).end( ) );
+  std::deque<dr_time> signaltimes( signal.times( ).begin( ), signal.times( ).end( ) );
   std::sort( signaltimes.begin( ), signaltimes.end( ) );
   const double hz = signal.hz( );
   const int rowsPerTime = ( hz < 1.0 ? 1 : (int) hz );
@@ -310,7 +309,7 @@ std::vector<size_t> SignalUtils::index( const std::vector<time_t>& alltimes,
   std::vector<size_t> indexes;
 
   size_t currentIndex = 0;
-  for ( time_t all : alltimes ) {
+  for ( dr_time all : alltimes ) {
     std::cout << "all: " << all << "\t front: " << signaltimes.front( ) << std::endl;
     indexes.push_back( currentIndex );
     if ( !signaltimes.empty( ) && signaltimes.front( ) == all ) {

@@ -48,7 +48,7 @@ protected:
    * modify the given date. This is important when anonymizing data
    * @param 
    */
-  time_t datemod( const time_t& rawdate ) const;
+  dr_time datemod( const dr_time& rawdate ) const;
   /**
    * Trims the given string in-place, and returns it
    * @param totrim
@@ -60,12 +60,12 @@ protected:
   virtual void start( const std::string& element, std::map<std::string, std::string>& attrs ) = 0;
   virtual void end( const std::string& element, const std::string& text ) = 0;
 
-  time_t time( const std::string& val ) const;
-  bool isRollover( const time_t& now, const time_t& then ) const;
+  dr_time time( const std::string& val ) const;
+  bool isRollover( const dr_time& now, const dr_time& then ) const;
   void startSaving( );
   void setResult( ReadResult rslt );
   bool isFirstRead( ) const;
-  void setDateModifier( const time_t& mod );
+  void setDateModifier( const dr_time& mod );
 
   SignalSet saved;
   SignalSet * filler;
@@ -81,7 +81,7 @@ private:
   std::ifstream input;
   ReadResult rslt;
 
-  time_t datemodifier;
+  dr_time datemodifier;
   bool firstread;
 };
 

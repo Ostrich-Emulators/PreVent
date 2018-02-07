@@ -9,6 +9,7 @@
 #include <memory>
 #include <sstream>
 
+#include "dr_time.h"
 #include "SignalSet.h"
 
 class SignalData;

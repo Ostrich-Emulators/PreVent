@@ -52,6 +52,13 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
+      const std::string& attr, dr_time val ) {
+  H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
+  H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I64LE, space );
+  attrib.write( H5::PredType::STD_I64LE, &val );
+}
+
+void Hdf5Writer::writeAttribute( H5::H5Location& loc,
       const std::string& attr, double val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::IEEE_F64LE, space );
@@ -59,19 +66,21 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 }
 
 void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
-      const time_t& start, const time_t& end ) {
-  writeAttribute( loc, "Start Time", (int) start );
-  writeAttribute( loc, "End Time", (int) end );
+      const dr_time& start, const dr_time& end ) {
+  writeAttribute( loc, "Start Time", start );
+  writeAttribute( loc, "End Time", end );
 
   char buf[sizeof "2011-10-08T07:07:09Z"];
-  strftime( buf, sizeof buf, "%FT%TZ", gmtime( &start ) );
+  time_t stime = start / 1000;
+  time_t etime = end / 1000;
+  strftime( buf, sizeof buf, "%FT%TZ", gmtime( &stime ) );
 
   writeAttribute( loc, "Start Date/Time", buf );
   buf[sizeof "2011-10-08T07:07:09Z"];
-  strftime( buf, sizeof buf, "%FT%TZ", gmtime( &end ) );
+  strftime( buf, sizeof buf, "%FT%TZ", gmtime( &etime ) );
   writeAttribute( loc, "End Date/Time", buf );
 
-  time_t xx( end - start );
+  time_t xx( etime - stime );
   tm * t = gmtime( &xx );
 
   std::string duration = "";
@@ -120,7 +129,7 @@ void Hdf5Writer::writeAttributes( H5::DataSet& ds, const SignalData& data ) {
 
 void Hdf5Writer::writeFileAttributes( H5::H5File file,
       std::map<std::string, std::string> datasetattrs,
-      const time_t& firstTime, const time_t& lastTime ) {
+      const dr_time& firstTime, const dr_time& lastTime ) {
 
   writeTimesAndDurationAttributes( file, firstTime, lastTime );
 
@@ -233,14 +242,14 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
   H5::Group wavetimes = grp.createGroup( "Waveforms" );
   H5::Group vittimes = grp.createGroup( "Vitals" );
 
-  std::map<long, time_t> segmentsizes = data.offsets( );
+  std::map<long, dr_time> segmentsizes = data.offsets( );
   if ( !segmentsizes.empty( ) ) {
     hsize_t dims[] = { segmentsizes.size( ), 2 };
     H5::DataSpace space( 2, dims );
 
     H5::DataSet ds = events.createDataSet( "Segment Offsets",
           H5::PredType::STD_I64LE, space );
-    long indexes[segmentsizes.size( ) * 2] = { 0 };
+    long long indexes[segmentsizes.size( ) * 2] = { 0 };
     int row = 0;
     for ( const auto& e : segmentsizes ) {
       indexes[ 2 * row ] = e.second;
@@ -248,18 +257,18 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
       row++;
     }
     ds.write( indexes, H5::PredType::STD_I64LE );
-    writeAttribute( ds, "Columns", "time, segment offset" );
+    writeAttribute( ds, "Columns", "timestamp, segment offset" );
     writeAttribute( ds, "Timezone", "UTC" );
   }
 
   for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {
     // output() << "writing times for " << m->name( ) << std::endl;
-    std::vector<time_t> times( m->times( ).rbegin( ), m->times( ).rend( ) );
+    std::vector<dr_time> times( m->times( ).rbegin( ), m->times( ).rend( ) );
 
     H5::Group * mygrp = ( m->wave( ) ? &wavetimes : &vittimes );
 
     if ( m->wave( ) ) {
-      std::vector<time_t> alltimes;
+      std::vector<dr_time> alltimes;
       alltimes.reserve( times.size( ) );
 
       for ( auto& t : times ) {
@@ -275,6 +284,7 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
           H5::PredType::STD_I64LE, space );
     ds.write( &times[0], H5::PredType::STD_I64LE );
     writeAttribute( ds, "Time Source", "raw" );
+    writeAttribute( ds, "Columns", "timestamp" );
     writeAttribute( ds, SignalData::VALS_PER_DR, m->valuesPerDataRow( ) );
   }
 }
@@ -294,10 +304,10 @@ int Hdf5Writer::drain( SignalSet& info ) {
 std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   SignalSet& data = *dataptr;
 
-  time_t firstTime = data.earliest( );
-  time_t lastTime = data.latest( );
+  dr_time firstTime = data.earliest( );
+  dr_time lastTime = data.latest( );
   std::vector<std::string> ret;
-  if( 0 == lastTime ){
+  if ( 0 == lastTime ) {
     // we don't have any data at all!
     return ret;
   }

@@ -60,11 +60,11 @@ public:
 	void addMeta( const std::string& key, const std::string& val );
 	void reset( bool signalDataOnly = true );
 	void setFileSupport( bool );
-	time_t earliest( const TimeCounter& tc = EITHER ) const;
-	time_t latest( const TimeCounter& tc = EITHER ) const;
+	dr_time earliest( const TimeCounter& tc = EITHER ) const;
+	dr_time latest( const TimeCounter& tc = EITHER ) const;
 	void setMetadataFrom( const SignalSet& target );
-	const std::map<long, time_t>& offsets() const;
-	void addOffset( long seg, time_t time );
+	const std::map<long, dr_time>& offsets() const;
+	void addOffset( long seg, dr_time time );
 	void clearOffsets();
 
 private:
@@ -74,7 +74,7 @@ private:
 	std::map<std::string, std::unique_ptr<SignalData>> vmap;
 	std::map<std::string, std::unique_ptr<SignalData>> wmap;
 	std::map<std::string, std::string> metamap;
-	std::map<long, time_t> segs; // segment index->time
+	std::map<long, dr_time> segs; // segment index->time
 	bool largefile;
 };
 

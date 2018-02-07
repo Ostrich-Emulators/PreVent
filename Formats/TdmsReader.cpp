@@ -25,12 +25,12 @@ TdmsReader::~TdmsReader( ) {
 
 }
 
-time_t TdmsReader::parsetime( const std::string& timestr ) {
+dr_time TdmsReader::parsetime( const std::string& timestr ) {
   // sample: 14.12.2017 17:49:24,0.000000
   tm brokenTime;
   strptime( timestr.c_str( ), "%d.%m.%Y %H:%M:%S", &brokenTime );
   time_t sinceEpoch = timegm( &brokenTime );
-  return sinceEpoch;
+  return sinceEpoch* 1000;
 }
 
 int TdmsReader::prepare( const std::string& recordset, SignalSet& info ) {
@@ -70,7 +70,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
           std::string name = ch->getName( );
           name = name.substr( 2, name.length( ) - 3 );
           output( ) << "reading " << name << std::endl;
-          time_t time = 0;
+          dr_time time = 0;
           double timeinc = 1;
           int freq = 0; // waves have an integer frequency
           auto propmap = ch->getProperties( );

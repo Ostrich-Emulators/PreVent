@@ -106,11 +106,11 @@ double SignalData::hz( ) const {
         : metadatad.at( SignalData::HERTZ ) );
 }
 
-const time_t& SignalData::startTime( ) const {
+const dr_time& SignalData::startTime( ) const {
   return firstdata;
 }
 
-const time_t& SignalData::endTime( ) const {
+const dr_time& SignalData::endTime( ) const {
   return lastdata;
 }
 
@@ -298,7 +298,7 @@ void SignalData::setScale( int x ) {
   metadatai[SCALE] = x;
 }
 
-const std::deque<time_t>& SignalData::times( ) const {
+const std::deque<dr_time>& SignalData::times( ) const {
   return dates;
 }
 

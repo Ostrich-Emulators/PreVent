@@ -212,7 +212,7 @@ int Db::getOrAddBed( const std::string& name, const std::string& unitname ) {
 }
 
 void Db::addOffsets( int fileid, const SignalSet& sig ) {
-  std::map<long, time_t> offsets = sig.offsets( );
+  std::map<long, dr_time> offsets = sig.offsets( );
   if ( !offsets.empty( ) ) {
     sqlite3_stmt * stmt = nullptr;
     std::string sql = "INSERT INTO offset( file_id, time, offset ) VALUES ( ?, ?, ? )";

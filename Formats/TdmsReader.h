@@ -36,7 +36,7 @@ protected:
 private:
   std::unique_ptr<TdmsParser> parser;
   
-  static time_t parsetime( const std::string& timestr );
+  static dr_time parsetime( const std::string& timestr );
 };
 
 #endif /* WFDBREADER_H */

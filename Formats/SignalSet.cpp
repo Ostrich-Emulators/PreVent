@@ -67,14 +67,14 @@ void SignalSet::setMetadataFrom( const SignalSet& src ) {
   }
 }
 
-time_t SignalSet::earliest( const TimeCounter& type ) const {
-  time_t early = std::numeric_limits<time_t>::max( );
+dr_time SignalSet::earliest( const TimeCounter& type ) const {
+  dr_time early = std::numeric_limits<dr_time>::max( );
 
   if ( TimeCounter::VITAL == type || TimeCounter::EITHER == type ) {
     early = SignalUtils::firstlast( vmap );
   }
   if ( TimeCounter::WAVE == type || TimeCounter::EITHER == type ) {
-    time_t w = SignalUtils::firstlast( wmap );
+    dr_time w = SignalUtils::firstlast( wmap );
     if ( w < early ) {
       early = w;
     }
@@ -83,15 +83,15 @@ time_t SignalSet::earliest( const TimeCounter& type ) const {
   return early;
 }
 
-time_t SignalSet::latest( const TimeCounter& type ) const {
-  time_t last = 0;
+dr_time SignalSet::latest( const TimeCounter& type ) const {
+  dr_time last = 0;
 
   if ( TimeCounter::VITAL == type || TimeCounter::EITHER == type ) {
     SignalUtils::firstlast( vmap, nullptr, &last );
   }
 
   if ( TimeCounter::WAVE == type || TimeCounter::EITHER == type ) {
-    time_t w;
+    dr_time w;
     SignalUtils::firstlast( wmap, nullptr, &w );
     if ( w > last ) {
       last = w;
@@ -151,11 +151,11 @@ void SignalSet::reset( bool signalDataOnly ) {
   }
 }
 
-const std::map<long, time_t>& SignalSet::offsets( ) const {
+const std::map<long, dr_time>& SignalSet::offsets( ) const {
   return segs;
 }
 
-void SignalSet::addOffset( long seg, time_t time ) {
+void SignalSet::addOffset( long seg, dr_time time ) {
   segs[seg] = time;
 }
 
