@@ -31,12 +31,22 @@ void helpAndExit( char * progname, std::string msg = "" ) {
         << std::endl << "\t-e or --export <vital/wave to export>"
         << std::endl << "\t-s or --sqlite <db file>"
         << std::endl << "\t-q or --quiet"
+        << std::endl << "\t-P or --pattern <naming pattern>"
         << std::endl << "\t-n or --no-break or --one-file"
         << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
         << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml, stpjson, tdms"
         << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
         << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
-        << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file"
+        << std::endl << "\tthe --pattern option recognizes these format specifiers:"
+        << std::endl << "\t  %p - patient ordinal"
+        << std::endl << "\t  %o - input filename (without extension)"
+        << std::endl << "\t  %x - input extension"
+        << std::endl << "\t  %d - date of input file"
+        << std::endl << "\t  %D - date of conversion"
+        << std::endl << "\t  %s - date of first data point"
+        << std::endl << "\t  %e - date of last data point"
+        << std::endl << "\t  %n - output ordinal"
+        << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file (or pattern)"
         //<< std::endl << "\tIf file is -, stdin is read for input, and the format is assumed to be our zl format, regardless of --from option"
         << std::endl << std::endl;
   exit( 1 );
@@ -56,25 +66,31 @@ struct option longopts[] = {
   { "anonymous", no_argument, NULL, 'a' },
   { "no-break", no_argument, NULL, 'n' },
   { "one-file", no_argument, NULL, 'n' },
+  { "pattern", no_argument, NULL, 'P' },
   { 0, 0, 0, 0 }
 };
+
+std::string parsePattern( const std::string& pattern, const std::string& inputfile ) {
+
+}
 
 int main( int argc, char** argv ) {
   char c;
   extern int optind;
   extern char * optarg;
-  std::string fromstr = "";
-  std::string tostr = "";
+  std::string fromstr;
+  std::string tostr;
   std::string outdir = ".";
-  std::string prefix = "";
-  std::string exp = "";
-  std::string sqlitedb = "";
+  std::string prefix;
+  std::string exp;
+  std::string sqlitedb;
+  std::string pattern;
   bool anonymize = false;
   bool quiet = false;
   bool nobreak = false;
   int compression = 6;
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qan", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanP:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -99,6 +115,9 @@ int main( int argc, char** argv ) {
         break;
       case 's':
         sqlitedb = optarg;
+        break;
+      case 'P':
+        pattern = optarg;
         break;
       case 'a':
         anonymize = true;
@@ -208,6 +227,10 @@ int main( int argc, char** argv ) {
     to->setOutputDir( outdir );
     to->setCompression( compression );
     to->setOutputPrefix( prefix );
+
+    if ( !pattern.empty( ) ) {
+      to->setOutputPattern( parsePattern( pattern, input ) );
+    }
 
     if ( from->prepare( input, data ) < 0 ) {
       std::cerr << "could not prepare file for reading" << std::endl;

@@ -26,6 +26,7 @@ public:
   void setCompression( int lev );
   void addListener( std::shared_ptr<ConversionListener> listener );
   void setQuiet( bool = true );
+  void setOutputPattern( const std::string& pat );
   
   /**
    * Sets a single name for non-breaking output file
@@ -78,6 +79,7 @@ private:
   bool quiet;
   std::stringstream ss;
   std::string outputname;
+  std::string outputpattern;
 };
 
 #endif /* WRITER_H */
