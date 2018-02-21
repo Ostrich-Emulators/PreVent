@@ -197,8 +197,8 @@ void SignalData::add( const DataRow& row ) {
     // copy current data list to disk
     cache( );
   }
-
-  int rowscale = DataRow::scale( row.data );
+  
+  int rowscale = DataRow::scale( row.data, iswave );
   if ( rowscale > scale( ) ) {
     setScale( rowscale );
   }

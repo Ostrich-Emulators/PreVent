@@ -185,7 +185,7 @@ void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
 
   for ( int row = 0; row < rows; row++ ) {
     std::unique_ptr<DataRow> datarow = data.pop( );
-    std::vector<short> ints = datarow->shorts( );
+    std::vector<short> ints = DataRow::shorts( datarow->data, data.scale( ) );
     buffer.insert( buffer.end( ), ints.begin( ), ints.end( ) );
 
     if ( buffer.size( ) >= maxslabcnt ) {
@@ -373,11 +373,13 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   output( ) << "Writing " << data.waves( ).size( ) << " Waveforms" << std::endl;
   for ( auto& wavs : data.waves( ) ) {
     output( ) << "Writing Wave: " << wavs.first;
-    int hz = wavs.second->metad( ).at( SignalData::HERTZ );
     auto st = std::chrono::high_resolution_clock::now( );
 
     hsize_t sz = wavs.second->size( );
-    hsize_t dims[] = { sz * hz * 2, 1 }; // each datarow is 2s long, at hz values/s
+
+    int valsperrow = wavs.second->metai( ).at( SignalData::VALS_PER_DR );
+
+    hsize_t dims[] = { sz * valsperrow, 1 };
     H5::DataSpace space( 2, dims );
     H5::DSetCreatPropList props;
     if ( compression > 0 ) {
@@ -388,7 +390,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     }
     H5::DataSet ds = grp.createDataSet( wavs.first, H5::PredType::STD_I16LE, space, props );
     writeAttributes( ds, *( wavs.second ) );
-    writeAttribute( ds, "Columns", "value" );
+    writeAttribute( ds, "Columns", "scaled value" );
     writeAttribute( ds, "Data Label", wavs.first );
 
     writeWave( ds, space, *( wavs.second ) );

@@ -291,7 +291,7 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
     while ( !signal->empty( ) ) {
       const auto& datarow = signal->pop( );
 
-      std::vector<short> slices = datarow->shorts( );
+      std::vector<short> slices = DataRow::shorts( datarow->data, signal->scale() );
       data.insert( data.end( ), slices.begin( ), slices.end( ) );
 
       if ( datachunksz == data.size( ) ) {

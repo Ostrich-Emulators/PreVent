@@ -59,6 +59,7 @@ protected:
   void copysaved( SignalSet& newset );
   virtual void start( const std::string& element, std::map<std::string, std::string>& attrs ) = 0;
   virtual void end( const std::string& element, const std::string& text ) = 0;
+  virtual void comment( const std::string& text ) = 0;
 
   dr_time time( const std::string& val ) const;
   bool isRollover( const dr_time& now, const dr_time& then ) const;
@@ -74,6 +75,7 @@ private:
   static void start( void * data, const char * el, const char ** attr );
   static void end( void * data, const char * el );
   static void chars( void * data, const char * text, int len );
+  static void comment( void * data, const char * text );
   static std::string working;
   static bool accumulateText;
 

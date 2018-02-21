@@ -35,7 +35,8 @@ const int StpXmlReader::INNAME = 8;
 
 StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ), warnMissingName( true ),
 warnJunkData( true ), prevtime( 0 ), currvstime( 0 ), lastvstime( 0 ),
-currwavetime( 0 ), lastwavetime( 0 ), state( INDETERMINATE ), currsegidx( 0 ) {
+currwavetime( 0 ), lastwavetime( 0 ), state( INDETERMINATE ), currsegidx( 0 ),
+v8( false ), isphilips( false ) {
 }
 
 StpXmlReader::StpXmlReader( const StpXmlReader& orig ) : XmlReaderBase( orig ) {
@@ -52,13 +53,13 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
   if ( "FileInfo" == element ) {
     setstate( INHEADER );
   }
-  else if ( std::string::npos != element.find( "Segment_" ) ) {
+  else if ( std::string::npos != element.find( "Segment" ) ) {
     currsegidx = std::stol( attributes["Offset"] );
   }
   else if ( "VitalSigns" == element ) {
     setstate( INVITAL );
     lastvstime = currvstime;
-    currvstime = time( attributes["Time"] );
+    currvstime = time( attributes[ v8 ? "CollectionTimeUTC" : "Time"] );
     if ( anonymizing( ) && isFirstRead( ) ) {
       setDateModifier( currvstime );
     }
@@ -76,7 +77,7 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
   else if ( "Waveforms" == element ) {
     setstate( INWAVE );
     lastwavetime = currwavetime;
-    currwavetime = time( attributes["Time"] );
+    currwavetime = time( attributes[ v8 ? "CollectionTimeUTC" : "Time"] );
     if ( anonymizing( ) && isFirstRead( ) ) {
       setDateModifier( currvstime );
     }
@@ -101,10 +102,22 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
 
     attrs = attributes;
     attrs.erase( "UOM" );
+
+    for ( auto it = attrs.begin( ); it != attrs.end( ); ) {
+      if ( it->second.empty( ) ) {
+        it = attrs.erase( it );
+      }
+      else {
+        it++;
+      }
+    }
   }
   else if ( "WaveformData" == element ) {
-    label = attributes["Channel"];
+    label = attributes[v8 ? "Label" : "Channel"];
     uom = attributes["UOM"];
+    if ( v8 ) {
+      v8samplerate = attributes["SampleRate"];
+    }
   }
 
   //  std::cout << "start " << element << std::endl;
@@ -119,6 +132,9 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
   if ( INHEADER == state ) {
     if ( "FileInfo" == element ) {
       setstate( INDETERMINATE );
+    }
+    else if ( "FamilyType" == element ) {
+      isphilips = ( "Philips" == text );
     }
     else if ( "Size" != element ) {
       filler->metadata( )[element] = text;
@@ -141,27 +157,36 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
     setstate( INDETERMINATE );
   }
   else if ( INVITAL == state ) {
-    if ( "Par" == element ) {
+    if ( "Par" == element || "Parameter" == element ) {
       label = text;
     }
     else if ( "Value" == element ) {
       value = text;
     }
-    else if ( "VS" == element ) {
+    else if ( "VS" == element || "VitalSign" == element ) {
       bool added = false;
-      std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
 
-      if ( added ) {
-        sig->metad( ).insert( std::make_pair( SignalData::HERTZ, 0.5 ) );
-        sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
-        sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
+      // v8 has a lot of stuff in value that isn't really a value
+      // so we need to check that we have a number here
+      try {
+        std::stof( value );
+        std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
 
-        if ( !uom.empty( ) ) {
-          sig->setUom( uom );
+        if ( added ) {
+          sig->metad( ).insert( std::make_pair( SignalData::HERTZ, ( isphilips ? 1.0 : 0.5 ) ) );
+          sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
+          sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
+
+          if ( !uom.empty( ) ) {
+            sig->setUom( uom );
+          }
         }
+        sig->add( DataRow( datemod( currvstime ), value, "", "", attrs ) );
       }
-
-      sig->add( DataRow( datemod( currvstime ), value, "", "", attrs ) );
+      catch ( std::invalid_argument ) {
+        // don't really care since we're not adding the data to our dataset
+        // value = MISSING_VALUESTR;
+      }
     }
     else if ( "VitalSigns" == element ) {
       setstate( INDETERMINATE );
@@ -179,13 +204,18 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
         std::string wavepoints = text;
         // reverse the oversampling (if any) and set the true Hz
         int thz = 240;
-        if ( 0 != Hz60.count( label ) ) {
-          wavepoints = resample( text, 60 );
-          thz = 60;
+        if ( v8 ) {
+          thz = std::stoi( v8samplerate );
         }
-        else if ( 0 != Hz120.count( label ) ) {
-          wavepoints = resample( text, 120 );
-          thz = 120;
+        else {
+          if ( 0 != Hz60.count( label ) ) {
+            wavepoints = resample( text, 60 );
+            thz = 60;
+          }
+          else if ( 0 != Hz120.count( label ) ) {
+            wavepoints = resample( text, 120 );
+            thz = 120;
+          }
         }
         const int hz = thz;
 
@@ -195,15 +225,16 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           if ( first ) {
             sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
             sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
-            sig->setValuesPerDataRow( 2 * hz ); // Stp always reads in 2s increments
+            // Stp always reads in 1s increments for Philips, 2s for GE monitors
+            sig->setValuesPerDataRow( isphilips ? hz : 2 * hz );
 
-            if ( sig->uom( ).empty( ) && !uom.empty( ) ) {
+            if ( !uom.empty( ) ) {
               sig->setUom( uom );
             }
           }
 
-          sig->metad( )[SignalData::HERTZ] = hz;
-          sig->add( DataRow( datemod( currwavetime ), wavepoints, "", "", attrs ) );
+          sig->metad( )[SignalData::HERTZ] = hz;          
+          sig->add( DataRow( datemod( currwavetime ), wavepoints, "", "", attrs ) );          
         }
         else if ( warnJunkData ) {
           warnJunkData = false;
@@ -217,6 +248,17 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
   }
 
   // std::cout << "end " << element << std::endl; //"(" << text << ")" << std::endl;
+}
+
+void StpXmlReader::comment( const std::string& text ) {
+  size_t pos = text.find( "Version " );
+  if ( pos != std::string::npos ) {
+    std::string versiontxt = text.substr( pos + 8 );
+    int ver = std::stof( versiontxt );
+    if ( ver >= 8.0 ) {
+      v8 = true;
+    }
+  }
 }
 
 std::string StpXmlReader::resample( const std::string& data, int hz ) {
@@ -264,7 +306,6 @@ std::string StpXmlReader::resample( const std::string& data, int hz ) {
 
 bool StpXmlReader::waveIsOk( const std::string& wavedata ) {
   // if all the values are -32768 or -32753, this isn't a valid reading
-  bool oneok = false;
   std::stringstream stream( wavedata );
   for ( std::string each; std::getline( stream, each, ',' ); ) {
     if ( !( "-32768" == each || "-32753" == each ) ) {

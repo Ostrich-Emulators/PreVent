@@ -40,8 +40,9 @@ private:
 	static std::string resample( const std::string& data, int hz );
 	static bool waveIsOk( const std::string& wavedata );
 
-	virtual void start( const std::string& element, std::map<std::string, std::string>& attrs );
-	virtual void end( const std::string& element, const std::string& text );
+	virtual void start( const std::string& element, std::map<std::string, std::string>& attrs ) override;
+	virtual void end( const std::string& element, const std::string& text ) override;
+	virtual void comment( const std::string& text ) override;
 
 	void setstate( int state );
 
@@ -53,11 +54,14 @@ private:
 	long currsegidx;
 	bool warnMissingName;
 	bool warnJunkData;
+    bool v8;
+    bool isphilips;
 
 	int state;
 	std::string label;
 	std::string value;
 	std::string uom;
+    std::string v8samplerate;
 	std::map<std::string, std::string> attrs;
 };
 

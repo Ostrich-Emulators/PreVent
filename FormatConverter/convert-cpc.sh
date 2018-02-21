@@ -1,6 +1,5 @@
 #!/bin/bash
 
-STP2XML=/opt/StpToXml/StpToXml.exe
 FMTCNV=/opt/formatconverter/formatconverter
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/formatconverter
 
@@ -56,8 +55,17 @@ PROCLOG=processing.log
 ERRLOG=errors.log
 DONELOG=done.log
 
+
 touch $PROCLOG
-ls -tr $DIR/*.Stp $DIR/*.xml 1>/dev/null 2>&1
+ls $DIR | while read datedir; do
+  ls $DIR/$datedir | while read bid; do
+    ls $DIR/$datedir/$bid/*.zip | while read zipfile; do 
+      #unzip -c $zipfile | 
+      ls $unzip
+    done
+  done
+done
+exit
 x=$?
 if [ "$x" -eq "0" ] ; then
   FMT=$(echo $DIR|cut -d- -f2)

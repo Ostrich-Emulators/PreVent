@@ -40,6 +40,10 @@ currtime( 0 ), lasttime( 0 ) {
 CpcXmlReader::~CpcXmlReader( ) {
 }
 
+void CpcXmlReader::comment( const std::string& text ) {
+  // nothing to do  
+}
+
 void CpcXmlReader::start( const std::string& element,
     std::map<std::string, std::string>& attrs ) {
   if ( "cpc" == element ) {

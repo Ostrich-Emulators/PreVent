@@ -23,36 +23,35 @@
 
 class DataRow {
 public:
-	DataRow( const dr_time& time, const std::string& data,
-			const std::string& high = "", const std::string& low = "",
-			std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
-	DataRow( );
-	DataRow( const DataRow& orig );
-	DataRow& operator=(const DataRow& orig );
+  DataRow( const dr_time& time, const std::string& data,
+        const std::string& high = "", const std::string& low = "",
+        std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
+  DataRow( );
+  DataRow( const DataRow& orig );
+  DataRow& operator=(const DataRow& orig );
 
-	void clear( );
+  void clear( );
 
-	/**
-	 * convert our "data" value into list of ints. WARNING: if the data isn't an
-	 * int, we will lose precision. This function is most useful for converting
-	 * wave datapoints
-	 * @return
-	 */
-	std::vector<int> ints( ) const;
-	std::vector<short> shorts( ) const;
-	static std::vector<int> ints( const std::string& );
-	static std::vector<short> shorts( const std::string& );
+  /**
+   * convert our "data" value into list of ints. WARNING: if the data isn't an
+   * int, we will lose precision. This function is most useful for converting
+   * wave datapoints
+   * @return
+   */
+  std::vector<int> ints( ) const;
+  static std::vector<int> ints( const std::string& );
+  static std::vector<short> shorts( const std::string&, int scale = 1 );
 
 
-	virtual ~DataRow( );
+  virtual ~DataRow( );
 
-	static int scale( const std::string& val );
+  static int scale( const std::string& val, bool iswave );
 
-	std::string data;
-	std::string high;
-	std::string low;
-	std::map<std::string, std::string> extras;
-	dr_time time;
+  std::string data;
+  std::string high;
+  std::string low;
+  std::map<std::string, std::string> extras;
+  dr_time time;
 };
 
 #endif /* DATAROW_H */

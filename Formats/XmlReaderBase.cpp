@@ -111,10 +111,17 @@ int XmlReaderBase::prepare( const std::string& fname, SignalSet& info ) {
     XML_SetUserData( parser, this );
     XML_SetElementHandler( parser, XmlReaderBase::start, XmlReaderBase::end );
     XML_SetCharacterDataHandler( parser, XmlReaderBase::chars );
+    XML_SetCommentHandler( parser, XmlReaderBase::comment );
     input.open( fname, std::ifstream::in );
     setResult( ReadResult::NORMAL );
   }
   return rr;
+}
+
+void XmlReaderBase::comment( void* data, const char* text ) {
+  XmlReaderBase * rdr = static_cast<XmlReaderBase *> ( data );
+  std::string comment( text );
+  rdr->comment( trim( comment ) );
 }
 
 void XmlReaderBase::copysaved( SignalSet& tgt ) {
