@@ -13,7 +13,6 @@
         <itemPath>TdmsReader.h</itemPath>
         <itemPath>WfdbReader.h</itemPath>
         <itemPath>XmlReaderBase.h</itemPath>
-        <itemPath>ZipReader.h</itemPath>
         <itemPath>ZlReader.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Writers" projectFiles="true">
@@ -21,7 +20,6 @@
         <itemPath>Hdf5Writer.h</itemPath>
         <itemPath>MatWriter.h</itemPath>
         <itemPath>WfdbWriter.h</itemPath>
-        <itemPath>ZipReader.cpp</itemPath>
         <itemPath>ZlWriter.h</itemPath>
         <itemPath>json.hpp</itemPath>
       </logicalFolder>
@@ -119,7 +117,6 @@
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
-            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/libminizip.so</linkerLibFileItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
@@ -205,10 +202,6 @@
       <item path="XmlReaderBase.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="XmlReaderBase.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="ZipReader.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="ZipReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -353,10 +346,6 @@
       </item>
       <item path="XmlReaderBase.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="ZipReader.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="ZipReader.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="ZlReader.h" ex="false" tool="3" flavor2="0">
@@ -500,10 +489,6 @@
       </item>
       <item path="XmlReaderBase.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="ZipReader.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="ZipReader.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="ZlReader.h" ex="false" tool="3" flavor2="0">
@@ -646,10 +631,6 @@
       <item path="XmlReaderBase.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="XmlReaderBase.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="ZipReader.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="ZipReader.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="11">
       </item>

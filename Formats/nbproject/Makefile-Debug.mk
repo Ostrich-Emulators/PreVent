@@ -55,7 +55,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/WfdbWriter.o \
 	${OBJECTDIR}/Writer.o \
 	${OBJECTDIR}/XmlReaderBase.o \
-	${OBJECTDIR}/ZipReader.o \
 	${OBJECTDIR}/ZlReader.o \
 	${OBJECTDIR}/ZlWriter.o
 
@@ -74,7 +73,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=`pkg-config --libs zlib` /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so `pkg-config --libs matio` `pkg-config --libs expat` -Wl,-rpath,'../libtdms/dist/Debug/GNU-Linux' -L../libtdms/dist/Debug/GNU-Linux -ltdms /usr/lib/x86_64-linux-gnu/libminizip.so  
+LDLIBSOPTIONS=`pkg-config --libs zlib` /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so `pkg-config --libs matio` `pkg-config --libs expat` -Wl,-rpath,'../libtdms/dist/Debug/GNU-Linux' -L../libtdms/dist/Debug/GNU-Linux -ltdms  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -85,8 +84,6 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: /usr/lib/
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: ../libtdms/dist/Debug/GNU-Linux/libtdms.so
-
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: /usr/lib/x86_64-linux-gnu/libminizip.so
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
@@ -192,11 +189,6 @@ ${OBJECTDIR}/XmlReaderBase.o: XmlReaderBase.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -s `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/XmlReaderBase.o XmlReaderBase.cpp
 
-${OBJECTDIR}/ZipReader.o: ZipReader.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -s `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ZipReader.o ZipReader.cpp
-
 ${OBJECTDIR}/ZlReader.o: ZlReader.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -214,7 +206,7 @@ ${OBJECTDIR}/ZlWriter.o: ZlWriter.cpp
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5_cpp.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libminizip.so
+	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5_cpp.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.so
 	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}
 
 # Subprojects
