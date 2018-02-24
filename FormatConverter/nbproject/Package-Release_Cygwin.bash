@@ -6,11 +6,11 @@
 
 # Macros
 TOP=`pwd`
-CND_PLATFORM=GNU-Linux
+CND_PLATFORM=Cygwin-Windows
 CND_CONF=Release_Cygwin
 CND_DISTDIR=dist
 CND_BUILDDIR=build
-CND_DLIB_EXT=so
+CND_DLIB_EXT=dll
 NBTMPDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
 OUTPUT_PATH=${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter
@@ -418,6 +418,18 @@ copyFileToTmpDir "${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.so" "${NBTM
 cd "${TOP}"
 makeDirectory "${NBTMPDIR}/formatconverter/bin"
 copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}" 0755
+
+cd "${TOP}"
+makeDirectory "${NBTMPDIR}/formatconverter/bin"
+copyFileToTmpDir "${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.dll" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/libFormats.dll" 0755
+
+cd "${TOP}"
+makeDirectory "${NBTMPDIR}/formatconverter/bin"
+copyFileToTmpDir "${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.dll" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/libtdms.dll" 0755
+
+cd "${TOP}"
+makeDirectory "${NBTMPDIR}/formatconverter/bin"
+copyFileToTmpDir "${OUTPUT_PATH}.exe" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}.exe" 0755
 
 
 # Generate tar file

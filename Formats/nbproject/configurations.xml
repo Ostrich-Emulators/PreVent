@@ -33,7 +33,6 @@
       <itemPath>SignalUtils.h</itemPath>
       <itemPath>Writer.h</itemPath>
       <itemPath>config.h</itemPath>
-      <itemPath>dr_time.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -68,6 +67,17 @@
       <itemPath>SignalSet.cpp</itemPath>
       <itemPath>SignalUtils.cpp</itemPath>
       <itemPath>Writer.cpp</itemPath>
+    </logicalFolder>
+    <logicalFolder name="TestFiles"
+                   displayName="Test Files"
+                   projectFiles="false"
+                   kind="TEST_LOGICAL_FOLDER">
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>Makefile</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -213,8 +223,6 @@
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="dr_time.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="json.hpp" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
@@ -356,8 +364,6 @@
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="dr_time.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="json.hpp" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
@@ -387,8 +393,8 @@
           <commandlineTool>g++</commandlineTool>
           <linkerLibItems>
             <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
-            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
-            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+            <linkerLibLibItem>hdf5.dll</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_cpp.dll</linkerLibLibItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
             <linkerLibProjectItem>
@@ -499,8 +505,6 @@
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="dr_time.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="json.hpp" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
@@ -530,8 +534,8 @@
           <commandlineTool>g++</commandlineTool>
           <linkerLibItems>
             <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
-            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
-            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+            <linkerLibLibItem>hdf5.dll</linkerLibLibItem>
+            <linkerLibLibItem>hdf5_cpp.dll</linkerLibLibItem>
             <linkerOptionItem>`pkg-config --libs matio`</linkerOptionItem>
             <linkerOptionItem>`pkg-config --libs expat`</linkerOptionItem>
             <linkerLibProjectItem>
@@ -641,8 +645,6 @@
       <item path="ZlWriter.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="dr_time.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="json.hpp" ex="false" tool="3" flavor2="0">
       </item>
