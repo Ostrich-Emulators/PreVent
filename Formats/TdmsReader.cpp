@@ -103,6 +103,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             else if ( "Frequency" == p.first ) {
               double f = std::stod( p.second );
               signal->metad( )[SignalData::HERTZ] = f;
+              signal->setValuesPerDataRow((int)f);
               if ( f > 1 ) { // wave!
                 freq = std::stoi( p.second );
               }
@@ -129,7 +130,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             if ( signal->wave( ) ) {
               // for waves, we need to construct a string of values that is 
               // {Frequency} items big
-              signal->setScale( 1000 ); // TDMS readouts seem to have 3 decimals
+              //signal->setScale( 1000 ); // TDMS readouts seem to have 3 decimals
 
               std::stringstream vals;
               int cnt = 0;

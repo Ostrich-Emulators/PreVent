@@ -21,15 +21,18 @@
 
 #include <H5Cpp.h>
 #include <H5Opublic.h>
+#include <vector>
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
-        << "Syntax: " << progname << " <input hdf5>"
-        << std::endl << "\t-m or --mrn <mrn>"
-        << std::endl << "\t-n or --name <patient name>"
+        << "Syntax: " << progname << "[options] <input hdf5>"
+        << std::endl << "\toptions:"
+        << std::endl << "\t-m or --mrn <mrn>\tsets MRN in file"
+        << std::endl << "\t-n or --name <patient name>\tsets name in file"
         << std::endl << "\t-o or --output <output file>"
-        << std::endl << "\t-a or --attr <key=value>"
+        << std::endl << "\t-a or --attr <key=value>\tsets the given attribute to the value"
         << std::endl << "\t-C or --clobber\toverwrite input file"
+        << std::endl << "\t-c --cat\tconcatenate files from command line, used with --output"
         << std::endl;
   exit( 1 );
 }
@@ -40,13 +43,13 @@ struct option longopts[] = {
   { "clobber", no_argument, NULL, 'C' },
   { "output", required_argument, NULL, 'o' },
   { "attr", required_argument, NULL, 'a' },
+  { "cat", no_argument, NULL, 'c' }, // all remaining args are files
   { 0, 0, 0, 0 }
 };
 
 void cloneFile( std::unique_ptr<H5::H5File>&infile,
       std::unique_ptr<H5::H5File>& outfile ) {
   hid_t ocpypl_id = H5Pcreate( H5P_OBJECT_COPY );
-  // FIXME: iterate through whatever's in the file
   for ( hsize_t i = 0; i < infile->getNumObjs( ); i++ ) {
     std::string name = infile->getObjnameByIdx( i );
     H5Ocopy( infile->getId( ), name.c_str( ),
@@ -84,6 +87,7 @@ void writeAttrs( std::unique_ptr<H5::H5File>& outfile, std::map<std::string, std
 
     H5::Attribute attrib = outfile->createAttribute( attr, st, space );
     attrib.write( st, val );
+    attrib.close( );
   }
 }
 
@@ -98,8 +102,10 @@ int main( int argc, char** argv ) {
   std::string outfilename = "";
   bool clobber = false;
   std::map <std::string, std::string> attrs;
+  bool catfiles = false;
+  std::vector<std::string> filesToCat;
 
-  while ( ( c = getopt_long( argc, argv, ":m:n:o:Ca:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":m:n:o:Ca:c:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'm':
         attrs["MRN"] = optarg;
@@ -126,6 +132,9 @@ int main( int argc, char** argv ) {
       case 'C':
         clobber = true;
         break;
+      case 'c':
+        catfiles = true;
+        break;
       case ':':
         std::cerr << "missing option argument" << std::endl;
         helpAndExit( argv[0] );
@@ -136,10 +145,26 @@ int main( int argc, char** argv ) {
         break;
     }
   }
-
   if ( ( optind + 1 ) > argc ) {
     helpAndExit( argv[0], "no file specified" );
   }
+
+  if ( catfiles ) {
+    if ( outfilename.empty( ) ) {
+      helpAndExit( argv[0], "please specify an output filename with --output" );
+    }
+
+    for ( int i = optind; i < argc; i++ ) {
+      filesToCat.push_back( argv[i] );
+    }
+
+    std::cout << "writing to " << outfilename << std::endl;
+    for ( auto x : filesToCat ) {
+      std::cout << "file to cat: " << x << std::endl;
+    }
+  }
+
+
 
   // something to acknowledge the program did something
   // (even if the user didn't ask us to do anything)
