@@ -13,10 +13,10 @@
 #include <iostream>
 #include <sys/stat.h>
 
-#include <tdms/TdmsParser.h>
-#include <tdms/TdmsChannel.h>
-#include <tdms/TdmsGroup.h>
-#include <tdms/TdmsMetaData.h>
+#include <TdmsParser.h>
+#include <TdmsChannel.h>
+#include <TdmsGroup.h>
+#include <TdmsMetaData.h>
 
 TdmsReader::TdmsReader( ) : Reader( "TDMS" ) {
 }

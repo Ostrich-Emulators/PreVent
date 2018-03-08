@@ -17,9 +17,8 @@
 #include "Reader.h"
 #include <memory>
 #include <string>
-#include <tdms/TdmsParser.h>
+#include <TdmsParser.h>
 
-class TdmsParser;
 
 class TdmsReader : public Reader {
 public:

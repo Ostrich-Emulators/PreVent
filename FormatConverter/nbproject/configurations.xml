@@ -610,6 +610,18 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libFormats.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
       </packaging>
       <item path="Db.cpp" ex="false" tool="1" flavor2="0">
@@ -1132,6 +1144,18 @@
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/libFormats.dll"
                             from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.dll"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libFormats.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so"
                             perm="755"
                             owner="root"
                             group="bin"/>
@@ -1735,6 +1759,24 @@
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}.exe"
                             from="${OUTPUT_PATH}.exe"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libFormats.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libtdms.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
                             perm="755"
                             owner="root"
                             group="bin"/>
@@ -2405,6 +2447,24 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libFormats.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libtdms.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
       </packaging>
       <item path="Db.cpp" ex="false" tool="1" flavor2="0">
@@ -2939,6 +2999,24 @@
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/libFormats.dll"
                             from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.dll"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libFormats.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libtdms.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.so"
                             perm="755"
                             owner="root"
                             group="bin"/>
@@ -3599,6 +3677,24 @@
                             perm="755"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libFormats.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libtdms.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
       </packaging>
       <item path="Db.cpp" ex="false" tool="1" flavor2="11">
@@ -4133,6 +4229,24 @@
           <packFileListElem type="File"
                             to="${PACKAGE_TOP_DIR}bin/libFormats.dll"
                             from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.dll"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libFormats.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so"
+                            perm="755"
+                            owner="root"
+                            group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}bin/libtdms.so"
+                            from="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.so"
                             perm="755"
                             owner="root"
                             group="bin"/>

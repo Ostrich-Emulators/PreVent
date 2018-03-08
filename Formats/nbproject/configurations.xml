@@ -104,6 +104,9 @@
           <stripSymbols>true</stripSymbols>
           <standard>11</standard>
           <commandlineTool>h5c++</commandlineTool>
+          <incDir>
+            <pElem>../libtdms/include</pElem>
+          </incDir>
           <commandLine>-Wno-deprecated -O0 -pg -g `wfdb-config --cflags`</commandLine>
         </ccTool>
         <linkerTool>
@@ -240,6 +243,9 @@
           <developmentMode>5</developmentMode>
           <standard>11</standard>
           <commandlineTool>h5c++</commandlineTool>
+          <incDir>
+            <pElem>../libtdms/include</pElem>
+          </incDir>
           <commandLine>-Wno-deprecated `wfdb-config --cflags`</commandLine>
         </ccTool>
         <fortranCompilerTool>
@@ -381,6 +387,9 @@
           <developmentMode>5</developmentMode>
           <standard>11</standard>
           <commandlineTool>h5c++</commandlineTool>
+          <incDir>
+            <pElem>../libtdms/include</pElem>
+          </incDir>
           <commandLine>-Wno-deprecated `wfdb-config --cflags` -D_XOPEN_SOURCE=700</commandLine>
         </ccTool>
         <fortranCompilerTool>
@@ -522,6 +531,9 @@
           <architecture>2</architecture>
           <standard>11</standard>
           <commandlineTool>h5c++</commandlineTool>
+          <incDir>
+            <pElem>../libtdms/include</pElem>
+          </incDir>
           <commandLine>-Wno-deprecated -O0 `wfdb-config --cflags` -D_XOPEN_SOURCE=700</commandLine>
         </ccTool>
         <fortranCompilerTool>
