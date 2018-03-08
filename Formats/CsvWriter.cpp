@@ -38,7 +38,7 @@ std::vector<std::string> CsvWriter::closeDataSet( ) {
 }
 
 int CsvWriter::drain( SignalSet& info ) {
-  time_t firsttime = info.earliest( );
+  dr_time firsttime = info.earliest( );
   std::string sfx = Writer::getDateSuffix( firsttime );
   filename = filestart + sfx + ".csv";
 

@@ -31,7 +31,7 @@ DEFAULTCONF=Release
 CONF=${DEFAULTCONF}
 
 # All Configurations
-ALLCONFS=Release Debug_big Release_Cygwin Debug_Cygwin Debug Debug_zl Debug_tdms 
+ALLCONFS=Release Debug_big Release_Cygwin Debug_Cygwin Debug Debug_zl Debug_tdms Debug_cpc 
 
 
 # build

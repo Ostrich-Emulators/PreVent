@@ -29,7 +29,7 @@ MatWriter::~MatWriter( ) {
 }
 
 int MatWriter::initDataSet( const std::string& directory, const std::string& namestart, int comp ) {
-  firsttime = std::numeric_limits<time_t>::max( );
+  firsttime = std::numeric_limits<dr_time>::max( );
   fileloc = directory + namestart;
   compression = ( 0 == comp ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
 
@@ -239,10 +239,10 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   std::vector<std::unique_ptr < SignalData>> signals = SignalUtils::sync( oldsignals );
   SignalUtils::firstlast( signals, &earliest, &latest );
 
-  std::vector<time_t> alltimes64( signals[0]->times( ).rbegin( ), signals[0]->times( ).rend( ) );
+  std::vector<dr_time> alltimes64( signals[0]->times( ).rbegin( ), signals[0]->times( ).rend( ) );
   std::vector<int> alltimes;
   alltimes.reserve( alltimes64.size( ) );
-  for ( time_t& t64 : alltimes64 ) {
+  for ( dr_time& t64 : alltimes64 ) {
     alltimes.push_back( (int) t64 );
   }
 

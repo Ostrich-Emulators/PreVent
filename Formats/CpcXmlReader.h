@@ -37,14 +37,16 @@ protected:
 private:
 	const static std::set<std::string> ignorables;
 	CpcXmlReader( const CpcXmlReader& orig );
-	time_t currtime;
-	time_t lasttime;
+	dr_time currtime;
+	dr_time lasttime;
 	std::string label;
 	std::string value;
 	double wavehz;
+    int valsperdr;
 	bool inmg;
 	bool inwave;
 	bool inhz;
+    bool inpoints;
 
 };
 

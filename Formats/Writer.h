@@ -41,7 +41,7 @@ public:
 protected:
   std::ostream& output( ) const;
 
-  static std::string getDateSuffix( const time_t& date, const std::string& sep = "-" );
+  static std::string getDateSuffix( const dr_time& date, const std::string& sep = "-" );
 
   /**
    * Initializes a new (possibly temporary) data file

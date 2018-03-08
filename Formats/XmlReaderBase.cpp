@@ -27,7 +27,7 @@
 
 bool XmlReaderBase::accumulateText = false;
 std::string XmlReaderBase::working;
-const int XmlReaderBase::READCHUNK = 16384 * 16;
+const int XmlReaderBase::READCHUNK = 16384 / 4; // * 16;
 
 XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ), datemodifier( 0 ) {
 }
@@ -80,11 +80,11 @@ void XmlReaderBase::chars( void * data, const char * text, int len ) {
 std::string XmlReaderBase::trim( std::string & totrim ) {
   // ltrim
   totrim.erase( totrim.begin( ), std::find_if( totrim.begin( ), totrim.end( ),
-        std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
+          std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
 
   // rtrim
   totrim.erase( std::find_if( totrim.rbegin( ), totrim.rend( ),
-        std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
+          std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
 
   return totrim;
 }
@@ -98,7 +98,7 @@ void XmlReaderBase::startSaving( ) {
 void XmlReaderBase::setResult( ReadResult rslt ) {
   // if we're not breaking our output, then ignore End of Day and End of Patient
   if ( nonbreaking( ) &&
-        ( ReadResult::END_OF_DAY == rslt || ReadResult::END_OF_PATIENT == rslt ) ) {
+          ( ReadResult::END_OF_DAY == rslt || ReadResult::END_OF_PATIENT == rslt ) ) {
     return;
   }
   this->rslt = rslt;
@@ -172,7 +172,15 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
   std::vector<char> buffer( READCHUNK, 0 );
   while ( input.read( buffer.data( ), buffer.size( ) ) ) {
     long gcnt = input.gcount( );
-    XML_Parse( parser, &buffer[0], buffer.size( ), gcnt < READCHUNK );
+    XML_Status status = XML_Parse( parser, &buffer[0], buffer.size( ), gcnt < READCHUNK );
+    if ( status != XML_STATUS_OK ) {
+      XML_Error err = XML_GetErrorCode( parser );
+      std::cerr << XML_ErrorString( err )
+              << " line: " << XML_GetCurrentLineNumber( parser )
+              << " column: " << XML_GetCurrentColumnNumber( parser )
+              << std::endl;
+      return ReadResult::ERROR;
+    }
     if ( ReadResult::NORMAL != rslt ) {
       if ( ReadResult::END_OF_PATIENT == rslt && anonymizing( ) ) {
         info.metadata( )["Patient Name"] = "Anonymous";
@@ -206,14 +214,14 @@ bool XmlReaderBase::isRollover( const dr_time& then, const dr_time& now ) const 
 
 dr_time XmlReaderBase::time( const std::string& timer ) const {
   if ( std::string::npos == timer.find( " " )
-        && std::string::npos == timer.find( "T" ) ) {
+          && std::string::npos == timer.find( "T" ) ) {
     return std::stol( timer )* 1000;
   }
 
   // we have a local time that we need to convert
   std::string format = ( std::string::npos == timer.find( "T" )
-        ? "%m/%d/%Y %I:%M:%S %p" // STPXML time string 
-        : "%Y-%m-%dT%H:%M:%S" ); // CPC time string
+          ? "%m/%d/%Y %I:%M:%S %p" // STPXML time string 
+          : "%Y-%m-%dT%H:%M:%S" ); // CPC time string
 
   tm mytime;
   strptime( timer.c_str( ), format.c_str( ), &mytime );

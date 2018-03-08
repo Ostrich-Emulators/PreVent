@@ -80,7 +80,7 @@ int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&dat
     sigmap[name].fmt = 16;
   }
 
-  time_t firstTime = SignalUtils::firstlast( data );
+  dr_time firstTime = SignalUtils::firstlast( data );
   std::string suffix = ( freq < 1 ? "vitals" : std::to_string( (int) freq ) + "hz" );
   std::string datedfile = fileloc + getDateSuffix( firstTime, "_" );
   std::string datafile = datedfile + "_" + suffix + ".dat";
@@ -101,7 +101,8 @@ int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&dat
     return -1;
   }
 
-  tm * t = gmtime( &firstTime );
+  time_t mytime = firstTime/1000;
+  tm * t = gmtime( &mytime );
   if ( 0 != ( t->tm_hour + t->tm_min + t->tm_sec ) ) { // not 00:00:00 (midnight)?
     char timestr[sizeof "00:00:00"];
     std::strftime( timestr, sizeof timestr, "%T", t );

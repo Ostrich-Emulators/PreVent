@@ -62,6 +62,14 @@ CND_ARTIFACT_PATH_Debug_tdms=dist/Debug_tdms/GNU-Linux/formatconverter
 CND_PACKAGE_DIR_Debug_tdms=dist/Debug_tdms/GNU-Linux/package
 CND_PACKAGE_NAME_Debug_tdms=formatconverter.tar
 CND_PACKAGE_PATH_Debug_tdms=dist/Debug_tdms/GNU-Linux/package/formatconverter.tar
+# Debug_cpc configuration
+CND_PLATFORM_Debug_cpc=GNU-Linux
+CND_ARTIFACT_DIR_Debug_cpc=dist/Debug_cpc/GNU-Linux
+CND_ARTIFACT_NAME_Debug_cpc=formatconverter
+CND_ARTIFACT_PATH_Debug_cpc=dist/Debug_cpc/GNU-Linux/formatconverter
+CND_PACKAGE_DIR_Debug_cpc=dist/Debug_cpc/GNU-Linux/package
+CND_PACKAGE_NAME_Debug_cpc=formatconverter.tar
+CND_PACKAGE_PATH_Debug_cpc=dist/Debug_cpc/GNU-Linux/package/formatconverter.tar
 #
 # include compiler specific variables
 #

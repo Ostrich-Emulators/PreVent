@@ -52,7 +52,7 @@ private:
 
 	std::string fileloc;
 	mat_t * matfile;
-	time_t firsttime;
+	dr_time firsttime;
 	SignalSet * dataptr;
 	matio_compression compression;
         MatVersion version;

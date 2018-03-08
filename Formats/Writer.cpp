@@ -44,10 +44,11 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
   }
 }
 
-std::string Writer::getDateSuffix( const time_t& date, const std::string& sep ) {
+std::string Writer::getDateSuffix( const dr_time& date, const std::string& sep ) {
   char recsuffix[sizeof "-YYYYMMDD"];
   const std::string pattern = sep + "%Y%m%d";
-  std::strftime( recsuffix, sizeof recsuffix, pattern.c_str( ), gmtime( &date ) );
+  time_t mytime = date/1000;
+  std::strftime( recsuffix, sizeof recsuffix, pattern.c_str( ), gmtime( &mytime ) );
   return std::string( recsuffix );
 }
 
