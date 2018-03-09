@@ -47,7 +47,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
         << std::endl << "\t  %e - date of last data point"
         << std::endl << "\t  %n - output ordinal"
         << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file (or pattern)"
-        //<< std::endl << "\tIf file is -, stdin is read for input, and the format is assumed to be our zl format, regardless of --from option"
+        << std::endl << "\tif file is -, stdin is read for input"
         << std::endl << std::endl;
   exit( 1 );
 }

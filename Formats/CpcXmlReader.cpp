@@ -51,7 +51,9 @@ void CpcXmlReader::start( const std::string& element,
     lasttime = currtime;
 
     size_t decimalplace = attrs["datetime"].find( "." );
+    //output( ) << "XXX " << attrs["datetime"] << std::endl;
     currtime = time( attrs["datetime"].substr( 0, decimalplace ) );
+    //output( ) << currtime << std::endl;
 
     if ( isRollover( lasttime, currtime ) ) {
       setResult( ReadResult::END_OF_DAY );

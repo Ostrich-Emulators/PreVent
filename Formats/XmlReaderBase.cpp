@@ -15,6 +15,7 @@
 
 #include "XmlReaderBase.h"
 #include "SignalData.h"
+#include "StreamChunkReader.h"
 
 #include <iostream>
 #include <fstream>
@@ -27,7 +28,7 @@
 
 bool XmlReaderBase::accumulateText = false;
 std::string XmlReaderBase::working;
-const int XmlReaderBase::READCHUNK = 16384 / 4; // * 16;
+const int XmlReaderBase::READCHUNK = 16384 * 16;
 
 XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ), datemodifier( 0 ) {
 }
@@ -40,10 +41,15 @@ XmlReaderBase::~XmlReaderBase( ) {
 
 void XmlReaderBase::finish( ) {
   XML_ParserFree( parser );
+  input->close( );
 }
 
 size_t XmlReaderBase::getSize( const std::string& input ) const {
   struct stat info;
+
+  if ( "-" == input ) {
+    return 0;
+  }
 
   if ( stat( input.c_str( ), &info ) < 0 ) {
     perror( input.c_str( ) );
@@ -112,8 +118,14 @@ int XmlReaderBase::prepare( const std::string& fname, SignalSet& info ) {
     XML_SetElementHandler( parser, XmlReaderBase::start, XmlReaderBase::end );
     XML_SetCharacterDataHandler( parser, XmlReaderBase::chars );
     XML_SetCommentHandler( parser, XmlReaderBase::comment );
-    input.open( fname, std::ifstream::in );
-    setResult( ReadResult::NORMAL );
+
+    if ( "-" == fname ) {
+      input.reset( new StreamChunkReader( &( std::cin ), false, true, READCHUNK ) );
+    }
+    else {
+      std::ifstream * myfile = new std::ifstream( fname, std::ios::in );
+      input.reset( new StreamChunkReader( myfile, false, false, READCHUNK ) );
+    }
   }
   return rr;
 }
@@ -170,9 +182,11 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
   firstread = ( ReadResult::FIRST_READ == lastfill );
 
   std::vector<char> buffer( READCHUNK, 0 );
-  while ( input.read( buffer.data( ), buffer.size( ) ) ) {
-    long gcnt = input.gcount( );
-    XML_Status status = XML_Parse( parser, &buffer[0], buffer.size( ), gcnt < READCHUNK );
+  int bytesread = input->read( buffer, READCHUNK );
+  while ( 0 != bytesread ) {
+    // output( ) << buffer.data( ) << std::endl;
+    bool waslast = ( bytesread < READCHUNK );
+    XML_Status status = XML_Parse( parser, buffer.data( ), bytesread, waslast );
     if ( status != XML_STATUS_OK ) {
       XML_Error err = XML_GetErrorCode( parser );
       std::cerr << XML_ErrorString( err )
@@ -188,6 +202,8 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
 
       return rslt;
     }
+
+    bytesread = input->read( buffer, READCHUNK );
   }
 
   return ReadResult::END_OF_FILE;
@@ -215,6 +231,7 @@ bool XmlReaderBase::isRollover( const dr_time& then, const dr_time& now ) const 
 dr_time XmlReaderBase::time( const std::string& timer ) const {
   if ( std::string::npos == timer.find( " " )
           && std::string::npos == timer.find( "T" ) ) {
+    // no space and no T---we must have a unix timestamp
     return std::stol( timer )* 1000;
   }
 
@@ -225,10 +242,13 @@ dr_time XmlReaderBase::time( const std::string& timer ) const {
 
   tm mytime;
   strptime( timer.c_str( ), format.c_str( ), &mytime );
+  //output( ) << mytime.tm_hour << ":" << mytime.tm_min << ":" << mytime.tm_sec << std::endl;
 
   // now convert our local time to UTC
   time_t local = mktime( &mytime );
   mytime = *gmtime( &local );
+  //output( ) << mytime.tm_hour << ":" << mytime.tm_min << ":" << mytime.tm_sec << std::endl;
+
 
   return mktime( &mytime )* 1000; // convert seconds to ms
 }

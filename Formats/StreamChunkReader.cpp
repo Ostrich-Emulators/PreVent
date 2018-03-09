@@ -5,7 +5,7 @@
  */
 
 /* 
- * File:   CacheFileHdf5Writer.cpp
+ * File:   StreamChunkReader.cpp
  * Author: ryan
  * 
  * Created on August 26, 2016, 12:55 PM
@@ -76,6 +76,15 @@ void StreamChunkReader::close( ) {
 
 std::string StreamChunkReader::readNextChunk( ) {
   return read( chunksize );
+}
+
+int StreamChunkReader:: read( std::vector<char>& vec, int numbytes ){
+  if ( stream->good( ) ) {
+    stream->read( vec.data(), numbytes );
+    int bytesread = stream->gcount( );
+    return bytesread;
+  }
+  return 0;
 }
 
 std::string StreamChunkReader::read( int bufsz ) {

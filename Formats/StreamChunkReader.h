@@ -16,6 +16,7 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
 
 #include <zlib.h>
 
@@ -28,37 +29,44 @@
  */
 class StreamChunkReader {
 public:
-	StreamChunkReader( std::istream * input, bool compressed, bool isStdin,
-			int chunksize = DEFAULT_CHUNKSIZE );
+  StreamChunkReader(std::istream * input, bool compressed, bool isStdin,
+          int chunksize = DEFAULT_CHUNKSIZE);
 
-	virtual ~StreamChunkReader( );
-	void close( );
+  virtual ~StreamChunkReader();
+  void close();
 
-	/**
-	 * Reads this many bytes 
-	 * @param numbytes
-	 * @return
-	 */
-	std::string read( int numbytes );
-	std::string readNextChunk( );
-	void setChunkSize( int size );
+  /**
+   * Reads this many bytes 
+   * @param numbytes
+   * @return
+   */
+  std::string read(int numbytes);
+  std::string readNextChunk();
+  /**
+   * Reads this many bytes into the given vector. This function only works on
+   * uncompressed streams (for now)
+   * @param vec
+   * @return the number of bytes read
+   */
+  int read(std::vector<char>& vec, int numbytes);
+  void setChunkSize(int size);
 
-	ReadResult rr;
+  ReadResult rr;
 private:
-	static const int DEFAULT_CHUNKSIZE;
+  static const int DEFAULT_CHUNKSIZE;
 
-	std::string readNextCompressedChunk( int numbytes );
-	void initZlib( );
+  std::string readNextCompressedChunk(int numbytes);
+  void initZlib();
 
-	bool iscompressed;
-	bool usestdin;
-	int chunksize;
+  bool iscompressed;
+  bool usestdin;
+  int chunksize;
 
-	std::istream * stream;
+  std::istream * stream;
 
 
-	// zlib-only var
-	z_stream strm;
+  // zlib-only var
+  z_stream strm;
 };
 
 #endif /* FILEORCINSTREAM_H */

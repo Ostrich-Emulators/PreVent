@@ -22,9 +22,9 @@
 #include <list>
 #include <set>
 #include <expat.h>
-#include <fstream>
 
 class SignalData;
+class StreamChunkReader;
 
 class XmlReaderBase : public Reader {
 public:
@@ -80,7 +80,7 @@ private:
   static bool accumulateText;
 
   XML_Parser parser;
-  std::ifstream input;
+  std::unique_ptr<StreamChunkReader> input;
   ReadResult rslt;
 
   dr_time datemodifier;
