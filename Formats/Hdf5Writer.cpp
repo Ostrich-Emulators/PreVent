@@ -240,7 +240,7 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
   H5::Group events = file.createGroup( "Events" );
   H5::Group grp = events.createGroup( "Times" );
   H5::Group wavetimes = grp.createGroup( "Waveforms" );
-  H5::Group vittimes = grp.createGroup( "Vitals" );
+  H5::Group vittimes = grp.createGroup( "VitalSigns" );
 
   std::map<long, dr_time> segmentsizes = data.offsets( );
   if ( !segmentsizes.empty( ) ) {
@@ -340,7 +340,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 
   createEvents( file, data );
 
-  H5::Group grp = file.createGroup( "Vital Signs" );
+  H5::Group grp = file.createGroup( "VitalSigns" );
 
   output( ) << "Writing " << data.vitals( ).size( ) << " Vitals" << std::endl;
   for ( auto& vits : data.vitals( ) ) {
