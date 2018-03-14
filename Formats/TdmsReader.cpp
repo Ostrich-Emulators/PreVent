@@ -30,7 +30,7 @@ dr_time TdmsReader::parsetime( const std::string& timestr ) {
   tm brokenTime;
   strptime( timestr.c_str( ), "%d.%m.%Y %H:%M:%S", &brokenTime );
   time_t sinceEpoch = timegm( &brokenTime );
-  return sinceEpoch* 1000;
+  return sinceEpoch * 1000;
 }
 
 int TdmsReader::prepare( const std::string& recordset, SignalSet& info ) {
@@ -103,7 +103,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             else if ( "Frequency" == p.first ) {
               double f = std::stod( p.second );
               signal->metad( )[SignalData::HERTZ] = f;
-              signal->setValuesPerDataRow((int)f);
+              signal->setValuesPerDataRow( (int) f );
               if ( f > 1 ) { // wave!
                 freq = std::stoi( p.second );
               }
@@ -138,7 +138,8 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                 bool nan = isnan( d );
 
                 if ( cnt == freq ) {
-                  signal->add( DataRow( time++, vals.str( ) ) );
+                  time += 1000;
+                  signal->add( DataRow( time, vals.str( ) ) );
                   vals.clear( );
                   vals.str( std::string( ) );
                   cnt = 0;
