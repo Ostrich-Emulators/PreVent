@@ -12,6 +12,7 @@
  */
 
 #include "DataRow.h"
+#include "Reader.h"
 #include <cmath>
 #include <sstream>
 #include <vector>
@@ -93,7 +94,13 @@ std::vector<short> DataRow::shorts( const std::string& data, int scale ) {
   std::stringstream stream( data );
   std::vector<short> vals;
   for ( std::string each; std::getline( stream, each, ',' ); ) {
-    vals.push_back( (short) ( std::stof( each ) * scale ) );
+    if( Reader::MISSING_VALUESTR == each ){
+      // don't scale missing values
+      vals.push_back( (short) ( std::stoi(Reader::MISSING_VALUESTR ) ) );
+    }
+    else{
+      vals.push_back( (short) ( std::stof( each ) * scale ) );
+    }
   }
   return vals;
 }

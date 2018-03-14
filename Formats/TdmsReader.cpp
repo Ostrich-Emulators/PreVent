@@ -142,6 +142,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
 
                 if ( cnt == freq ) {
                   time += timeinc;
+                  //output()<<vals.str()<<std::endl;
                   signal->add( DataRow( time, vals.str( ) ) );
                   vals.clear( );
                   vals.str( std::string( ) );

@@ -149,6 +149,7 @@ void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace&, SignalData& data )
     const std::unique_ptr<DataRow>& datarow = data.pop( );
 
     long baseidx = ( exc + 1 ) * row;
+    // FIXME: we don't want to scale missing values
     buffer[baseidx] = (short) ( std::stof( datarow->data ) * scale );
 
     if ( !extras.empty( ) ) {
