@@ -236,9 +236,9 @@ void Hdf5Writer::autochunk( hsize_t* dims, int rank, hsize_t* rslts ) {
   rslts[1] = ( rslts[0] < 1000 ? 2 : 1 );
 }
 
-void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
+void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet& data ) {
   H5::Group events = file.createGroup( "Events" );
-  H5::Group grp = events.createGroup( "Times" );
+  H5::Group grp = file.createGroup( "Times" );
   H5::Group wavetimes = grp.createGroup( "Waveforms" );
   H5::Group vittimes = grp.createGroup( "VitalSigns" );
 
@@ -247,7 +247,7 @@ void Hdf5Writer::createEvents( H5::H5File file, const SignalSet& data ) {
     hsize_t dims[] = { segmentsizes.size( ), 2 };
     H5::DataSpace space( 2, dims );
 
-    H5::DataSet ds = events.createDataSet( "Segment Offsets",
+    H5::DataSet ds = events.createDataSet( "Segment_Offsets",
           H5::PredType::STD_I64LE, space );
     long long indexes[segmentsizes.size( ) * 2] = { 0 };
     int row = 0;
@@ -338,7 +338,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   H5::H5File file( outy, H5F_ACC_TRUNC );
   writeFileAttributes( file, data.metadata( ), firstTime, lastTime );
 
-  createEvents( file, data );
+  createEventsAndTimes( file, data );
 
   H5::Group grp = file.createGroup( "VitalSigns" );
 

@@ -57,7 +57,7 @@ private:
 	static void writeVital( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
 	static void writeWave( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
 	static void autochunk( hsize_t* dims, int rank, hsize_t* rslts );
-	void createEvents( H5::H5File, const SignalSet& data );
+	void createEventsAndTimes( H5::H5File, const SignalSet& data );
 
 	std::string tempfileloc;
 	int compression;

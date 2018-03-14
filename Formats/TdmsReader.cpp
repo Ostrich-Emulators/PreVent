@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <sstream>
+#include <iomanip>
 #include <iostream>
 #include <sys/stat.h>
 
@@ -71,15 +72,15 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
           name = name.substr( 2, name.length( ) - 3 );
           output( ) << "reading " << name << std::endl;
           dr_time time = 0;
-          double timeinc = 1;
+          int timeinc = 1024; // philips runs at 1.024s, or 1024 ms
           int freq = 0; // waves have an integer frequency
           auto propmap = ch->getProperties( );
           if ( propmap.count( "wf_increment" ) > 0 ) {
-            timeinc = std::stod( propmap.at( "wf_increment" ) );
+            timeinc = (int) ( std::stod( propmap.at( "wf_increment" ) )* 1000 );
           }
 
           // figure out if this is a wave or a vital
-          std::unique_ptr<SignalData>& signal = ( timeinc < 1.024
+          std::unique_ptr<SignalData>& signal = ( timeinc < 1024
                 ? info.addWave( name )
                 : info.addVital( name ) );
 
@@ -130,15 +131,17 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             if ( signal->wave( ) ) {
               // for waves, we need to construct a string of values that is 
               // {Frequency} items big
-              //signal->setScale( 1000 ); // TDMS readouts seem to have 3 decimals
 
               std::stringstream vals;
+              // tdms file seem to use 3 decimal places for everything
+              // so make sure we don't have extra 0s running around
+              vals << std::setprecision( 3 ) << std::fixed;
               int cnt = 0;
               for ( auto& d : data ) {
                 bool nan = isnan( d );
 
                 if ( cnt == freq ) {
-                  time += 1000;
+                  time += timeinc;
                   signal->add( DataRow( time, vals.str( ) ) );
                   vals.clear( );
                   vals.str( std::string( ) );
@@ -153,7 +156,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                   vals << MISSING_VALUESTR;
                 }
                 else {
-                  vals << (int) ( d * 1000 );
+                  vals << d;
                 }
                 cnt++;
               }
@@ -164,7 +167,8 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                 for ( cnt; cnt < freq; cnt++ ) {
                   vals << "," << MISSING_VALUESTR;
                 }
-                signal->add( DataRow( time++, vals.str( ) ) );
+                time += timeinc;
+                signal->add( DataRow( time, vals.str( ) ) );
               }
             }
             else {
@@ -172,7 +176,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
               for ( auto& d : data ) {
                 if ( !isnan( d ) ) {
                   // check if our number ends in .000000...
-                  int dd = int(d );
+                  int dd = int( d );
                   bool isint = ( 0 == ( d - dd ) );
                   if ( isint ) {
                     signal->add( DataRow( time, std::to_string( dd ) ) );
