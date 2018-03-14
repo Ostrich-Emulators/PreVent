@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/H5Cat.o \
 	${OBJECTDIR}/main.o
 
 
@@ -61,6 +62,11 @@ LDLIBSOPTIONS=
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools ${OBJECTFILES} ${LDLIBSOPTIONS}
+
+${OBJECTDIR}/H5Cat.o: H5Cat.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -std=c++14 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/H5Cat.o H5Cat.cpp
 
 ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
