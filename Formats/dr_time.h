@@ -14,7 +14,7 @@
 #ifndef DR_TIME_H
 #define DR_TIME_H
 
-typedef long long dr_time;
+typedef int64_t dr_time;
 
 #endif /* DR_TIME_H */
 

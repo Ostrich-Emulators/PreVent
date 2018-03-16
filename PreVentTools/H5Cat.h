@@ -15,15 +15,22 @@
 #define H5CAT_H
 
 #include <memory>
-class H5::H5File;
+#include <vector>
+#include <string>
+
+namespace H5 {
+  class H5File;
+}
 
 class H5Cat {
 public:
   H5Cat( const std::string& output );
   H5Cat( const H5Cat& orig );
   virtual ~H5Cat( );
-  
-  void process
+
+  std::unique_ptr<H5::H5File> cat( std::vector<std::string>& filesToCat );
+  static std::unique_ptr<H5::H5File> cat( const std::string& outfile,
+      std::vector<std::string>& filesToCat );
 private:
   const std::string output;
 };
