@@ -26,11 +26,12 @@ public:
   virtual ~Hdf5Reader( );
   static const std::set<std::string> IGNORABLE_PROPS;
 
-protected:
   int prepare( const std::string& input, SignalSet& info ) override;
   void finish( ) override;
+  ReadResult fill( SignalSet& data,
+       const ReadResult& lastresult = ReadResult::FIRST_READ ) override;
 
-  ReadResult fill( SignalSet& data, const ReadResult& lastfill ) override;
+protected:
   size_t getSize( const std::string& input ) const override;
 
 private:
