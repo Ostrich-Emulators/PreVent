@@ -32,7 +32,7 @@ H5Cat::~H5Cat( ) {
 }
 
 std::unique_ptr<H5::H5File> H5Cat::cat( std::vector<std::string>& filesToCat ) {
-  std::unique_ptr<H5::H5File> h5( new H5::H5File( output, H5F_ACC_TRUNC ) );
+  //std::unique_ptr<H5::H5File> h5( new H5::H5File( output, H5F_ACC_TRUNC ) );
 
   // we need to open all the files and see which datasets we have
   Hdf5Reader rdr;
@@ -48,13 +48,14 @@ std::unique_ptr<H5::H5File> H5Cat::cat( std::vector<std::string>& filesToCat ) {
   alldata.addMeta( "Source Reader", rdr.name( ) );
 
   Hdf5Writer wrt;
-  std::unique_ptr<Reader> nullrdr( new NullReader(rdr.name()) );
+  std::unique_ptr<Reader> nullrdr( new NullReader( rdr.name( ) ) );
+  wrt.setNonbreakingOutputName( output );
   wrt.write( nullrdr, alldata );
 
-  return std::move( h5 );
+  return std::unique_ptr<H5::H5File>();// std::move( h5 );
 }
 
 std::unique_ptr<H5::H5File> H5Cat::cat( const std::string& outfile,
-    std::vector<std::string>& filesToCat ) {
+        std::vector<std::string>& filesToCat ) {
   return H5Cat( outfile ).cat( filesToCat );
 }

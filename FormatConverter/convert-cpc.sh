@@ -1,48 +1,8 @@
 #!/bin/bash
 
+FMTCAT=/opt/formatconverter/preventtools
 FMTCNV=/opt/formatconverter/formatconverter
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/formatconverter
-
-function convert {
-  STPFILE=$1
-  OUTFMT=$2
-  OUTDIR=$3
-  ERRLOG=$4
-  DONELOG=$5
-
-  BASESTP=$(basename $STPFILE)
-  STPSIZE=$(ls -s $STPFILE | cut -d\  -f1)
-  TMPOUT=/mnt/ramdisk/xml.xml
-  if [ $STPSIZE -gt 500000 ]; then
-    TMPOUT=/tmp/xml.xml
-  fi
-
-  EXT="${STPFILE##*.}"
-  echo $EXT
-  if [ "$EXT" = "xml" ]; then
-    TMPOUT=$STPFILE
-  else
-    mono $STP2XML $STPFILE -utc -o $TMPOUT
-
-    if [ $? -ne 0 ]; then
-      echo "$STPFILE stp error" >> $ERRLOG
-      echo "error converting $STPFILE"
-      return
-    fi
-  fi
-
-  $FMTCNV --to $OUTFMT --prefix $BASESTP --outdir $OUTDIR $TMPOUT
-  if [ $? -ne 0 ]; then
-    echo "$STPFILE conversion error" >> $ERRLOG
-    echo "error converting $STPFILE"
-  else
-    echo "$STPFILE" >> $DONELOG
-  fi
-}
-
-###########################################################################
-## This is the whole program...the function above does all the work!     ##
-###########################################################################
 
 if [ $# -ne 1 ]; then
   echo "Syntax: $0 <conversion directory>"
@@ -58,29 +18,15 @@ DONELOG=done.log
 ls $DIR | while read datedir; do
   ls $DIR/$datedir | while read bid; do
     ls $DIR/$datedir/$bid/*.zip | while read zipfile; do 
-      #unzip -c $zipfile | 
-      ls $unzip
+      PREFIX=$$
+      unzip -Z1 $zipfile | while read file; do
+        unzip -p $zipfile $file | $FMTCNV --from cpcxml --to hdf5 --one-file --quiet -
+        mv ./- ${PREFIX}-${file}.hdf5
+      done
+      fname=${datedir}-${bid}.hdf5
+echo "$FMTCAT --output ${fname} --cat $(ls ${PREFIX}*.hdf5)"
+      $FMTCAT --output ${fname} --cat $(ls ${PREFIX}*.hdf5)
+      #rm -rf ${PREFIX}*
     done
   done
 done
-exit
-x=$?
-if [ "$x" -eq "0" ] ; then
-  FMT=$(echo $DIR|cut -d- -f2)
-  OUTDIR=$DIR/converted
-  mkdir -p $OUTDIR
-  for STPFILE in $(ls -tr $DIR/*.Stp $DIR/*.xml); do
-    cat $PROCLOG $DONELOG | grep -q $STPFILE
-    x=$?
-    if [ "$x" -ne "0" ] ; then
-      echo "$STPFILE $FMT $OUTDIR $ERRLOG $DONELOG" >> $PROCLOG
-    fi
-  done
-fi
-
-cat $PROCLOG | while read STPFILE FMT OUTDIR ERRLOG DONELOG; do
-  convert "$STPFILE" $FMT "$OUTDIR" "$ERRLOG" "$DONELOG"
-  TMPPROC=/tmp/processing.$$
-  grep -v "$STPFILE" "$PROCLOG" > $TMPPROC
-  mv $TMPPROC "$PROCLOG"
-done 

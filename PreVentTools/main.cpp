@@ -165,8 +165,11 @@ int main( int argc, char** argv ) {
       std::cout << "file to cat: " << x << std::endl;
     }
 
+    // FIXME: check for clobber
     H5Cat catter( outfilename );
     catter.cat( filesToCat );
+    
+    return 0;
   }
 
 

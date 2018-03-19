@@ -328,8 +328,8 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   std::string outy = getNonbreakingOutputName( );
   if ( outy.empty( ) ) {
     outy = tempfileloc + getDateSuffix( firstTime );
+    outy.append( ".hdf5" );
   }
-  outy.append( ".hdf5" );
 
   if ( data.vitals( ).empty( ) && data.waves( ).empty( ) ) {
     std::cerr << "Nothing to write to " << outy << std::endl;
