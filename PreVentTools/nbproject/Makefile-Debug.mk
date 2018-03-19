@@ -53,7 +53,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=`pkg-config --libs zlib` /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so  
+LDLIBSOPTIONS=`pkg-config --libs zlib` /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so -Wl,-rpath,'../Formats/dist/Debug/GNU-Linux' -L../Formats/dist/Debug/GNU-Linux -lFormats  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -63,6 +63,8 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: /usr/lib/x86_64-linux-g
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so
 
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: ../Formats/dist/Debug/GNU-Linux/libFormats.so
+
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools ${OBJECTFILES} ${LDLIBSOPTIONS}
@@ -70,24 +72,26 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: ${OBJECTFILES}
 ${OBJECTDIR}/H5Cat.o: H5Cat.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/H5Cat.o H5Cat.cpp
+	$(COMPILE.cc) -g -I../Formats `pkg-config --cflags zlib` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/H5Cat.o H5Cat.cpp
 
 ${OBJECTDIR}/main.o: main.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g `pkg-config --cflags zlib` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -g -I../Formats `pkg-config --cflags zlib` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
 
 # Subprojects
 .build-subprojects:
+	cd ../Formats && ${MAKE}  -f Makefile CONF=Debug
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5_cpp.so
+	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5_cpp.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so
 	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools
 
 # Subprojects
 .clean-subprojects:
+	cd ../Formats && ${MAKE}  -f Makefile CONF=Debug clean
 
 # Enable dependency checking
 .dep.inc: .depcheck-impl

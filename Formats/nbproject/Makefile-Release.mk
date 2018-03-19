@@ -43,6 +43,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/Hdf5Reader.o \
 	${OBJECTDIR}/Hdf5Writer.o \
 	${OBJECTDIR}/MatWriter.o \
+	${OBJECTDIR}/NullReader.o \
 	${OBJECTDIR}/Reader.o \
 	${OBJECTDIR}/SignalData.o \
 	${OBJECTDIR}/SignalSet.o \
@@ -128,6 +129,11 @@ ${OBJECTDIR}/MatWriter.o: MatWriter.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -I../libtdms/include `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/MatWriter.o MatWriter.cpp
+
+${OBJECTDIR}/NullReader.o: NullReader.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -I../libtdms/include `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/NullReader.o NullReader.cpp
 
 ${OBJECTDIR}/Reader.o: Reader.cpp
 	${MKDIR} -p ${OBJECTDIR}

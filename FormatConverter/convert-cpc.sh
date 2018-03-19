@@ -55,8 +55,6 @@ PROCLOG=processing.log
 ERRLOG=errors.log
 DONELOG=done.log
 
-
-touch $PROCLOG
 ls $DIR | while read datedir; do
   ls $DIR/$datedir | while read bid; do
     ls $DIR/$datedir/$bid/*.zip | while read zipfile; do 
