@@ -14,6 +14,7 @@
 
 #include "SignalSet.h"
 #include "SignalData.h"
+#include "FileNamer.h"
 
 ZlWriter::ZlWriter( ) {
 }
@@ -24,15 +25,9 @@ ZlWriter::ZlWriter( const ZlWriter& ) {
 ZlWriter::~ZlWriter( ) {
 }
 
-int ZlWriter::initDataSet( const std::string& directory, const std::string& namestart,
-    int ) {
-  filestart = directory + namestart;
-  return 0;
-}
-
 std::vector<std::string> ZlWriter::closeDataSet( ) {
   std::vector<std::string> vec;
-  vec.push_back( filename );
+  vec.push_back( filenamer( ).last( ) );
   return vec;
 }
 
@@ -64,10 +59,10 @@ int ZlWriter::drain( SignalSet& info ) {
     }
   }
 
-  char recsuffix[sizeof "-YYYYMMDD"];
-  std::strftime( recsuffix, sizeof recsuffix, "-%Y%m%d", gmtime( &firsttime ) );
-  filename = filestart + recsuffix + ".zl";
-
+  //char recsuffix[sizeof "-YYYYMMDD"];
+  //std::strftime( recsuffix, sizeof recsuffix, "-%Y%m%d", gmtime( &firsttime ) );
+  //filename = filestart + recsuffix + ".zl";
+  std::string filename = filenamer( ).filename( info );
   std::ofstream out( filename );
   out << "HEADER" << std::endl;
   for ( auto& m : info.metadata( ) ) {

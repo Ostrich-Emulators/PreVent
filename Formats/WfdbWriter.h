@@ -22,25 +22,25 @@ class SignalData;
 
 class WfdbWriter : public Writer {
 public:
-	WfdbWriter( );
-	virtual ~WfdbWriter( );
+  WfdbWriter( );
+  virtual ~WfdbWriter( );
 
 protected:
-	int initDataSet( const std::string& outdir, const std::string& namestart,
-			int compression );
-	std::vector<std::string> closeDataSet( );
-	int drain( SignalSet& );
+  int initDataSet( int compression );
+  std::vector<std::string> closeDataSet( );
+  int drain( SignalSet& );
 
 private:
-	WfdbWriter( const WfdbWriter& orig );
+  WfdbWriter( const WfdbWriter& orig );
 
-	int write( double freq, std::vector<std::unique_ptr<SignalData>>&data );
-	void syncAndWrite( double freq, std::vector<std::unique_ptr<SignalData>>&data );
+  int write( double freq, std::vector<std::unique_ptr<SignalData>>&data,
+      const std::string& filestart );
+  void syncAndWrite( double freq, std::vector<std::unique_ptr<SignalData>>&data );
 
-	std::string fileloc;
-	std::string currdir;
-	std::vector<std::string> files;
-	std::map<std::string, WFDB_Siginfo> sigmap;
+  std::string fileloc;
+  std::string currdir;
+  std::vector<std::string> files;
+  std::map<std::string, WFDB_Siginfo> sigmap;
 };
 
 

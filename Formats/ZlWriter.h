@@ -16,25 +16,19 @@
 
 #include "Writer.h"
 
-
 class SignalData;
 
 class ZlWriter : public Writer {
 public:
-	ZlWriter( );
-	virtual ~ZlWriter( );
+  ZlWriter( );
+  virtual ~ZlWriter( );
 
 protected:
-	int initDataSet( const std::string& outdir, const std::string& namestart,
-			int compression );
-	std::vector<std::string> closeDataSet( );
-	int drain( SignalSet& );
+  std::vector<std::string> closeDataSet( );
+  int drain( SignalSet& );
 
 private:
-	ZlWriter( const ZlWriter& orig );
-
-	std::string filestart;
-	std::string filename;
+  ZlWriter( const ZlWriter& orig );
 };
 
 

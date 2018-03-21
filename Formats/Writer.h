@@ -13,6 +13,7 @@
 #include "ConversionListener.h"
 
 class Reader;
+class FileNamer;
 
 class Writer {
 public:
@@ -21,36 +22,27 @@ public:
 
   static std::unique_ptr<Writer> get( const Format& fmt );
 
-  void setOutputDir( const std::string& outdir );
-  void setOutputPrefix( const std::string& pres );
   void setCompression( int lev );
   void addListener( std::shared_ptr<ConversionListener> listener );
   void setQuiet( bool = true );
-  void setOutputPattern( const std::string& pat );
-  
-  /**
-   * Sets a single name for non-breaking output file
-   * @param name
-   */
-  void setNonbreakingOutputName( const std::string& name );
-  std::string getNonbreakingOutputName() const;
+  void filenamer( const FileNamer& namer );
+  FileNamer& filenamer() const;
+
 
   virtual std::vector<std::string> write( std::unique_ptr<Reader>& from,
-        SignalSet& data );
+      SignalSet& data );
 
 protected:
   std::ostream& output( ) const;
 
-  static std::string getDateSuffix( const dr_time& date, const std::string& sep = "-" );
-
   /**
-   * Initializes a new (possibly temporary) data file
+   * Lets subclasses initialize a new (possibly temporary) data file.
+   * By default, does nothing
    * @param newfile
    * @param compression
    * @return 0 (Success), -1 (Error)
    */
-  virtual int initDataSet( const std::string& outdir, const std::string& prefix,
-        int compression ) = 0;
+  virtual int initDataSet( int compression );
 
   /**
    * Closes the current data file, and provides the final name for it. Datafiles
@@ -67,19 +59,18 @@ protected:
    * @param info The data to drain
    * @return 0 (success) -1 (error)
    */
-  virtual int drain( SignalSet& info ) = 0;  
+  virtual int drain( SignalSet& info ) = 0;
   
 private:
   Writer( const Writer& );
 
   std::string outdir;
-  std::string prefix;
   std::vector<std::shared_ptr<ConversionListener>> listeners;
   int compression;
   bool quiet;
   std::stringstream ss;
-  std::string outputname;
-  std::string outputpattern;
+  std::unique_ptr<FileNamer> namer;
+
 };
 
 #endif /* WRITER_H */

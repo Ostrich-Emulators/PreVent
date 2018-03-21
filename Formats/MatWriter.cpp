@@ -18,6 +18,7 @@
 #include "SignalSet.h"
 #include "SignalData.h"
 #include "SignalUtils.h"
+#include "FileNamer.h"
 
 MatWriter::MatWriter( MatVersion ver ) : version( ver ) {
 }
@@ -28,9 +29,7 @@ MatWriter::MatWriter( const MatWriter& ) {
 MatWriter::~MatWriter( ) {
 }
 
-int MatWriter::initDataSet( const std::string& directory, const std::string& namestart, int comp ) {
-  firsttime = std::numeric_limits<dr_time>::max( );
-  fileloc = directory + namestart;
+int MatWriter::initDataSet( int comp ) {
   compression = ( 0 == comp ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
 
   char fulldatetime[sizeof "Thu Nov 31 10:10:27 1997"];
@@ -59,31 +58,33 @@ int MatWriter::initDataSet( const std::string& directory, const std::string& nam
       << ", Created by: fmtcnv (rpb6eg@virginia.edu) on: "
       << fulldatetime;
 
-  matfile = Mat_CreateVer( fileloc.c_str( ), header.str( ).c_str( ), ver );
+  tempfileloc = filenamer().filenameNoExt( );
+  matfile = Mat_CreateVer( tempfileloc.c_str( ), header.str( ).c_str( ), ver );
 
   return !( matfile );
 }
 
-std::vector<std::string> MatWriter::closeDataSet( ) {
+std::vector<std::string> MatWriter::closeDataSet() {
   Mat_Close( matfile );
 
-  std::ifstream src( fileloc, std::ios::binary );
-  std::string matfile = fileloc + getDateSuffix( firsttime ) + ".mat";
-  std::ofstream dst( matfile, std::ios::binary | std::ios::trunc );
+  // copy our temporary mat file to its final location
+  std::ifstream src( tempfileloc, std::ios::binary );
+  std::ofstream dst( filenamer().last(), std::ios::binary | std::ios::trunc );
 
   dst << src.rdbuf( );
-  remove( fileloc.c_str( ) );
+  remove( tempfileloc.c_str( ) );
 
   src.close( );
   dst.close( );
+
   std::vector<std::string> ret;
-  ret.push_back( matfile );
+  ret.push_back( filenamer().last() );
   return ret;
 }
 
 int MatWriter::drain( SignalSet& info ) {
   dataptr = &info;
-  firsttime = info.earliest( );
+  filenamer().filename( info );
 
   writeVitals( info.vitals( ) );
 
@@ -291,7 +292,7 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
     while ( !signal->empty( ) ) {
       const auto& datarow = signal->pop( );
 
-      std::vector<short> slices = DataRow::shorts( datarow->data, signal->scale() );
+      std::vector<short> slices = DataRow::shorts( datarow->data, signal->scale( ) );
       data.insert( data.end( ), slices.begin( ), slices.end( ) );
 
       if ( datachunksz == data.size( ) ) {

@@ -22,6 +22,7 @@
 #include "SignalData.h"
 #include "DataRow.h"
 #include "SignalUtils.h"
+#include "FileNamer.h"
 
 Hdf5Writer::Hdf5Writer( ) {
 }
@@ -292,9 +293,7 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet& data ) 
   }
 }
 
-int Hdf5Writer::initDataSet( const std::string& directory, const std::string& namestart,
-    int compression ) {
-  tempfileloc = directory + namestart;
+int Hdf5Writer::initDataSet( int compression ) {
   this->compression = compression;
   return 0;
 }
@@ -304,7 +303,7 @@ int Hdf5Writer::drain( SignalSet& info ) {
   return 0;
 }
 
-std::vector<std::string> Hdf5Writer::closeDataSet( ) {
+std::vector<std::string> Hdf5Writer::closeDataSet() {
   SignalSet& data = *dataptr;
 
   dr_time firstTime = data.earliest( );
@@ -325,12 +324,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   //    }
   //  }
 
-  std::string outy = getNonbreakingOutputName( );
-  if ( outy.empty( ) ) {
-    outy = tempfileloc + getDateSuffix( firstTime );
-    outy.append( ".hdf5" );
-  }
-
+  std::string outy = filenamer().filename( data, ret.size( ) );
   if ( data.vitals( ).empty( ) && data.waves( ).empty( ) ) {
     std::cerr << "Nothing to write to " << outy << std::endl;
     return ret;

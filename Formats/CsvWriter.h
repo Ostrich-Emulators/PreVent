@@ -22,27 +22,21 @@
 #include <ctime>
 #include "Writer.h"
 
-
 class SignalData;
 
 class CsvWriter : public Writer {
 public:
-  CsvWriter();
-  virtual ~CsvWriter();
+  CsvWriter( );
+  virtual ~CsvWriter( );
 
   static const int MISSING_VALUE;
 
 protected:
-  int initDataSet(const std::string& outdir, const std::string& namestart,
-          int compression);
   std::vector<std::string> closeDataSet();
-  int drain(SignalSet&);
+  int drain( SignalSet& );
 
 private:
-  CsvWriter(const CsvWriter& orig);
-private:
-  std::string filestart;
-  std::string filename;
+  CsvWriter( const CsvWriter& orig );
 };
 
 #endif /* CSVWRITER_H */

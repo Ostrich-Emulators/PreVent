@@ -15,6 +15,7 @@
 #include "SignalSet.h"
 #include "SignalData.h"
 #include "SignalUtils.h"
+#include "FileNamer.h"
 
 CsvWriter::CsvWriter( ) {
 }
@@ -25,22 +26,14 @@ CsvWriter::CsvWriter( const CsvWriter& ) {
 CsvWriter::~CsvWriter( ) {
 }
 
-int CsvWriter::initDataSet( const std::string& directory, const std::string& namestart,
-    int ) {
-  filestart = directory + namestart;
-  return 0;
-}
-
 std::vector<std::string> CsvWriter::closeDataSet( ) {
   std::vector<std::string> vec;
-  vec.push_back( filename );
+  vec.push_back( filenamer().last() );
   return vec;
 }
 
 int CsvWriter::drain( SignalSet& info ) {
-  dr_time firsttime = info.earliest( );
-  std::string sfx = Writer::getDateSuffix( firsttime );
-  filename = filestart + sfx + ".csv";
+  std::string filename = filenamer().filename( info );
 
   std::ofstream out( filename );
   for ( auto& v : info.vitals( ) ) {

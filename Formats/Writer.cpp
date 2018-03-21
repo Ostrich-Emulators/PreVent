@@ -12,6 +12,7 @@
 #include "MatWriter.h"
 #include "CsvWriter.h"
 #include "ConversionListener.h"
+#include "FileNamer.h"
 
 Writer::Writer( ) : quiet( false ) {
 }
@@ -44,50 +45,28 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
   }
 }
 
-std::string Writer::getDateSuffix( const dr_time& date, const std::string& sep ) {
-  char recsuffix[sizeof "-YYYYMMDD"];
-  const std::string pattern = sep + "%Y%m%d";
-  time_t mytime = date/1000;
-  std::strftime( recsuffix, sizeof recsuffix, pattern.c_str( ), gmtime( &mytime ) );
-  return std::string( recsuffix );
-}
-
-void Writer::setOutputPrefix( const std::string& pre ) {
-  prefix = pre;
-}
-
 void Writer::setCompression( int lev ) {
   compression = lev;
 }
 
-void Writer::setOutputDir( const std::string& _outdir ) {
-  outdir = _outdir;
+int Writer::initDataSet( int ){
+  return 0;
+}
 
-  struct stat info;
-  if ( stat( outdir.c_str( ), &info ) != 0 ) {
-    mkdir( outdir.c_str( ), S_IRWXU | S_IRWXG );
-  }
-
-  size_t extpos = outdir.find_last_of( dirsep, outdir.length( ) );
-  if ( outdir.length( ) - 1 != extpos || extpos < 0 ) {
-    // doesn't end with a dirsep, so add it
-    outdir += dirsep;
-  }
+FileNamer& Writer::filenamer() const {
+  return *namer.get();
 }
 
 std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
-      SignalSet& data ) {
+    SignalSet& data ) {
   int patientno = 1;
 
-  std::string namestart = ( "" == prefix ? "p" : prefix + "-p" );
-
   output( ) << "init data set" << std::endl;
-  int initrslt = initDataSet( outdir, namestart + std::to_string( patientno ),
-        compression );
+  namer->patientOrdinal( patientno );
+  int initrslt = initDataSet( compression );
   std::vector<std::string> list;
   if ( initrslt < 0 ) {
-    std::cerr << "cannot init dataset: " + outdir + prefix + "-p"
-          + std::to_string( patientno ) << std::endl;
+    std::cerr << "cannot init dataset: " + namer->last( ) << std::endl;
     return list;
   }
 
@@ -98,7 +77,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     drain( data );
 
     if ( ReadResult::END_OF_DAY == retcode || ReadResult::END_OF_PATIENT == retcode ) {
-      std::vector<std::string> files = closeDataSet( );
+      std::vector<std::string> files = closeDataSet();
       for ( auto& outfile : files ) {
         for ( auto& l : listeners ) {
           l->onFileCompleted( outfile, data );
@@ -118,12 +97,13 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
 
       data.reset( false );
       output( ) << "init data set" << std::endl;
-      initDataSet( outdir, namestart + std::to_string( patientno ), compression );
+      namer->patientOrdinal( patientno );
+      initDataSet( compression );
     }
     else if ( ReadResult::END_OF_FILE == retcode ) {
       // end of file, so break out of our write
 
-      std::vector<std::string> files = closeDataSet( );
+      std::vector<std::string> files = closeDataSet();
       if ( files.empty( ) ) {
         std::cerr << "refusing to write empty data file!" << std::endl;
       }
@@ -155,15 +135,7 @@ void Writer::addListener( std::shared_ptr<ConversionListener> l ) {
   listeners.push_back( l );
 }
 
-void Writer::setNonbreakingOutputName( const std::string& name ) {
-  outputname = name;
-}
-
-std::string Writer::getNonbreakingOutputName( ) const {
-  return outputname;
-}
-
-class NullBuffer : public std::streambuf {
+class NullBuffer : public std::streambuf{
 public:
 
   int overflow( int c ) {
@@ -175,8 +147,8 @@ void Writer::setQuiet( bool q ) {
   quiet = q;
 }
 
-void Writer::setOutputPattern( const std::string& p ) {
-  outputpattern = p;
+void Writer::filenamer( const FileNamer& p ) {
+  namer.reset( new FileNamer( p ) );
 }
 
 std::ostream& Writer::output( ) const {

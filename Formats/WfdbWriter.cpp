@@ -16,6 +16,7 @@
 #include "SignalData.h"
 #include "SignalUtils.h"
 #include "config.h"
+#include "FileNamer.h"
 
 WfdbWriter::WfdbWriter( ) {
 }
@@ -26,14 +27,15 @@ WfdbWriter::WfdbWriter( const WfdbWriter& ) {
 WfdbWriter::~WfdbWriter( ) {
 }
 
-int WfdbWriter::initDataSet( const std::string& directory, const std::string& namestart, int ) {
+int WfdbWriter::initDataSet( int ) {
   currdir = getcwd( NULL, 0 );
+  std::string directory = filenamer().outputdir( );
   int x = chdir( directory.c_str( ) );
 
   files.clear( );
 
-  fileloc = namestart;
-  std::string rectest = namestart + "-20170101"; // we're going to replace the date
+  fileloc = filenamer().filename( ).substr( directory.size( ) );
+  std::string rectest = fileloc + "-20170101"; // we're going to replace the date
   int headerok = newheader( (char *) rectest.c_str( ) ); // check that our header file is valid
   if ( 0 == headerok ) {
     // remove the file
@@ -43,7 +45,7 @@ int WfdbWriter::initDataSet( const std::string& directory, const std::string& na
   return headerok;
 }
 
-std::vector<std::string> WfdbWriter::closeDataSet( ) {
+std::vector<std::string> WfdbWriter::closeDataSet() {
   int x = chdir( currdir.c_str( ) );
   wfdbquit( );
   return files;
@@ -62,13 +64,14 @@ int WfdbWriter::drain( SignalSet& info ) {
   }
 
   for ( auto& ds : freqgroups ) {
-    write( ds.first, ds.second );
+    write( ds.first, ds.second, filenamer().filenameNoExt(info) );
   }
 
   return 0;
 }
 
-int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&data ) {
+int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&data,
+    const std::string& namestart) {
   setsampfreq( freq );
 
   sigmap.clear( );
@@ -82,9 +85,8 @@ int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&dat
 
   dr_time firstTime = SignalUtils::firstlast( data );
   std::string suffix = ( freq < 1 ? "vitals" : std::to_string( (int) freq ) + "hz" );
-  std::string datedfile = fileloc + getDateSuffix( firstTime, "_" );
-  std::string datafile = datedfile + "_" + suffix + ".dat";
-  std::string headerfile = datedfile + "_" + suffix + ".hea";
+  std::string datafile = namestart + "_" + suffix + ".dat";
+  std::string headerfile = namestart + "_" + suffix + ".hea";
   std::string cwd = getcwd( NULL, 0 );
   files.push_back( cwd + dirsep + datafile );
   files.push_back( cwd + dirsep + headerfile );
@@ -101,7 +103,7 @@ int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&dat
     return -1;
   }
 
-  time_t mytime = firstTime/1000;
+  time_t mytime = firstTime / 1000;
   tm * t = gmtime( &mytime );
   if ( 0 != ( t->tm_hour + t->tm_min + t->tm_sec ) ) { // not 00:00:00 (midnight)?
     char timestr[sizeof "00:00:00"];
@@ -119,9 +121,9 @@ void WfdbWriter::syncAndWrite( double freq, std::vector<std::unique_ptr<SignalDa
 
   std::vector<std::vector < std::string>> data = SignalUtils::syncDatas( olddata );
 
-  const auto& first = (olddata.begin()->get() );  
-  if ( first->wave() ) {
-    int ifrq = (olddata.begin())->get()->valuesPerDataRow();
+  const auto& first = ( olddata.begin( )->get( ) );
+  if ( first->wave( ) ) {
+    int ifrq = ( olddata.begin( ) )->get( )->valuesPerDataRow( );
 
     // waveforms
 
@@ -136,7 +138,7 @@ void WfdbWriter::syncAndWrite( double freq, std::vector<std::unique_ptr<SignalDa
       WFDB_Sample samples[cols][ifrq] = { 0 };
       for ( int col = 0; col < cols; col++ ) {
         std::vector<int> slices = DataRow::ints( rowcols[col] );
-        size_t numslices = slices.size();
+        size_t numslices = slices.size( );
         for ( size_t slice = 0; slice < numslices; slice++ ) {
           samples[col][slice] = slices[slice];
         }

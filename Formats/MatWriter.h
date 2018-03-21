@@ -24,38 +24,38 @@
 class SignalData;
 class SignalSet;
 
-enum MatVersion { MV4, MV5, MV7 };
+enum MatVersion {
+  MV4, MV5, MV7
+};
 
 class MatWriter : public Writer {
 public:
-	MatWriter( MatVersion version = MV5  );
-	virtual ~MatWriter( );
+  MatWriter( MatVersion version = MV5 );
+  virtual ~MatWriter( );
 
 protected:
-	int initDataSet( const std::string& outdir, const std::string& namestart,
-			int compression );
-	std::vector<std::string> closeDataSet( );
-	int drain( SignalSet& );
+  int initDataSet( int compression );
+  std::vector<std::string> closeDataSet();
+  int drain( SignalSet& );
 
 private:
-	MatWriter( const MatWriter& orig );
+  MatWriter( const MatWriter& orig );
 
-	/**
-	 * Consumes the given data and writes to the file
-	 * @param data
-	 * @return
-	 */
-	int writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&data );
-	int writeWaves( const int& freq, std::vector<std::unique_ptr<SignalData>>&data );
+  /**
+   * Consumes the given data and writes to the file
+   * @param data
+   * @return
+   */
+  int writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&data );
+  int writeWaves( const int& freq, std::vector<std::unique_ptr<SignalData>>&data );
 
-	int writeStrings( const std::string& label, std::vector<std::string>& strings );
+  int writeStrings( const std::string& label, std::vector<std::string>& strings );
 
-	std::string fileloc;
-	mat_t * matfile;
-	dr_time firsttime;
-	SignalSet * dataptr;
-	matio_compression compression;
-        MatVersion version;
+  std::string tempfileloc;
+  mat_t * matfile;
+  SignalSet * dataptr;
+  matio_compression compression;
+  MatVersion version;
 };
 
 
