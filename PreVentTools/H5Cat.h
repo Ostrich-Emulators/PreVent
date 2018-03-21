@@ -28,9 +28,8 @@ public:
   H5Cat( const H5Cat& orig );
   virtual ~H5Cat( );
 
-  std::unique_ptr<H5::H5File> cat( std::vector<std::string>& filesToCat );
-  static std::unique_ptr<H5::H5File> cat( const std::string& outfile,
-      std::vector<std::string>& filesToCat );
+  void cat( std::vector<std::string>& filesToCat );
+  static void cat( const std::string& outfile, std::vector<std::string>& filesToCat );
 private:
   const std::string output;
 };

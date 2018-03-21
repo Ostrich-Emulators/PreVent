@@ -160,57 +160,56 @@ int main( int argc, char** argv ) {
       filesToCat.push_back( argv[i] );
     }
 
-    std::cout << "catting to " << outfilename << std::endl;
-    for ( auto x : filesToCat ) {
-      std::cout << "file to cat: " << x << std::endl;
-    }
+    // std::cout << "catting to " << outfilename << std::endl;
+    // for ( auto x : filesToCat ) {
+    //   std::cout << "file to cat: " << x << std::endl;
+    // }
 
-    // FIXME: check for clobber
-    H5Cat catter( outfilename );
-    catter.cat( filesToCat );
-    
-    return 0;
-  }
-
-
-
-  // something to acknowledge the program did something
-  // (even if the user didn't ask us to do anything)
-  if ( attrs.empty( ) ) {
-    std::cout << "yup...that's a file" << std::endl;
-    exit( 0 );
-  }
-
-  std::unique_ptr<H5::H5File> infile;
-  std::unique_ptr<H5::H5File> outfile;
-  std::string infilename = argv[optind];
-
-  if ( "" == outfilename ) {
-    // infile and outfile are the same
-    if ( clobber ) {
-      outfile.reset( new H5::H5File( infilename, H5F_ACC_RDWR ) );
-    }
-    else {
-      std::cerr << "will not overwrite " << infilename << " (use --clobber)" << std::endl;
-      exit( 1 );
-    }
-  }
-  else {
-    // if file exists,  worry about clobbering it
     struct stat buffer;
     if ( stat( outfilename.c_str( ), &buffer ) == 0 && !clobber ) {
       std::cerr << "will not overwrite " << outfilename << " (use --clobber)" << std::endl;
       exit( 1 );
     }
 
-    infile.reset( new H5::H5File( infilename, H5F_ACC_RDONLY ) );
-    outfile.reset( new H5::H5File( outfilename, H5F_ACC_TRUNC ) );
-    cloneFile( infile, outfile );
+    H5Cat catter( outfilename );
+    catter.cat( filesToCat );
   }
+  else if ( attrs.empty( ) ) {
+    // something to acknowledge the program did something
+    // (even if the user didn't ask us to do anything)
+    std::cout << "yup...that's a file" << std::endl;
+  }
+  else { // write some attributes
+    std::unique_ptr<H5::H5File> infile;
+    std::unique_ptr<H5::H5File> outfile;
+    std::string infilename = argv[optind];
 
-  writeAttrs( outfile, attrs );
+    if ( "" == outfilename ) {
+      // infile and outfile are the same
+      if ( clobber ) {
+        outfile.reset( new H5::H5File( infilename, H5F_ACC_RDWR ) );
+      }
+      else {
+        std::cerr << "will not overwrite " << infilename << " (use --clobber)" << std::endl;
+        exit( 1 );
+      }
+    }
+    else {
+      // if file exists,  worry about clobbering it
+      struct stat buffer;
+      if ( stat( outfilename.c_str( ), &buffer ) == 0 && !clobber ) {
+        std::cerr << "will not overwrite " << outfilename << " (use --clobber)" << std::endl;
+        exit( 1 );
+      }
 
-  outfile->close( );
+      infile.reset( new H5::H5File( infilename, H5F_ACC_RDONLY ) );
+      outfile.reset( new H5::H5File( outfilename, H5F_ACC_TRUNC ) );
+      cloneFile( infile, outfile );
+    }
+
+    writeAttrs( outfile, attrs );
+    outfile->close( );
+  }
 
   return 0;
 }

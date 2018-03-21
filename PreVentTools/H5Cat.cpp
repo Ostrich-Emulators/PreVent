@@ -31,10 +31,10 @@ H5Cat::H5Cat( const H5Cat& orig ) : output( orig.output ) {
 H5Cat::~H5Cat( ) {
 }
 
-std::unique_ptr<H5::H5File> H5Cat::cat( std::vector<std::string>& filesToCat ) {
-  //std::unique_ptr<H5::H5File> h5( new H5::H5File( output, H5F_ACC_TRUNC ) );
-
+void H5Cat::cat( std::vector<std::string>& filesToCat ) {
   // we need to open all the files and see which datasets we have
+  // it's a lot easier to store these things as SignalData objects
+  // even though that will write extra temp files
   Hdf5Reader rdr;
   SignalSet alldata;
   alldata.setFileSupport( true );
@@ -51,11 +51,9 @@ std::unique_ptr<H5::H5File> H5Cat::cat( std::vector<std::string>& filesToCat ) {
   std::unique_ptr<Reader> nullrdr( new NullReader( rdr.name( ) ) );
   wrt.setNonbreakingOutputName( output );
   wrt.write( nullrdr, alldata );
-
-  return std::unique_ptr<H5::H5File>();// std::move( h5 );
 }
 
-std::unique_ptr<H5::H5File> H5Cat::cat( const std::string& outfile,
-        std::vector<std::string>& filesToCat ) {
-  return H5Cat( outfile ).cat( filesToCat );
+void H5Cat::cat( const std::string& outfile,
+    std::vector<std::string>& filesToCat ) {
+  H5Cat( outfile ).cat( filesToCat );
 }
