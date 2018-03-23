@@ -21,6 +21,7 @@
 #include "SignalData.h"
 #include "SignalSet.h"
 #include "NullReader.h"
+#include "FileNamer.h"
 
 H5Cat::H5Cat( const std::string& outfile ) : output( outfile ) {
 }
@@ -49,7 +50,7 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
 
   Hdf5Writer wrt;
   std::unique_ptr<Reader> nullrdr( new NullReader( rdr.name( ) ) );
-  wrt.setNonbreakingOutputName( output );
+  wrt.filenamer( FileNamer::parse( output ) );
   wrt.write( nullrdr, alldata );
 }
 

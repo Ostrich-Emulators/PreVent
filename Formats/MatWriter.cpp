@@ -20,10 +20,10 @@
 #include "SignalUtils.h"
 #include "FileNamer.h"
 
-MatWriter::MatWriter( MatVersion ver ) : version( ver ) {
+MatWriter::MatWriter( MatVersion ver ) : Writer( "mat" ), version( ver ) {
 }
 
-MatWriter::MatWriter( const MatWriter& ) {
+MatWriter::MatWriter( const MatWriter& c) : Writer( "mat" ) {
 }
 
 MatWriter::~MatWriter( ) {
@@ -58,18 +58,18 @@ int MatWriter::initDataSet( int comp ) {
       << ", Created by: fmtcnv (rpb6eg@virginia.edu) on: "
       << fulldatetime;
 
-  tempfileloc = filenamer().filenameNoExt( );
+  tempfileloc = filenamer( ).filenameNoExt( );
   matfile = Mat_CreateVer( tempfileloc.c_str( ), header.str( ).c_str( ), ver );
 
   return !( matfile );
 }
 
-std::vector<std::string> MatWriter::closeDataSet() {
+std::vector<std::string> MatWriter::closeDataSet( ) {
   Mat_Close( matfile );
 
   // copy our temporary mat file to its final location
   std::ifstream src( tempfileloc, std::ios::binary );
-  std::ofstream dst( filenamer().last(), std::ios::binary | std::ios::trunc );
+  std::ofstream dst( filenamer( ).last( ), std::ios::binary | std::ios::trunc );
 
   dst << src.rdbuf( );
   remove( tempfileloc.c_str( ) );
@@ -78,13 +78,13 @@ std::vector<std::string> MatWriter::closeDataSet() {
   dst.close( );
 
   std::vector<std::string> ret;
-  ret.push_back( filenamer().last() );
+  ret.push_back( filenamer( ).last( ) );
   return ret;
 }
 
 int MatWriter::drain( SignalSet& info ) {
   dataptr = &info;
-  filenamer().filename( info );
+  filenamer( ).filename( info );
 
   writeVitals( info.vitals( ) );
 

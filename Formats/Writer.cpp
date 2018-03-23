@@ -14,11 +14,12 @@
 #include "ConversionListener.h"
 #include "FileNamer.h"
 
-Writer::Writer( ) : quiet( false ) {
+Writer::Writer( const std::string& ext ) : quiet( false ), extension( ext ),
+namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
 }
 
-Writer::Writer( const Writer& ) : quiet( false ) {
-
+Writer::Writer( const Writer& w ) : quiet( false ), extension( w.extension ),
+namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
 }
 
 Writer::~Writer( ) {
@@ -40,21 +41,30 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
       return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV4 ) );
     case CSV:
       return std::unique_ptr<Writer>( new CsvWriter( ) );
+
     default:
       throw "writer not yet implemented";
   }
 }
 
+const std::string& Writer::ext( ) const {
+
+  return extension;
+}
+
 void Writer::setCompression( int lev ) {
+
   compression = lev;
 }
 
-int Writer::initDataSet( int ){
+int Writer::initDataSet( int ) {
+
   return 0;
 }
 
-FileNamer& Writer::filenamer() const {
-  return *namer.get();
+FileNamer& Writer::filenamer( ) const {
+
+  return *namer.get( );
 }
 
 std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
@@ -77,7 +87,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     drain( data );
 
     if ( ReadResult::END_OF_DAY == retcode || ReadResult::END_OF_PATIENT == retcode ) {
-      std::vector<std::string> files = closeDataSet();
+      std::vector<std::string> files = closeDataSet( );
       for ( auto& outfile : files ) {
         for ( auto& l : listeners ) {
           l->onFileCompleted( outfile, data );
@@ -103,7 +113,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
     else if ( ReadResult::END_OF_FILE == retcode ) {
       // end of file, so break out of our write
 
-      std::vector<std::string> files = closeDataSet();
+      std::vector<std::string> files = closeDataSet( );
       if ( files.empty( ) ) {
         std::cerr << "refusing to write empty data file!" << std::endl;
       }
@@ -125,6 +135,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
   }
 
   if ( ReadResult::ERROR == retcode ) {
+
     std::cerr << "error reading file" << std::endl;
   }
 
@@ -132,6 +143,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
 }
 
 void Writer::addListener( std::shared_ptr<ConversionListener> l ) {
+
   listeners.push_back( l );
 }
 
@@ -139,15 +151,18 @@ class NullBuffer : public std::streambuf{
 public:
 
   int overflow( int c ) {
+
     return c;
   }
 };
 
 void Writer::setQuiet( bool q ) {
+
   quiet = q;
 }
 
 void Writer::filenamer( const FileNamer& p ) {
+
   namer.reset( new FileNamer( p ) );
 }
 

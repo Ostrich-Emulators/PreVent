@@ -18,10 +18,10 @@
 #include "config.h"
 #include "FileNamer.h"
 
-WfdbWriter::WfdbWriter( ) {
+WfdbWriter::WfdbWriter( ) : Writer( "hea" ) {
 }
 
-WfdbWriter::WfdbWriter( const WfdbWriter& ) {
+WfdbWriter::WfdbWriter( const WfdbWriter& ) : Writer( "hea" ) {
 }
 
 WfdbWriter::~WfdbWriter( ) {
@@ -29,12 +29,12 @@ WfdbWriter::~WfdbWriter( ) {
 
 int WfdbWriter::initDataSet( int ) {
   currdir = getcwd( NULL, 0 );
-  std::string directory = filenamer().outputdir( );
+  std::string directory = filenamer( ).outputdir( );
   int x = chdir( directory.c_str( ) );
 
   files.clear( );
 
-  fileloc = filenamer().filename( ).substr( directory.size( ) );
+  fileloc = filenamer( ).filename( ).substr( directory.size( ) );
   std::string rectest = fileloc + "-20170101"; // we're going to replace the date
   int headerok = newheader( (char *) rectest.c_str( ) ); // check that our header file is valid
   if ( 0 == headerok ) {
@@ -45,7 +45,7 @@ int WfdbWriter::initDataSet( int ) {
   return headerok;
 }
 
-std::vector<std::string> WfdbWriter::closeDataSet() {
+std::vector<std::string> WfdbWriter::closeDataSet( ) {
   int x = chdir( currdir.c_str( ) );
   wfdbquit( );
   return files;
@@ -64,14 +64,14 @@ int WfdbWriter::drain( SignalSet& info ) {
   }
 
   for ( auto& ds : freqgroups ) {
-    write( ds.first, ds.second, filenamer().filenameNoExt(info) );
+    write( ds.first, ds.second, filenamer( ).filenameNoExt( info ) );
   }
 
   return 0;
 }
 
 int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&data,
-    const std::string& namestart) {
+    const std::string& namestart ) {
   setsampfreq( freq );
 
   sigmap.clear( );

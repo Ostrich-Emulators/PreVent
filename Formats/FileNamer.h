@@ -23,6 +23,9 @@ class SignalSet;
 
 class FileNamer {
 public:
+  static const std::string DEFAULT_PATTERN;
+  static const std::string FILENAME_PATTERN;
+
   virtual ~FileNamer( );
   FileNamer& operator=(const FileNamer& orig );
   FileNamer( const FileNamer& orig );

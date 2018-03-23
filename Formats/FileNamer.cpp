@@ -9,6 +9,9 @@
 #include <sys/stat.h>
 #include "config.h"
 
+const std::string FileNamer::DEFAULT_PATTERN = "%i-p%p-%s.%t";
+const std::string FileNamer::FILENAME_PATTERN = "%i.%t";
+
 FileNamer::FileNamer( const std::string& pat ) : pattern( pat ), patientnum( -1 ) {
 }
 

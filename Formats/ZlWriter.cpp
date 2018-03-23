@@ -16,10 +16,10 @@
 #include "SignalData.h"
 #include "FileNamer.h"
 
-ZlWriter::ZlWriter( ) {
+ZlWriter::ZlWriter( ) : Writer( "zl" ) {
 }
 
-ZlWriter::ZlWriter( const ZlWriter& ) {
+ZlWriter::ZlWriter( const ZlWriter& ) : Writer( "zl" ) {
 }
 
 ZlWriter::~ZlWriter( ) {
@@ -74,7 +74,7 @@ int ZlWriter::drain( SignalSet& info ) {
   while ( empties.size( ) < sigcount ) {
     dr_time nextearliesttime = std::numeric_limits<dr_time>::max( );
 
-    out << "TIME " << firsttime/1000 << std::endl;
+    out << "TIME " << firsttime / 1000 << std::endl;
     for ( int i = 0; i < info.vitals( ).size( ); i++ ) {
       std::string& label = vls[i];
 

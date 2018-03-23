@@ -35,6 +35,9 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-a or --attr <key=value>\tsets the given attribute to the value"
       << std::endl << "\t-C or --clobber\toverwrite input file"
       << std::endl << "\t-c --cat\tconcatenate files from command line, used with --output"
+      << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
+      << std::endl << "\t-e or --end <time>\tstop output immediately before this UTC time (many time formats supported)"
+      << std::endl << "\t-f or --for <ms>\toutput this many ms of data from the start of file (or --start)"
       << std::endl;
   exit( 1 );
 }
@@ -107,7 +110,7 @@ int main( int argc, char** argv ) {
   bool catfiles = false;
   std::vector<std::string> filesToCat;
 
-  while ( ( c = getopt_long( argc, argv, ":m:n:o:Ca:c:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":m:n:o:Ca:c:s:e:f:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'm':
         attrs["MRN"] = optarg;

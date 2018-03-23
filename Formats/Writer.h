@@ -17,7 +17,6 @@ class FileNamer;
 
 class Writer {
 public:
-  Writer( );
   virtual ~Writer( );
 
   static std::unique_ptr<Writer> get( const Format& fmt );
@@ -26,13 +25,14 @@ public:
   void addListener( std::shared_ptr<ConversionListener> listener );
   void setQuiet( bool = true );
   void filenamer( const FileNamer& namer );
-  FileNamer& filenamer() const;
-
+  FileNamer& filenamer( ) const;
+  const std::string& ext() const;
 
   virtual std::vector<std::string> write( std::unique_ptr<Reader>& from,
       SignalSet& data );
 
 protected:
+  Writer( const std::string& extension );
   std::ostream& output( ) const;
 
   /**
@@ -60,16 +60,16 @@ protected:
    * @return 0 (success) -1 (error)
    */
   virtual int drain( SignalSet& info ) = 0;
-  
+
 private:
   Writer( const Writer& );
 
-  std::string outdir;
   std::vector<std::shared_ptr<ConversionListener>> listeners;
   int compression;
   bool quiet;
   std::stringstream ss;
   std::unique_ptr<FileNamer> namer;
+  const std::string& extension; // filename extension
 
 };
 

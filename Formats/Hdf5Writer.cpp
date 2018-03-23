@@ -24,10 +24,10 @@
 #include "SignalUtils.h"
 #include "FileNamer.h"
 
-Hdf5Writer::Hdf5Writer( ) {
+Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
 }
 
-Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) {
+Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) {
 }
 
 Hdf5Writer::~Hdf5Writer( ) {
@@ -303,7 +303,7 @@ int Hdf5Writer::drain( SignalSet& info ) {
   return 0;
 }
 
-std::vector<std::string> Hdf5Writer::closeDataSet() {
+std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   SignalSet& data = *dataptr;
 
   dr_time firstTime = data.earliest( );
@@ -324,7 +324,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet() {
   //    }
   //  }
 
-  std::string outy = filenamer().filename( data, ret.size( ) );
+  std::string outy = filenamer( ).filename( data, ret.size( ) );
   if ( data.vitals( ).empty( ) && data.waves( ).empty( ) ) {
     std::cerr << "Nothing to write to " << outy << std::endl;
     return ret;

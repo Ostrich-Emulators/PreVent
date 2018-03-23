@@ -17,10 +17,10 @@
 #include "SignalUtils.h"
 #include "FileNamer.h"
 
-CsvWriter::CsvWriter( ) {
+CsvWriter::CsvWriter( ) : Writer( "csv" ) {
 }
 
-CsvWriter::CsvWriter( const CsvWriter& ) {
+CsvWriter::CsvWriter( const CsvWriter& ) : Writer( "csv" ){
 }
 
 CsvWriter::~CsvWriter( ) {

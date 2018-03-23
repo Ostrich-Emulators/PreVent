@@ -47,7 +47,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t  %s - date of first data point"
       << std::endl << "\t  %e - date of last data point"
       << std::endl << "\t  %o - output file ordinal"
-      << std::endl << "\t  %t - the --to option value (e.g., hdf5, csv)"
+      << std::endl << "\t  %t - the --to option's extension (e.g., hdf5, csv)"
       << std::endl << "\t  all dates are output in YYYYMMDD format"
       << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file (or pattern)"
       << std::endl << "\tif file is -, stdin is read for input"
@@ -81,7 +81,7 @@ int main( int argc, char** argv ) {
   std::string outdir = ".";
   std::string exp;
   std::string sqlitedb;
-  std::string pattern = "%i-p%p.%t";
+  std::string pattern = FileNamer::DEFAULT_PATTERN;
   bool anonymize = false;
   bool quiet = false;
   bool nobreak = false;
@@ -192,7 +192,7 @@ int main( int argc, char** argv ) {
     to->setCompression( compression );
     FileNamer namer = FileNamer::parse( pattern );
     namer.outputdir( outdir );
-    namer.tofmt( tostr );
+    namer.tofmt( to->ext() );
     to->filenamer( namer );
 
     from->setQuiet( quiet );
