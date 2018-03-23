@@ -32,7 +32,7 @@ std::vector<std::string> ZlWriter::closeDataSet( ) {
 }
 
 int ZlWriter::drain( SignalSet& info ) {
-  time_t firsttime = std::numeric_limits<time_t>::max( );
+  dr_time firsttime = std::numeric_limits<dr_time>::max( );
 
   std::unique_ptr<DataRow> vits[info.vitals( ).size( )];
   std::unique_ptr<DataRow> wavs[info.waves( ).size( )];
@@ -72,9 +72,9 @@ int ZlWriter::drain( SignalSet& info ) {
   int sigcount = info.vitals( ).size( ) + info.waves( ).size( );
   std::set<std::string> empties;
   while ( empties.size( ) < sigcount ) {
-    time_t nextearliesttime = std::numeric_limits<time_t>::max( );
+    dr_time nextearliesttime = std::numeric_limits<dr_time>::max( );
 
-    out << "TIME " << firsttime << std::endl;
+    out << "TIME " << firsttime/1000 << std::endl;
     for ( int i = 0; i < info.vitals( ).size( ); i++ ) {
       std::string& label = vls[i];
 

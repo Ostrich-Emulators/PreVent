@@ -100,14 +100,14 @@ ReadResult WfdbReader::fill( SignalSet& info, const ReadResult& ) {
 
   WFDB_Frequency freqhz = getifreq( );
   int timecount = 0; // how many times have we seen the same time? (we should see it freqhz times, no?)
-  time_t lasttime = -1;
+  dr_time lasttime = -1;
   DataRow currents[sigcount];
   bool iswave = ( freqhz > 1 );
 
   while ( retcode > 0 ) {
     for ( int j = 0; j < sigcount; j++ ) {
       char * timer = timstr( sampleno );
-      time_t timet = convert( timer );
+      dr_time timet = convert( timer );
       // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
       // for what timer is
 

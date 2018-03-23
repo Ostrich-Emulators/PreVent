@@ -33,7 +33,7 @@ const std::string SignalData::VALS_PER_DR = "Readings Per Time";
 const short SignalData::MISSING_VALUE = -32768;
 
 SignalData::SignalData( const std::string& name, bool largefile, bool wavedata )
-: label( name ), firstdata( std::numeric_limits<time_t>::max( ) ), lastdata( 0 ),
+: label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
 datacount( 0 ), popping( false ), iswave( wavedata ) {
   //file = ( largefile ? fopen( std::tmpnam( nullptr ), "w+" ) : NULL );
   if ( largefile ) {
@@ -251,7 +251,7 @@ int SignalData::uncache( int max ) {
     }
 
     std::stringstream ss( read );
-    time_t t;
+    dr_time t;
     std::string val;
     std::string high;
     std::string low;
