@@ -34,7 +34,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-o or --output <output file>"
       << std::endl << "\t-a or --attr <key=value>\tsets the given attribute to the value"
       << std::endl << "\t-C or --clobber\toverwrite input file"
-      << std::endl << "\t-c --cat\tconcatenate files from command line, used with --output"
+      << std::endl << "\t-c or --cat\tconcatenate files from command line, used with --output"
       << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
       << std::endl << "\t-e or --end <time>\tstop output immediately before this UTC time (many time formats supported)"
       << std::endl << "\t-f or --for <ms>\toutput this many ms of data from the start of file (or --start)"

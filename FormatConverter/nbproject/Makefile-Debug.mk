@@ -82,6 +82,7 @@ ${OBJECTDIR}/main.o: main.cpp nbproject/Makefile-${CND_CONF}.mk
 # Subprojects
 .build-subprojects:
 	cd ../Formats && ${MAKE}  -f Makefile CONF=Debug
+	cd ../libtdms && ${MAKE}  -f Makefile CONF=Debug
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
@@ -92,6 +93,7 @@ ${OBJECTDIR}/main.o: main.cpp nbproject/Makefile-${CND_CONF}.mk
 # Subprojects
 .clean-subprojects:
 	cd ../Formats && ${MAKE}  -f Makefile CONF=Debug clean
+	cd ../libtdms && ${MAKE}  -f Makefile CONF=Debug clean
 
 # Enable dependency checking
 .dep.inc: .depcheck-impl
