@@ -22,8 +22,12 @@
 #include <H5Cpp.h>
 #include <H5Opublic.h>
 #include <vector>
+#include <algorithm>
 
 #include "H5Cat.h"
+#include "dr_time.h"
+#include "TimeParser.h"
+#include "DurationSpecification.h"
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
@@ -48,6 +52,9 @@ struct option longopts[] = {
   { "clobber", no_argument, NULL, 'C' },
   { "output", required_argument, NULL, 'o' },
   { "attr", required_argument, NULL, 'a' },
+  { "start", required_argument, NULL, 's' },
+  { "end", required_argument, NULL, 'e' },
+  { "for", required_argument, NULL, 'f' },
   { "cat", no_argument, NULL, 'c' }, // all remaining args are files
   { 0, 0, 0, 0 }
 };
@@ -109,6 +116,10 @@ int main( int argc, char** argv ) {
   std::map <std::string, std::string> attrs;
   bool catfiles = false;
   std::vector<std::string> filesToCat;
+  bool dotime = false;
+  dr_time starttime = 0;
+  dr_time endtime = std::numeric_limits<dr_time>::max( );
+  int for_ms = -1;
 
   while ( ( c = getopt_long( argc, argv, ":m:n:o:Ca:c:s:e:f:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
@@ -140,6 +151,18 @@ int main( int argc, char** argv ) {
       case 'c':
         catfiles = true;
         break;
+      case 's':
+        starttime = TimeParser::parse( optarg );
+        dotime = true;
+        break;
+      case 'e':
+        endtime = TimeParser::parse( optarg );
+        dotime = true;
+        break;
+      case 'f':
+        for_ms = std::stoi( optarg );
+        dotime = true;
+        break;
       case ':':
         std::cerr << "missing option argument" << std::endl;
         helpAndExit( argv[0] );
@@ -152,6 +175,14 @@ int main( int argc, char** argv ) {
   }
   if ( ( optind + 1 ) > argc ) {
     helpAndExit( argv[0], "no file specified" );
+  }
+
+
+  DurationSpecification spec = DurationSpecification::all( );
+  if ( dotime ) {
+    spec = ( for_ms > 0
+        ? DurationSpecification::for_ms( starttime, for_ms )
+        : DurationSpecification( starttime, endtime ) );
   }
 
   if ( catfiles ) {

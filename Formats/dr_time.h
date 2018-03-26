@@ -14,6 +14,7 @@
 #ifndef DR_TIME_H
 #define DR_TIME_H
 
+#include <stdint.h>
 typedef int64_t dr_time;
 
 #endif /* DR_TIME_H */

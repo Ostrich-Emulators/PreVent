@@ -18,6 +18,8 @@
 #include <vector>
 #include <string>
 
+class DurationSpecification;
+
 namespace H5 {
   class H5File;
 }
@@ -30,8 +32,10 @@ public:
 
   void cat( std::vector<std::string>& filesToCat );
   static void cat( const std::string& outfile, std::vector<std::string>& filesToCat );
+  void setDuration( const DurationSpecification& spec );
 private:
   const std::string output;
+  std::unique_ptr<DurationSpecification> spec;
 };
 
 #endif /* H5CAT_H */

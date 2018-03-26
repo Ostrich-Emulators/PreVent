@@ -39,6 +39,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/CpcXmlReader.o \
 	${OBJECTDIR}/CsvWriter.o \
 	${OBJECTDIR}/DataRow.o \
+	${OBJECTDIR}/DurationSpecification.o \
 	${OBJECTDIR}/FileNamer.o \
 	${OBJECTDIR}/Formats.o \
 	${OBJECTDIR}/Hdf5Reader.o \
@@ -110,6 +111,11 @@ ${OBJECTDIR}/DataRow.o: DataRow.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -s -I../libtdms/include `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DataRow.o DataRow.cpp
+
+${OBJECTDIR}/DurationSpecification.o: DurationSpecification.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -s -I../libtdms/include `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/DurationSpecification.o DurationSpecification.cpp
 
 ${OBJECTDIR}/FileNamer.o: FileNamer.cpp
 	${MKDIR} -p ${OBJECTDIR}

@@ -22,11 +22,14 @@
 #include "SignalSet.h"
 #include "NullReader.h"
 #include "FileNamer.h"
+#include "DurationSpecification.h"
 
-H5Cat::H5Cat( const std::string& outfile ) : output( outfile ) {
+H5Cat::H5Cat( const std::string& outfile ) : output( outfile ),
+spec( new DurationSpecification( DurationSpecification::all( ) ) ) {
 }
 
-H5Cat::H5Cat( const H5Cat& orig ) : output( orig.output ) {
+H5Cat::H5Cat( const H5Cat& orig ) : output( orig.output ),
+spec( new DurationSpecification( DurationSpecification::all( ) ) ) {
 }
 
 H5Cat::~H5Cat( ) {
