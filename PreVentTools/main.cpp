@@ -41,7 +41,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-c or --cat\tconcatenate files from command line, used with --output"
       << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
       << std::endl << "\t-e or --end <time>\tstop output immediately before this UTC time (many time formats supported)"
-      << std::endl << "\t-f or --for <ms>\toutput this many ms of data from the start of file (or --start)"
+      << std::endl << "\t-f or --for <s>\toutput this many seconds of data from the start of file (or --start)"
       << std::endl;
   exit( 1 );
 }
@@ -181,7 +181,7 @@ int main( int argc, char** argv ) {
   DurationSpecification spec = DurationSpecification::all( );
   if ( dotime ) {
     spec = ( for_ms > 0
-        ? DurationSpecification::for_ms( starttime, for_ms )
+        ? DurationSpecification::for_s( starttime, for_ms )
         : DurationSpecification( starttime, endtime ) );
   }
 
@@ -206,6 +206,9 @@ int main( int argc, char** argv ) {
     }
 
     H5Cat catter( outfilename );
+    if( dotime ){
+      catter.duration( spec );
+    }
     catter.cat( filesToCat );
   }
   else if ( attrs.empty( ) ) {

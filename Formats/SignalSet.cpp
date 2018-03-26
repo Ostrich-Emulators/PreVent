@@ -7,6 +7,8 @@
 #include "SignalSet.h"
 #include "SignalData.h"
 #include "SignalUtils.h"
+#include "DurationSpecification.h"
+#include "DurationSignalData.h"
 
 #include <limits>
 
@@ -117,7 +119,9 @@ std::unique_ptr<SignalData>& SignalSet::addVital( const std::string& name, bool 
   int cnt = vmap.count( name );
   if ( 0 == cnt ) {
     vmap.insert( std::make_pair( name,
-        std::unique_ptr<SignalData>( new SignalData( name, largefile ) ) ) );
+        std::unique_ptr<SignalData>( duration
+        ? new DurationSignalData( name, *duration, largefile )
+        : new SignalData( name, largefile ) ) ) );
   }
 
   if ( NULL != added ) {
@@ -131,11 +135,12 @@ std::unique_ptr<SignalData>& SignalSet::addWave( const std::string& name, bool *
   int cnt = wmap.count( name );
   if ( 0 == cnt ) {
     wmap.insert( std::make_pair( name,
-        std::unique_ptr<SignalData>( new SignalData( name, largefile, true ) ) ) );
+        std::unique_ptr<SignalData>( duration
+        ? new DurationSignalData( name, *duration, largefile, true )
+        : new SignalData( name, largefile, true ) ) ) );
   }
 
   if ( NULL != added ) {
-
     *added = ( 0 == cnt );
   }
 
@@ -159,6 +164,41 @@ void SignalSet::addOffset( long seg, dr_time time ) {
   segs[seg] = time;
 }
 
-void SignalSet::clearOffsets(){
-  segs.clear();
+void SignalSet::clearOffsets( ) {
+  segs.clear( );
+}
+
+void SignalSet::validDuration( const DurationSpecification& d ) {
+  duration.reset( new DurationSpecification( d ) );
+}
+
+void SignalSet::moveTo( SignalSet& dest ) {
+  dest.metadata( ).clear( );
+  for ( auto& x : metadata( ) ) {
+    dest.addMeta( x.first, x.second );
+  }
+
+  for ( auto& v : vmap ) {
+    if ( 0 == dest.vitals( ).count( v.first ) ) {
+      std::unique_ptr<SignalData>& destdata = dest.addVital( v.first );
+      destdata->setMetadataFrom( *v.second );
+      v.second->moveDataTo( destdata );
+    }
+    else {
+      std::unique_ptr<SignalData>& destdata = dest.vitals( ).at( v.first );
+      v.second->moveDataTo( destdata );
+    }
+  }
+
+  for ( auto& v : wmap ) {
+    if ( 0 == dest.waves( ).count( v.first ) ) {
+      std::unique_ptr<SignalData>& destdata = dest.addWave( v.first );
+      destdata->setMetadataFrom( *v.second );
+      v.second->moveDataTo( destdata );
+    }
+    else {
+      std::unique_ptr<SignalData>& destdata = dest.waves( ).at( v.first );
+      v.second->moveDataTo( destdata );
+    }
+  }
 }

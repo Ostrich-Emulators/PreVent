@@ -24,12 +24,10 @@
 #include "FileNamer.h"
 #include "DurationSpecification.h"
 
-H5Cat::H5Cat( const std::string& outfile ) : output( outfile ),
-spec( new DurationSpecification( DurationSpecification::all( ) ) ) {
+H5Cat::H5Cat( const std::string& outfile ) : output( outfile ), spec( nullptr ) {
 }
 
-H5Cat::H5Cat( const H5Cat& orig ) : output( orig.output ),
-spec( new DurationSpecification( DurationSpecification::all( ) ) ) {
+H5Cat::H5Cat( const H5Cat& orig ) : output( orig.output ), spec( nullptr ) {
 }
 
 H5Cat::~H5Cat( ) {
@@ -42,6 +40,7 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
   Hdf5Reader rdr;
   SignalSet alldata;
   alldata.setFileSupport( true );
+  alldata.validDuration( *spec );
   for ( const auto& file : filesToCat ) {
     SignalSet junk;
     rdr.prepare( file, junk );
@@ -53,11 +52,23 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
 
   Hdf5Writer wrt;
   std::unique_ptr<Reader> nullrdr( new NullReader( rdr.name( ) ) );
-  wrt.filenamer( FileNamer::parse( output ) );
+  FileNamer fn = FileNamer::parse( output );
+
+  // FIXME: this doesn't work?
+  // fn.tofmt( wrt.ext( ) );
+  fn.tofmt( "hdf5" );
+  fn.inputfilename( "-" );
+  fn.outputdir( "." );
+  wrt.filenamer( fn );
+
   wrt.write( nullrdr, alldata );
 }
 
 void H5Cat::cat( const std::string& outfile,
     std::vector<std::string>& filesToCat ) {
   H5Cat( outfile ).cat( filesToCat );
+}
+
+void H5Cat::duration( const DurationSpecification& newspec ) {
+  spec.reset( new DurationSpecification( newspec ) );
 }

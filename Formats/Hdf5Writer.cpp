@@ -341,6 +341,10 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 
   output( ) << "Writing " << data.vitals( ).size( ) << " Vitals" << std::endl;
   for ( auto& vits : data.vitals( ) ) {
+    if ( vits.second->empty( ) ) {
+      output( ) << "Skipping Vital: " << vits.first << "(no data)" << std::endl;
+      continue;
+    }
     output( ) << "Writing Vital: " << vits.first << std::endl;
     std::vector<std::string> extras = vits.second->extras( );
     hsize_t sz = vits.second->size( );
@@ -369,6 +373,10 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   grp = file.createGroup( "Waveforms" );
   output( ) << "Writing " << data.waves( ).size( ) << " Waveforms" << std::endl;
   for ( auto& wavs : data.waves( ) ) {
+    if ( wavs.second->empty( ) ) {
+      output( ) << "Skipping Wave: " << wavs.first << "(no data)" << std::endl;
+      continue;
+    }
     output( ) << "Writing Wave: " << wavs.first;
     auto st = std::chrono::high_resolution_clock::now( );
 

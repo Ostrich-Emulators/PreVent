@@ -25,6 +25,7 @@
 #include "dr_time.h"
 
 class DataRow;
+class DurationSpecification;
 
 class SignalData {
 public:
@@ -38,9 +39,10 @@ public:
 
   SignalData( const std::string& name, bool largefilesupport = false, bool iswave = false );
   std::unique_ptr<SignalData> shallowcopy( bool includedates = false );
+  void moveDataTo( std::unique_ptr<SignalData>& signal );
   virtual ~SignalData( );
 
-  void add( const DataRow& row );
+  virtual void add( const DataRow& row );
   void setUom( const std::string& u );
   const std::string& uom( ) const;
   int scale( ) const;
@@ -52,6 +54,7 @@ public:
   void setValuesPerDataRow( int );
   int valuesPerDataRow( ) const;
   void setMetadataFrom( const SignalData& model );
+  void validDuration( const DurationSpecification& spec );
 
   std::unique_ptr<DataRow> pop( );
   bool empty( ) const;
@@ -95,9 +98,7 @@ private:
   bool popping;
   bool iswave;
   std::set<std::string> extrafields;
-
   static const int CACHE_LIMIT;
-  friend class TdmsReader; // needs to set scale
 };
 
 #endif /* DATASETDATACACHE_H */

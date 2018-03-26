@@ -76,6 +76,14 @@ std::unique_ptr<SignalData> SignalData::shallowcopy( bool includedates ) {
   return std::move( copy );
 }
 
+void SignalData::moveDataTo( std::unique_ptr<SignalData>& dest ) {
+  size_t count = size( );
+  for ( size_t i = 0; i < count; i++ ) {
+    std::unique_ptr<DataRow> dr = pop( );
+    dest->add( *dr );
+  }
+}
+
 std::map<std::string, std::string>& SignalData::metas( ) {
   return metadatas;
 }
@@ -102,8 +110,8 @@ const std::map<std::string, double>& SignalData::metad( ) const {
 
 double SignalData::hz( ) const {
   return ( 0 == metadatad.count( SignalData::HERTZ )
-        ? 1
-        : metadatad.at( SignalData::HERTZ ) );
+      ? 1
+      : metadatad.at( SignalData::HERTZ ) );
 }
 
 const dr_time& SignalData::startTime( ) const {
@@ -197,7 +205,7 @@ void SignalData::add( const DataRow& row ) {
     // copy current data list to disk
     cache( );
   }
-  
+
   int rowscale = DataRow::scale( row.data, iswave );
   if ( rowscale > scale( ) ) {
     setScale( rowscale );

@@ -48,22 +48,18 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
 }
 
 const std::string& Writer::ext( ) const {
-
   return extension;
 }
 
 void Writer::setCompression( int lev ) {
-
   compression = lev;
 }
 
 int Writer::initDataSet( int ) {
-
   return 0;
 }
 
 FileNamer& Writer::filenamer( ) const {
-
   return *namer.get( );
 }
 
