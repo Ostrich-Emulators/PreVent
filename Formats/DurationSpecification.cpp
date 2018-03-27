@@ -41,7 +41,7 @@ DurationSpecification DurationSpecification::for_ms( const dr_time& start, long 
 }
 
 DurationSpecification DurationSpecification::for_s( const dr_time& start, long s ) {
-  return for_ms( start, s * 1000 );
+  return for_ms( start, (s+1) * 1000 );
 }
 
 DurationSpecification DurationSpecification::all() {

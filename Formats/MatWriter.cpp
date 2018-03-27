@@ -23,14 +23,14 @@
 MatWriter::MatWriter( MatVersion ver ) : Writer( "mat" ), version( ver ) {
 }
 
-MatWriter::MatWriter( const MatWriter& c) : Writer( "mat" ) {
+MatWriter::MatWriter( const MatWriter& c ) : Writer( "mat" ) {
 }
 
 MatWriter::~MatWriter( ) {
 }
 
-int MatWriter::initDataSet( int comp ) {
-  compression = ( 0 == comp ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
+int MatWriter::initDataSet( ) {
+  compress = ( 0 == compression( ) ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
 
   char fulldatetime[sizeof "Thu Nov 31 10:10:27 1997"];
   time_t now;
@@ -55,8 +55,8 @@ int MatWriter::initDataSet( int comp ) {
   }
 
   header << "  MAT-file, Platform: " << osname
-      << ", Created by: fmtcnv (rpb6eg@virginia.edu) on: "
-      << fulldatetime;
+          << ", Created by: fmtcnv (rpb6eg@virginia.edu) on: "
+          << fulldatetime;
 
   tempfileloc = filenamer( ).filenameNoExt( );
   matfile = Mat_CreateVer( tempfileloc.c_str( ), header.str( ).c_str( ), ver );
@@ -130,18 +130,18 @@ int MatWriter::writeStrings( const std::string& label, std::vector<std::string>&
   // this is the code for writing cells, which seems more appropriate to me
   size_t dims[] = { 1, rows };
   matvar_t * var = Mat_VarCreate( label.c_str( ), MAT_C_CELL, MAT_T_CELL, 2,
-      dims, NULL, 0 );
+          dims, NULL, 0 );
 
   for ( int i = 0; i < rows; i++ ) {
     size_t strdims[2] = { 1, strings[i].size( ) };
     char * text = (char *) strings[i].c_str( );
     matvar_t * vart = Mat_VarCreate( NULL, MAT_C_CHAR, MAT_T_UTF8, 2, strdims,
-        text, 0 );
+            text, 0 );
     Mat_VarSetCell( var, i, vart );
     // does vart get free'd when var does?
   }
 
-  int ok = Mat_VarWrite( matfile, var, compression );
+  int ok = Mat_VarWrite( matfile, var, compress );
   Mat_VarFree( var );
   return ok;
 }
@@ -185,8 +185,8 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
     int col = 0;
     for ( std::string valstr : rowcols ) {
       short val = ( scales[labels[col]] > 1
-          ? short( std::stof( valstr ) * scales[labels[col]] )
-          : short( std::stoi( valstr ) ) );
+              ? short( std::stof( valstr ) * scales[labels[col]] )
+              : short( std::stoi( valstr ) ) );
 
       // WARNING: we're transposing these values
       // (because that's how matio wants them)!
@@ -198,9 +198,9 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
   }
 
   matvar_t * var = Mat_VarCreate( "vitals", MAT_C_INT16, MAT_T_INT16, 2, dims,
-      vitals, 0 );
+          vitals, 0 );
 
-  Mat_VarWrite( matfile, var, compression );
+  Mat_VarWrite( matfile, var, compress );
   Mat_VarFree( var );
 
   // timestamps
@@ -208,7 +208,7 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
   dims[1] = 1;
 
   var = Mat_VarCreate( "vt", MAT_C_INT32, MAT_T_INT32, 2, dims, timestamps, 0 );
-  Mat_VarWrite( matfile, var, compression );
+  Mat_VarWrite( matfile, var, compress );
   Mat_VarFree( var );
 
   // scales
@@ -219,7 +219,7 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
     scalesarr[i] = scales[labels[i]];
   }
   var = Mat_VarCreate( "vscales", MAT_C_INT16, MAT_T_INT16, 2, dims, scalesarr, 0 );
-  Mat_VarWrite( matfile, var, compression );
+  Mat_VarWrite( matfile, var, compress );
   Mat_VarFree( var );
 
   // units of measure
@@ -270,7 +270,7 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   std::vector<matvar_t *> vars;
   for ( int i = 0; i < cols; i++ ) {
     matvar_t * var = Mat_VarCreate( signals[i]->name( ).c_str( ),
-        MAT_C_INT16, MAT_T_INT16, 2, dims, NULL, 0 );
+            MAT_C_INT16, MAT_T_INT16, 2, dims, NULL, 0 );
     Mat_VarWriteInfo( matfile, var );
     vars.push_back( var );
   }
@@ -319,8 +319,8 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   dims[0] = alltimes.size( );
 
   matvar_t * var = Mat_VarCreate( std::string( "wt" + sfx ).c_str( ),
-      MAT_C_INT32, MAT_T_INT32, 2, dims, &alltimes[0], 0 );
-  Mat_VarWrite( matfile, var, compression );
+          MAT_C_INT32, MAT_T_INT32, 2, dims, &alltimes[0], 0 );
+  Mat_VarWrite( matfile, var, compress );
   Mat_VarFree( var );
 
   // FIXME: (metadata?)

@@ -32,7 +32,6 @@ public:
   virtual ~Hdf5Writer( );
 
 protected:
-  int initDataSet( int compression );
   std::vector<std::string> closeDataSet( );
   int drain( SignalSet& );
 
@@ -58,7 +57,6 @@ private:
   static void autochunk( hsize_t* dims, int rank, hsize_t* rslts );
   void createEventsAndTimes( H5::H5File, const SignalSet& data );
 
-  int compression;
   SignalSet * dataptr;
 };
 

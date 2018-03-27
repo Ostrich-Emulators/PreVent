@@ -11,8 +11,8 @@
  * Created on August 3, 2016, 7:47 AM
  */
 
-#ifndef DATASETDATACACHE_H
-#define DATASETDATACACHE_H
+#ifndef SIGNALDATA_H
+#define SIGNALDATA_H
 
 #include <list>
 #include <memory>
@@ -25,7 +25,6 @@
 #include "dr_time.h"
 
 class DataRow;
-class DurationSpecification;
 
 class SignalData {
 public:
@@ -37,69 +36,47 @@ public:
   static const std::string VALS_PER_DR;
   static const short MISSING_VALUE;
 
-  SignalData( const std::string& name, bool largefilesupport = false, bool iswave = false );
-  std::unique_ptr<SignalData> shallowcopy( bool includedates = false );
-  void moveDataTo( std::unique_ptr<SignalData>& signal );
-  virtual ~SignalData( );
+  SignalData();
+  SignalData(const SignalData& orig);
+  virtual ~SignalData();
 
-  virtual void add( const DataRow& row );
-  void setUom( const std::string& u );
-  const std::string& uom( ) const;
-  int scale( ) const;
-  size_t size( ) const;
-  double hz( ) const;
-  const dr_time& startTime( ) const;
-  const dr_time& endTime( ) const;
-  const std::string& name( ) const;
-  void setValuesPerDataRow( int );
-  int valuesPerDataRow( ) const;
-  void setMetadataFrom( const SignalData& model );
-  void validDuration( const DurationSpecification& spec );
+  virtual std::unique_ptr<SignalData> shallowcopy(bool includedates = false) = 0;
+  virtual void add(const DataRow& row) = 0;
+  virtual size_t size() const = 0;
+  virtual const dr_time& startTime() const = 0;
+  virtual const dr_time& endTime() const = 0;
+  virtual const std::string& name() const = 0;
+  virtual const std::deque<dr_time>& times() const = 0;
 
-  std::unique_ptr<DataRow> pop( );
-  bool empty( ) const;
-  void setWave( bool wave = false );
-  bool wave( ) const;
+  virtual std::unique_ptr<DataRow> pop() = 0;
+  virtual void setWave(bool wave = false) = 0;
+  virtual bool wave() const = 0;
 
-  std::map<std::string, std::string>& metas( );
-  std::map<std::string, int>& metai( );
-  std::map<std::string, double>& metad( );
-  const std::map<std::string, std::string>& metas( ) const;
-  const std::map<std::string, int>& metai( ) const;
-  const std::map<std::string, double>& metad( ) const;
-  const std::deque<dr_time>& times( ) const;
-  std::vector<std::string> extras( ) const;
+  virtual void setUom(const std::string& u);
+  virtual const std::string& uom() const;
+  virtual int scale() const;
+  virtual double hz() const;
+
+  virtual void moveDataTo(std::unique_ptr<SignalData>& signal);
+  virtual void setMetadataFrom(const SignalData& model);
+  virtual std::map<std::string, std::string>& metas();
+  virtual std::map<std::string, int>& metai();
+  virtual std::map<std::string, double>& metad();
+  virtual const std::map<std::string, std::string>& metas() const;
+  virtual const std::map<std::string, int>& metai() const;
+  virtual const std::map<std::string, double>& metad() const;
+  virtual std::vector<std::string> extras() const;
+  virtual void setValuesPerDataRow(int);
+  virtual int valuesPerDataRow() const;
+  virtual void scale( int scaling );
+  virtual bool empty() const;
 
 private:
-  SignalData( const SignalData& orig );
-
-  void startPopping( );
-
-  /**
-   * copy rows from the cache file to the data list.
-   * @param count the desired elements to uncache
-   * @return the number uncached, or 0 if there is no cache, or it's empty
-   */
-  int uncache( int count = CACHE_LIMIT );
-  void cache( );
-  void setScale( int x );
-
-
-  const std::string label;
-  dr_time firstdata;
-  dr_time lastdata;
-  size_t datacount;
-  std::list<std::unique_ptr<DataRow>> data;
-  std::deque<dr_time> dates;
   std::map<std::string, std::string> metadatas;
   std::map<std::string, int> metadatai;
   std::map<std::string, double> metadatad;
-  std::FILE * file;
-  bool popping;
-  bool iswave;
   std::set<std::string> extrafields;
-  static const int CACHE_LIMIT;
 };
 
-#endif /* DATASETDATACACHE_H */
+#endif /* SIGNALDATA_H */
 

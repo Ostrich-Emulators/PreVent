@@ -5,7 +5,7 @@
  */
 
 #include "SignalSet.h"
-#include "SignalData.h"
+#include "BasicSignalData.h"
 #include "SignalUtils.h"
 #include "DurationSpecification.h"
 #include "DurationSignalData.h"
@@ -118,10 +118,12 @@ void SignalSet::addMeta( const std::string& key, const std::string & val ) {
 std::unique_ptr<SignalData>& SignalSet::addVital( const std::string& name, bool * added ) {
   int cnt = vmap.count( name );
   if ( 0 == cnt ) {
-    vmap.insert( std::make_pair( name,
-        std::unique_ptr<SignalData>( duration
-        ? new DurationSignalData( name, *duration, largefile )
-        : new SignalData( name, largefile ) ) ) );
+    std::unique_ptr<SignalData> sig( new BasicSignalData( name, largefile));
+    if( duration ){
+      sig.reset( new DurationSignalData( std::move( sig ), *duration ));
+    }
+        
+    vmap.insert( std::make_pair( name, std::move( sig ) ) );
   }
 
   if ( NULL != added ) {
@@ -134,10 +136,12 @@ std::unique_ptr<SignalData>& SignalSet::addVital( const std::string& name, bool 
 std::unique_ptr<SignalData>& SignalSet::addWave( const std::string& name, bool * added ) {
   int cnt = wmap.count( name );
   if ( 0 == cnt ) {
-    wmap.insert( std::make_pair( name,
-        std::unique_ptr<SignalData>( duration
-        ? new DurationSignalData( name, *duration, largefile, true )
-        : new SignalData( name, largefile, true ) ) ) );
+    std::unique_ptr<SignalData> sig( new BasicSignalData( name, largefile, true));
+    if( duration ){
+      sig.reset( new DurationSignalData( std::move( sig ), *duration ));
+    }
+
+    wmap.insert( std::make_pair( name, std::move( sig ) ) );
   }
 
   if ( NULL != added ) {

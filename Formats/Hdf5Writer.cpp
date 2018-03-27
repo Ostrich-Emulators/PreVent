@@ -34,7 +34,7 @@ Hdf5Writer::~Hdf5Writer( ) {
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-    const std::string& attr, const std::string& val ) {
+        const std::string& attr, const std::string& val ) {
   if ( !val.empty( ) ) {
     //std::cout << attr << ": " << val << std::endl;
 
@@ -47,28 +47,28 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-    const std::string& attr, int val ) {
+        const std::string& attr, int val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I32LE, space );
   attrib.write( H5::PredType::STD_I32LE, &val );
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-    const std::string& attr, dr_time val ) {
+        const std::string& attr, dr_time val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I64LE, space );
   attrib.write( H5::PredType::STD_I64LE, &val );
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-    const std::string& attr, double val ) {
+        const std::string& attr, double val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::IEEE_F64LE, space );
   attrib.write( H5::PredType::IEEE_F64LE, &val );
 }
 
 void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
-    const dr_time& start, const dr_time& end ) {
+        const dr_time& start, const dr_time& end ) {
   writeAttribute( loc, "Start Time", start );
   writeAttribute( loc, "End Time", end );
 
@@ -130,13 +130,13 @@ void Hdf5Writer::writeAttributes( H5::DataSet& ds, const SignalData& data ) {
 }
 
 void Hdf5Writer::writeFileAttributes( H5::H5File file,
-    std::map<std::string, std::string> datasetattrs,
-    const dr_time& firstTime, const dr_time& lastTime ) {
+        std::map<std::string, std::string> datasetattrs,
+        const dr_time& firstTime, const dr_time& lastTime ) {
 
   writeTimesAndDurationAttributes( file, firstTime, lastTime );
 
   for ( std::map<std::string, std::string>::const_iterator it = datasetattrs.begin( );
-      it != datasetattrs.end( ); ++it ) {
+          it != datasetattrs.end( ); ++it ) {
     //std::cout << "writing file attr: " << it->first << ": " << it->second << std::endl;
     writeAttribute( file, it->first, it->second );
   }
@@ -172,7 +172,7 @@ void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace&, SignalData& data )
 }
 
 void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
-    SignalData& data ) {
+        SignalData& data ) {
 
   const size_t rows = data.size( );
   const hsize_t maxslabcnt = 125000;
@@ -252,7 +252,7 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet& data ) 
     H5::DataSpace space( 2, dims );
 
     H5::DataSet ds = events.createDataSet( "Segment_Offsets",
-        H5::PredType::STD_I64LE, space );
+            H5::PredType::STD_I64LE, space );
     long long indexes[segmentsizes.size( ) * 2] = { 0 };
     int row = 0;
     for ( const auto& e : segmentsizes ) {
@@ -285,17 +285,12 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet& data ) 
     H5::DataSpace space( 2, dims );
 
     H5::DataSet ds = mygrp->createDataSet( m->name( ).c_str( ),
-        H5::PredType::STD_I64LE, space );
+            H5::PredType::STD_I64LE, space );
     ds.write( &times[0], H5::PredType::STD_I64LE );
     writeAttribute( ds, "Time Source", "raw" );
     writeAttribute( ds, "Columns", "timestamp" );
     writeAttribute( ds, SignalData::VALS_PER_DR, m->valuesPerDataRow( ) );
   }
-}
-
-int Hdf5Writer::initDataSet( int compression ) {
-  this->compression = compression;
-  return 0;
 }
 
 int Hdf5Writer::drain( SignalSet& info ) {
@@ -351,11 +346,11 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     hsize_t dims[] = { sz, 1 + extras.size( ) };
     H5::DataSpace space( 2, dims );
     H5::DSetCreatPropList props;
-    if ( compression > 0 ) {
+    if ( compression( ) > 0 ) {
       hsize_t chunkdims[] = { 0, 0 };
       autochunk( dims, 2, chunkdims );
       props.setChunk( 2, chunkdims );
-      props.setDeflate( compression );
+      props.setDeflate( compression( ) );
     }
     H5::DataSet ds = grp.createDataSet( vits.first, H5::PredType::STD_I16LE, space, props );
     writeAttributes( ds, *( vits.second ) );
@@ -387,11 +382,11 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     hsize_t dims[] = { sz * valsperrow, 1 };
     H5::DataSpace space( 2, dims );
     H5::DSetCreatPropList props;
-    if ( compression > 0 ) {
+    if ( compression( ) > 0 ) {
       hsize_t chunkdims[] = { 0, 0 };
       autochunk( dims, 2, chunkdims );
       props.setChunk( 2, chunkdims );
-      props.setDeflate( compression );
+      props.setDeflate( compression( ) );
     }
     H5::DataSet ds = grp.createDataSet( wavs.first, H5::PredType::STD_I16LE, space, props );
     writeAttributes( ds, *( wavs.second ) );

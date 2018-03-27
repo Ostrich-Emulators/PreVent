@@ -34,7 +34,7 @@ public:
   virtual ~MatWriter( );
 
 protected:
-  int initDataSet( int compression );
+  int initDataSet();
   std::vector<std::string> closeDataSet();
   int drain( SignalSet& );
 
@@ -54,7 +54,7 @@ private:
   std::string tempfileloc;
   mat_t * matfile;
   SignalSet * dataptr;
-  matio_compression compression;
+  matio_compression compress;
   MatVersion version;
 };
 

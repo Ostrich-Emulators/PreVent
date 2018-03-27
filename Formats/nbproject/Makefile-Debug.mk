@@ -36,6 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/Base64.o \
+	${OBJECTDIR}/BasicSignalData.o \
 	${OBJECTDIR}/CpcXmlReader.o \
 	${OBJECTDIR}/CsvWriter.o \
 	${OBJECTDIR}/DataRow.o \
@@ -97,6 +98,11 @@ ${OBJECTDIR}/Base64.o: Base64.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -s -I../libtdms/include `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Base64.o Base64.cpp
+
+${OBJECTDIR}/BasicSignalData.o: BasicSignalData.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -s -I../libtdms/include `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/BasicSignalData.o BasicSignalData.cpp
 
 ${OBJECTDIR}/CpcXmlReader.o: CpcXmlReader.cpp
 	${MKDIR} -p ${OBJECTDIR}
