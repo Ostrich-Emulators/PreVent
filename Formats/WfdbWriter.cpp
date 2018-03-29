@@ -27,7 +27,7 @@ WfdbWriter::WfdbWriter( const WfdbWriter& ) : Writer( "hea" ) {
 WfdbWriter::~WfdbWriter( ) {
 }
 
-int WfdbWriter::initDataSet( int ) {
+int WfdbWriter::initDataSet() {
   currdir = getcwd( NULL, 0 );
   std::string directory = filenamer( ).outputdir( );
   int x = chdir( directory.c_str( ) );

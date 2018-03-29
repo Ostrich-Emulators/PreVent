@@ -26,7 +26,7 @@ public:
   virtual ~WfdbWriter( );
 
 protected:
-  int initDataSet( int compression );
+  int initDataSet();
   std::vector<std::string> closeDataSet( );
   int drain( SignalSet& );
 

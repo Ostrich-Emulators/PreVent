@@ -85,7 +85,7 @@ int main( int argc, char** argv ) {
   bool anonymize = false;
   bool quiet = false;
   bool nobreak = false;
-  int compression = 6;
+  int compression = Writer::DEFAULT_COMPRESSION;
 
   while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qan", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
@@ -189,7 +189,7 @@ int main( int argc, char** argv ) {
     from = Reader::get( fromfmt );
     to = Writer::get( tofmt );
     to->setQuiet( quiet );
-    to->setCompression( compression );
+    to->compression( compression );
     FileNamer namer = FileNamer::parse( pattern );
     namer.outputdir( outdir );
     namer.tofmt( to->ext() );

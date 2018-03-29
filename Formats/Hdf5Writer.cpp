@@ -293,8 +293,7 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet& data ) 
   }
 }
 
-int Hdf5Writer::initDataSet( int compression ) {
-  this->compression = compression;
+int Hdf5Writer::initDataSet() {
   return 0;
 }
 
@@ -351,11 +350,11 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     hsize_t dims[] = { sz, 1 + extras.size( ) };
     H5::DataSpace space( 2, dims );
     H5::DSetCreatPropList props;
-    if ( compression > 0 ) {
+    if ( compression() > 0 ) {
       hsize_t chunkdims[] = { 0, 0 };
       autochunk( dims, 2, chunkdims );
       props.setChunk( 2, chunkdims );
-      props.setDeflate( compression );
+      props.setDeflate( compression() );
     }
     H5::DataSet ds = grp.createDataSet( vits.first, H5::PredType::STD_I16LE, space, props );
     writeAttributes( ds, *( vits.second ) );
@@ -387,11 +386,11 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     hsize_t dims[] = { sz * valsperrow, 1 };
     H5::DataSpace space( 2, dims );
     H5::DSetCreatPropList props;
-    if ( compression > 0 ) {
+    if ( compression() > 0 ) {
       hsize_t chunkdims[] = { 0, 0 };
       autochunk( dims, 2, chunkdims );
       props.setChunk( 2, chunkdims );
-      props.setDeflate( compression );
+      props.setDeflate( compression() );
     }
     H5::DataSet ds = grp.createDataSet( wavs.first, H5::PredType::STD_I16LE, space, props );
     writeAttributes( ds, *( wavs.second ) );

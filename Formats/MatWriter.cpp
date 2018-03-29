@@ -29,8 +29,8 @@ MatWriter::MatWriter( const MatWriter& c) : Writer( "mat" ) {
 MatWriter::~MatWriter( ) {
 }
 
-int MatWriter::initDataSet( int comp ) {
-  compression = ( 0 == comp ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
+int MatWriter::initDataSet() {
+  compress = ( 0 == compression() ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
 
   char fulldatetime[sizeof "Thu Nov 31 10:10:27 1997"];
   time_t now;
@@ -141,7 +141,7 @@ int MatWriter::writeStrings( const std::string& label, std::vector<std::string>&
     // does vart get free'd when var does?
   }
 
-  int ok = Mat_VarWrite( matfile, var, compression );
+  int ok = Mat_VarWrite( matfile, var, compress );
   Mat_VarFree( var );
   return ok;
 }
@@ -200,7 +200,7 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
   matvar_t * var = Mat_VarCreate( "vitals", MAT_C_INT16, MAT_T_INT16, 2, dims,
       vitals, 0 );
 
-  Mat_VarWrite( matfile, var, compression );
+  Mat_VarWrite( matfile, var, compress );
   Mat_VarFree( var );
 
   // timestamps
@@ -208,7 +208,7 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
   dims[1] = 1;
 
   var = Mat_VarCreate( "vt", MAT_C_INT32, MAT_T_INT32, 2, dims, timestamps, 0 );
-  Mat_VarWrite( matfile, var, compression );
+  Mat_VarWrite( matfile, var, compress );
   Mat_VarFree( var );
 
   // scales
@@ -219,7 +219,7 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
     scalesarr[i] = scales[labels[i]];
   }
   var = Mat_VarCreate( "vscales", MAT_C_INT16, MAT_T_INT16, 2, dims, scalesarr, 0 );
-  Mat_VarWrite( matfile, var, compression );
+  Mat_VarWrite( matfile, var, compress );
   Mat_VarFree( var );
 
   // units of measure
@@ -320,7 +320,7 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
 
   matvar_t * var = Mat_VarCreate( std::string( "wt" + sfx ).c_str( ),
       MAT_C_INT32, MAT_T_INT32, 2, dims, &alltimes[0], 0 );
-  Mat_VarWrite( matfile, var, compression );
+  Mat_VarWrite( matfile, var, compress );
   Mat_VarFree( var );
 
   // FIXME: (metadata?)

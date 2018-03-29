@@ -18,16 +18,18 @@ DONELOG=done.log
 ls $DIR | while read datedir; do
   ls $DIR/$datedir | while read bid; do
     PREFIX=$$
+    echo "$DIR/$datedir/$bid"
     ls $DIR/$datedir/$bid/*.zip | while read zipfile; do 
+    #  echo "  $zipfile"
       unzip -Z1 $zipfile | while read file; do
         unzip -p $zipfile $file | $FMTCNV --from cpcxml --to hdf5 --one-file --quiet -
-        mv ./- ${PREFIX}-${file}.hdf5
+        mv ./-p1-* ${PREFIX}-${file}.hdf5
       done
-      #rm -rf ${PREFIX}*
     done
 
     fname=${datedir}-${bid}.hdf5
     echo "$FMTCAT --output ${fname} --cat $(ls ${PREFIX}-*.hdf5)"
     $FMTCAT --output ${fname} --cat $(ls ${PREFIX}*.hdf5)
+    mv ./-p1-* $fname && rm -rf ${PREFIX}*
   done
 done

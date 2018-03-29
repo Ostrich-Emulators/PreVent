@@ -18,10 +18,11 @@ class FileNamer;
 class Writer {
 public:
   virtual ~Writer( );
-
+  static const int DEFAULT_COMPRESSION;
   static std::unique_ptr<Writer> get( const Format& fmt );
 
-  void setCompression( int lev );
+  void compression( int lev );
+  int compression() const;
   void addListener( std::shared_ptr<ConversionListener> listener );
   void setQuiet( bool = true );
   void filenamer( const FileNamer& namer );
@@ -38,11 +39,9 @@ protected:
   /**
    * Lets subclasses initialize a new (possibly temporary) data file.
    * By default, does nothing
-   * @param newfile
-   * @param compression
    * @return 0 (Success), -1 (Error)
    */
-  virtual int initDataSet( int compression );
+  virtual int initDataSet();
 
   /**
    * Closes the current data file, and provides the final name for it. Datafiles
@@ -65,7 +64,7 @@ private:
   Writer( const Writer& );
 
   std::vector<std::shared_ptr<ConversionListener>> listeners;
-  int compression;
+  int compress;
   bool quiet;
   std::stringstream ss;
   std::unique_ptr<FileNamer> namer;
