@@ -43,8 +43,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wno-deprecated -O0 -pg
-CXXFLAGS=-Wno-deprecated -O0 -pg
+CCFLAGS=-Wno-deprecated -O0 -pg -DGIT_BUILD=\"`git rev-parse HEAD| cut -c-8`\"
+CXXFLAGS=-Wno-deprecated -O0 -pg -DGIT_BUILD=\"`git rev-parse HEAD| cut -c-8`\"
 
 # Fortran Compiler Flags
 FFLAGS=
