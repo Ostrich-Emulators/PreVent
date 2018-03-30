@@ -28,10 +28,12 @@ class SignalData;
 
 class Hdf5Writer : public Writer {
 public:
+  static const std::string LAYOUT_VERSION;
   Hdf5Writer( );
   virtual ~Hdf5Writer( );
 
 protected:
+  int initDataSet( );
   std::vector<std::string> closeDataSet( );
   int drain( SignalSet& );
 

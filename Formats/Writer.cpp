@@ -14,13 +14,15 @@
 #include "ConversionListener.h"
 #include "FileNamer.h"
 
+const int Writer::DEFAULT_COMPRESSION = 6;
+
 Writer::Writer( const std::string& ext ) : quiet( false ), extension( ext ),
-compress( 0 ),
+compress( DEFAULT_COMPRESSION ),
 namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
 }
 
 Writer::Writer( const Writer& w ) : quiet( false ), extension( w.extension ),
-compress( 0 ),
+compress( DEFAULT_COMPRESSION ),
 namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
 }
 
@@ -57,11 +59,11 @@ void Writer::compression( int lev ) {
   compress = lev;
 }
 
-int Writer::compression() const{
+int Writer::compression( ) const {
   return compress;
 }
 
-int Writer::initDataSet() {
+int Writer::initDataSet( ) {
   return 0;
 }
 
@@ -70,7 +72,7 @@ FileNamer& Writer::filenamer( ) const {
 }
 
 std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
-        SignalSet& data ) {
+    SignalSet& data ) {
   int patientno = 1;
 
   output( ) << "init data set" << std::endl;
@@ -110,7 +112,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
       data.reset( false );
       output( ) << "init data set" << std::endl;
       namer->patientOrdinal( patientno );
-      initDataSet();
+      initDataSet( );
     }
     else if ( ReadResult::END_OF_FILE == retcode ) {
       // end of file, so break out of our write
@@ -149,7 +151,7 @@ void Writer::addListener( std::shared_ptr<ConversionListener> l ) {
   listeners.push_back( l );
 }
 
-class NullBuffer : public std::streambuf {
+class NullBuffer : public std::streambuf{
 public:
 
   int overflow( int c ) {

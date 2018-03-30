@@ -40,11 +40,9 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
   Hdf5Reader rdr;
   SignalSet alldata;
   alldata.setFileSupport( true );
-  
-  if( spec ){
+  if ( spec ) {
     alldata.validDuration( *spec );
   }
-  
   for ( const auto& file : filesToCat ) {
     SignalSet junk;
     rdr.prepare( file, junk );

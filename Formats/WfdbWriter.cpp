@@ -71,7 +71,7 @@ int WfdbWriter::drain( SignalSet& info ) {
 }
 
 int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&data,
-        const std::string& namestart ) {
+    const std::string& namestart ) {
   setsampfreq( freq );
 
   sigmap.clear( );

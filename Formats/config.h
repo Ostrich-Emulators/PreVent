@@ -16,27 +16,31 @@
 
 const char dirsep =
 #ifdef __linux__
-		'/';
+      '/';
 #else
-		'\\';
+      '\\';
 #endif
 
 const std::string osname =
 #ifdef _WIN32
-		"Windows 32-bit";
+      "Windows 32-bit";
 #elif _WIN64
-		"Windows 64-bit";
+      "Windows 64-bit";
 #elif __unix || __unix__
-		"Unix";
+      "Unix";
 #elif __APPLE__ || __MACH__
-		"Mac OSX";
+      "Mac OSX";
 #elif __linux__
-		"Linux";
+      "Linux";
 #elif __FreeBSD__
-		"FreeBSD";
+      "FreeBSD";
 #else
-		"Other";
+      "Other";
 #endif
 
+
+const int FC_VERS_MAJOR = 3;
+const int FC_VERS_MINOR = 0;
+const int FC_VERS_MICRO = 0;
 #endif /* CONFIG_H */
 
