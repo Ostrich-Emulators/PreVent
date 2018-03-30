@@ -34,6 +34,7 @@ public:
   static const std::string MSM;
   static const std::string TIMEZONE;
   static const std::string VALS_PER_DR;
+  static const std::string LABEL;
   static const short MISSING_VALUE;
 
   SignalData();

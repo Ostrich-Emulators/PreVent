@@ -33,7 +33,6 @@ public:
   virtual ~Hdf5Writer( );
 
 protected:
-  int initDataSet( );
   std::vector<std::string> closeDataSet( );
   int drain( SignalSet& );
 
@@ -53,9 +52,13 @@ private:
       const std::string& attr, dr_time val );
   static void writeTimesAndDurationAttributes( H5::H5Location& loc,
       const dr_time& start, const dr_time& end );
-  static void writeAttributes( H5::DataSet& ds, const SignalData& data );
-  static void writeVital( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
-  static void writeWave( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
+  static void writeAttributes( H5::H5Location& ds, const SignalData& data );
+  void writeVital( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
+  void writeVitalGroup( H5::Group& group, SignalData& data );
+  void writeWave( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
+  void writeWaveGroup( H5::Group& group, SignalData& data );
+  void writeTimes( H5::Group& group, SignalData& data );
+  void writeGroupAttrs( H5::Group& group, SignalData& data);
   static void autochunk( hsize_t* dims, int rank, hsize_t* rslts );
   void createEventsAndTimes( H5::H5File, const SignalSet& data );
 

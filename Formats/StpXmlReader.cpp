@@ -174,9 +174,6 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
 
         if ( added ) {
           sig->metad( ).insert( std::make_pair( SignalData::HERTZ, ( isphilips ? 1.0 : 0.5 ) ) );
-          sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
-          sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
-
           if ( !uom.empty( ) ) {
             sig->setUom( uom );
           }
@@ -223,8 +220,6 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           bool first;
           std::unique_ptr<SignalData>& sig = filler->addWave( label, &first );
           if ( first ) {
-            sig->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
-            sig->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
             // Stp always reads in 1s increments for Philips, 2s for GE monitors
             sig->setValuesPerDataRow( isphilips ? hz : 2 * hz );
 

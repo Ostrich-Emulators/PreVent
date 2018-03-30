@@ -66,6 +66,7 @@ void CpcXmlReader::start( const std::string& element,
       inwave = ( "Wave" == attrs["name"] );
       inhz = ( "Hz" == attrs["name"] );
       inpoints = ( "Points" == attrs["name"] );
+      ingain = ( "Gain" == attrs["name"] );
     }
     else {
       if ( 0 == ignorables.count( attrs["name"] ) ) {
@@ -101,9 +102,8 @@ void CpcXmlReader::end( const std::string& element, const std::string& text ) {
     signal->add( DataRow( currtime, vals ) );
     if ( added ) {
       signal->metad( )[SignalData::HERTZ] = wavehz;
-      signal->metas( )[SignalData::MSM] = MISSING_VALUESTR;
-      signal->metas( )[SignalData::TIMEZONE] = "UTC";
       signal->metai( )[SignalData::VALS_PER_DR] = valsperdr;
+      signal->metad( )["Gain"] = gain;
     }
 
     inmg = inhz = inpoints = false;
@@ -125,6 +125,9 @@ void CpcXmlReader::end( const std::string& element, const std::string& text ) {
       else if ( inpoints ) {
         valsperdr = std::stoi( text );
       }
+      else if ( ingain ) {
+        gain = std::stod( text );
+      }
     }
     else {
       bool added = false;
@@ -133,8 +136,6 @@ void CpcXmlReader::end( const std::string& element, const std::string& text ) {
 
       if ( added ) {
         signal->metad( )[SignalData::HERTZ] = 0.5;
-        signal->metas( ).insert( std::make_pair( SignalData::MSM, MISSING_VALUESTR ) );
-        signal->metas( ).insert( std::make_pair( SignalData::TIMEZONE, "UTC" ) );
       }
       label.clear( );
     }

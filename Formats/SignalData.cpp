@@ -28,12 +28,15 @@ const std::string SignalData::UOM = "Unit of Measure";
 const std::string SignalData::MSM = "Missing Value Marker";
 const std::string SignalData::TIMEZONE = "Timezone";
 const std::string SignalData::VALS_PER_DR = "Readings Per Time";
+const std::string SignalData::LABEL = "Data Label";
 const short SignalData::MISSING_VALUE = -32768;
 
 SignalData::SignalData( ) {
   scale( 1 );
   setValuesPerDataRow( 1 );
   setUom( "Uncalib" );
+  metadatai[SignalData::MSM] = SignalData::MISSING_VALUE;
+  metadatas[SignalData::TIMEZONE] = "UTC";
 }
 
 SignalData::SignalData( const SignalData& orig ) : metadatas( orig.metadatas ),
@@ -86,7 +89,8 @@ bool SignalData::empty( ) const {
   return ( 0 == size( ) );
 }
 
-SignalData::~SignalData( ) {}
+SignalData::~SignalData( ) {
+}
 
 void SignalData::setUom( const std::string& u ) {
   metadatas[UOM] = u;
@@ -95,7 +99,6 @@ void SignalData::setUom( const std::string& u ) {
 const std::string& SignalData::uom( ) const {
   return metadatas.at( UOM );
 }
-
 
 int SignalData::scale( ) const {
   return metadatai.at( SCALE );

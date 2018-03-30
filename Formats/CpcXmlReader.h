@@ -43,10 +43,12 @@ private:
 	std::string value;
 	double wavehz;
     int valsperdr;
+    double gain;
 	bool inmg;
 	bool inwave;
 	bool inhz;
     bool inpoints;
+    bool ingain;
 
 };
 
