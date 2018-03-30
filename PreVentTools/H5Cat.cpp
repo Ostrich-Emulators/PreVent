@@ -56,9 +56,7 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
   std::unique_ptr<Reader> nullrdr( new NullReader( rdr.name( ) ) );
   FileNamer fn = FileNamer::parse( output );
 
-  // FIXME: this doesn't work?
-  // fn.tofmt( wrt.ext( ) );
-  fn.tofmt( "hdf5" );
+  fn.tofmt( wrt.ext( ) );
   fn.inputfilename( "-" );
   fn.outputdir( "." );
   wrt.filenamer( fn );

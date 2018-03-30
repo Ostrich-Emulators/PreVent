@@ -199,7 +199,7 @@ int main( int argc, char** argv ) {
   try {
     from = Reader::get( fromfmt );
     to = Writer::get( tofmt );
-    to->setQuiet( quiet );
+    to->quiet( quiet );
     to->compression( compression );
     FileNamer namer = FileNamer::parse( pattern );
     namer.outputdir( outdir );

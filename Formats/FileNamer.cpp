@@ -56,7 +56,10 @@ void FileNamer::inputfilename( const std::string& inny ) {
 
 std::string FileNamer::filename( const SignalSet& data, int outputnum ) {
   // for now, always the same thing
-  lastname = filenameNoExt( data, outputnum ) + "." + conversions.at( "tofmt" );
+  lastname = filenameNoExt( data, outputnum );
+  if ( 0 != conversions.count( "tofmt" ) ) {
+    lastname += "." + conversions.at( "tofmt" );
+  }
   return lastname;
 }
 
@@ -70,7 +73,10 @@ std::string FileNamer::filenameNoExt( const SignalSet& data, int outputnum ) {
 }
 
 std::string FileNamer::filename( ) {
-  lastname = filenameNoExt( ) + "." + conversions.at( "tofmt" );
+  lastname = filenameNoExt( );
+  if ( 0 != conversions.count( "tofmt" ) ) {
+    lastname += "." + conversions.at( "tofmt" );
+  }
   return lastname;
 }
 

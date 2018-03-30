@@ -16,12 +16,12 @@
 
 const int Writer::DEFAULT_COMPRESSION = 6;
 
-Writer::Writer( const std::string& ext ) : quiet( false ), extension( ext ),
+Writer::Writer( const std::string& ext ) : bequiet( false ), extension( ext ),
 compress( DEFAULT_COMPRESSION ),
 namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
 }
 
-Writer::Writer( const Writer& w ) : quiet( false ), extension( w.extension ),
+Writer::Writer( const Writer& w ) : bequiet( false ), extension( w.extension ),
 compress( DEFAULT_COMPRESSION ),
 namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
 }
@@ -160,9 +160,9 @@ public:
   }
 };
 
-void Writer::setQuiet( bool q ) {
+void Writer::quiet( bool q ) {
 
-  quiet = q;
+  bequiet = q;
 }
 
 void Writer::filenamer( const FileNamer& p ) {
@@ -171,5 +171,5 @@ void Writer::filenamer( const FileNamer& p ) {
 }
 
 std::ostream& Writer::output( ) const {
-  return ( quiet ? ( std::ostream& ) ss : std::cout );
+  return ( bequiet ? ( std::ostream& ) ss : std::cout );
 }

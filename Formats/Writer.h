@@ -24,7 +24,7 @@ public:
   void compression( int lev );
   int compression( ) const;
   void addListener( std::shared_ptr<ConversionListener> listener );
-  void setQuiet( bool = true );
+  void quiet( bool = true );
   void filenamer( const FileNamer& namer );
   FileNamer& filenamer( ) const;
   const std::string& ext( ) const;
@@ -65,10 +65,10 @@ private:
 
   std::vector<std::shared_ptr<ConversionListener>> listeners;
   int compress;
-  bool quiet;
+  bool bequiet;
   std::stringstream ss;
   std::unique_ptr<FileNamer> namer;
-  const std::string& extension; // filename extension
+  const std::string extension; // filename extension
 
 };
 
