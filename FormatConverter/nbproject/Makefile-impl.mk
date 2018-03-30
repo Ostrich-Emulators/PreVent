@@ -27,11 +27,11 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 PROJECTNAME=FormatConverter
 
 # Active Configuration
-DEFAULTCONF=Release
+DEFAULTCONF=Debug
 CONF=${DEFAULTCONF}
 
 # All Configurations
-ALLCONFS=Release Debug_big Release_Cygwin Debug_Cygwin Debug Debug_zl Debug_tdms Debug_cpc 
+ALLCONFS=Debug Release Release_Cygwin Debug_Cygwin 
 
 
 # build

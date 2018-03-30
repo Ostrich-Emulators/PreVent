@@ -15,11 +15,11 @@
             <sourceRootList/>
             <confList>
                 <confElem>
-                    <name>Release</name>
+                    <name>Debug</name>
                     <type>1</type>
                 </confElem>
                 <confElem>
-                    <name>Debug_big</name>
+                    <name>Release</name>
                     <type>1</type>
                 </confElem>
                 <confElem>
@@ -28,22 +28,6 @@
                 </confElem>
                 <confElem>
                     <name>Debug_Cygwin</name>
-                    <type>1</type>
-                </confElem>
-                <confElem>
-                    <name>Debug</name>
-                    <type>1</type>
-                </confElem>
-                <confElem>
-                    <name>Debug_zl</name>
-                    <type>1</type>
-                </confElem>
-                <confElem>
-                    <name>Debug_tdms</name>
-                    <type>1</type>
-                </confElem>
-                <confElem>
-                    <name>Debug_cpc</name>
                     <type>1</type>
                 </confElem>
             </confList>
