@@ -50,6 +50,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/NullReader.o \
 	${OBJECTDIR}/Reader.o \
 	${OBJECTDIR}/SignalData.o \
+	${OBJECTDIR}/SignalDataWrapper.o \
 	${OBJECTDIR}/SignalSet.o \
 	${OBJECTDIR}/SignalUtils.o \
 	${OBJECTDIR}/StpJsonReader.o \
@@ -168,6 +169,11 @@ ${OBJECTDIR}/SignalData.o: SignalData.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -I../libtdms/include `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SignalData.o SignalData.cpp
+
+${OBJECTDIR}/SignalDataWrapper.o: SignalDataWrapper.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -I../libtdms/include `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat` -std=c++14  -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/SignalDataWrapper.o SignalDataWrapper.cpp
 
 ${OBJECTDIR}/SignalSet.o: SignalSet.cpp
 	${MKDIR} -p ${OBJECTDIR}

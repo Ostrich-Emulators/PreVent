@@ -34,6 +34,7 @@
       <itemPath>Formats.h</itemPath>
       <itemPath>Reader.h</itemPath>
       <itemPath>SignalData.h</itemPath>
+      <itemPath>SignalDataWrapper.h</itemPath>
       <itemPath>SignalSet.h</itemPath>
       <itemPath>SignalUtils.h</itemPath>
       <itemPath>Writer.h</itemPath>
@@ -74,6 +75,7 @@
       <itemPath>Formats.cpp</itemPath>
       <itemPath>Reader.cpp</itemPath>
       <itemPath>SignalData.cpp</itemPath>
+      <itemPath>SignalDataWrapper.cpp</itemPath>
       <itemPath>SignalSet.cpp</itemPath>
       <itemPath>SignalUtils.cpp</itemPath>
       <itemPath>Writer.cpp</itemPath>
@@ -206,6 +208,10 @@
       <item path="SignalData.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalDataWrapper.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalDataWrapper.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="SignalSet.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -373,6 +379,10 @@
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="SignalDataWrapper.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalDataWrapper.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="SignalSet.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
@@ -539,6 +549,10 @@
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="SignalDataWrapper.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalDataWrapper.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="SignalSet.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
@@ -704,6 +718,10 @@
       <item path="SignalData.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalDataWrapper.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalDataWrapper.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="SignalSet.cpp" ex="false" tool="1" flavor2="11">
       </item>

@@ -319,11 +319,7 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
   dims[0] = alltimes.size( );
 
   matvar_t * var = Mat_VarCreate( std::string( "wt" + sfx ).c_str( ),
-      << << << < HEAD
       MAT_C_INT32, MAT_T_INT32, 2, dims, &alltimes[0], 0 );
-  == == == =
-      MAT_C_INT32, MAT_T_INT32, 2, dims, &alltimes[0], 0 );
-  >>>>>>> master
   Mat_VarWrite( matfile, var, compress );
   Mat_VarFree( var );
 
