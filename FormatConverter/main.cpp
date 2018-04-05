@@ -30,7 +30,6 @@ void helpAndExit( char * progname, std::string msg = "" ) {
         << "Syntax: " << progname << " --to <format> <file>..."
         << std::endl << "\t-f or --from <input format>"
         << std::endl << "\t-t or --to <output format>"
-        << std::endl << "\t-o or --outdir <output directory>"
         << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
         << std::endl << "\t-e or --export <vital/wave to export>"
         << std::endl << "\t-s or --sqlite <db file>"
@@ -43,7 +42,8 @@ void helpAndExit( char * progname, std::string msg = "" ) {
         << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
         << std::endl << "\tthe --pattern option recognizes these format specifiers:"
         << std::endl << "\t  %p - patient ordinal"
-        << std::endl << "\t  %i - input filename (without extension)"
+        << std::endl << "\t  %i - input filename (without directory or extension)"
+        << std::endl << "\t  %d - input directory"
         << std::endl << "\t  %x - input extension"
         << std::endl << "\t  %m - modified date of input file"
         << std::endl << "\t  %c - creation date of input file"
@@ -62,7 +62,6 @@ void helpAndExit( char * progname, std::string msg = "" ) {
 struct option longopts[] = {
   { "from", required_argument, NULL, 'f' },
   { "to", required_argument, NULL, 't' },
-  { "outdir", required_argument, NULL, 'o' },
   { "compression", required_argument, NULL, 'z' },
   { "export", required_argument, NULL, 'e' },
   { "sqlite", required_argument, NULL, 's' },
@@ -72,7 +71,7 @@ struct option longopts[] = {
   { "anonymous", no_argument, NULL, 'a' },
   { "no-break", no_argument, NULL, 'n' },
   { "one-file", no_argument, NULL, 'n' },
-  { "pattern", no_argument, NULL, 'P' },
+  { "pattern", required_argument, NULL, 'p' },
   { 0, 0, 0, 0 }
 };
 
@@ -82,7 +81,6 @@ int main( int argc, char** argv ) {
   extern char * optarg;
   std::string fromstr;
   std::string tostr;
-  std::string outdir = ".";
   std::string exp;
   std::string sqlitedb;
   std::string pattern = FileNamer::DEFAULT_PATTERN;
@@ -98,9 +96,6 @@ int main( int argc, char** argv ) {
         break;
       case 't':
         tostr = optarg;
-        break;
-      case 'o':
-        outdir = optarg;
         break;
       case 'z':
         compression = std::atoi( optarg );
@@ -202,7 +197,6 @@ int main( int argc, char** argv ) {
     to->quiet( quiet );
     to->compression( compression );
     FileNamer namer = FileNamer::parse( pattern );
-    namer.outputdir( outdir );
     namer.tofmt( to->ext( ) );
     to->filenamer( namer );
 

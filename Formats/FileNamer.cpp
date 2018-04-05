@@ -9,8 +9,8 @@
 #include <sys/stat.h>
 #include "config.h"
 
-const std::string FileNamer::DEFAULT_PATTERN = "%i-p%p-%s.%t";
-const std::string FileNamer::FILENAME_PATTERN = "%i.%t";
+const std::string FileNamer::DEFAULT_PATTERN = "%d%i-p%p-%s.%t";
+const std::string FileNamer::FILENAME_PATTERN = "%d%i.%t";
 
 FileNamer::FileNamer( const std::string& pat ) : pattern( pat ), patientnum( -1 ) {
 }
@@ -50,39 +50,58 @@ void FileNamer::inputfilename( const std::string& inny ) {
   // get rid of any leading directories
   const size_t basepos = input.rfind( dirsep );
   if ( std::string::npos != basepos ) {
-    conversions["%i"] = input.substr( 0, basepos + 1 );
+    conversions["%i"] = input.substr( basepos + 1 );
+    conversions["%d"] = input.substr( 0, basepos );
   }
-}
-
-std::string FileNamer::filename( const SignalSet& data, int outputnum ) {
-  // for now, always the same thing
-  lastname = filenameNoExt( data, outputnum );
-  if ( 0 != conversions.count( "tofmt" ) ) {
-    lastname += "." + conversions.at( "tofmt" );
+  else {
+    conversions["%d"] = ".";
   }
-  return lastname;
 }
 
 std::string FileNamer::filenameNoExt( const SignalSet& data, int outputnum ) {
   // for now, always the same thing
-  dr_time first = data.earliest( );
-  lastname = conversions.at( "outputdir" ) + conversions["%i"]
-      + ( patientnum > 0 ? "-p" + std::to_string( patientnum ) : "" )
-      + getDateSuffix( first, "-" );
+  const size_t pos = lastname.rfind( "." );
+  return lastname.substr( 0, pos );  
+}
+
+std::string FileNamer::filename( const SignalSet& data, int outputnum ) {
+  // we need to have data for all the conversion keys in here
+
+  conversions["%s"] = getDateSuffix( data.earliest( ), "" );
+
+  lastname = pattern;
+  const std::string replacements[] = {
+    "%d",
+    "%i",
+    "%p",
+    "%s",
+    "%t"
+  };
+
+  for ( auto x : replacements ) {
+    size_t pos = lastname.find( x );
+
+    // FIXME: what if a key is in the pattern more than once?
+    if ( std::string::npos != pos ) {
+      lastname.replace( pos, 2, conversions[x] );
+    }
+  }
+
   return lastname;
 }
 
 std::string FileNamer::filename( ) {
   lastname = filenameNoExt( );
   if ( 0 != conversions.count( "tofmt" ) ) {
-    lastname += "." + conversions.at( "tofmt" );
+    lastname += conversions.at( "tofmt" );
   }
   return lastname;
 }
 
 std::string FileNamer::filenameNoExt( ) {
-  lastname = conversions.at( "outputdir" ) + conversions["%i"]
-      + ( patientnum > 0 ? "-p" + std::to_string( patientnum ) : "" );
+  // for now, always the same thing
+  lastname = conversions["%d"] + dirsep + conversions["%i"]
+        + ( patientnum > 0 ? "-p" + std::to_string( patientnum ) : "" );
   return lastname;
 }
 
@@ -111,7 +130,7 @@ std::string FileNamer::outputdir( ) const {
 }
 
 void FileNamer::tofmt( const std::string& ext ) {
-  conversions["tofmt"] = ext;
+  conversions["%t"] = ext;
 }
 
 std::string FileNamer::last( ) const {
