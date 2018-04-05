@@ -104,8 +104,8 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             else if ( "Frequency" == p.first ) {
               double f = std::stod( p.second );
               signal->metad( )[SignalData::HERTZ] = f;
-              signal->setValuesPerDataRow( (int) f );
               if ( f > 1 ) { // wave!
+                signal->setValuesPerDataRow( (int) f );
                 freq = std::stoi( p.second );
               }
             }

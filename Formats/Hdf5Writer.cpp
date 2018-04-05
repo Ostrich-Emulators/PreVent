@@ -422,7 +422,7 @@ void Hdf5Writer::writeWaveGroup( H5::Group& group, SignalData& data ) {
 
   auto en = std::chrono::high_resolution_clock::now( );
   std::chrono::duration<float> dur = en - st;
-  output( ) << " (complete in " << dur.count( ) << "ms)" << std::endl;
+  output( ) << " (complete in " << dur.count( ) << "s)" << std::endl;
 }
 
 void Hdf5Writer::writeTimes( H5::Group& group, SignalData& data ) {
