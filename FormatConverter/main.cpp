@@ -22,7 +22,7 @@
 #include "FileNamer.h"
 
 #ifndef GIT_BUILD
-#define GIT_BUILD="--------"
+#define GIT_BUILD "--------"
 #endif        
 
 void helpAndExit( char * progname, std::string msg = "" ) {
