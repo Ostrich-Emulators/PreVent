@@ -41,6 +41,6 @@ const std::string osname =
 
 const int FC_VERS_MAJOR = 3;
 const int FC_VERS_MINOR = 0;
-const int FC_VERS_MICRO = 0;
+const int FC_VERS_MICRO = 1;
 #endif /* CONFIG_H */
 
