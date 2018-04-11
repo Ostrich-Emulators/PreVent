@@ -119,7 +119,7 @@ int main( int argc, char** argv ) {
   bool dotime = false;
   dr_time starttime = 0;
   dr_time endtime = std::numeric_limits<dr_time>::max( );
-  int for_ms = -1;
+  int for_s = -1;
 
   while ( ( c = getopt_long( argc, argv, ":m:n:o:Ca:c:s:e:f:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
@@ -160,7 +160,7 @@ int main( int argc, char** argv ) {
         dotime = true;
         break;
       case 'f':
-        for_ms = std::stoi( optarg );
+        for_s = std::stoi( optarg );
         dotime = true;
         break;
       case ':':
@@ -180,8 +180,8 @@ int main( int argc, char** argv ) {
 
   DurationSpecification spec = DurationSpecification::all( );
   if ( dotime ) {
-    spec = ( for_ms > 0
-            ? DurationSpecification::for_s( starttime, for_ms )
+    spec = ( for_s > 0
+            ? DurationSpecification::for_s( starttime, for_s )
             : DurationSpecification( starttime, endtime ) );
   }
 

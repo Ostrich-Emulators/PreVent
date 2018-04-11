@@ -12,8 +12,8 @@
 #include <exception>
 
 const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
-  "Start Date/Time", "End Time", "Start Time", SignalData::SCALE,
-  "Columns", "Timezone", "Data Label", "Source Reader" } );
+  "Start Date/Time", "End Time", "Start Time", SignalData::SCALE, SignalData::MSM,
+  "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader", SignalData::VALS_PER_DR  } );
 
 Hdf5Reader::Hdf5Reader( ) : Reader( "HDF5" ) {
 

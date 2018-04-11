@@ -28,8 +28,7 @@ public:
 
 private:
 
-  TimeParser( ) {
-  }
+  TimeParser( );
 
   TimeParser( const TimeParser& ) {
   }
