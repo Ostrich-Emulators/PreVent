@@ -46,7 +46,7 @@ void CpcXmlReader::comment( const std::string& text ) {
 }
 
 void CpcXmlReader::start( const std::string& element,
-        std::map<std::string, std::string>& attrs ) {
+      std::map<std::string, std::string>& attrs ) {
   if ( "cpc" == element ) {
     lasttime = currtime;
 
@@ -60,6 +60,11 @@ void CpcXmlReader::start( const std::string& element,
       startSaving( );
     }
     inmg = false;
+  }
+  else if ( "device" == element ) {
+    for ( auto& x : attrs ) {
+      filler->addMeta( x.first, x.second );
+    }
   }
   else if ( "m" == element ) {
     if ( inmg ) {
