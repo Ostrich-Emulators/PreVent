@@ -15,8 +15,8 @@ NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
 CC=gcc
-CCC=h5c++
-CXX=h5c++
+CCC=h5++
+CXX=h5++
 FC=gfortran
 AS=as
 
@@ -54,7 +54,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=`pkg-config --libs zlib` /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so  
+LDLIBSOPTIONS=`pkg-config --libs zlib` /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so -Wl,-rpath,'../Formats/dist/Debug/GNU-Linux' -L../Formats/dist/Debug/GNU-Linux -lFormats -Wl,-rpath,'../libtdms/dist/Debug/GNU-Linux' -L../libtdms/dist/Debug/GNU-Linux -ltdms  
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -63,6 +63,10 @@ LDLIBSOPTIONS=`pkg-config --libs zlib` /usr/lib/x86_64-linux-gnu/hdf5/serial/lib
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: /usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so
+
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: ../Formats/dist/Debug/GNU-Linux/libFormats.so
+
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: ../libtdms/dist/Debug/GNU-Linux/libtdms.so
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
@@ -85,15 +89,19 @@ ${OBJECTDIR}/main.o: main.cpp
 
 # Subprojects
 .build-subprojects:
+	cd ../Formats && ${MAKE}  -f Makefile CONF=Debug
+	cd ../libtdms && ${MAKE}  -f Makefile CONF=Debug
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5_cpp.so
+	${RM} -r ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libhdf5_cpp.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.so ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.so
 	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools
 
 # Subprojects
 .clean-subprojects:
+	cd ../Formats && ${MAKE}  -f Makefile CONF=Debug clean
+	cd ../libtdms && ${MAKE}  -f Makefile CONF=Debug clean
 
 # Enable dependency checking
 .dep.inc: .depcheck-impl

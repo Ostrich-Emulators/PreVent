@@ -22,14 +22,14 @@ ls $DIR | while read datedir; do
     ls $DIR/$datedir/$bid/*.zip | while read zipfile; do 
     #  echo "  $zipfile"
       unzip -Z1 $zipfile | while read file; do
-        unzip -p $zipfile $file | $FMTCNV --from cpcxml --to hdf5 --one-file --quiet -
-        mv ./-p1-* ${PREFIX}-${file}.hdf5
+        unzip -p $zipfile $file | $FMTCNV --from cpcxml --to hdf5 --one-file --pattern /mnt/ramdisk/$file.hdf5 --quiet -
+        mv /mnt/ramdisk/$file.hdf5 /mnt/ramdisk/${PREFIX}-${file}.hdf5
       done
     done
 
     fname=${datedir}-${bid}.hdf5
     echo "$FMTCAT --output ${fname} --cat $(ls ${PREFIX}-*.hdf5)"
-    $FMTCAT --output ${fname} --cat $(ls ${PREFIX}*.hdf5)
+    $FMTCAT --output ${fname} --cat $(ls /mnt/ramdisk/${PREFIX}*.hdf5)
     mv ./-p1-* $fname && rm -rf ${PREFIX}*
   done
 done

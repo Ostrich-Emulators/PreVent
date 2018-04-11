@@ -44,6 +44,7 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
     alldata.validDuration( *spec );
   }
   for ( const auto& file : filesToCat ) {
+    std::cout << "  " << file << std::endl;
     SignalSet junk;
     rdr.prepare( file, junk );
     rdr.fill( alldata );
@@ -65,7 +66,7 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
 }
 
 void H5Cat::cat( const std::string& outfile,
-    std::vector<std::string>& filesToCat ) {
+      std::vector<std::string>& filesToCat ) {
   H5Cat( outfile ).cat( filesToCat );
 }
 

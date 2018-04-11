@@ -37,16 +37,22 @@ protected:
 private:
   Hdf5Reader( const Hdf5Reader& );
 
+  /**
+   * Reads an attribute as a string (converts appropriately)
+   * @param attr
+   * @return 
+   */
   std::string metastr( const H5::Attribute& attr ) const;
+  std::string metastr( const H5::H5Location& loc, const std::string& attrname ) const;
+  int metaint( const H5::H5Location& loc, const std::string& attrname ) const;
   void copymetas( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
   void fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
       const std::vector<dr_time>& times, int valsPerTime, int scale ) const;
   void fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
       const std::vector<dr_time>& tmes, int valsPerTime, int scale ) const;
-  void readDataSet( H5::Group& group, const std::string& name, const bool& iswave,
-      SignalSet& info, H5::Group& timegroup ) const;
-  std::vector<dr_time> readTimes( H5::Group& timegroup, const std::string& name,
-      int& readingsPerTime ) const;
+  void readDataSet( H5::Group& dataAndTimeGroup, const bool& iswave,
+      SignalSet& info ) const;
+  std::vector<dr_time> readTimes( H5::DataSet& times ) const;
   std::string upgradeMetaKey( const std::string& oldkey ) const;
 
   H5::H5File file;

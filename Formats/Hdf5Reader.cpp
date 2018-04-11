@@ -10,10 +10,12 @@
 #include "SignalData.h"
 #include <iostream>
 #include <exception>
+#include <hdf5/serial/H5Location.h>
 
 const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
   "Start Date/Time", "End Time", "Start Time", SignalData::SCALE, SignalData::MSM,
-  "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader", SignalData::VALS_PER_DR  } );
+  "Layout Version", "HDF5 Version",
+  "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader", SignalData::VALS_PER_DR } );
 
 Hdf5Reader::Hdf5Reader( ) : Reader( "HDF5" ) {
 
@@ -52,17 +54,17 @@ ReadResult Hdf5Reader::fill( SignalSet& info, const ReadResult& ) {
 
   H5::Group vgroup = file.openGroup( "/VitalSigns" );
   for ( int i = 0; i < vgroup.getNumObjs( ); i++ ) {
-    H5::Group timegroup = file.openGroup( "/Times/VitalSigns" );
     std::string vital = vgroup.getObjnameByIdx( i );
-    readDataSet( vgroup, vital, false, info, timegroup );
+    H5::Group dataAndTimeGroup = vgroup.openGroup( vital );
+    readDataSet( dataAndTimeGroup, false, info );
   }
   vgroup.close( );
 
   H5::Group wgroup = file.openGroup( "/Waveforms" );
   for ( int i = 0; i < wgroup.getNumObjs( ); i++ ) {
-    H5::Group timegroup = file.openGroup( "/Times/Waveforms" );
     std::string wave = wgroup.getObjnameByIdx( i );
-    readDataSet( wgroup, wave, true, info, timegroup );
+    H5::Group dataAndTimeGroup = wgroup.openGroup( wave );
+    readDataSet( dataAndTimeGroup, true, info );
   }
   wgroup.close( );
 
@@ -73,22 +75,14 @@ size_t Hdf5Reader::getSize( const std::string& input ) const {
   return 1;
 }
 
-std::vector<dr_time> Hdf5Reader::readTimes( H5::Group& group,
-    const std::string& name, int& readingsPerTime ) const {
+std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet& dataset ) const {
   //std::cout << group.getObjName( ) << " " << name << std::endl;
-  H5::DataSet dataset = group.openDataSet( name );
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
   dataspace.getSimpleExtentDims( DIMS );
   const hsize_t ROWS = DIMS[0];
   const hsize_t COLS = DIMS[1];
-  readingsPerTime = 1;
   //std::cout << "dimensions: " << DIMS[0] << " " << DIMS[1] << std::endl;
-
-  if ( dataset.attrExists( SignalData::VALS_PER_DR ) ) {
-    H5::Attribute attr = dataset.openAttribute( SignalData::VALS_PER_DR );
-    attr.read( attr.getDataType( ), &readingsPerTime );
-  }
 
   const hsize_t sizer = ROWS * COLS;
   long read[sizer] = { };
@@ -104,13 +98,26 @@ std::vector<dr_time> Hdf5Reader::readTimes( H5::Group& group,
   return times;
 }
 
-void Hdf5Reader::readDataSet( H5::Group& group, const std::string& name,
-    const bool& iswave, SignalSet& info, H5::Group& timegroup ) const {
-  std::unique_ptr<SignalData>& signal = ( iswave
-      ? info.addWave( name )
-      : info.addVital( name ) );
+void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
+      const bool& iswave, SignalSet& info ) const {
+  std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
 
-  H5::DataSet dataset = group.openDataSet( name );
+  std::unique_ptr<SignalData>& signal = ( iswave
+        ? info.addWave( name )
+        : info.addVital( name ) );
+  int valsPerTime = 1;
+  if ( dataAndTimeGroup.attrExists( SignalData::VALS_PER_DR ) ) {
+    valsPerTime = metaint( dataAndTimeGroup, SignalData::VALS_PER_DR );
+    signal->setValuesPerDataRow( valsPerTime );
+  }
+
+  if ( dataAndTimeGroup.attrExists( SignalData::HERTZ ) ) {
+    double freq = std::stof( metastr( dataAndTimeGroup, SignalData::HERTZ ) );
+    signal->metad( )[SignalData::HERTZ] = freq;
+  }
+
+  H5::DataSet dataset = dataAndTimeGroup.openDataSet( "data" );
+
   copymetas( signal, dataset );
   int scale = signal->scale( );
   for ( auto& x : IGNORABLE_PROPS ) {
@@ -130,8 +137,9 @@ void Hdf5Reader::readDataSet( H5::Group& group, const std::string& name,
   //    std::cout << "  " << m.first << ": (s) " << m.second << std::endl;
   //  }
 
-  int valsPerTime = 1;
-  std::vector<dr_time> times = readTimes( timegroup, name, valsPerTime );
+  H5::DataSet ds = dataAndTimeGroup.openDataSet( "time" );
+  std::vector<dr_time> times = readTimes( ds );
+  ds.close( );
 
   if ( iswave ) {
     fillWave( signal, dataset, times, valsPerTime, scale );
@@ -139,10 +147,11 @@ void Hdf5Reader::readDataSet( H5::Group& group, const std::string& name,
   else {
     fillVital( signal, dataset, times, valsPerTime, scale );
   }
+  dataset.close( );
 }
 
 void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-    const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
+      const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
   dataspace.getSimpleExtentDims( DIMS );
@@ -181,7 +190,7 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
 }
 
 void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-    const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
+      const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
   dataspace.getSimpleExtentDims( DIMS );
@@ -232,7 +241,7 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
 }
 
 void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
-    H5::DataSet& dataset ) const {
+      H5::DataSet& dataset ) const {
   hsize_t cnt = dataset.getNumAttrs( );
 
   for ( int i = 0; i < cnt; i++ ) {
@@ -261,6 +270,20 @@ void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
         signal->metas( )[key] = aval;
     }
   }
+}
+
+int Hdf5Reader::metaint( const H5::H5Location& loc, const std::string& attrname ) const {
+  int val;
+  if ( loc.attrExists( attrname ) ) {
+    H5::Attribute attr = loc.openAttribute( attrname );
+    attr.read( attr.getDataType( ), &val );
+  }
+
+  return val;
+}
+
+std::string Hdf5Reader::metastr( const H5::H5Location& loc, const std::string& attrname ) const {
+  return metastr( loc.openAttribute( attrname ) );
 }
 
 std::string Hdf5Reader::metastr( const H5::Attribute& attr ) const {

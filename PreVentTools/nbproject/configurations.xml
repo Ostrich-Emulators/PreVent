@@ -103,6 +103,11 @@
         <ccTool>
           <developmentMode>5</developmentMode>
           <standard>11</standard>
+          <commandlineTool>h5c++</commandlineTool>
+          <incDir>
+            <pElem>../Formats</pElem>
+          </incDir>
+          <commandLine>-Wno-deprecated</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -110,6 +115,37 @@
         <asmTool>
           <developmentMode>5</developmentMode>
         </asmTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
+            <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../Formats"
+                            CT="2"
+                            CN="Debug"
+                            AC="true"
+                            BL="true"
+                            WD="../Formats"
+                            BC="${MAKE}  -f Makefile CONF=Debug"
+                            CC="${MAKE}  -f Makefile CONF=Debug clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../libtdms"
+                            CT="2"
+                            CN="Debug"
+                            AC="false"
+                            BL="true"
+                            WD="../libtdms"
+                            BC="${MAKE}  -f Makefile CONF=Debug"
+                            CC="${MAKE}  -f Makefile CONF=Debug clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
+          </linkerLibItems>
+        </linkerTool>
       </compileType>
       <item path="H5Cat.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -131,7 +167,7 @@
       <compileType>
         <ccTool>
           <standard>11</standard>
-          <commandlineTool>h5c++</commandlineTool>
+          <commandlineTool>h5++</commandlineTool>
           <commandLine>-Wno-deprecated -O0 -pg -g</commandLine>
         </ccTool>
         <linkerTool>
@@ -139,6 +175,30 @@
             <linkerOptionItem>`pkg-config --libs zlib`</linkerOptionItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5.so</linkerLibFileItem>
             <linkerLibFileItem>/usr/lib/x86_64-linux-gnu/hdf5/serial/libhdf5_cpp.so</linkerLibFileItem>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../Formats"
+                            CT="2"
+                            CN="Debug"
+                            AC="true"
+                            BL="true"
+                            WD="../Formats"
+                            BC="${MAKE}  -f Makefile CONF=Debug"
+                            CC="${MAKE}  -f Makefile CONF=Debug clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
+            <linkerLibProjectItem>
+              <makeArtifact PL="../libtdms"
+                            CT="2"
+                            CN="Debug"
+                            AC="false"
+                            BL="true"
+                            WD="../libtdms"
+                            BC="${MAKE}  -f Makefile CONF=Debug"
+                            CC="${MAKE}  -f Makefile CONF=Debug clean"
+                            OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}">
+              </makeArtifact>
+            </linkerLibProjectItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
