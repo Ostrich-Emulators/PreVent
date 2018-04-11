@@ -59,7 +59,7 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
   else if ( "VitalSigns" == element ) {
     setstate( INVITAL );
     lastvstime = currvstime;
-    currvstime = time( attributes[ v8 ? "CollectionTimeUTC" : "Time"] );
+    currvstime = time( attributes[0 == attributes.count( "CollectionTimeUTC" ) ? "Time" : "CollectionTimeUTC"] );
     if ( anonymizing( ) && isFirstRead( ) ) {
       setDateModifier( currvstime );
     }
@@ -77,7 +77,8 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
   else if ( "Waveforms" == element ) {
     setstate( INWAVE );
     lastwavetime = currwavetime;
-    currwavetime = time( attributes[ v8 ? "CollectionTimeUTC" : "Time"] );
+    currwavetime = time( attributes[0 == attributes.count( "CollectionTimeUTC" ) ? "Time" : "CollectionTimeUTC"] );
+
     if ( anonymizing( ) && isFirstRead( ) ) {
       setDateModifier( currvstime );
     }
@@ -228,8 +229,8 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
             }
           }
 
-          sig->metad( )[SignalData::HERTZ] = hz;          
-          sig->add( DataRow( datemod( currwavetime ), wavepoints, "", "", attrs ) );          
+          sig->metad( )[SignalData::HERTZ] = hz;
+          sig->add( DataRow( datemod( currwavetime ), wavepoints, "", "", attrs ) );
         }
         else if ( warnJunkData ) {
           warnJunkData = false;
