@@ -22,14 +22,6 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/preventtools
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
 CND_PACKAGE_NAME_Release=preventtools.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/preventtools.tar
-# cat configuration
-CND_PLATFORM_cat=GNU-Linux
-CND_ARTIFACT_DIR_cat=dist/cat/GNU-Linux
-CND_ARTIFACT_NAME_cat=preventtools
-CND_ARTIFACT_PATH_cat=dist/cat/GNU-Linux/preventtools
-CND_PACKAGE_DIR_cat=dist/cat/GNU-Linux/package
-CND_PACKAGE_NAME_cat=preventtools.tar
-CND_PACKAGE_PATH_cat=dist/cat/GNU-Linux/package/preventtools.tar
 #
 # include compiler specific variables
 #

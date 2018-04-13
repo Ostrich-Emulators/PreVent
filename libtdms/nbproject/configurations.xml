@@ -68,6 +68,12 @@
                             perm="644"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
       </packaging>
       <item path="TdmsChannel.cpp" ex="false" tool="1" flavor2="0">
@@ -135,6 +141,12 @@
                             perm="644"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
       </packaging>
       <item path="TdmsChannel.cpp" ex="false" tool="1" flavor2="0">
@@ -148,130 +160,6 @@
       <item path="TdmsObject.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="TdmsParser.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="include/TdmsChannel.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/TdmsGroup.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/TdmsLeadIn.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/TdmsMetaData.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/TdmsObject.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/TdmsParser.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/endianfstream.hh" ex="false" tool="3" flavor2="0">
-      </item>
-    </conf>
-    <conf name="Debug_cygwin" type="2">
-      <toolsSet>
-        <compilerSet>default</compilerSet>
-        <dependencyChecking>true</dependencyChecking>
-        <rebuildPropChanged>false</rebuildPropChanged>
-      </toolsSet>
-      <compileType>
-        <ccTool>
-          <standard>11</standard>
-          <incDir>
-            <pElem>include</pElem>
-          </incDir>
-          <commandLine>-g -O0 -D_XOPEN_SOURCE=700</commandLine>
-        </ccTool>
-        <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}</output>
-        </linkerTool>
-      </compileType>
-      <packaging>
-        <packType>Tar</packType>
-        <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libtdms.so.tar</output>
-        <packFileList>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-        </packFileList>
-      </packaging>
-      <item path="TdmsChannel.cpp" ex="false" tool="1" flavor2="11">
-      </item>
-      <item path="TdmsGroup.cpp" ex="false" tool="1" flavor2="11">
-      </item>
-      <item path="TdmsLeadIn.cpp" ex="false" tool="1" flavor2="11">
-      </item>
-      <item path="TdmsMetaData.cpp" ex="false" tool="1" flavor2="11">
-      </item>
-      <item path="TdmsObject.cpp" ex="false" tool="1" flavor2="11">
-      </item>
-      <item path="TdmsParser.cpp" ex="false" tool="1" flavor2="11">
-      </item>
-      <item path="include/TdmsChannel.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/TdmsGroup.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/TdmsLeadIn.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/TdmsMetaData.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/TdmsObject.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/TdmsParser.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="include/endianfstream.hh" ex="false" tool="3" flavor2="0">
-      </item>
-    </conf>
-    <conf name="Release_cygwin" type="2">
-      <toolsSet>
-        <compilerSet>default</compilerSet>
-        <dependencyChecking>true</dependencyChecking>
-        <rebuildPropChanged>false</rebuildPropChanged>
-      </toolsSet>
-      <compileType>
-        <cTool>
-          <developmentMode>5</developmentMode>
-        </cTool>
-        <ccTool>
-          <developmentMode>5</developmentMode>
-          <stripSymbols>true</stripSymbols>
-          <incDir>
-            <pElem>include</pElem>
-          </incDir>
-          <commandLine>-O2 -D_XOPEN_SOURCE=700</commandLine>
-        </ccTool>
-        <fortranCompilerTool>
-          <developmentMode>5</developmentMode>
-        </fortranCompilerTool>
-        <asmTool>
-          <developmentMode>5</developmentMode>
-        </asmTool>
-        <linkerTool>
-          <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}</output>
-        </linkerTool>
-      </compileType>
-      <packaging>
-        <packType>Tar</packType>
-        <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libtdms.so.tar</output>
-        <packFileList>
-          <packFileListElem type="File"
-                            to="${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}"
-                            from="${OUTPUT_PATH}"
-                            perm="644"
-                            owner="root"
-                            group="bin"/>
-        </packFileList>
-      </packaging>
-      <item path="TdmsChannel.cpp" ex="false" tool="1" flavor2="9">
-      </item>
-      <item path="TdmsGroup.cpp" ex="false" tool="1" flavor2="9">
-      </item>
-      <item path="TdmsLeadIn.cpp" ex="false" tool="1" flavor2="9">
-      </item>
-      <item path="TdmsMetaData.cpp" ex="false" tool="1" flavor2="9">
-      </item>
-      <item path="TdmsObject.cpp" ex="false" tool="1" flavor2="9">
-      </item>
-      <item path="TdmsParser.cpp" ex="false" tool="1" flavor2="9">
       </item>
       <item path="include/TdmsChannel.h" ex="false" tool="3" flavor2="0">
       </item>

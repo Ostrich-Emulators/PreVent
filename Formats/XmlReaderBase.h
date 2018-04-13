@@ -35,13 +35,13 @@ public:
   XmlReaderBase( const std::string& name );
   virtual ~XmlReaderBase( );
 
+  virtual int prepare( const std::string& input, SignalSet& info ) override;
+  virtual ReadResult fill( SignalSet & info, const ReadResult& lastfill  = ReadResult::FIRST_READ ) override;
+  virtual void finish( ) override;
+
 protected:
   XmlReaderBase( const XmlReaderBase& orig );
-
   size_t getSize( const std::string& input ) const override;
-  virtual int prepare( const std::string& input, SignalSet& info ) override;
-  virtual ReadResult fill( SignalSet & info, const ReadResult& lastfill ) override;
-  virtual void finish( ) override;
 
 protected:
   /**

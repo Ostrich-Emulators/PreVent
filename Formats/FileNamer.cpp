@@ -54,7 +54,7 @@ void FileNamer::inputfilename( const std::string& inny ) {
     conversions["%d"] = input.substr( 0, basepos );
   }
   else {
-    conversions["%d"] = ".";
+    conversions["%d"] = "";
   }
 }
 

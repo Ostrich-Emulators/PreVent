@@ -22,22 +22,6 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/libtdms.so
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
 CND_PACKAGE_NAME_Release=libtdms.so.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/libtdms.so.tar
-# Debug_cygwin configuration
-CND_PLATFORM_Debug_cygwin=GNU-Linux
-CND_ARTIFACT_DIR_Debug_cygwin=dist/Debug_cygwin/GNU-Linux
-CND_ARTIFACT_NAME_Debug_cygwin=libtdms.so
-CND_ARTIFACT_PATH_Debug_cygwin=dist/Debug_cygwin/GNU-Linux/libtdms.so
-CND_PACKAGE_DIR_Debug_cygwin=dist/Debug_cygwin/GNU-Linux/package
-CND_PACKAGE_NAME_Debug_cygwin=libtdms.so.tar
-CND_PACKAGE_PATH_Debug_cygwin=dist/Debug_cygwin/GNU-Linux/package/libtdms.so.tar
-# Release_cygwin configuration
-CND_PLATFORM_Release_cygwin=GNU-Linux
-CND_ARTIFACT_DIR_Release_cygwin=dist/Release_cygwin/GNU-Linux
-CND_ARTIFACT_NAME_Release_cygwin=libtdms.so
-CND_ARTIFACT_PATH_Release_cygwin=dist/Release_cygwin/GNU-Linux/libtdms.so
-CND_PACKAGE_DIR_Release_cygwin=dist/Release_cygwin/GNU-Linux/package
-CND_PACKAGE_NAME_Release_cygwin=libtdms.so.tar
-CND_PACKAGE_PATH_Release_cygwin=dist/Release_cygwin/GNU-Linux/package/libtdms.so.tar
 #
 # include compiler specific variables
 #

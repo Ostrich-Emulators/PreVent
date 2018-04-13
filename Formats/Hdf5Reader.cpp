@@ -10,7 +10,6 @@
 #include "SignalData.h"
 #include <iostream>
 #include <exception>
-#include <hdf5/serial/H5Location.h>
 
 const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
   "Start Date/Time", "End Time", "Start Time", SignalData::SCALE, SignalData::MSM,

@@ -22,22 +22,6 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/libFormats.so
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
 CND_PACKAGE_NAME_Release=libFormats.so.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/libFormats.so.tar
-# Release_Cygwin configuration
-CND_PLATFORM_Release_Cygwin=GNU-Linux
-CND_ARTIFACT_DIR_Release_Cygwin=dist/Release_Cygwin/GNU-Linux
-CND_ARTIFACT_NAME_Release_Cygwin=libFormats.so
-CND_ARTIFACT_PATH_Release_Cygwin=dist/Release_Cygwin/GNU-Linux/libFormats.so
-CND_PACKAGE_DIR_Release_Cygwin=dist/Release_Cygwin/GNU-Linux/package
-CND_PACKAGE_NAME_Release_Cygwin=libFormats.so.tar
-CND_PACKAGE_PATH_Release_Cygwin=dist/Release_Cygwin/GNU-Linux/package/libFormats.so.tar
-# Debug_Cygwin configuration
-CND_PLATFORM_Debug_Cygwin=GNU-Linux
-CND_ARTIFACT_DIR_Debug_Cygwin=dist/Debug_Cygwin/GNU-Linux
-CND_ARTIFACT_NAME_Debug_Cygwin=libFormats.so
-CND_ARTIFACT_PATH_Debug_Cygwin=dist/Debug_Cygwin/GNU-Linux/libFormats.so
-CND_PACKAGE_DIR_Debug_Cygwin=dist/Debug_Cygwin/GNU-Linux/package
-CND_PACKAGE_NAME_Debug_Cygwin=libFormats.so.tar
-CND_PACKAGE_PATH_Debug_Cygwin=dist/Debug_Cygwin/GNU-Linux/package/libFormats.so.tar
 #
 # include compiler specific variables
 #
