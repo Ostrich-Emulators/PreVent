@@ -39,9 +39,7 @@ datacount( 0 ), popping( false ), iswave( wavedata ) {
 
 BasicSignalData::BasicSignalData( const BasicSignalData& orig ) : SignalData( orig ),
 label( orig.label ), firstdata( orig.firstdata ), lastdata( orig.lastdata ),
-datacount( orig.datacount ), metadatas( orig.metadatas ),
-metadatai( orig.metadatai ), metadatad( orig.metadatad ), popping( orig.popping ),
-iswave( orig.iswave ) {
+datacount( orig.datacount ), popping( orig.popping ), iswave( orig.iswave ) {
   for ( auto const& i : orig.data ) {
     data.push_front( std::unique_ptr<DataRow>( new DataRow( *i ) ) );
   }
@@ -62,11 +60,13 @@ std::unique_ptr<SignalData> BasicSignalData::shallowcopy( bool includedates ) {
     copy->lastdata = this->lastdata;
   }
 
-  copy->metad( ).insert( metadatad.begin( ), metadatad.end( ) );
-  copy->metai( ).insert( metadatai.begin( ), metadatai.end( ) );
-  copy->metas( ).insert( metadatas.begin( ), metadatas.end( ) );
+  copy->metad( ).insert( metad( ).begin( ), metad( ).end( ) );
+  copy->metai( ).insert( metai( ).begin( ), metai( ).end( ) );
+  copy->metas( ).insert( metas( ).begin( ), metas( ).end( ) );
   copy->popping = this->popping;
-  copy->extrafields.insert( this->extrafields.begin( ), this->extrafields.end( ) );
+  for ( std::string& s : extras( ) ) {
+    copy->extras( ).push_back( s );
+  }
   return std::move( copy );
 }
 
@@ -140,13 +140,14 @@ void BasicSignalData::add( const DataRow& row ) {
   }
 
   int rowscale = DataRow::scale( row.data, iswave );
-  if ( rowscale > scale( ) ) {
-    setScale( rowscale );
+  int myscale = scale( );
+  if ( rowscale > myscale ) {
+    scale( rowscale );
   }
 
   if ( !row.extras.empty( ) ) {
     for ( const auto& x : row.extras ) {
-      extrafields.insert( x.first );
+      extras().push_back(x.first );
     }
   }
 
@@ -229,10 +230,6 @@ int BasicSignalData::uncache( int max ) {
   }
 
   return loop;
-}
-
-void BasicSignalData::setScale( int x ) {
-  metadatai[SCALE] = x;
 }
 
 const std::deque<dr_time>& BasicSignalData::times( ) const {

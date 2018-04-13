@@ -19,7 +19,7 @@
 #include <iostream>
 
 DataRow::DataRow( const dr_time& t, const std::string& d, const std::string& hi,
-      const std::string& lo, std::map<std::string, std::string> exts ) : time( t ),
+    const std::string& lo, std::map<std::string, std::string> exts ) : time( t ),
 data( d ), high( hi ), low( lo ), extras( exts ) {
 }
 
@@ -73,6 +73,10 @@ int DataRow::scale( const std::string& val, bool iswave ) {
   if ( val.npos == pos || ".0" == val.substr( pos ) ) {
     return 1;
   }
+  if ( "0.09999999" == val ) {
+    //std::cout << "rounding 0.999999 to 0.01" << std::endl;
+    return 10;
+  }
 
   return (int) std::pow( 10, val.length( ) - pos - 1 ); // -1 for the .
 }
@@ -94,11 +98,11 @@ std::vector<short> DataRow::shorts( const std::string& data, int scale ) {
   std::stringstream stream( data );
   std::vector<short> vals;
   for ( std::string each; std::getline( stream, each, ',' ); ) {
-    if( Reader::MISSING_VALUESTR == each ){
+    if ( Reader::MISSING_VALUESTR == each ) {
       // don't scale missing values
-      vals.push_back( (short) ( std::stoi(Reader::MISSING_VALUESTR ) ) );
+      vals.push_back( (short) ( std::stoi( Reader::MISSING_VALUESTR ) ) );
     }
-    else{
+    else {
       vals.push_back( (short) ( std::stof( each ) * scale ) );
     }
   }

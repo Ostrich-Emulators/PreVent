@@ -58,8 +58,6 @@ private:
    */
   int uncache(int count = CACHE_LIMIT);
   void cache();
-  void setScale(int x);
-
 
   const std::string label;
   dr_time firstdata;
@@ -67,13 +65,9 @@ private:
   size_t datacount;
   std::list<std::unique_ptr<DataRow>> data;
   std::deque<dr_time> dates;
-  std::map<std::string, std::string> metadatas;
-  std::map<std::string, int> metadatai;
-  std::map<std::string, double> metadatad;
   std::FILE * file;
   bool popping;
   bool iswave;
-  std::set<std::string> extrafields;
   static const int CACHE_LIMIT;
 };
 

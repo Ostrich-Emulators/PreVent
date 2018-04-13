@@ -50,7 +50,7 @@ void StpXmlReader::setstate( int st ) {
 }
 
 void StpXmlReader::start( const std::string& element, std::map<std::string, std::string>& attributes ) {
-  if ( "FileInfo" == element ) {
+  if ( "FileInfo" == element || "DeviceInformation" == element ) {
     setstate( INHEADER );
   }
   else if ( std::string::npos != element.find( "Segment" ) ) {
@@ -114,7 +114,7 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     }
   }
   else if ( "WaveformData" == element ) {
-    label = attributes[v8 ? "Label" : "Channel"];
+    label = attributes[v8 || isphilips ? "Label" : "Channel"];
     uom = attributes["UOM"];
     if ( v8 ) {
       v8samplerate = attributes["SampleRate"];
@@ -134,8 +134,10 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
     if ( "FileInfo" == element ) {
       setstate( INDETERMINATE );
     }
-    else if ( "FamilyType" == element ) {
-      isphilips = ( "Philips" == text );
+    else if ( "FamilyType" == element || "Family" == element ) {
+      if ( text.length( ) >= 7 ) {
+        isphilips = ( "Philips" == text.substr( 0, 7 ) );
+      }
     }
     else if ( "Size" != element ) {
       filler->metadata( )[element] = text;
@@ -174,7 +176,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
         std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
 
         if ( added ) {
-          sig->metad( ).insert( std::make_pair( SignalData::HERTZ, ( isphilips ? 1.0 : 0.5 ) ) );
+          sig->metad( )[SignalData::HERTZ] = ( isphilips ? 1.0 : 0.5 );
           if ( !uom.empty( ) ) {
             sig->setUom( uom );
           }
