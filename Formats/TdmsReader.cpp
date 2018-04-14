@@ -154,7 +154,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                 }
 
                 if ( nan ) {
-                  vals << MISSING_VALUESTR;
+                  vals << SignalData::MISSING_VALUESTR;
                 }
                 else {
                   vals << d;
@@ -166,7 +166,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                 // uh oh...we have some un-flushed data (probably an interrupted
                 // read) so normalize it, then add it
                 for ( cnt; cnt < freq; cnt++ ) {
-                  vals << "," << MISSING_VALUESTR;
+                  vals << "," << SignalData::MISSING_VALUESTR;
                 }
                 time += timeinc;
                 signal->add( DataRow( time, vals.str( ) ) );

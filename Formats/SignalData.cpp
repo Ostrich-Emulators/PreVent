@@ -30,6 +30,7 @@ const std::string SignalData::TIMEZONE = "Timezone";
 const std::string SignalData::VALS_PER_DR = "Readings Per Time";
 const std::string SignalData::LABEL = "Data Label";
 const short SignalData::MISSING_VALUE = -32768;
+const std::string SignalData::MISSING_VALUESTR = std::to_string( SignalData::MISSING_VALUE );
 
 SignalData::SignalData( ) {
   scale( 1 );
@@ -77,8 +78,8 @@ const std::map<std::string, double>& SignalData::metad( ) const {
 
 double SignalData::hz( ) const {
   return ( 0 == metadatad.count( SignalData::HERTZ )
-          ? 1
-          : metadatad.at( SignalData::HERTZ ) );
+      ? 1
+      : metadatad.at( SignalData::HERTZ ) );
 }
 
 std::vector<std::string> SignalData::extras( ) const {

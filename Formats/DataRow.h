@@ -33,24 +33,29 @@ public:
   void clear( );
 
   /**
-   * convert our "data" value into list of ints. WARNING: if the data isn't an
-   * int, we will lose precision. This function is most useful for converting
-   * wave datapoints
+   * Converts the given data string (comma-separated or not) to integers by
+   * multiplying the each value by the scale.
    * @return
    */
-  std::vector<int> ints( ) const;
-  static std::vector<int> ints( const std::string& );
+  static std::vector<int> ints( const std::string&, int scale = 1 );
   static std::vector<short> shorts( const std::string&, int scale = 1 );
 
+  std::vector<int> ints( int scale = 1 ) const;
+  std::vector<short> shorts( int scale = 1 ) const;
+
+  /**
+   * Iterates through the given string and determines the highest and lowest vals
+   * after scaling
+   * @param highval
+   * @param lowval
+   */
+  static void hilo( const std::string& vals, int& highval, int& lowval, int scale = 1 );
 
   virtual ~DataRow( );
 
   /**
    * Figures out how many decimal places are in these numbers.
-   * Special case: if the number is 0.0999999 (Philips does this occasionally),
-   * the scale of that number is 10 (rounds to 0.1). We do this because we always
-   * expect the value to be a short int, and if we multiply all the other numbers
-   * by 10000000, we won't get there
+   * 
    * @param val the value string (will be converted to a float for comparison
    * @param iswave should this value be checked for comma-separated values?
    * @return a power of 10 for small numbers, or a negative power for big numbers

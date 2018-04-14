@@ -30,34 +30,37 @@ class DataRow;
 
 class BasicSignalData : public SignalData {
 public:
-  BasicSignalData(const std::string& name, bool largefilesupport = false, bool iswave = false);
-  virtual ~BasicSignalData();
+  BasicSignalData( const std::string& name, bool largefilesupport = false, bool iswave = false );
+  virtual ~BasicSignalData( );
 
-  virtual std::unique_ptr<SignalData> shallowcopy(bool includedates = false) override;
-  virtual void add(const DataRow& row) override;
-  virtual size_t size() const override;
-  virtual const dr_time& startTime() const override;
-  virtual const dr_time& endTime() const override;
-  virtual const std::string& name() const override;
+  virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) override;
+  virtual void add( const DataRow& row ) override;
+  virtual size_t size( ) const override;
+  virtual const dr_time& startTime( ) const override;
+  virtual const dr_time& endTime( ) const override;
+  virtual const std::string& name( ) const override;
 
-  virtual std::unique_ptr<DataRow> pop() override;
-  virtual void setWave(bool wave = false) override;
-  virtual bool wave() const override;
+  virtual std::unique_ptr<DataRow> pop( ) override;
+  virtual void setWave( bool wave = false ) override;
+  virtual bool wave( ) const override;
 
-  virtual const std::deque<dr_time>& times() const override;
+  virtual const std::deque<dr_time>& times( ) const override;
+
+  virtual int highwater( ) const override;
+  virtual int lowwater( ) const override;
 
 private:
-  BasicSignalData(const BasicSignalData& orig);
+  BasicSignalData( const BasicSignalData& orig );
 
-  void startPopping();
+  void startPopping( );
 
   /**
    * copy rows from the cache file to the data list.
    * @param count the desired elements to uncache
    * @return the number uncached, or 0 if there is no cache, or it's empty
    */
-  int uncache(int count = CACHE_LIMIT);
-  void cache();
+  int uncache( int count = CACHE_LIMIT );
+  void cache( );
 
   const std::string label;
   dr_time firstdata;
@@ -68,6 +71,8 @@ private:
   std::FILE * file;
   bool popping;
   bool iswave;
+  int highval;
+  int lowval;
   static const int CACHE_LIMIT;
 };
 

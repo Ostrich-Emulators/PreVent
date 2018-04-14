@@ -59,7 +59,7 @@ int CsvWriter::drain( SignalSet& info ) {
     out << "time,value,slice" << std::endl;
     while ( !w.second->empty( ) ) {
       const auto& r = w.second->pop( );
-      std::vector<int> vals = r->ints( );
+      std::vector<int> vals = r->ints( w.second->scale() );
       for ( int slice = 0; slice < vals.size( ); slice++ ) {
         out << r->time << "," << vals[slice] << "," << slice << std::endl;
       }

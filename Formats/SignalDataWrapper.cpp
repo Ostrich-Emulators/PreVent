@@ -117,3 +117,11 @@ const std::deque<dr_time>& SignalDataWrapper::times( ) const {
 std::vector<std::string> SignalDataWrapper::extras( ) const {
   return signal->extras( );
 }
+
+int SignalDataWrapper::highwater() const {
+  return signal->highwater();
+}
+
+int SignalDataWrapper::lowwater() const {
+  return signal->lowwater();
+}

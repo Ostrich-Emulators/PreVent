@@ -58,7 +58,7 @@ private:
   void writeWave( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
   void writeWaveGroup( H5::Group& group, SignalData& data );
   void writeTimes( H5::Group& group, SignalData& data );
-  void writeGroupAttrs( H5::Group& group, SignalData& data);
+  void writeGroupAttrs( H5::Group& group, SignalData& data );
   static void autochunk( hsize_t* dims, int rank, hsize_t* rslts );
   void createEventsAndTimes( H5::H5File, const SignalSet& data );
 

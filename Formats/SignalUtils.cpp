@@ -271,11 +271,11 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
 }
 
 DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time ) {
-  std::string dummy = Reader::MISSING_VALUESTR;
+  std::string dummy = SignalData::MISSING_VALUESTR;
 
   if ( signal->wave( ) ) {
     for ( int i = 1; i < signal->hz( ); i++ ) {
-      dummy.append( "," ).append( Reader::MISSING_VALUESTR );
+      dummy.append( "," ).append( SignalData::MISSING_VALUESTR );
     }
   }
   return DataRow( time, dummy );

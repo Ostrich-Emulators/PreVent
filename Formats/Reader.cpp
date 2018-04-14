@@ -11,8 +11,6 @@
 
 #include <iostream>
 
-const std::string Reader::MISSING_VALUESTR( "-32768" );
-
 Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ),
 quiet( false ), anon( false ), onefile( false ) {
 }

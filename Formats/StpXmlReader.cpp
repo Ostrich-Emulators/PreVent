@@ -116,7 +116,7 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
   else if ( "WaveformData" == element ) {
     label = attributes[v8 || isphilips ? "Label" : "Channel"];
     uom = attributes["UOM"];
-    if ( v8 ) {
+    if ( v8 || isphilips ) {
       v8samplerate = attributes["SampleRate"];
     }
   }
@@ -204,7 +204,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
         std::string wavepoints = text;
         // reverse the oversampling (if any) and set the true Hz
         int thz = 240;
-        if ( v8 ) {
+        if ( v8 || isphilips ) {
           thz = std::stoi( v8samplerate );
         }
         else {

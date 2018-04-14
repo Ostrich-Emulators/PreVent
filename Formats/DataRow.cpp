@@ -13,10 +13,12 @@
 
 #include "DataRow.h"
 #include "Reader.h"
+#include "SignalData.h"
 #include <cmath>
 #include <sstream>
 #include <vector>
 #include <iostream>
+#include <limits>
 
 DataRow::DataRow( const dr_time& t, const std::string& d, const std::string& hi,
     const std::string& lo, std::map<std::string, std::string> exts ) : time( t ),
@@ -66,30 +68,54 @@ int DataRow::scale( const std::string& val, bool iswave ) {
     }
     return myscale;
   }
-
+  
   // probably dumb, but we pretend the value is a filename, and that
   // makes the extension the number of decimal places in the mantissa
   size_t pos = val.find_last_of( '.', val.length( ) );
   if ( val.npos == pos || ".0" == val.substr( pos ) ) {
     return 1;
   }
-  if ( "0.09999999" == val ) {
-    //std::cout << "rounding 0.999999 to 0.01" << std::endl;
-    return 10;
-  }
 
   return (int) std::pow( 10, val.length( ) - pos - 1 ); // -1 for the .
 }
 
-std::vector<int> DataRow::ints( ) const {
-  return ints( data );
+void DataRow::hilo( const std::string& data, int& highval, int& lowval, int scale ) {
+  std::stringstream stream( data );
+  for ( std::string each; std::getline( stream, each, ',' ); ) {
+    if ( SignalData::MISSING_VALUESTR != each ) {
+      int v = (int) ( std::stof( each ) * scale );
+      if ( v > highval ) {
+        highval = v;
+      }
+      if ( v < lowval ) {
+        lowval = v;
+      }
+    }
+  }
 }
 
-std::vector<int> DataRow::ints( const std::string& data ) {
+std::vector<int> DataRow::ints( int scale ) const {
+  return ints( data, scale );
+}
+
+std::vector<short> DataRow::shorts( int scale ) const {
+  return shorts( data, scale );
+}
+
+std::vector<int> DataRow::ints( const std::string& data, int scale ) {
   std::stringstream stream( data );
   std::vector<int> vals;
   for ( std::string each; std::getline( stream, each, ',' ); ) {
-    vals.push_back( std::stoi( each ) );
+    if ( SignalData::MISSING_VALUESTR == each ) {
+      // don't scale missing numbers
+      vals.push_back( SignalData::MISSING_VALUE );
+    }
+    else if ( 1 == scale ) {
+      vals.push_back( std::stoi( each ) );
+    }
+    else {
+      vals.push_back( (int) ( std::stof( each ) * scale ) );
+    }
   }
   return vals;
 }
@@ -98,9 +124,14 @@ std::vector<short> DataRow::shorts( const std::string& data, int scale ) {
   std::stringstream stream( data );
   std::vector<short> vals;
   for ( std::string each; std::getline( stream, each, ',' ); ) {
-    if ( Reader::MISSING_VALUESTR == each ) {
+    if ( SignalData::MISSING_VALUESTR == each ) {
       // don't scale missing values
-      vals.push_back( (short) ( std::stoi( Reader::MISSING_VALUESTR ) ) );
+      vals.push_back( SignalData::MISSING_VALUE );
+    }
+    else if ( 1 == scale ) {
+      // FIXME: check against short limits?
+      int val = std::stoi( each );
+      vals.push_back( (short) val );
     }
     else {
       vals.push_back( (short) ( std::stof( each ) * scale ) );

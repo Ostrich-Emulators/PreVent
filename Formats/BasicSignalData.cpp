@@ -26,7 +26,8 @@ const int BasicSignalData::CACHE_LIMIT = 15000;
 
 BasicSignalData::BasicSignalData( const std::string& name, bool largefile, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
-datacount( 0 ), popping( false ), iswave( wavedata ) {
+datacount( 0 ), popping( false ), iswave( wavedata ), highval( std::numeric_limits<int>::min( ) ),
+lowval( std::numeric_limits<int>::max( ) ) {
   //file = ( largefile ? fopen( std::tmpnam( nullptr ), "w+" ) : NULL );
   if ( largefile ) {
     std::string fname = "/tmp/cache-" + name + ".prevent";
@@ -39,7 +40,8 @@ datacount( 0 ), popping( false ), iswave( wavedata ) {
 
 BasicSignalData::BasicSignalData( const BasicSignalData& orig ) : SignalData( orig ),
 label( orig.label ), firstdata( orig.firstdata ), lastdata( orig.lastdata ),
-datacount( orig.datacount ), popping( orig.popping ), iswave( orig.iswave ) {
+datacount( orig.datacount ), popping( orig.popping ), iswave( orig.iswave ),
+highval( orig.highval ), lowval( orig.lowval ) {
   for ( auto const& i : orig.data ) {
     data.push_front( std::unique_ptr<DataRow>( new DataRow( *i ) ) );
   }
@@ -114,6 +116,14 @@ void BasicSignalData::startPopping( ) {
   }
 }
 
+int BasicSignalData::highwater( ) const {
+  return highval;
+}
+
+int BasicSignalData::lowwater( ) const {
+  return lowval;
+}
+
 void BasicSignalData::cache( ) {
   while ( !data.empty( ) ) {
     std::unique_ptr<DataRow> a = std::move( data.front( ) );
@@ -140,14 +150,34 @@ void BasicSignalData::add( const DataRow& row ) {
   }
 
   int rowscale = DataRow::scale( row.data, iswave );
+  int oldhigh = highval;
+  int oldlow = lowval;
+
+  DataRow::hilo( row.data, highval, lowval, rowscale );
   int myscale = scale( );
   if ( rowscale > myscale ) {
     scale( rowscale );
+
+    // see if our high, low vals are really bigger than our new vals
+    // given that our scale just changed
+
+    double myhi = static_cast<double> ( oldhigh ) / static_cast<double> ( myscale );
+    double mylo = static_cast<double> ( oldlow ) / static_cast<double> ( myscale );
+
+    double rowhi = static_cast<double> ( highval ) / static_cast<double> ( rowscale );
+    double rowlo = static_cast<double> ( lowval ) / static_cast<double> ( rowscale );
+
+    if ( myhi > rowhi ) {
+      highval = oldhigh;
+    }
+    if ( mylo < rowlo ) {
+      lowval = oldlow;
+    }
   }
 
   if ( !row.extras.empty( ) ) {
     for ( const auto& x : row.extras ) {
-      extras().push_back(x.first );
+      extras( ).push_back( x.first );
     }
   }
 
