@@ -68,6 +68,7 @@ std::string FileNamer::filename( const SignalSet& data, int outputnum ) {
   // we need to have data for all the conversion keys in here
 
   conversions["%s"] = getDateSuffix( data.earliest( ), "" );
+  conversions["%o"] = std::to_string( outputnum );
 
   lastname = pattern;
   const std::string replacements[] = {
@@ -75,7 +76,8 @@ std::string FileNamer::filename( const SignalSet& data, int outputnum ) {
     "%i",
     "%p",
     "%s",
-    "%t"
+    "%t",
+    "%o"
   };
 
   for ( auto x : replacements ) {
@@ -107,6 +109,7 @@ std::string FileNamer::filenameNoExt( ) {
 
 void FileNamer::patientOrdinal( int patient ) {
   patientnum = patient;
+  conversions["%p"]=std::to_string( patient );
 }
 
 void FileNamer::outputdir( const std::string& out ) {
