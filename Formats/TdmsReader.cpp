@@ -132,42 +132,91 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
               // for waves, we need to construct a string of values that is 
               // {Frequency} items big
 
-              std::stringstream vals;
-              // tdms file seem to use 3 decimal places for everything
-              // so make sure we don't have extra 0s running around
-              vals << std::setprecision( 3 ) << std::fixed;
+              std::vector<double> doubles;
+
+              // we pretty much always get a datatype of float, even though
+              // not all the data IS float
+              bool seenFloat = false;
+              // if we have a whole datarow worth of nans, don't write anything
+              int nancount = 0;
+              // how many numbers have we seen?
               int cnt = 0;
+              double intpart;
               for ( auto& d : data ) {
                 bool nan = isnan( d );
+                doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
+
+                if ( nan ) {
+                  nancount++;
+                }
+                else {
+                  double fraction = std::modf( d, &intpart );
+                  if ( 0 != fraction ) {
+                    seenFloat = true;
+                  }
+                }
 
                 if ( cnt == freq ) {
                   time += timeinc;
-                  //output()<<vals.str()<<std::endl;
-                  signal->add( DataRow( time, vals.str( ) ) );
-                  vals.clear( );
-                  vals.str( std::string( ) );
+
+                  if ( nancount != cnt ) {
+                    // make sure we have some data!
+
+                    std::stringstream vals;
+                    if ( seenFloat ) {
+                      // tdms file seems to use 3 decimal places for everything
+                      // so make sure we don't have extra 0s running around
+                      vals << std::setprecision( 3 ) << std::fixed;
+                    }
+
+                    vals << doubles[0];
+                    for ( int i = 1; i < cnt; i++ ) {
+                      vals << ",";
+                      if ( SignalData::MISSING_VALUE == doubles[i] ) {
+                        vals << SignalData::MISSING_VALUESTR;
+                      }
+                      else {
+                        vals << doubles[i];
+                      }
+                    }
+
+                    //output( ) << vals.str( ) << std::endl;
+                    signal->add( DataRow( time, vals.str( ) ) );
+                  }
+                  doubles.clear( );
                   cnt = 0;
+                  nancount = 0;
+                  seenFloat = false;
                 }
 
-                if ( 0 != cnt ) {
-                  vals << ",";
-                }
-
-                if ( nan ) {
-                  vals << SignalData::MISSING_VALUESTR;
-                }
-                else {
-                  vals << d;
-                }
                 cnt++;
               }
 
-              if ( 0 != cnt ) {
+              if ( 0 != cnt && nancount != cnt ) {
                 // uh oh...we have some un-flushed data (probably an interrupted
                 // read) so normalize it, then add it
+
+                std::stringstream vals;
+                if ( seenFloat ) {
+                  // tdms file seems to use 3 decimal places for everything
+                  // so make sure we don't have extra 0s running around
+                  vals << std::setprecision( 3 ) << std::fixed;
+                }
+
+                vals << doubles[0];
+                for ( int i = 1; i < cnt; i++ ) {
+                  vals << ",";
+                  if ( SignalData::MISSING_VALUE == doubles[i] ) {
+                    vals << SignalData::MISSING_VALUESTR;
+                  }
+                  else {
+                    vals << doubles[i];
+                  }
+                }
                 for ( cnt; cnt < freq; cnt++ ) {
                   vals << "," << SignalData::MISSING_VALUESTR;
                 }
+
                 time += timeinc;
                 signal->add( DataRow( time, vals.str( ) ) );
               }

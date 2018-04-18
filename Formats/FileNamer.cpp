@@ -61,7 +61,7 @@ void FileNamer::inputfilename( const std::string& inny ) {
 std::string FileNamer::filenameNoExt( const SignalSet& data, int outputnum ) {
   // for now, always the same thing
   const size_t pos = lastname.rfind( "." );
-  return lastname.substr( 0, pos );  
+  return lastname.substr( 0, pos );
 }
 
 std::string FileNamer::filename( const SignalSet& data, int outputnum ) {
@@ -109,7 +109,7 @@ std::string FileNamer::filenameNoExt( ) {
 
 void FileNamer::patientOrdinal( int patient ) {
   patientnum = patient;
-  conversions["%p"]=std::to_string( patient );
+  conversions["%p"] = std::to_string( patient );
 }
 
 void FileNamer::outputdir( const std::string& out ) {
