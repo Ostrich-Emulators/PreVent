@@ -149,10 +149,6 @@ void BasicSignalData::add( const DataRow& row ) {
     cache( );
   }
 
-  if ( name( ) == "RESP" ) {
-    std::cout << "here I ma" << std::endl;
-  }
-
   int rowscale = DataRow::scale( row.data, iswave );
   DataRow::hilo( row.data, highval, lowval );
   int myscale = scale( );

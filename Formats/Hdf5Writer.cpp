@@ -37,7 +37,7 @@ Hdf5Writer::~Hdf5Writer( ) {
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-      const std::string& attr, const std::string& val ) {
+        const std::string& attr, const std::string& val ) {
   if ( !val.empty( ) ) {
     //std::cout << attr << ": " << val << std::endl;
 
@@ -50,28 +50,28 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-      const std::string& attr, int val ) {
+        const std::string& attr, int val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I32LE, space );
   attrib.write( H5::PredType::STD_I32LE, &val );
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-      const std::string& attr, dr_time val ) {
+        const std::string& attr, dr_time val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I64LE, space );
   attrib.write( H5::PredType::STD_I64LE, &val );
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-      const std::string& attr, double val ) {
+        const std::string& attr, double val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::IEEE_F64LE, space );
   attrib.write( H5::PredType::IEEE_F64LE, &val );
 }
 
 void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
-      const dr_time& start, const dr_time& end ) {
+        const dr_time& start, const dr_time& end ) {
   writeAttribute( loc, "Start Time", start );
   writeAttribute( loc, "End Time", end );
 
@@ -124,22 +124,22 @@ void Hdf5Writer::writeAttributes( H5::H5Location& ds, const SignalData& data ) {
 }
 
 void Hdf5Writer::writeFileAttributes( H5::H5File file,
-      std::map<std::string, std::string> datasetattrs,
-      const dr_time& firstTime, const dr_time& lastTime ) {
+        std::map<std::string, std::string> datasetattrs,
+        const dr_time& firstTime, const dr_time& lastTime ) {
 
   writeTimesAndDurationAttributes( file, firstTime, lastTime );
 
   for ( std::map<std::string, std::string>::const_iterator it = datasetattrs.begin( );
-        it != datasetattrs.end( ); ++it ) {
+          it != datasetattrs.end( ); ++it ) {
     //std::cout << "writing file attr: " << it->first << ": " << it->second << std::endl;
     writeAttribute( file, it->first, it->second );
   }
 
   writeAttribute( file, "Layout Version", LAYOUT_VERSION );
   writeAttribute( file, "HDF5 Version",
-        std::to_string( H5_VERS_MAJOR ) + "."
-        + std::to_string( H5_VERS_MINOR ) + "."
-        + std::to_string( H5_VERS_RELEASE ) );
+          std::to_string( H5_VERS_MAJOR ) + "."
+          + std::to_string( H5_VERS_MINOR ) + "."
+          + std::to_string( H5_VERS_RELEASE ) );
 }
 
 void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace&, SignalData& data ) {
@@ -173,12 +173,12 @@ void Hdf5Writer::writeVital( H5::DataSet& ds, H5::DataSpace&, SignalData& data )
 }
 
 void Hdf5Writer::writeWave( H5::DataSet& ds, H5::DataSpace& space,
-      SignalData& data ) {
+        SignalData& data ) {
 
   const size_t rows = data.size( );
   const hsize_t maxslabcnt = ( rows * data.valuesPerDataRow( ) > 125000
-        ? 125000
-        : rows * data.valuesPerDataRow( ) );
+          ? 125000
+          : rows * data.valuesPerDataRow( ) );
   hsize_t offset[] = { 0, 0 };
   hsize_t count[] = { 0, 1 };
 
@@ -257,7 +257,7 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet& data ) 
     H5::DataSpace space( 2, dims );
 
     H5::DataSet ds = events.createDataSet( "Segment_Offsets",
-          H5::PredType::STD_I64LE, space );
+            H5::PredType::STD_I64LE, space );
     long long indexes[segmentsizes.size( ) * 2] = { 0 };
     int row = 0;
     for ( const auto& e : segmentsizes ) {
@@ -381,7 +381,7 @@ void Hdf5Writer::writeVitalGroup( H5::Group& group, SignalData& data ) {
     props.setDeflate( compression( ) );
   }
 
-  if ( rescaleIfNeeded( data ) ) {
+  if ( rescaleForShortsIfNeeded( data ) ) {
     std::cerr << std::endl << "  coercing out-of-range numbers (possible loss of precision)";
   }
 
@@ -400,14 +400,36 @@ void Hdf5Writer::writeVitalGroup( H5::Group& group, SignalData& data ) {
   writeVital( ds, space, data );
 }
 
-bool Hdf5Writer::rescaleIfNeeded( SignalData& data ) const {
+bool Hdf5Writer::rescaleForShortsIfNeeded( SignalData& data ) const {
   bool rescaled = false;
-  if ( data.scale( ) > 10000 ) {
-    std::cerr << "high/low water marks: " << data.highwater( ) << "/" << data.lowwater( ) << std::endl;
-    data.scale( 10000 );
+
+  const short int max = std::numeric_limits<short>::max( );
+  const short int min = std::numeric_limits<short>::min( );
+  int scale = data.scale( );
+  int hi = scale * data.highwater( );
+  int low = scale * data.lowwater( );
+  std::cerr << " high/low water marks: " << data.highwater( ) << "/" << data.lowwater( ) << "(scale: " << data.scale( ) << ")" << std::endl;
+  std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
+
+  // keep reducing the scale until we fit in shorts
+  // FIXME: if we can't fit in shorts, we're screwed
+  while ( ( hi > max || low < min ) && scale > 0 ) {
+    scale /= 10;
+    hi = scale * data.highwater( );
+    low = scale * data.lowwater( );
     rescaled = true;
+    std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
   }
 
+  if ( hi > max || low < min ) {
+    // this is "we're screwed" time
+    std::cerr << " ERROR: cannot coerce values to be in range";
+  }
+  else {
+    if ( rescaled ) {
+      data.scale( scale );
+    }
+  }
 
   return rescaled;
 }
@@ -430,7 +452,7 @@ void Hdf5Writer::writeWaveGroup( H5::Group& group, SignalData& data ) {
     props.setDeflate( compression( ) );
   }
 
-  if ( rescaleIfNeeded( data ) ) {
+  if ( rescaleForShortsIfNeeded( data ) ) {
     std::cerr << std::endl << "  coercing out-of-range numbers (possible loss of precision)";
   }
 

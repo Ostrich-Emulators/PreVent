@@ -67,7 +67,7 @@ private:
    * @param data
    * @return true, if the data was rescaled
    */
-  bool rescaleIfNeeded( SignalData& data ) const;
+  bool rescaleForShortsIfNeeded( SignalData& data ) const;
   SignalSet * dataptr;
 };
 
