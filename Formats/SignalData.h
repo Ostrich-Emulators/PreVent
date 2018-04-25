@@ -57,12 +57,12 @@ public:
    * Retrieves the highest value in this signal data
    * @return
    */
-  virtual int highwater( ) const = 0;
+  virtual double highwater( ) const = 0;
   /**
    * Retrieves the lowest value in this signal data
    * @return
    */
-  virtual int lowwater( ) const = 0;
+  virtual double lowwater( ) const = 0;
 
   virtual void setUom( const std::string& u );
   virtual const std::string& uom( ) const;

@@ -56,6 +56,7 @@ private:
   bool warnJunkData;
   bool v8;
   bool isphilips;
+  bool isix;
 
   int state;
   std::string label;

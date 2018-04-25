@@ -42,8 +42,8 @@ public:
   virtual int valuesPerDataRow( ) const override;
   virtual void setMetadataFrom( const SignalData& model ) override;
 
-  virtual int highwater( ) const override;
-  virtual int lowwater( ) const override;
+  virtual double highwater( ) const override;
+  virtual double lowwater( ) const override;
 
   virtual std::unique_ptr<DataRow> pop( ) override;
   virtual bool empty( ) const override;

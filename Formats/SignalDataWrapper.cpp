@@ -118,10 +118,10 @@ std::vector<std::string> SignalDataWrapper::extras( ) const {
   return signal->extras( );
 }
 
-int SignalDataWrapper::highwater() const {
+double SignalDataWrapper::highwater() const {
   return signal->highwater();
 }
 
-int SignalDataWrapper::lowwater() const {
+double SignalDataWrapper::lowwater() const {
   return signal->lowwater();
 }

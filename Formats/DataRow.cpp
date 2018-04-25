@@ -21,7 +21,7 @@
 #include <limits>
 
 DataRow::DataRow( const dr_time& t, const std::string& d, const std::string& hi,
-    const std::string& lo, std::map<std::string, std::string> exts ) : time( t ),
+      const std::string& lo, std::map<std::string, std::string> exts ) : time( t ),
 data( d ), high( hi ), low( lo ), extras( exts ) {
 }
 
@@ -68,7 +68,7 @@ int DataRow::scale( const std::string& val, bool iswave ) {
     }
     return myscale;
   }
-  
+
   // probably dumb, but we pretend the value is a filename, and that
   // makes the extension the number of decimal places in the mantissa
   size_t pos = val.find_last_of( '.', val.length( ) );
@@ -79,11 +79,11 @@ int DataRow::scale( const std::string& val, bool iswave ) {
   return (int) std::pow( 10, val.length( ) - pos - 1 ); // -1 for the .
 }
 
-void DataRow::hilo( const std::string& data, int& highval, int& lowval, int scale ) {
+void DataRow::hilo( const std::string& data, double& highval, double& lowval ) {
   std::stringstream stream( data );
   for ( std::string each; std::getline( stream, each, ',' ); ) {
-    if ( SignalData::MISSING_VALUESTR != each ) {
-      int v = (int) ( std::stof( each ) * scale );
+    if ( !( SignalData::MISSING_VALUESTR == each || "32768" == each ) ) {
+      double v = std::stod( each );
       if ( v > highval ) {
         highval = v;
       }

@@ -36,7 +36,7 @@ const int StpXmlReader::INNAME = 8;
 StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ), warnMissingName( true ),
 warnJunkData( true ), prevtime( 0 ), currvstime( 0 ), lastvstime( 0 ),
 currwavetime( 0 ), lastwavetime( 0 ), state( INDETERMINATE ), currsegidx( 0 ),
-v8( false ), isphilips( false ) {
+v8( false ), isphilips( false ), isix( false ) {
 }
 
 StpXmlReader::StpXmlReader( const StpXmlReader& orig ) : XmlReaderBase( orig ) {
@@ -118,6 +118,11 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     uom = attributes["UOM"];
     if ( v8 || isphilips ) {
       v8samplerate = attributes["SampleRate"];
+      if ( isix ) {
+        int ms = std::stoi( attributes["SamplePeriodInMsec"] );
+        int div = std::stoi( attributes["SampleRate"] );
+        v8samplerate = std::to_string( ms / div );
+      }
     }
   }
 
@@ -137,6 +142,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
     else if ( "FamilyType" == element || "Family" == element ) {
       if ( text.length( ) >= 7 ) {
         isphilips = ( "Philips" == text.substr( 0, 7 ) );
+        isix = ( "PhilipsIX" == text );
       }
     }
     else if ( "Size" != element ) {
@@ -224,7 +230,14 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           std::unique_ptr<SignalData>& sig = filler->addWave( label, &first );
           if ( first ) {
             // Stp always reads in 1s increments for Philips, 2s for GE monitors
-            sig->setValuesPerDataRow( isphilips ? hz : 2 * hz );
+            // for PhilipsIX, we appear to always get 256 values, regardless
+            // of what anything else says
+            if ( isix ) {
+              sig->setValuesPerDataRow( 256 );
+            }
+            else {
+              sig->setValuesPerDataRow( isphilips ? hz : 2 * hz );
+            }
 
             if ( !uom.empty( ) ) {
               sig->setUom( uom );

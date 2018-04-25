@@ -24,8 +24,8 @@
 class DataRow {
 public:
   DataRow( const dr_time& time, const std::string& data,
-      const std::string& high = "", const std::string& low = "",
-      std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
+        const std::string& high = "", const std::string& low = "",
+        std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
   DataRow( );
   DataRow( const DataRow& orig );
   DataRow& operator=(const DataRow& orig );
@@ -45,16 +45,18 @@ public:
 
   /**
    * Iterates through the given string and determines the highest and lowest vals
-   * after scaling
+   * higher/lower than the given values. That is, if a highval is 10, the vals
+   * contains 11, the highval is set to 11. If vals only contained 9, then highval
+   * would remain 10.
    * @param highval
    * @param lowval
    */
-  static void hilo( const std::string& vals, int& highval, int& lowval, int scale = 1 );
+  static void hilo( const std::string& vals, double& highval, double& lowval );
 
   virtual ~DataRow( );
 
   /**
-   * Figures out how many decimal places are in these numbers.
+   * Figures out how many decimal places are in these numbers. 
    * 
    * @param val the value string (will be converted to a float for comparison
    * @param iswave should this value be checked for comma-separated values?

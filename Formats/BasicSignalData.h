@@ -46,8 +46,8 @@ public:
 
   virtual const std::deque<dr_time>& times( ) const override;
 
-  virtual int highwater( ) const override;
-  virtual int lowwater( ) const override;
+  virtual double highwater( ) const override;
+  virtual double lowwater( ) const override;
 
 private:
   BasicSignalData( const BasicSignalData& orig );
@@ -71,8 +71,8 @@ private:
   std::FILE * file;
   bool popping;
   bool iswave;
-  int highval;
-  int lowval;
+  double highval;
+  double lowval;
   static const int CACHE_LIMIT;
 };
 

@@ -26,8 +26,8 @@ const int BasicSignalData::CACHE_LIMIT = 15000;
 
 BasicSignalData::BasicSignalData( const std::string& name, bool largefile, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
-datacount( 0 ), popping( false ), iswave( wavedata ), highval( std::numeric_limits<int>::min( ) ),
-lowval( std::numeric_limits<int>::max( ) ) {
+datacount( 0 ), popping( false ), iswave( wavedata ), highval( -std::numeric_limits<double>::max( ) ),
+lowval( std::numeric_limits<double>::max( ) ) {
   //file = ( largefile ? fopen( std::tmpnam( nullptr ), "w+" ) : NULL );
   if ( largefile ) {
     std::string fname = "/tmp/cache-" + name + ".prevent";
@@ -116,11 +116,11 @@ void BasicSignalData::startPopping( ) {
   }
 }
 
-int BasicSignalData::highwater( ) const {
+double BasicSignalData::highwater( ) const {
   return highval;
 }
 
-int BasicSignalData::lowwater( ) const {
+double BasicSignalData::lowwater( ) const {
   return lowval;
 }
 
@@ -149,30 +149,15 @@ void BasicSignalData::add( const DataRow& row ) {
     cache( );
   }
 
-  int rowscale = DataRow::scale( row.data, iswave );
-  int oldhigh = highval;
-  int oldlow = lowval;
+  if ( name( ) == "RESP" ) {
+    std::cout << "here I ma" << std::endl;
+  }
 
-  DataRow::hilo( row.data, highval, lowval, rowscale );
+  int rowscale = DataRow::scale( row.data, iswave );
+  DataRow::hilo( row.data, highval, lowval );
   int myscale = scale( );
   if ( rowscale > myscale ) {
     scale( rowscale );
-
-    // see if our high, low vals are really bigger than our new vals
-    // given that our scale just changed
-
-    double myhi = static_cast<double> ( oldhigh ) / static_cast<double> ( myscale );
-    double mylo = static_cast<double> ( oldlow ) / static_cast<double> ( myscale );
-
-    double rowhi = static_cast<double> ( highval ) / static_cast<double> ( rowscale );
-    double rowlo = static_cast<double> ( lowval ) / static_cast<double> ( rowscale );
-
-    if ( myhi > rowhi ) {
-      highval = oldhigh;
-    }
-    if ( mylo < rowlo ) {
-      lowval = oldlow;
-    }
   }
 
   if ( !row.extras.empty( ) ) {
