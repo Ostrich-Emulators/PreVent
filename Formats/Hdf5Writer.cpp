@@ -432,8 +432,8 @@ bool Hdf5Writer::rescaleForShortsIfNeeded( SignalData& data ) const {
   int scale = data.scale( );
   int hi = scale * data.highwater( );
   int low = ( data.lowwater( ) == SignalData::MISSING_VALUE ? data.lowwater( ) : scale * data.lowwater( ) );
-  std::cerr << " high/low water marks: " << data.highwater( ) << "/" << data.lowwater( ) << "(scale: " << data.scale( ) << ")" << std::endl;
-  std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
+  //std::cerr << " high/low water marks: " << data.highwater( ) << "/" << data.lowwater( ) << "(scale: " << data.scale( ) << ")" << std::endl;
+  //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
 
   // keep reducing the scale until we fit in shorts
   // FIXME: if we can't fit in shorts, we're screwed
@@ -442,7 +442,7 @@ bool Hdf5Writer::rescaleForShortsIfNeeded( SignalData& data ) const {
     hi = scale * data.highwater( );
     low = ( data.lowwater( ) == SignalData::MISSING_VALUE ? data.lowwater( ) : scale * data.lowwater( ) );
     rescaled = true;
-    std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
+    //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
   }
 
   if ( hi > max || low < min ) {
