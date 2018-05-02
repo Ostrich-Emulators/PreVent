@@ -34,6 +34,8 @@ const std::string osname =
       "Linux";
 #elif __FreeBSD__
       "FreeBSD";
+#elif __CYGWIN__
+      "Cygwin";
 #else
       "Other";
 #endif
