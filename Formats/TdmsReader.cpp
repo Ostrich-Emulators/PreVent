@@ -75,12 +75,12 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
           int timeinc = 1024; // philips runs at 1.024s, or 1024 ms
           int freq = 0; // waves have an integer frequency
           auto propmap = ch->getProperties( );
-          if ( propmap.count( "wf_increment" ) > 0 ) {
-            timeinc = (int) ( std::stod( propmap.at( "wf_increment" ) )* 1000 );
-          }
+
+          bool iswave = ( propmap.count( "wf_increment" ) > 0 &&
+                ( std::stod( propmap.at( "wf_increment" ) ) * 1000 ) < 1024 );
 
           // figure out if this is a wave or a vital
-          std::unique_ptr<SignalData>& signal = ( timeinc < 1024
+          std::unique_ptr<SignalData>& signal = ( iswave
                 ? info.addWave( name )
                 : info.addVital( name ) );
 
@@ -157,8 +157,6 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                 }
 
                 if ( cnt == freq ) {
-                  time += timeinc;
-
                   if ( nancount != cnt ) {
                     // make sure we have some data!
 
@@ -187,6 +185,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                   cnt = 0;
                   nancount = 0;
                   seenFloat = false;
+                  time += timeinc;
                 }
 
                 cnt++;
@@ -217,8 +216,8 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                   vals << "," << SignalData::MISSING_VALUESTR;
                 }
 
-                time += timeinc;
                 signal->add( DataRow( time, vals.str( ) ) );
+                time += timeinc;
               }
             }
             else {
@@ -226,10 +225,11 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
               for ( auto& d : data ) {
                 if ( !isnan( d ) ) {
                   // check if our number ends in .000000...
-                  int dd = int( d );
-                  bool isint = ( 0 == ( d - dd ) );
+                  double intpart = 0;
+                  double mantissa = std::modf( d, &intpart );
+                  bool isint = ( 0 == mantissa );
                   if ( isint ) {
-                    signal->add( DataRow( time, std::to_string( dd ) ) );
+                    signal->add( DataRow( time, std::to_string( (int) intpart ) ) );
                   }
                   else {
                     signal->add( DataRow( time, std::to_string( d ) ) );

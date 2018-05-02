@@ -53,9 +53,9 @@ private:
   static void writeTimesAndDurationAttributes( H5::H5Location& loc,
         const dr_time& start, const dr_time& end );
   static void writeAttributes( H5::H5Location& ds, const SignalData& data );
-  void writeVital( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
+  void writeVital( H5::Group& group, SignalData& data );
   void writeVitalGroup( H5::Group& group, SignalData& data );
-  void writeWave( H5::DataSet& ds, H5::DataSpace& space, SignalData& data );
+  void writeWave( H5::Group& group, SignalData& data );
   void writeWaveGroup( H5::Group& group, SignalData& data );
   void writeTimes( H5::Group& group, SignalData& data );
   void writeGroupAttrs( H5::Group& group, SignalData& data );
