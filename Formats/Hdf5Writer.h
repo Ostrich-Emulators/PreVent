@@ -61,6 +61,7 @@ private:
   void writeGroupAttrs( H5::Group& group, SignalData& data );
   static void autochunk( hsize_t* dims, int rank, hsize_t* rslts );
   void createEventsAndTimes( H5::H5File, const SignalSet& data );
+  static std::string getDatasetName( const SignalData& data );
 
   /**
    * Rescale the data to fit in shorts

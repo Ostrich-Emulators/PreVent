@@ -37,7 +37,7 @@ Hdf5Writer::~Hdf5Writer( ) {
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-      const std::string& attr, const std::string& val ) {
+    const std::string& attr, const std::string& val ) {
   if ( !val.empty( ) ) {
     //std::cout << attr << ": " << val << std::endl;
 
@@ -50,28 +50,28 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-      const std::string& attr, int val ) {
+    const std::string& attr, int val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I32LE, space );
   attrib.write( H5::PredType::STD_I32LE, &val );
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-      const std::string& attr, dr_time val ) {
+    const std::string& attr, dr_time val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I64LE, space );
   attrib.write( H5::PredType::STD_I64LE, &val );
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-      const std::string& attr, double val ) {
+    const std::string& attr, double val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::IEEE_F64LE, space );
   attrib.write( H5::PredType::IEEE_F64LE, &val );
 }
 
 void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
-      const dr_time& start, const dr_time& end ) {
+    const dr_time& start, const dr_time& end ) {
   writeAttribute( loc, "Start Time", start );
   writeAttribute( loc, "End Time", end );
 
@@ -123,23 +123,44 @@ void Hdf5Writer::writeAttributes( H5::H5Location& ds, const SignalData& data ) {
   }
 }
 
+std::string Hdf5Writer::getDatasetName( const SignalData& data ) {
+  std::string name( data.name( ) );
+  std::map<std::string, std::string> replacements;
+  replacements["%"] = "perc";
+  replacements["("] = "_";
+  replacements[")"] = "_";
+  replacements["/"] = "_";
+
+  for ( auto&pr : replacements ) {
+    size_t pos = name.find( pr.first );
+    while ( std::string::npos != pos ) {
+      // Replace this occurrence of Sub String
+      name.replace( pos, pr.first.size(), pr.second );
+      // Get the next occurrence from the current position
+      pos = name.find( pr.first, pos + pr.first.size( ) );
+    }
+  }
+
+  return name;
+}
+
 void Hdf5Writer::writeFileAttributes( H5::H5File file,
-      std::map<std::string, std::string> datasetattrs,
-      const dr_time& firstTime, const dr_time& lastTime ) {
+    std::map<std::string, std::string> datasetattrs,
+    const dr_time& firstTime, const dr_time& lastTime ) {
 
   writeTimesAndDurationAttributes( file, firstTime, lastTime );
 
   for ( std::map<std::string, std::string>::const_iterator it = datasetattrs.begin( );
-        it != datasetattrs.end( ); ++it ) {
+      it != datasetattrs.end( ); ++it ) {
     //std::cout << "writing file attr: " << it->first << ": " << it->second << std::endl;
     writeAttribute( file, it->first, it->second );
   }
 
   writeAttribute( file, "Layout Version", LAYOUT_VERSION );
   writeAttribute( file, "HDF5 Version",
-        std::to_string( H5_VERS_MAJOR ) + "."
-        + std::to_string( H5_VERS_MINOR ) + "."
-        + std::to_string( H5_VERS_RELEASE ) );
+      std::to_string( H5_VERS_MAJOR ) + "."
+      + std::to_string( H5_VERS_MINOR ) + "."
+      + std::to_string( H5_VERS_RELEASE ) );
 }
 
 void Hdf5Writer::writeVital( H5::Group& group, SignalData& data ) {
@@ -171,7 +192,7 @@ void Hdf5Writer::writeVital( H5::Group& group, SignalData& data ) {
   }
 
   writeAttribute( ds, "Columns", cols );
-  
+
   const int rows = data.size( );
   const size_t exc = extras.size( );
   short buffer[rows * ( exc + 1 )] = { 0 };
@@ -222,12 +243,12 @@ void Hdf5Writer::writeWave( H5::Group& group, SignalData& data ) {
   H5::DataSet ds = group.createDataSet( "data", H5::PredType::STD_I16LE, space, props );
   writeAttributes( ds, data );
   writeAttribute( ds, "Columns", "scaled value" );
- 
-  
+
+
   const size_t rows = data.size( );
   const hsize_t maxslabcnt = ( rows * data.valuesPerDataRow( ) > 125000
-        ? 125000
-        : rows * data.valuesPerDataRow( ) );
+      ? 125000
+      : rows * data.valuesPerDataRow( ) );
   hsize_t offset[] = { 0, 0 };
   hsize_t count[] = { 0, 1 };
 
@@ -306,7 +327,7 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet& data ) 
     H5::DataSpace space( 2, dims );
 
     H5::DataSet ds = events.createDataSet( "Segment_Offsets",
-          H5::PredType::STD_I64LE, space );
+        H5::PredType::STD_I64LE, space );
     long long indexes[segmentsizes.size( ) * 2] = { 0 };
     int row = 0;
     for ( const auto& e : segmentsizes ) {
@@ -382,7 +403,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
       output( ) << "Skipping Vital: " << vits.first << "(no data)" << std::endl;
     }
     else {
-      H5::Group g = grp.createGroup( vits.first );
+      H5::Group g = grp.createGroup( getDatasetName( *vits.second ) );
       writeVitalGroup( g, *vits.second );
     }
   }
@@ -394,7 +415,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
       output( ) << "Skipping Wave: " << wavs.first << "(no data)" << std::endl;
     }
     else {
-      H5::Group g = grp.createGroup( wavs.first );
+      H5::Group g = grp.createGroup( getDatasetName( *wavs.second ) );
       writeWaveGroup( g, *wavs.second );
     }
   }
