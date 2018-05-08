@@ -57,6 +57,7 @@ private:
   bool v8;
   bool isphilips;
   bool isix;
+  bool warnedix;
 
   int state;
   std::string label;

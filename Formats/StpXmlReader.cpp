@@ -36,7 +36,7 @@ const int StpXmlReader::INNAME = 8;
 StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ), warnMissingName( true ),
 warnJunkData( true ), prevtime( 0 ), currvstime( 0 ), lastvstime( 0 ),
 currwavetime( 0 ), lastwavetime( 0 ), state( INDETERMINATE ), currsegidx( 0 ),
-v8( false ), isphilips( false ), isix( false ) {
+v8( false ), isphilips( false ), isix( false ), warnedix( false ) {
 }
 
 StpXmlReader::StpXmlReader( const StpXmlReader& orig ) : XmlReaderBase( orig ) {
@@ -118,10 +118,14 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     uom = attributes["UOM"];
     if ( v8 || isphilips ) {
       v8samplerate = std::stoi( attributes["SampleRate"] );
-      if ( isix && !v8 && v8samplerate <=16) {
+      if ( isix && !v8 && v8samplerate <= 16 ) {
         // for pre-v8 PhilipsIX inputs, we appear to always get 256 values,
         // but only for signals with SampleRate less than or equal to 16 
         v8samplerate = 256;
+        if ( !warnedix ) {
+          warnedix = true;
+          std::cerr << "Assuming 256 samples/sec from this Philips IX data" << std::endl;
+        }
       }
     }
   }
