@@ -117,11 +117,11 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     label = attributes[v8 || isphilips ? "Label" : "Channel"];
     uom = attributes["UOM"];
     if ( v8 || isphilips ) {
-      v8samplerate = attributes["SampleRate"];
-      if ( isix ) {
-        int ms = std::stoi( attributes["SamplePeriodInMsec"] );
-        int div = std::stoi( attributes["SampleRate"] );
-        v8samplerate = std::to_string( ms / div );
+      v8samplerate = std::stoi( attributes["SampleRate"] );
+      if ( isix && !v8 && v8samplerate <=16) {
+        // for pre-v8 PhilipsIX inputs, we appear to always get 256 values,
+        // but only for signals with SampleRate less than or equal to 16 
+        v8samplerate = 256;
       }
     }
   }
@@ -175,23 +175,27 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
     else if ( "VS" == element || "VitalSign" == element ) {
       bool added = false;
 
-      // v8 has a lot of stuff in value that isn't really a value
-      // so we need to check that we have a number here
-      try {
-        std::stof( value );
-        std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
+      // skip missing value marker for vitals
+      if ( SignalData::MISSING_VALUESTR != value ) {
 
-        if ( added ) {
-          sig->metad( )[SignalData::HERTZ] = ( isphilips ? 1.0 : 0.5 );
-          if ( !uom.empty( ) ) {
-            sig->setUom( uom );
+        // v8 has a lot of stuff in value that isn't really a value
+        // so we need to check that we have a number here
+        try {
+          std::stof( value );
+          std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
+
+          if ( added ) {
+            sig->metad( )[SignalData::HERTZ] = ( isphilips ? 1.0 : 0.5 );
+            if ( !uom.empty( ) ) {
+              sig->setUom( uom );
+            }
           }
+          sig->add( DataRow( datemod( currvstime ), value, "", "", attrs ) );
         }
-        sig->add( DataRow( datemod( currvstime ), value, "", "", attrs ) );
-      }
-      catch ( std::invalid_argument ) {
-        // don't really care since we're not adding the data to our dataset
-        // value = MISSING_VALUESTR;
+        catch ( std::invalid_argument ) {
+          // don't really care since we're not adding the data to our dataset
+          // value = MISSING_VALUESTR;
+        }
       }
     }
     else if ( "VitalSigns" == element ) {
@@ -211,7 +215,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
         // reverse the oversampling (if any) and set the true Hz
         int thz = 240;
         if ( v8 || isphilips ) {
-          thz = std::stoi( v8samplerate );
+          thz = v8samplerate;
         }
         else {
           if ( 0 != Hz60.count( label ) ) {
@@ -230,14 +234,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           std::unique_ptr<SignalData>& sig = filler->addWave( label, &first );
           if ( first ) {
             // Stp always reads in 1s increments for Philips, 2s for GE monitors
-            // for PhilipsIX, we appear to always get 256 values, regardless
-            // of what anything else says
-            if ( isix ) {
-              sig->setValuesPerDataRow( 256 );
-            }
-            else {
-              sig->setValuesPerDataRow( isphilips ? hz : 2 * hz );
-            }
+            sig->setValuesPerDataRow( isphilips ? hz : 2 * hz );
 
             if ( !uom.empty( ) ) {
               sig->setUom( uom );

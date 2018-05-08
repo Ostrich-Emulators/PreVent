@@ -62,7 +62,7 @@ private:
   std::string label;
   std::string value;
   std::string uom;
-  std::string v8samplerate;
+  int v8samplerate;
   std::map<std::string, std::string> attrs;
 };
 
