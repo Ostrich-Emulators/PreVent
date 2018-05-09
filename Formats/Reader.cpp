@@ -12,11 +12,11 @@
 #include <iostream>
 
 Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ),
-quiet( false ), anon( false ), onefile( false ) {
+quiet( false ), anon( false ), onefile( false ), local_time( false ) {
 }
 
-Reader::Reader( const Reader& ) : rdrname( "x" ), quiet( false ), anon( false ),
-onefile( false ) {
+Reader::Reader( const Reader& r ) : rdrname( "x" ), quiet( r.quiet ), anon( r.anon ),
+onefile( r.onefile ), local_time( r.local_time ) {
 
 }
 
@@ -66,7 +66,8 @@ int Reader::prepare( const std::string& input, SignalSet& info ) {
 
   info.setFileSupport( largefile );
   info.addMeta( "Source Reader", name( ) );
-
+  info.addMeta( SignalData::TIMEZONE, localizingTime( ) ? "local" : "UTC" );
+  
   return 0;
 }
 
@@ -100,6 +101,14 @@ void Reader::setNonbreaking( bool nb ) {
 
 bool Reader::nonbreaking( ) const {
   return onefile;
+}
+
+void Reader::localizeTime( bool local ) {
+  local_time = local;
+}
+
+bool Reader::localizingTime( ) const {
+  return local_time;
 }
 
 std::ostream& Reader::output( ) const {

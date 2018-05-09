@@ -59,7 +59,13 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
   else if ( "VitalSigns" == element ) {
     setstate( INVITAL );
     lastvstime = currvstime;
-    currvstime = time( attributes[0 == attributes.count( "CollectionTimeUTC" ) ? "Time" : "CollectionTimeUTC"] );
+    if ( 0 != attributes.count( "CollectionTimeUTC" ) ) {
+      currvstime = time( attributes["CollectionTimeUTC"] );
+    }
+    else {
+      currvstime = time( attributes[0 == attributes.count( "CollectionTime" ) ? "Time" : "CollectionTime"], true );
+    }
+
     if ( anonymizing( ) && isFirstRead( ) ) {
       setDateModifier( currvstime );
     }
@@ -77,7 +83,12 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
   else if ( "Waveforms" == element ) {
     setstate( INWAVE );
     lastwavetime = currwavetime;
-    currwavetime = time( attributes[0 == attributes.count( "CollectionTimeUTC" ) ? "Time" : "CollectionTimeUTC"] );
+    if ( 0 != attributes.count( "CollectionTimeUTC" ) ) {
+      currwavetime = time( attributes["CollectionTimeUTC"] );
+    }
+    else {
+      currwavetime = time( attributes[0 == attributes.count( "CollectionTime" ) ? "Time" : "CollectionTime"], true );
+    }
 
     if ( anonymizing( ) && isFirstRead( ) ) {
       setDateModifier( currvstime );
@@ -191,9 +202,17 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
 
           if ( added ) {
             sig->metad( )[SignalData::HERTZ] = ( isphilips ? 1.0 : 0.5 );
+
+            if( localizingTime() ){
+              time_t reftime = std::time( nullptr );
+              tm * reftm = localtime( &reftime );
+              sig->metas( )[SignalData::TIMEZONE] = reftm->tm_zone;
+            }
+            
             if ( !uom.empty( ) ) {
               sig->setUom( uom );
             }
+
           }
           sig->add( DataRow( datemod( currvstime ), value, "", "", attrs ) );
         }
@@ -240,7 +259,14 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           if ( first ) {
             // Stp always reads in 1s increments for Philips, 2s for GE monitors
             sig->setValuesPerDataRow( isphilips ? hz : 2 * hz );
+            sig->metad( )[SignalData::HERTZ] = hz;
+            if( localizingTime() ){
+              time_t reftime = std::time( nullptr );
+              tm * reftm = localtime( &reftime );
+              sig->metas( )[SignalData::TIMEZONE] = reftm->tm_zone;
+            }
 
+            
             if ( !uom.empty( ) ) {
               sig->setUom( uom );
             }
@@ -248,9 +274,9 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
             if ( 0 != attrs.count( "Cal" ) ) {
               sig->metas( )["Cal"] = attrs["Cal"];
             }
+
           }
 
-          sig->metad( )[SignalData::HERTZ] = hz;
           sig->add( DataRow( datemod( currwavetime ), wavepoints, "", "", attrs ) );
         }
         else if ( warnJunkData ) {

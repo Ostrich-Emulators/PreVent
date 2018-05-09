@@ -34,6 +34,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
         << std::endl << "\t-e or --export <vital/wave to export>"
         << std::endl << "\t-s or --sqlite <db file>"
         << std::endl << "\t-q or --quiet"
+        << std::endl << "\t-l or --localtime"
         << std::endl << "\t-p or --pattern <naming pattern>"
         << std::endl << "\t-n or --no-break or --one-file"
         << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
@@ -72,6 +73,7 @@ struct option longopts[] = {
   { "no-break", no_argument, NULL, 'n' },
   { "one-file", no_argument, NULL, 'n' },
   { "pattern", required_argument, NULL, 'p' },
+  { "localtime", no_argument, NULL, 'l' },
   { 0, 0, 0, 0 }
 };
 
@@ -87,9 +89,10 @@ int main( int argc, char** argv ) {
   bool anonymize = false;
   bool quiet = false;
   bool nobreak = false;
+  bool localtime = false;
   int compression = Writer::DEFAULT_COMPRESSION;
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qan", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -114,6 +117,9 @@ int main( int argc, char** argv ) {
         break;
       case 'a':
         anonymize = true;
+        break;
+      case 'l':
+        localtime = true;
         break;
       case 'n':
         nobreak = true;
@@ -203,6 +209,7 @@ int main( int argc, char** argv ) {
     from->setQuiet( quiet );
     from->setAnonymous( anonymize );
     from->setNonbreaking( nobreak );
+    from->localizeTime( localtime );
 
     if ( !exp.empty( ) ) {
       from->extractOnly( exp );

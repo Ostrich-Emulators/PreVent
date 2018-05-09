@@ -68,6 +68,8 @@ public:
   void setAnonymous( bool anon = true );
   void setNonbreaking( bool nb = false );
   bool anonymizing( ) const;
+  void localizeTime( bool local = true );
+  bool localizingTime( ) const;
 
 protected:
   Reader( const Reader& );
@@ -85,8 +87,8 @@ protected:
    */
   bool shouldExtract( const std::string& vitalOrWave ) const;
 
-  bool nonbreaking() const;
-  
+  bool nonbreaking( ) const;
+
   std::ostream& output( ) const;
 private:
 
@@ -96,6 +98,7 @@ private:
   bool quiet;
   bool anon;
   bool onefile;
+  bool local_time;
   std::stringstream ss;
 
 };

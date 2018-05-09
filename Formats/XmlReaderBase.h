@@ -36,7 +36,7 @@ public:
   virtual ~XmlReaderBase( );
 
   virtual int prepare( const std::string& input, SignalSet& info ) override;
-  virtual ReadResult fill( SignalSet & info, const ReadResult& lastfill  = ReadResult::FIRST_READ ) override;
+  virtual ReadResult fill( SignalSet & info, const ReadResult& lastfill = ReadResult::FIRST_READ ) override;
   virtual void finish( ) override;
 
 protected:
@@ -61,7 +61,13 @@ protected:
   virtual void end( const std::string& element, const std::string& text ) = 0;
   virtual void comment( const std::string& text ) = 0;
 
-  dr_time time( const std::string& val ) const;
+  /**
+   * Converts the given time string to a UTC time
+   * @param val
+   * @param valIsLocal is the string given in val localtime or already in UTC?
+   * @return UTC time
+   */
+  dr_time time( const std::string& val, bool valIsLocal = false ) const;
   bool isRollover( const dr_time& now, const dr_time& then ) const;
   void startSaving( );
   void setResult( ReadResult rslt );
