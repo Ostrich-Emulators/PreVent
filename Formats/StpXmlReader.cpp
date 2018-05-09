@@ -114,6 +114,7 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     }
   }
   else if ( "WaveformData" == element ) {
+    attrs = attributes;
     label = attributes[v8 || isphilips ? "Label" : "Channel"];
     uom = attributes["UOM"];
     if ( v8 || isphilips ) {
@@ -242,6 +243,10 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
 
             if ( !uom.empty( ) ) {
               sig->setUom( uom );
+            }
+
+            if ( 0 != attrs.count( "Cal" ) ) {
+              sig->metas( )["Cal"] = attrs["Cal"];
             }
           }
 
