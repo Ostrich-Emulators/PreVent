@@ -135,7 +135,7 @@ std::string Hdf5Writer::getDatasetName( const SignalData& data ) {
     size_t pos = name.find( pr.first );
     while ( std::string::npos != pos ) {
       // Replace this occurrence of Sub String
-      name.replace( pos, pr.first.size(), pr.second );
+      name.replace( pos, pr.first.size( ), pr.second );
       // Get the next occurrence from the current position
       pos = name.find( pr.first, pos + pr.first.size( ) );
     }
@@ -180,7 +180,7 @@ void Hdf5Writer::writeVital( H5::Group& group, SignalData& data ) {
   }
 
   if ( rescaleForShortsIfNeeded( data ) ) {
-    std::cerr << std::endl << "  coercing out-of-range numbers (possible loss of precision)";
+    std::cerr << std::endl << " coercing out-of-range numbers (possible loss of precision)";
   }
 
   H5::DataSet ds = group.createDataSet( "data", H5::PredType::STD_I16LE, space, props );
@@ -494,6 +494,17 @@ void Hdf5Writer::writeWaveGroup( H5::Group& group, SignalData& data ) {
 
 void Hdf5Writer::writeTimes( H5::Group& group, SignalData& data ) {
   std::vector<dr_time> times( data.times( ).rbegin( ), data.times( ).rend( ) );
+
+  if ( dataptr->metadata( )[SignalData::TIMEZONE] != "UTC" ) {
+    // convert all the (UTC) times to localtime
+    time_t ref = time( nullptr );
+    tm * reftime = localtime( &ref );
+    long offset = reftime->tm_gmtoff * 1000; // offset in millis
+
+    for ( size_t i = 0; i < times.size( ); i++ ) {
+      times[i] += offset;
+    }
+  }
 
   hsize_t dims[] = { times.size( ), 1 };
   H5::DataSpace space( 2, dims );
