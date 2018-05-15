@@ -13,11 +13,16 @@
 
 Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ),
 quiet( false ), anon( false ), onefile( false ), local_time( false ) {
+  // figure out a string for our timezone by getting a reference time
+  time_t reftime = std::time( nullptr );
+  tm * reftm = localtime( &reftime );
+  gmt_offset = reftm->tm_gmtoff;
+  timezone = std::string( reftm->tm_zone );
 }
 
 Reader::Reader( const Reader& r ) : rdrname( "x" ), quiet( r.quiet ), anon( r.anon ),
-onefile( r.onefile ), local_time( r.local_time ) {
-
+onefile( r.onefile ), local_time( r.local_time ), gmt_offset( r.gmt_offset ),
+timezone( r.timezone ) {
 }
 
 Reader::~Reader( ) {
@@ -66,10 +71,21 @@ int Reader::prepare( const std::string& input, SignalSet& info ) {
 
   info.setFileSupport( largefile );
   info.addMeta( "Source Reader", name( ) );
-  info.addMeta( SignalData::TIMEZONE, localizingTime( ) ? "local" : "UTC" );
-  
+
+  // figure out a string for our timezone by getting a reference time
+  info.addMeta( SignalData::TIMEZONE, localizingTime( ) ? tz_name() : "UTC" );
+
   return 0;
 }
+
+int Reader::tz_offset() const{
+  return gmt_offset;
+}
+
+const std::string& Reader::tz_name() const {
+  return timezone;
+}
+
 
 void Reader::finish( ) {
   ss.clear( );

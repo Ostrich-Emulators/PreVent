@@ -87,11 +87,11 @@ void XmlReaderBase::chars( void * data, const char * text, int len ) {
 std::string XmlReaderBase::trim( std::string & totrim ) {
   // ltrim
   totrim.erase( totrim.begin( ), std::find_if( totrim.begin( ), totrim.end( ),
-        std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
+      std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
 
   // rtrim
   totrim.erase( std::find_if( totrim.rbegin( ), totrim.rend( ),
-        std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
+      std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
 
   return totrim;
 }
@@ -105,7 +105,7 @@ void XmlReaderBase::startSaving( ) {
 void XmlReaderBase::setResult( ReadResult rslt ) {
   // if we're not breaking our output, then ignore End of Day and End of Patient
   if ( nonbreaking( ) &&
-        ( ReadResult::END_OF_DAY == rslt || ReadResult::END_OF_PATIENT == rslt ) ) {
+      ( ReadResult::END_OF_DAY == rslt || ReadResult::END_OF_PATIENT == rslt ) ) {
     return;
   }
   this->rslt = rslt;
@@ -191,9 +191,9 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
     if ( status != XML_STATUS_OK ) {
       XML_Error err = XML_GetErrorCode( parser );
       std::cerr << XML_ErrorString( err )
-            << " line: " << XML_GetCurrentLineNumber( parser )
-            << " column: " << XML_GetCurrentColumnNumber( parser )
-            << std::endl;
+          << " line: " << XML_GetCurrentLineNumber( parser )
+          << " column: " << XML_GetCurrentColumnNumber( parser )
+          << std::endl;
       return ReadResult::ERROR;
     }
     if ( ReadResult::NORMAL != rslt ) {
@@ -231,16 +231,17 @@ bool XmlReaderBase::isRollover( const dr_time& then, const dr_time& now ) const 
 
 dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal ) const {
   if ( std::string::npos == timer.find( " " )
-        && std::string::npos == timer.find( "T" ) ) {
+      && std::string::npos == timer.find( "T" ) ) {
     // no space and no T---we must have a unix timestamp
     // and we believe Stp saves unix timestamps in UTC always
+    // (regardless of valIsLocal)
     return std::stol( timer ) * 1000;
   }
 
   // we have a local time that we need to convert
   std::string format = ( std::string::npos == timer.find( "T" )
-        ? "%m/%d/%Y %I:%M:%S %p" // STPXML time string 
-        : "%Y-%m-%dT%H:%M:%S" ); // CPC time string
+      ? "%m/%d/%Y %I:%M:%S %p" // STPXML time string
+      : "%Y-%m-%dT%H:%M:%S" ); // CPC time string
 
   tm mytime = { 0, };
   strptime( timer.c_str( ), format.c_str( ), &mytime );
@@ -248,12 +249,8 @@ dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal ) const {
 
   // now convert our local time to UTC
   if ( valIsLocal ) {
-    // get a reference time so we can figure out our timezone
-    time_t reftime = std::time( nullptr );
-    tm * reftm = localtime( &reftime );
-
-    mytime.tm_zone = reftm->tm_zone;
-    mytime.tm_gmtoff = reftm->tm_gmtoff;
+    mytime.tm_zone = tz_name( ).c_str( );
+    mytime.tm_gmtoff = tz_offset( );
 
     time_t local = mktime( &mytime );
     mytime = *gmtime( &local );
