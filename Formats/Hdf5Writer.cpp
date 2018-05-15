@@ -72,19 +72,35 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 
 void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
     const dr_time& start, const dr_time& end ) {
-  writeAttribute( loc, "Start Time", start );
-  writeAttribute( loc, "End Time", end );
 
-  char buf[sizeof "2011-10-08T07:07:09Z"];
   time_t stime = start / 1000;
   time_t etime = end / 1000;
-  strftime( buf, sizeof buf, "%FT%TZ", gmtime( &stime ) );
+  if ( dataptr->metadata( )[SignalData::TIMEZONE] != "UTC" ) {
+    writeAttribute( loc, "Start Time", start + tz_offset( ) );
+    writeAttribute( loc, "End Time", end + tz_offset( ) );
 
-  writeAttribute( loc, "Start Date/Time", buf );
-  buf[sizeof "2011-10-08T07:07:09Z"];
-  strftime( buf, sizeof buf, "%FT%TZ", gmtime( &etime ) );
-  writeAttribute( loc, "End Date/Time", buf );
+    stime += tz_offset( );
+    etime += tz_offset( );
+    char buf[sizeof "2011-10-08T07:07:09"];
+    strftime( buf, sizeof buf, "%FT%T", gmtime( &stime ) );
 
+    writeAttribute( loc, "Start Date/Time", buf );
+    buf[sizeof "2011-10-08T07:07:09"];
+    strftime( buf, sizeof buf, "%FT%T", gmtime( &etime ) );
+    writeAttribute( loc, "End Date/Time", buf );
+  }
+  else {
+    writeAttribute( loc, "Start Time", start );
+    writeAttribute( loc, "End Time", end );
+
+    char buf[sizeof "2011-10-08T07:07:09Z"];
+    strftime( buf, sizeof buf, "%FT%TZ", gmtime( &stime ) );
+
+    writeAttribute( loc, "Start Date/Time", buf );
+    buf[sizeof "2011-10-08T07:07:09Z"];
+    strftime( buf, sizeof buf, "%FT%TZ", gmtime( &etime ) );
+    writeAttribute( loc, "End Date/Time", buf );
+  }
   time_t xx( etime - stime );
   tm * t = gmtime( &xx );
 
@@ -497,9 +513,7 @@ void Hdf5Writer::writeTimes( H5::Group& group, SignalData& data ) {
 
   if ( dataptr->metadata( )[SignalData::TIMEZONE] != "UTC" ) {
     // convert all the (UTC) times to localtime
-    time_t ref = time( nullptr );
-    tm * reftime = localtime( &ref );
-    long offset = reftime->tm_gmtoff * 1000; // offset in millis
+    long offset = tz_offset( ) * 1000; // offset in millis
 
     for ( size_t i = 0; i < times.size( ); i++ ) {
       times[i] += offset;

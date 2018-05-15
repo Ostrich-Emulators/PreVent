@@ -86,7 +86,6 @@ const std::string& Reader::tz_name() const {
   return timezone;
 }
 
-
 void Reader::finish( ) {
   ss.clear( );
 }
