@@ -399,7 +399,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     return ret;
   }
 
-  std::string outy = filenamer( ).filename( data, ret.size( ) );
+  std::string outy = filenamer( ).filename( data );
   if ( data.vitals( ).empty( ) && data.waves( ).empty( ) ) {
     std::cerr << "Nothing to write to " << outy << std::endl;
     return ret;

@@ -12,12 +12,11 @@
 const std::string FileNamer::DEFAULT_PATTERN = "%d%i-p%p-%s.%t";
 const std::string FileNamer::FILENAME_PATTERN = "%d%i.%t";
 
-FileNamer::FileNamer( const std::string& pat ) : pattern( pat ), patientnum( -1 ) {
+FileNamer::FileNamer( const std::string& pat ) : pattern( pat ) {
 }
 
 FileNamer::FileNamer( const FileNamer& orig ) : pattern( orig.pattern ),
-patientnum( orig.patientnum ), conversions( orig.conversions.begin( ), orig.conversions.end( ) ),
-lastname( orig.lastname ) {
+conversions( orig.conversions.begin( ), orig.conversions.end( ) ), lastname( orig.lastname ) {
 }
 
 FileNamer::~FileNamer( ) {
@@ -26,7 +25,6 @@ FileNamer::~FileNamer( ) {
 FileNamer& FileNamer::operator=(const FileNamer& orig ) {
   if ( this != &orig ) {
     pattern = orig.pattern;
-    patientnum = orig.patientnum;
     conversions.clear( );
     conversions.insert( orig.conversions.begin( ), orig.conversions.end( ) );
     lastname = orig.lastname;
@@ -58,17 +56,16 @@ void FileNamer::inputfilename( const std::string& inny ) {
   }
 }
 
-std::string FileNamer::filenameNoExt( const SignalSet& data, int outputnum ) {
+std::string FileNamer::filenameNoExt( const SignalSet& data ) {
   // for now, always the same thing
   const size_t pos = lastname.rfind( "." );
   return lastname.substr( 0, pos );
 }
 
-std::string FileNamer::filename( const SignalSet& data, int outputnum ) {
+std::string FileNamer::filename( const SignalSet& data ) {
   // we need to have data for all the conversion keys in here
 
   conversions["%s"] = getDateSuffix( data.earliest( ), "" );
-  conversions["%o"] = std::to_string( outputnum );
 
   lastname = pattern;
   const std::string replacements[] = {
@@ -102,14 +99,19 @@ std::string FileNamer::filename( ) {
 
 std::string FileNamer::filenameNoExt( ) {
   // for now, always the same thing
-  lastname = conversions["%d"] + dirsep + conversions["%i"]
-        + ( patientnum > 0 ? "-p" + std::to_string( patientnum ) : "" );
+  if ( 0 == conversions.count( "%p" ) ) {
+    conversions["%p"] = 1;
+  }
+  lastname = conversions["%d"] + dirsep + conversions["%i"] + conversions["%p"];
   return lastname;
 }
 
 void FileNamer::patientOrdinal( int patient ) {
-  patientnum = patient;
   conversions["%p"] = std::to_string( patient );
+}
+
+void FileNamer::fileOrdinal( int fnum ) {
+  conversions["%o"] = std::to_string( fnum );
 }
 
 void FileNamer::outputdir( const std::string& out ) {

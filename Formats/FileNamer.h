@@ -36,6 +36,7 @@ public:
   std::string outputdir() const;
   void tofmt( const std::string& ext );
   void patientOrdinal( int patientnum );
+  void fileOrdinal( int filenum );
   void inputfilename( const std::string& input );
 
   /**
@@ -45,7 +46,7 @@ public:
    * @param outputnum
    * @return
    */
-  std::string filename( const SignalSet& data, int outputnum = -1 );
+  std::string filename( const SignalSet& data );
 
   /**
    * Gets a filename (including directory) without an extension (or the preceding .)
@@ -53,7 +54,7 @@ public:
    * @param outputnum
    * @return
    */
-  std::string filenameNoExt( const SignalSet& data, int outputnum = -1 );
+  std::string filenameNoExt( const SignalSet& data );
   /**
    * Gets a filename (including directory) based on whatever information we
    * already have. Some conversions cannot be performed with this function,
@@ -73,7 +74,6 @@ public:
 
 private:
   FileNamer( const std::string& pat );
-  int patientnum;
   std::string pattern;
   std::map<std::string, std::string> conversions;
   std::string lastname;

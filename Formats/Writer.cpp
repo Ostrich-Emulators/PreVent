@@ -78,7 +78,7 @@ FileNamer& Writer::filenamer( ) const {
 }
 
 std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
-    SignalSet& data ) {
+      SignalSet& data ) {
   int patientno = 1;
 
   output( ) << "init data set" << std::endl;
@@ -93,8 +93,10 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
   output( ) << "filling data" << std::endl;
   ReadResult retcode = from->fill( data );
 
+  int files = 0;
   while ( retcode != ReadResult::ERROR ) {
     drain( data );
+    namer->fileOrdinal( files++ );
 
     if ( ReadResult::END_OF_DAY == retcode || ReadResult::END_OF_PATIENT == retcode ) {
       std::vector<std::string> files = closeDataSet( );
@@ -157,7 +159,7 @@ void Writer::addListener( std::shared_ptr<ConversionListener> l ) {
   listeners.push_back( l );
 }
 
-class NullBuffer : public std::streambuf{
+class NullBuffer : public std::streambuf {
 public:
 
   int overflow( int c ) {
