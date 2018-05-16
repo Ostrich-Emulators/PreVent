@@ -19,11 +19,17 @@ const int Writer::DEFAULT_COMPRESSION = 6;
 Writer::Writer( const std::string& ext ) : bequiet( false ), extension( ext ),
 compress( DEFAULT_COMPRESSION ),
 namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
+  // figure out a string for our timezone by getting a reference time
+  time_t reftime = std::time( nullptr );
+  tm * reftm = localtime( &reftime );
+  gmt_offset = reftm->tm_gmtoff;
+  timezone = std::string( reftm->tm_zone );
 }
 
 Writer::Writer( const Writer& w ) : bequiet( false ), extension( w.extension ),
 compress( DEFAULT_COMPRESSION ),
-namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
+namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ),
+gmt_offset( w.gmt_offset ), timezone( w.timezone ) {
 }
 
 Writer::~Writer( ) {
@@ -172,4 +178,12 @@ void Writer::filenamer( const FileNamer& p ) {
 
 std::ostream& Writer::output( ) const {
   return ( bequiet ? ( std::ostream& ) ss : std::cout );
+}
+
+int Writer::tz_offset( ) const {
+  return gmt_offset;
+}
+
+const std::string& Writer::tz_name( ) const {
+  return timezone;
 }

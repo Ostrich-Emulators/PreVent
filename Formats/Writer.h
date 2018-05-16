@@ -60,6 +60,9 @@ protected:
    */
   virtual int drain( SignalSet& info ) = 0;
 
+  int tz_offset() const;
+  const std::string& tz_name() const;
+
 private:
   Writer( const Writer& );
 
@@ -69,7 +72,8 @@ private:
   std::stringstream ss;
   std::unique_ptr<FileNamer> namer;
   const std::string extension; // filename extension
-
+  int gmt_offset;
+  std::string timezone;
 };
 
 #endif /* WRITER_H */

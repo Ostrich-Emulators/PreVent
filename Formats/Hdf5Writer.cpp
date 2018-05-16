@@ -72,19 +72,35 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 
 void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
     const dr_time& start, const dr_time& end ) {
-  writeAttribute( loc, "Start Time", start );
-  writeAttribute( loc, "End Time", end );
 
-  char buf[sizeof "2011-10-08T07:07:09Z"];
   time_t stime = start / 1000;
   time_t etime = end / 1000;
-  strftime( buf, sizeof buf, "%FT%TZ", gmtime( &stime ) );
+  if ( dataptr->metadata( )[SignalData::TIMEZONE] != "UTC" ) {
+    writeAttribute( loc, "Start Time", start + tz_offset( ) );
+    writeAttribute( loc, "End Time", end + tz_offset( ) );
 
-  writeAttribute( loc, "Start Date/Time", buf );
-  buf[sizeof "2011-10-08T07:07:09Z"];
-  strftime( buf, sizeof buf, "%FT%TZ", gmtime( &etime ) );
-  writeAttribute( loc, "End Date/Time", buf );
+    stime += tz_offset( );
+    etime += tz_offset( );
+    char buf[sizeof "2011-10-08T07:07:09"];
+    strftime( buf, sizeof buf, "%FT%T", gmtime( &stime ) );
 
+    writeAttribute( loc, "Start Date/Time", buf );
+    buf[sizeof "2011-10-08T07:07:09"];
+    strftime( buf, sizeof buf, "%FT%T", gmtime( &etime ) );
+    writeAttribute( loc, "End Date/Time", buf );
+  }
+  else {
+    writeAttribute( loc, "Start Time", start );
+    writeAttribute( loc, "End Time", end );
+
+    char buf[sizeof "2011-10-08T07:07:09Z"];
+    strftime( buf, sizeof buf, "%FT%TZ", gmtime( &stime ) );
+
+    writeAttribute( loc, "Start Date/Time", buf );
+    buf[sizeof "2011-10-08T07:07:09Z"];
+    strftime( buf, sizeof buf, "%FT%TZ", gmtime( &etime ) );
+    writeAttribute( loc, "End Date/Time", buf );
+  }
   time_t xx( etime - stime );
   tm * t = gmtime( &xx );
 
@@ -135,7 +151,7 @@ std::string Hdf5Writer::getDatasetName( const SignalData& data ) {
     size_t pos = name.find( pr.first );
     while ( std::string::npos != pos ) {
       // Replace this occurrence of Sub String
-      name.replace( pos, pr.first.size(), pr.second );
+      name.replace( pos, pr.first.size( ), pr.second );
       // Get the next occurrence from the current position
       pos = name.find( pr.first, pos + pr.first.size( ) );
     }
@@ -180,7 +196,7 @@ void Hdf5Writer::writeVital( H5::Group& group, SignalData& data ) {
   }
 
   if ( rescaleForShortsIfNeeded( data ) ) {
-    std::cerr << std::endl << "  coercing out-of-range numbers (possible loss of precision)";
+    std::cerr << std::endl << " coercing out-of-range numbers (possible loss of precision)";
   }
 
   H5::DataSet ds = group.createDataSet( "data", H5::PredType::STD_I16LE, space, props );
@@ -494,6 +510,15 @@ void Hdf5Writer::writeWaveGroup( H5::Group& group, SignalData& data ) {
 
 void Hdf5Writer::writeTimes( H5::Group& group, SignalData& data ) {
   std::vector<dr_time> times( data.times( ).rbegin( ), data.times( ).rend( ) );
+
+  if ( dataptr->metadata( )[SignalData::TIMEZONE] != "UTC" ) {
+    // convert all the (UTC) times to localtime
+    long offset = tz_offset( ) * 1000; // offset in millis
+
+    for ( size_t i = 0; i < times.size( ); i++ ) {
+      times[i] += offset;
+    }
+  }
 
   hsize_t dims[] = { times.size( ), 1 };
   H5::DataSpace space( 2, dims );
