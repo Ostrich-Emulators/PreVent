@@ -74,6 +74,7 @@ struct option longopts[] = {
   { "one-file", no_argument, NULL, 'n' },
   { "pattern", required_argument, NULL, 'p' },
   { "localtime", no_argument, NULL, 'l' },
+  { "local", no_argument, NULL, 'l' },
   { 0, 0, 0, 0 }
 };
 
