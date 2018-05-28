@@ -103,7 +103,7 @@ std::string FileNamer::filename( ) {
 std::string FileNamer::filenameNoExt( ) {
   // for now, always the same thing
   lastname = conversions["%d"] + dirsep + conversions["%i"]
-        + ( patientnum > 0 ? "-p" + std::to_string( patientnum ) : "" );
+      + ( patientnum > 0 ? "-p" + std::to_string( patientnum ) : "" );
   return lastname;
 }
 
@@ -141,10 +141,22 @@ std::string FileNamer::last( ) const {
 }
 
 std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& sep ) {
-  std::string test = sep + "YYYYMMDD";
-  char recsuffix[sizeof test];
-  const std::string pattern = sep + "%Y%m%d";
   time_t mytime = date / 1000;
-  std::strftime( recsuffix, sizeof recsuffix, pattern.c_str( ), gmtime( &mytime ) );
-  return std::string( recsuffix );
+  tm * dater = std::gmtime( &mytime );
+  // we want YYYYMMDD format, but cygwin seems to misinterpret %m for strftime
+  // so we're doing it manually (for now)
+  std::string ret = sep;
+  ret += std::to_string( dater->tm_year + 1900 );
+
+  if ( dater->tm_mon < 10 ) {
+    ret += '0';
+  }
+  ret += std::to_string( dater->tm_mon );
+
+  if ( dater->tm_mday < 10 ) {
+    ret += '0';
+  }
+  ret += std::to_string( dater->tm_mday );
+
+  return ret;
 }
