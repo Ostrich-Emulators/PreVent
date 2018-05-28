@@ -56,7 +56,7 @@ public:
   virtual const std::map<std::string, std::string>& metas( ) const override;
   virtual const std::map<std::string, int>& metai( ) const override;
   virtual const std::map<std::string, double>& metad( ) const override;
-  virtual const std::deque<dr_time>& times( ) const override;
+  virtual const std::deque<dr_time> times( long offset_ms = 0 ) const override;
   virtual std::vector<std::string> extras( ) const override;
 
 private:

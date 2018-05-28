@@ -48,7 +48,13 @@ public:
   virtual const dr_time& startTime( ) const = 0;
   virtual const dr_time& endTime( ) const = 0;
   virtual const std::string& name( ) const = 0;
-  virtual const std::deque<dr_time>& times( ) const = 0;
+  /**
+   * Gets the dr_times for this dataset.
+   * @param offset_ms apply this offset (in ms) to every time (like for different timezones)
+   *
+   * @return
+   */
+  virtual const std::deque<dr_time> times( long offset_ms = 0 ) const = 0;
 
   virtual std::unique_ptr<DataRow> pop( ) = 0;
   virtual void setWave( bool wave = false ) = 0;

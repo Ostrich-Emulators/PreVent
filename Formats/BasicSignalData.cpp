@@ -243,6 +243,13 @@ int BasicSignalData::uncache( int max ) {
   return loop;
 }
 
-const std::deque<dr_time>& BasicSignalData::times( ) const {
-  return dates;
+const std::deque<dr_time> BasicSignalData::times( long offset ) const {
+  std::deque<dr_time> ret;
+  //ret.resize( dates.size( ) );
+  for ( auto t : dates ) {
+    dr_time tt = t + offset;
+    ret.push_back( tt );
+  }
+
+  return ret;
 }

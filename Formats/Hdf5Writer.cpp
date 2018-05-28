@@ -25,7 +25,7 @@
 #include "FileNamer.h"
 #include "H5public.h"
 
-const std::string Hdf5Writer::LAYOUT_VERSION = "3.0";
+const std::string Hdf5Writer::LAYOUT_VERSION = "3.0.1";
 
 Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
 }
@@ -333,9 +333,6 @@ void Hdf5Writer::autochunk( hsize_t* dims, int rank, hsize_t* rslts ) {
 
 void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet& data ) {
   H5::Group events = file.createGroup( "Events" );
-  //H5::Group grp = file.createGroup( "Times" );
-  //H5::Group wavetimes = grp.createGroup( "Waveforms" );
-  //H5::Group vittimes = grp.createGroup( "VitalSigns" );
 
   std::map<long, dr_time> segmentsizes = data.offsets( );
   if ( !segmentsizes.empty( ) ) {
@@ -355,32 +352,50 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet& data ) 
     writeAttribute( ds, "Columns", "timestamp, segment offset" );
   }
 
-  //  for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {
-  //    // output() << "writing times for " << m->name( ) << std::endl;
-  //    std::vector<dr_time> times( m->times( ).rbegin( ), m->times( ).rend( ) );
-  //
-  //    H5::Group * mygrp = ( m->wave( ) ? &wavetimes : &vittimes );
-  //
-  //    if ( m->wave( ) ) {
-  //      std::vector<dr_time> alltimes;
-  //      alltimes.reserve( times.size( ) );
-  //
-  //      for ( auto& t : times ) {
-  //        alltimes.push_back( t );
-  //      }
-  //      times = alltimes;
-  //    }
-  //
-  //    hsize_t dims[] = { times.size( ), 1 };
-  //    H5::DataSpace space( 2, dims );
-  //
-  //    H5::DataSet ds = mygrp->createDataSet( m->name( ).c_str( ),
-  //            H5::PredType::STD_I64LE, space );
-  //    ds.write( &times[0], H5::PredType::STD_I64LE );
-  //    writeAttribute( ds, "Time Source", "raw" );
-  //    writeAttribute( ds, "Columns", "timestamp" );
-  //    //writeAttribute( ds, SignalData::VALS_PER_DR, m->valuesPerDataRow( ) );
-  //  }
+  // we want "sort of unique" global times. That is, if a time is duplicated
+  // in a signal, we want duplicates in our time list. However, if two signals
+  // have the same time, we don't want duplicates
+
+  // our algorithm: keep a running count of each signal's time occurences.
+  // after each signal, merge them with our "true" timecounter. Basically, if
+  // timecounter and signalcounter agree, then don't change timecounter.
+  // if signalcounter is greater than timecounter, update timecounter
+  std::map<dr_time, int> timecounter;
+  for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {
+    std::map<dr_time, int> sigcounter;
+    for ( auto& dr : m->times( tz_offset( ) * 1000 ) ) {
+      sigcounter[dr] = ( 0 == sigcounter.count( dr ) ? 1 : sigcounter[dr] + 1 );
+    }
+
+    for ( auto& it : sigcounter ) {
+      if ( 0 == timecounter.count( it.first ) ) {
+        timecounter[it.first] = it.second;
+      }
+      else if ( timecounter[it.first] < sigcounter[it.first] ) {
+        timecounter[it.first] = sigcounter[it.first];
+      }
+    }
+  }
+
+  // convert our map to a vector with the appropriate duplicates
+  std::vector<dr_time> alltimes;
+  alltimes.reserve( timecounter.size( ) );
+
+  for ( auto it = timecounter.begin( ); it != timecounter.end( ); it++ ) {
+    for ( int i = 0; i < it->second; i++ ) {
+      alltimes.push_back( it->first );
+    }
+  }
+
+  // now we can make our dataset
+  hsize_t dims[] = { alltimes.size( ), 1 };
+  H5::DataSpace space( 2, dims );
+
+  H5::DataSet ds = events.createDataSet( "Global_Times",
+      H5::PredType::STD_I64LE, space );
+  ds.write( &alltimes[0], H5::PredType::STD_I64LE );
+  writeAttribute( ds, "Columns", "timestamp (ms)" );
+  writeAttribute( ds, SignalData::TIMEZONE, data.metadata( ).at( SignalData::TIMEZONE ) );
 }
 
 int Hdf5Writer::drain( SignalSet& info ) {
@@ -509,16 +524,8 @@ void Hdf5Writer::writeWaveGroup( H5::Group& group, SignalData& data ) {
 }
 
 void Hdf5Writer::writeTimes( H5::Group& group, SignalData& data ) {
-  std::vector<dr_time> times( data.times( ).rbegin( ), data.times( ).rend( ) );
-
-  if ( dataptr->metadata( )[SignalData::TIMEZONE] != "UTC" ) {
-    // convert all the (UTC) times to localtime
-    long offset = tz_offset( ) * 1000; // offset in millis
-
-    for ( size_t i = 0; i < times.size( ); i++ ) {
-      times[i] += offset;
-    }
-  }
+  std::deque<dr_time> vec = data.times( tz_offset( ) * 1000 );
+  std::vector<dr_time> times( vec.rbegin( ), vec.rend( ) );
 
   hsize_t dims[] = { times.size( ), 1 };
   H5::DataSpace space( 2, dims );
@@ -527,5 +534,6 @@ void Hdf5Writer::writeTimes( H5::Group& group, SignalData& data ) {
   ds.write( &times[0], H5::PredType::STD_I64LE );
   writeAttribute( ds, "Time Source", "raw" );
   writeAttribute( ds, "Columns", "timestamp (ms)" );
+  writeAttribute( ds, SignalData::TIMEZONE, data.metas( )[SignalData::TIMEZONE] );
   // writeAttribute( ds, SignalData::VALS_PER_DR, data.valuesPerDataRow( ) );
 }

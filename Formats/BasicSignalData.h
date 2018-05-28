@@ -44,7 +44,7 @@ public:
   virtual void setWave( bool wave = false ) override;
   virtual bool wave( ) const override;
 
-  virtual const std::deque<dr_time>& times( ) const override;
+  virtual const std::deque<dr_time> times( long offset_ms = 0 ) const override;
 
   virtual double highwater( ) const override;
   virtual double lowwater( ) const override;

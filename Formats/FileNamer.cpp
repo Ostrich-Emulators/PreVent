@@ -150,10 +150,10 @@ std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& se
   std::string ret = sep;
   ret += std::to_string( dater->tm_year + 1900 );
 
-  if ( dater->tm_mon < 10 ) {
+  if ( dater->tm_mon + 1 < 10 ) {
     ret += '0';
   }
-  ret += std::to_string( dater->tm_mon );
+  ret += std::to_string( dater->tm_mon + 1 );
 
   if ( dater->tm_mday < 10 ) {
     ret += '0';
