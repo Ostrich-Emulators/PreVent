@@ -203,17 +203,18 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           if ( added ) {
             sig->metad( )[SignalData::HERTZ] = ( isphilips ? 1.0 : 0.5 );
 
-            if( localizingTime() ){
+            if ( localizingTime( ) ) {
               time_t reftime = std::time( nullptr );
               tm * reftm = localtime( &reftime );
               sig->metas( )[SignalData::TIMEZONE] = reftm->tm_zone;
             }
-            
+
             if ( !uom.empty( ) ) {
               sig->setUom( uom );
             }
 
           }
+          
           sig->add( DataRow( datemod( currvstime ), value, "", "", attrs ) );
         }
         catch ( std::invalid_argument ) {
@@ -260,13 +261,13 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
             // Stp always reads in 1s increments for Philips, 2s for GE monitors
             sig->setValuesPerDataRow( isphilips ? hz : 2 * hz );
             sig->metad( )[SignalData::HERTZ] = hz;
-            if( localizingTime() ){
+            if ( localizingTime( ) ) {
               time_t reftime = std::time( nullptr );
               tm * reftm = localtime( &reftime );
               sig->metas( )[SignalData::TIMEZONE] = reftm->tm_zone;
             }
 
-            
+
             if ( !uom.empty( ) ) {
               sig->setUom( uom );
             }

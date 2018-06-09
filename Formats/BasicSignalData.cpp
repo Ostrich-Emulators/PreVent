@@ -143,7 +143,7 @@ void BasicSignalData::cache( ) {
 
 void BasicSignalData::add( const DataRow& row ) {
   datacount++;
-
+  
   if ( NULL != file && data.size( ) >= CACHE_LIMIT ) {
     // copy current data list to disk
     cache( );
@@ -158,7 +158,7 @@ void BasicSignalData::add( const DataRow& row ) {
 
   if ( !row.extras.empty( ) ) {
     for ( const auto& x : row.extras ) {
-      extras( ).push_back( x.first );
+      extras( x.first );
     }
   }
 

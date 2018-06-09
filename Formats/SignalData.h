@@ -89,6 +89,8 @@ public:
   virtual void scale( int scaling );
   virtual bool empty( ) const;
 
+  void extras( const std::string& ext );
+  
 private:
   std::map<std::string, std::string> metadatas;
   std::map<std::string, int> metadatai;

@@ -185,6 +185,7 @@ void Hdf5Writer::writeVital( H5::Group& group, SignalData& data ) {
   // 2: write data
   std::vector<std::string> extras = data.extras( );
   hsize_t sz = data.size( );
+
   hsize_t dims[] = { sz, 1 + extras.size( ) };
   H5::DataSpace space( 2, dims );
   H5::DSetCreatPropList props;

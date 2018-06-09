@@ -41,7 +41,8 @@ SignalData::SignalData( ) {
 }
 
 SignalData::SignalData( const SignalData& orig ) : metadatas( orig.metadatas ),
-metadatai( orig.metadatai ), metadatad( orig.metadatad ) {
+metadatai( orig.metadatai ), metadatad( orig.metadatad ),
+extrafields( orig.extrafields.begin( ), orig.extrafields.end( ) ) {
 }
 
 void SignalData::moveDataTo( std::unique_ptr<SignalData>& dest ) {
@@ -78,12 +79,16 @@ const std::map<std::string, double>& SignalData::metad( ) const {
 
 double SignalData::hz( ) const {
   return ( 0 == metadatad.count( SignalData::HERTZ )
-      ? 1
-      : metadatad.at( SignalData::HERTZ ) );
+        ? 1
+        : metadatad.at( SignalData::HERTZ ) );
 }
 
 std::vector<std::string> SignalData::extras( ) const {
   return std::vector<std::string>( extrafields.begin( ), extrafields.end( ) );
+}
+
+void SignalData::extras( const std::string& ext ){
+  extrafields.insert(ext);
 }
 
 bool SignalData::empty( ) const {
@@ -126,4 +131,8 @@ void SignalData::setMetadataFrom( const SignalData& model ) {
 
   metadatad.clear( );
   metadatad.insert( model.metad( ).begin( ), model.metad( ).end( ) );
+
+  extrafields.clear( );
+  std::vector<std::string> vec = model.extras( );
+  extrafields.insert( vec.begin( ), vec.end( ) );
 }

@@ -75,6 +75,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
           int timeinc = 1024; // philips runs at 1.024s, or 1024 ms
           int freq = 0; // waves have an integer frequency
           auto propmap = ch->getProperties( );
+          bool doDoubleValues = false;
 
           bool iswave = ( propmap.count( "wf_increment" ) > 0 &&
                 ( std::stod( propmap.at( "wf_increment" ) ) * 1000 ) < 1024 );
@@ -103,9 +104,23 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             }
             else if ( "Frequency" == p.first ) {
               double f = std::stod( p.second );
+
               signal->metad( )[SignalData::HERTZ] = f;
               if ( f > 1 ) { // wave!
-                signal->setValuesPerDataRow( (int) f );
+                double intpart;
+                double fraction = std::modf( f, &intpart );
+                if ( 0 == fraction ) {
+                  signal->setValuesPerDataRow( (int) f );
+                }
+                else {
+                  std::cout << "doubling freqency for " << name << std::endl;
+                  // if the Frequency is 62.5, double all values
+                  // so we can say it's 125
+                  doDoubleValues = true;
+                  signal->setValuesPerDataRow( freq );
+                  freq = (int) ( f * 2 );
+                  signal->metad( )[SignalData::HERTZ] = freq;
+                }
                 freq = std::stoi( p.second );
               }
             }
@@ -145,6 +160,9 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
               for ( auto& d : data ) {
                 bool nan = isnan( d );
                 doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
+                if ( doDoubleValues ) {
+                  doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
+                }
 
                 if ( nan ) {
                   nancount++;
