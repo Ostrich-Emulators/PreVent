@@ -126,8 +126,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             }
           }
 
-          signal->metai( )[SignalData::CHUNK_INTERVAL_MS] = timeinc;
-          signal->metai( )[SignalData::READINGS_PER_CHUNK] = freq;
+          signal->setChunkIntervalAndSampleRate(timeinc, freq);
 
           unsigned int type = ch->getDataType( );
           std::vector<double> data = ch->getDataVector( );
