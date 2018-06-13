@@ -19,23 +19,26 @@
 #include <string>
 #include <TdmsParser.h>
 
+class SignalData;
 
 class TdmsReader : public Reader {
 public:
-	TdmsReader( );
-	virtual ~TdmsReader( );
+  TdmsReader( );
+  virtual ~TdmsReader( );
 
 protected:
-	int prepare( const std::string& input, SignalSet& info ) override;
-	void finish( ) override;
+  int prepare( const std::string& input, SignalSet& info ) override;
+  void finish( ) override;
 
-	ReadResult fill( SignalSet& data, const ReadResult& lastfill ) override;
-	size_t getSize( const std::string& input ) const override;
+  ReadResult fill( SignalSet& data, const ReadResult& lastfill ) override;
+  size_t getSize( const std::string& input ) const override;
 
 private:
   std::unique_ptr<TdmsParser> parser;
-  
+
   static dr_time parsetime( const std::string& timestr );
+  bool writeWaveChunkAndReset( int& count, int& nancount, std::vector<double>& doubles,
+        bool& seenFloat, std::unique_ptr<SignalData>& signal, dr_time& time, int timeinc );
 };
 
 #endif /* WFDBREADER_H */

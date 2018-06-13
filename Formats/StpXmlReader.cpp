@@ -264,7 +264,14 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           std::unique_ptr<SignalData>& sig = filler->addWave( label, &first );
           if ( first ) {
             if ( v8 ) {
-              sig->setChunkIntervalAndSampleRate( std::stoi( attrs.at( "SamplePeriodInMsec" ) ), v8samplerate );
+
+              int interval = std::stoi( attrs.at( "SamplePeriodInMsec" ) );
+              int reads = v8samplerate;
+              if ( !isphilips ) {
+                interval *= 2;
+                reads *= 2;
+              }
+              sig->setChunkIntervalAndSampleRate( interval, reads );
             }
             else {
               // Stp always reads in 1024ms increments for Philips, 2s for GE monitors
@@ -288,7 +295,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
 
           }
 
-          sig->add( DataRow( datemod( currwavetime ), wavepoints, "", "", attrs ) );
+          sig->add( DataRow( datemod( currwavetime ), wavepoints, "", "" ) );
         }
         else if ( warnJunkData ) {
           warnJunkData = false;

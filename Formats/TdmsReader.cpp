@@ -78,12 +78,12 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
           bool doDoubleValues = false;
 
           bool iswave = ( propmap.count( "wf_increment" ) > 0 &&
-                  ( std::stod( propmap.at( "wf_increment" ) ) * 1000 ) < 1024 );
+                ( std::stod( propmap.at( "wf_increment" ) ) * 1000 ) < 1024 );
 
           // figure out if this is a wave or a vital
           std::unique_ptr<SignalData>& signal = ( iswave
-                  ? info.addWave( name )
-                  : info.addVital( name ) );
+                ? info.addWave( name )
+                : info.addVital( name ) );
 
           string unit = ch->getUnit( );
           if ( !unit.empty( ) ) {
@@ -117,8 +117,9 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                   // so we can say it's 125
                   doDoubleValues = true;
                   freq = (int) ( f * 2 );
+
+                  signal->metas( )["Notes"] = "The sampling values have been doubled to correct non-integer sample rate";
                 }
-                freq = std::stoi( p.second );
               }
             }
             else {
@@ -126,14 +127,14 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             }
           }
 
-          signal->setChunkIntervalAndSampleRate(timeinc, freq);
+          signal->setChunkIntervalAndSampleRate( timeinc, freq );
 
           unsigned int type = ch->getDataType( );
           std::vector<double> data = ch->getDataVector( );
           if ( type == TdmsChannel::tdsTypeComplexSingleFloat
-                  || type == TdmsChannel::tdsTypeComplexDoubleFloat ) {
+                || type == TdmsChannel::tdsTypeComplexDoubleFloat ) {
             std::cerr << "WARNING: complex data types are not yet supported"
-                    << std::endl;
+                  << std::endl;
             //            std::vector<double> imData = ch->getImaginaryDataVector( );
             //            double iVal1 = imData.front( ), iVal2 = imData.back( );
             //            std::string fmt = ":\n\t%g";
@@ -159,9 +160,7 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
               for ( auto& d : data ) {
                 bool nan = isnan( d );
                 doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
-                if ( doDoubleValues ) {
-                  doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
-                }
+                cnt++;
 
                 if ( nan ) {
                   nancount++;
@@ -174,38 +173,32 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
                 }
 
                 if ( cnt == freq ) {
-                  if ( nancount != cnt ) {
-                    // make sure we have some data!
-
-                    std::stringstream vals;
-                    if ( seenFloat ) {
-                      // tdms file seems to use 3 decimal places for everything
-                      // so make sure we don't have extra 0s running around
-                      vals << std::setprecision( 3 ) << std::fixed;
-                    }
-
-                    vals << doubles[0];
-                    for ( int i = 1; i < cnt; i++ ) {
-                      vals << ",";
-                      if ( SignalData::MISSING_VALUE == doubles[i] ) {
-                        vals << SignalData::MISSING_VALUESTR;
-                      }
-                      else {
-                        vals << doubles[i];
-                      }
-                    }
-
-                    //output( ) << vals.str( ) << std::endl;
-                    signal->add( DataRow( time, vals.str( ) ) );
-                  }
-                  doubles.clear( );
-                  cnt = 0;
-                  nancount = 0;
-                  seenFloat = false;
-                  time += timeinc;
+                  writeWaveChunkAndReset( cnt, nancount, doubles, seenFloat,
+                        signal, time, timeinc );
                 }
 
-                cnt++;
+                // if we're doubling values, we need to do the whole thing again
+                // because we don't know if we started with one extra value,
+                // or finished with one.
+                if ( doDoubleValues ) {
+                  doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
+                  cnt++;
+
+                  if ( nan ) {
+                    nancount++;
+                  }
+                  else {
+                    double fraction = std::modf( d, &intpart );
+                    if ( 0 != fraction ) {
+                      seenFloat = true;
+                    }
+                  }
+
+                  if ( cnt == freq ) {
+                    writeWaveChunkAndReset( cnt, nancount, doubles, seenFloat,
+                          signal, time, timeinc );
+                  }
+                }
               }
 
               if ( 0 != cnt && nancount != cnt ) {
@@ -281,6 +274,42 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
 
   // doesn't look like Tdms can do incremental reads, so we're at the end
   return ( 0 <= retcode ? ReadResult::END_OF_FILE : ReadResult::ERROR );
+}
+
+bool TdmsReader::writeWaveChunkAndReset( int& count, int& nancount, std::vector<double>& doubles,
+      bool& seenFloat, std::unique_ptr<SignalData>& signal, dr_time& time, int timeinc ) {
+
+  // make sure we have some data!
+  if ( nancount != count ) {
+    std::stringstream vals;
+    if ( seenFloat ) {
+      // tdms file seems to use 3 decimal places for everything
+      // so make sure we don't have extra 0s running around
+      vals << std::setprecision( 3 ) << std::fixed;
+    }
+
+    vals << doubles[0];
+    for ( int i = 1; i < count; i++ ) {
+      vals << ",";
+      if ( SignalData::MISSING_VALUE == doubles[i] ) {
+        vals << SignalData::MISSING_VALUESTR;
+      }
+      else {
+        vals << doubles[i];
+      }
+    }
+
+    //output( ) << vals.str( ) << std::endl;
+    signal->add( DataRow( time, vals.str( ) ) );
+  }
+
+  doubles.clear( );
+  count = 0;
+  nancount = 0;
+  seenFloat = false;
+  time += timeinc;
+
+  return true;
 }
 
 size_t TdmsReader::getSize( const std::string & input ) const {
