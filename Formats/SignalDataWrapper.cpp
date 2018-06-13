@@ -58,12 +58,12 @@ const std::string& SignalDataWrapper::name( ) const {
   return signal->name( );
 }
 
-void SignalDataWrapper::setValuesPerDataRow( int vpr ) {
-  signal->setValuesPerDataRow( vpr );
+void SignalDataWrapper::setChunkIntervalAndSampleRate( int chunk_ms, int sr ) {
+  signal->setChunkIntervalAndSampleRate( chunk_ms, sr );
 }
 
-int SignalDataWrapper::valuesPerDataRow( ) const {
-  return signal->valuesPerDataRow( );
+int SignalDataWrapper::readingsPerSample( ) const {
+  return signal->readingsPerSample( );
 }
 
 void SignalDataWrapper::setMetadataFrom( const SignalData& model ) {
@@ -118,10 +118,10 @@ std::vector<std::string> SignalDataWrapper::extras( ) const {
   return signal->extras( );
 }
 
-double SignalDataWrapper::highwater() const {
-  return signal->highwater();
+double SignalDataWrapper::highwater( ) const {
+  return signal->highwater( );
 }
 
-double SignalDataWrapper::lowwater() const {
-  return signal->lowwater();
+double SignalDataWrapper::lowwater( ) const {
+  return signal->lowwater( );
 }

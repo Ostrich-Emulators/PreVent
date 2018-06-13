@@ -184,7 +184,7 @@ void StpJsonReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
 
       if ( added ) {
         dataset->setUom( uom );
-        dataset->metad( )[SignalData::HERTZ] = 0.5;
+        dataset->setChunkIntervalAndSampleRate( 2000, 1 );
       }
       dataset->add( DataRow( currentTime, val, high, low ) );
     }
@@ -203,9 +203,8 @@ void StpJsonReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       points >> wavename >> uom >> val;
 
       if ( first ) {
-        dataset->metad( )[SignalData::HERTZ] = 240;
+        dataset->setChunkIntervalAndSampleRate( 2000, 480 );
         dataset->setUom( uom );
-        dataset->setValuesPerDataRow( 480 );
       }
 
       dataset->add( DataRow( currentTime, val ) );

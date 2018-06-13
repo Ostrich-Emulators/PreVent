@@ -28,14 +28,17 @@ class DataRow;
 
 class SignalData {
 public:
-  static const std::string HERTZ;
   static const std::string SCALE;
   static const std::string UOM;
   static const std::string MSM;
   static const std::string TIMEZONE;
-  static const std::string VALS_PER_DR;
   static const std::string LABEL;
+  
+  static const std::string CHUNK_INTERVAL_MS;
+  static const std::string READINGS_PER_CHUNK;
+  
   static const std::string MISSING_VALUESTR;
+  
   static const short MISSING_VALUE;
 
   SignalData( );
@@ -84,8 +87,8 @@ public:
   virtual const std::map<std::string, int>& metai( ) const;
   virtual const std::map<std::string, double>& metad( ) const;
   virtual std::vector<std::string> extras( ) const;
-  virtual void setValuesPerDataRow( int );
-  virtual int valuesPerDataRow( ) const;
+  virtual int readingsPerSample( ) const;  
+  virtual void setChunkIntervalAndSampleRate( int chunktime_ms, int samplerate );
   virtual void scale( int scaling );
   virtual bool empty( ) const;
 

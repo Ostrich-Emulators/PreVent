@@ -78,12 +78,12 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
           bool doDoubleValues = false;
 
           bool iswave = ( propmap.count( "wf_increment" ) > 0 &&
-                ( std::stod( propmap.at( "wf_increment" ) ) * 1000 ) < 1024 );
+                  ( std::stod( propmap.at( "wf_increment" ) ) * 1000 ) < 1024 );
 
           // figure out if this is a wave or a vital
           std::unique_ptr<SignalData>& signal = ( iswave
-                ? info.addWave( name )
-                : info.addVital( name ) );
+                  ? info.addWave( name )
+                  : info.addVital( name ) );
 
           string unit = ch->getUnit( );
           if ( !unit.empty( ) ) {
@@ -105,21 +105,18 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             else if ( "Frequency" == p.first ) {
               double f = std::stod( p.second );
 
-              signal->metad( )[SignalData::HERTZ] = f;
               if ( f > 1 ) { // wave!
                 double intpart;
                 double fraction = std::modf( f, &intpart );
                 if ( 0 == fraction ) {
-                  signal->setValuesPerDataRow( (int) f );
+                  freq = (int) f;
                 }
                 else {
-                  std::cout << "doubling freqency for " << name << std::endl;
+                  output( ) << "doubling freqency for " << name << std::endl;
                   // if the Frequency is 62.5, double all values
                   // so we can say it's 125
                   doDoubleValues = true;
-                  signal->setValuesPerDataRow( freq );
                   freq = (int) ( f * 2 );
-                  signal->metad( )[SignalData::HERTZ] = freq;
                 }
                 freq = std::stoi( p.second );
               }
@@ -129,12 +126,15 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
             }
           }
 
+          signal->metai( )[SignalData::CHUNK_INTERVAL_MS] = timeinc;
+          signal->metai( )[SignalData::READINGS_PER_CHUNK] = freq;
+
           unsigned int type = ch->getDataType( );
           std::vector<double> data = ch->getDataVector( );
           if ( type == TdmsChannel::tdsTypeComplexSingleFloat
-                || type == TdmsChannel::tdsTypeComplexDoubleFloat ) {
+                  || type == TdmsChannel::tdsTypeComplexDoubleFloat ) {
             std::cerr << "WARNING: complex data types are not yet supported"
-                  << std::endl;
+                    << std::endl;
             //            std::vector<double> imData = ch->getImaginaryDataVector( );
             //            double iVal1 = imData.front( ), iVal2 = imData.back( );
             //            std::string fmt = ":\n\t%g";

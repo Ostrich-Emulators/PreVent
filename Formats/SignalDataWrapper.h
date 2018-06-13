@@ -38,8 +38,8 @@ public:
   virtual const dr_time& startTime( ) const override;
   virtual const dr_time& endTime( ) const override;
   virtual const std::string& name( ) const override;
-  virtual void setValuesPerDataRow( int ) override;
-  virtual int valuesPerDataRow( ) const override;
+  virtual int readingsPerSample( ) const override;
+  virtual void setChunkIntervalAndSampleRate( int chunk_ms, int sr ) override;
   virtual void setMetadataFrom( const SignalData& model ) override;
 
   virtual double highwater( ) const override;

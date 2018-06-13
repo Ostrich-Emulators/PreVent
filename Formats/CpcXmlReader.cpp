@@ -46,7 +46,7 @@ void CpcXmlReader::comment( const std::string& text ) {
 }
 
 void CpcXmlReader::start( const std::string& element,
-      std::map<std::string, std::string>& attrs ) {
+        std::map<std::string, std::string>& attrs ) {
   if ( "cpc" == element ) {
     lasttime = currtime;
 
@@ -106,8 +106,7 @@ void CpcXmlReader::end( const std::string& element, const std::string& text ) {
     std::unique_ptr<SignalData>& signal = filler->addWave( label, &added );
     signal->add( DataRow( currtime, vals ) );
     if ( added ) {
-      signal->metad( )[SignalData::HERTZ] = wavehz;
-      signal->metai( )[SignalData::VALS_PER_DR] = valsperdr;
+      signal->setChunkIntervalAndSampleRate( 2000, valsperdr );
       signal->metad( )["Gain"] = gain;
     }
 
@@ -140,7 +139,7 @@ void CpcXmlReader::end( const std::string& element, const std::string& text ) {
       signal->add( DataRow( currtime, text ) );
 
       if ( added ) {
-        signal->metad( )[SignalData::HERTZ] = 0.5;
+        signal->setChunkIntervalAndSampleRate( 2000, 1 );
       }
       label.clear( );
     }

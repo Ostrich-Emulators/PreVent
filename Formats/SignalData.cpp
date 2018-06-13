@@ -22,19 +22,21 @@
 #include <limits>
 #include <queue>
 
-const std::string SignalData::HERTZ = "Sample Frequency (Hz)";
 const std::string SignalData::SCALE = "Scale";
 const std::string SignalData::UOM = "Unit of Measure";
 const std::string SignalData::MSM = "Missing Value Marker";
 const std::string SignalData::TIMEZONE = "Timezone";
-const std::string SignalData::VALS_PER_DR = "Readings Per Time";
+
+const std::string SignalData::CHUNK_INTERVAL_MS = "Sample Period (ms)";
+const std::string SignalData::READINGS_PER_CHUNK = "Readings Per Sample";
+
 const std::string SignalData::LABEL = "Data Label";
 const short SignalData::MISSING_VALUE = -32768;
 const std::string SignalData::MISSING_VALUESTR = std::to_string( SignalData::MISSING_VALUE );
 
 SignalData::SignalData( ) {
   scale( 1 );
-  setValuesPerDataRow( 1 );
+  setChunkIntervalAndSampleRate( 2000, 1 );
   setUom( "Uncalib" );
   metadatai[SignalData::MSM] = SignalData::MISSING_VALUE;
   metadatas[SignalData::TIMEZONE] = "UTC";
@@ -78,17 +80,16 @@ const std::map<std::string, double>& SignalData::metad( ) const {
 }
 
 double SignalData::hz( ) const {
-  return ( 0 == metadatad.count( SignalData::HERTZ )
-        ? 1
-        : metadatad.at( SignalData::HERTZ ) );
+  double ratio = 1000.0 / (double) metadatai.at( SignalData::CHUNK_INTERVAL_MS );
+  return ratio * (double)metadatai.at( SignalData::READINGS_PER_CHUNK );
 }
 
 std::vector<std::string> SignalData::extras( ) const {
   return std::vector<std::string>( extrafields.begin( ), extrafields.end( ) );
 }
 
-void SignalData::extras( const std::string& ext ){
-  extrafields.insert(ext);
+void SignalData::extras( const std::string& ext ) {
+  extrafields.insert( ext );
 }
 
 bool SignalData::empty( ) const {
@@ -114,12 +115,13 @@ void SignalData::scale( int x ) {
   metadatai[SCALE] = x;
 }
 
-void SignalData::setValuesPerDataRow( int x ) {
-  metadatai[VALS_PER_DR] = x;
+int SignalData::readingsPerSample( ) const {
+  return metadatai.at( READINGS_PER_CHUNK );
 }
 
-int SignalData::valuesPerDataRow( ) const {
-  return metadatai.at( VALS_PER_DR );
+void SignalData::setChunkIntervalAndSampleRate( int chunktime_ms, int samplerate ) {
+  metadatai[CHUNK_INTERVAL_MS] = chunktime_ms;
+  metadatai[READINGS_PER_CHUNK] = samplerate;
 }
 
 void SignalData::setMetadataFrom( const SignalData& model ) {

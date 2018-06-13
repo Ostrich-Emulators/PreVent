@@ -201,7 +201,12 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
 
           if ( added ) {
-            sig->metad( )[SignalData::HERTZ] = ( isphilips ? 1.0 : 0.5 );
+            output( ) << "vital: " << label << std::endl;
+            sig->setChunkIntervalAndSampleRate( ( isphilips ? 1024 : 2000 ), 1 );
+
+            for ( auto x : sig->metad( ) ) {
+              output( ) << x.first << ":=>" << x.second << std::endl;
+            }
 
             if ( localizingTime( ) ) {
               time_t reftime = std::time( nullptr );
@@ -214,7 +219,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
             }
 
           }
-          
+
           sig->add( DataRow( datemod( currvstime ), value, "", "", attrs ) );
         }
         catch ( std::invalid_argument ) {
@@ -258,9 +263,14 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           bool first;
           std::unique_ptr<SignalData>& sig = filler->addWave( label, &first );
           if ( first ) {
-            // Stp always reads in 1s increments for Philips, 2s for GE monitors
-            sig->setValuesPerDataRow( isphilips ? hz : 2 * hz );
-            sig->metad( )[SignalData::HERTZ] = hz;
+            if ( v8 ) {
+              sig->setChunkIntervalAndSampleRate( std::stoi( attrs.at( "SamplePeriodInMsec" ) ), v8samplerate );
+            }
+            else {
+              // Stp always reads in 1024ms increments for Philips, 2s for GE monitors
+              sig->setChunkIntervalAndSampleRate( ( isphilips ? 1024 : 2000 ), ( isphilips ? hz : 2 * hz ) );
+            }
+
             if ( localizingTime( ) ) {
               time_t reftime = std::time( nullptr );
               tm * reftm = localtime( &reftime );
@@ -287,6 +297,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
       }
     }
     else if ( "WaveformData" == element ) {
+
       setstate( INDETERMINATE );
     }
   }
@@ -300,6 +311,7 @@ void StpXmlReader::comment( const std::string& text ) {
     std::string versiontxt = text.substr( pos + 8 );
     int ver = std::stof( versiontxt );
     if ( ver >= 8.0 ) {
+
       v8 = true;
     }
   }

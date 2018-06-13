@@ -74,10 +74,10 @@ int WfdbReader::prepare( const std::string& recordset, SignalSet& info ) {
 
     for ( int i = 0; i < sigcount; i++ ) {
       std::unique_ptr<SignalData>& dataset = ( iswave
-          ? info.addWave( siginfo[i].desc )
-          : info.addVital( siginfo[i].desc ) );
+              ? info.addWave( siginfo[i].desc )
+              : info.addVital( siginfo[i].desc ) );
 
-      dataset->metad( )[SignalData::HERTZ] = freqhz;
+      dataset->setChunkIntervalAndSampleRate( 1000, freqhz );
 
       if ( NULL != siginfo[i].units ) {
         dataset->setUom( siginfo[i].units );
@@ -119,8 +119,8 @@ ReadResult WfdbReader::fill( SignalSet& info, const ReadResult& ) {
         lasttime = timet;
 
         std::unique_ptr<SignalData>& dataset = ( iswave
-            ? info.addWave( siginfo[j].desc )
-            : info.addVital( siginfo[j].desc ) );
+                ? info.addWave( siginfo[j].desc )
+                : info.addVital( siginfo[j].desc ) );
 
         if ( !currents[j].data.empty( ) ) {
           // don't add a row on the very first loop through
@@ -145,8 +145,8 @@ ReadResult WfdbReader::fill( SignalSet& info, const ReadResult& ) {
   // now add our last data point
   for ( int j = 0; j < sigcount; j++ ) {
     std::unique_ptr<SignalData>& dataset = ( iswave
-        ? info.addWave( siginfo[j].desc )
-        : info.addVital( siginfo[j].desc ) );
+            ? info.addWave( siginfo[j].desc )
+            : info.addVital( siginfo[j].desc ) );
 
     currents[j].time = lasttime;
     dataset->add( currents[j] );

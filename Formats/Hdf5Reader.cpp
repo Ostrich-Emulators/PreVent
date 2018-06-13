@@ -14,7 +14,7 @@
 const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
   "Start Date/Time", "End Time", "Start Time", SignalData::SCALE, SignalData::MSM,
   "Layout Version", "HDF5 Version",
-  "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader", SignalData::VALS_PER_DR } );
+  "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader" } );
 
 Hdf5Reader::Hdf5Reader( ) : Reader( "HDF5" ) {
 
@@ -98,21 +98,21 @@ std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet& dataset ) const {
 }
 
 void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
-      const bool& iswave, SignalSet& info ) const {
+        const bool& iswave, SignalSet& info ) const {
   std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
 
   std::unique_ptr<SignalData>& signal = ( iswave
-        ? info.addWave( name )
-        : info.addVital( name ) );
-  int valsPerTime = 1;
-  if ( dataAndTimeGroup.attrExists( SignalData::VALS_PER_DR ) ) {
-    valsPerTime = metaint( dataAndTimeGroup, SignalData::VALS_PER_DR );
-    signal->setValuesPerDataRow( valsPerTime );
+          ? info.addWave( name )
+          : info.addVital( name ) );
+  int timeinterval = 2000;
+  if ( dataAndTimeGroup.attrExists( SignalData::CHUNK_INTERVAL_MS ) ) {
+    timeinterval = metaint( dataAndTimeGroup, SignalData::CHUNK_INTERVAL_MS );
+    signal->metai()[SignalData::CHUNK_INTERVAL_MS] = timeinterval;
   }
-
-  if ( dataAndTimeGroup.attrExists( SignalData::HERTZ ) ) {
-    double freq = std::stof( metastr( dataAndTimeGroup, SignalData::HERTZ ) );
-    signal->metad( )[SignalData::HERTZ] = freq;
+  int valsPerChunk = 1;
+  if ( dataAndTimeGroup.attrExists( SignalData::READINGS_PER_CHUNK ) ) {
+    valsPerChunk = metaint( dataAndTimeGroup, SignalData::READINGS_PER_CHUNK );
+    signal->metai()[SignalData::READINGS_PER_CHUNK] = valsPerChunk;
   }
 
   H5::DataSet dataset = dataAndTimeGroup.openDataSet( "data" );
@@ -141,16 +141,16 @@ void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
   ds.close( );
 
   if ( iswave ) {
-    fillWave( signal, dataset, times, valsPerTime, scale );
+    fillWave( signal, dataset, times, timeinterval, scale );
   }
   else {
-    fillVital( signal, dataset, times, valsPerTime, scale );
+    fillVital( signal, dataset, times, timeinterval, scale );
   }
   dataset.close( );
 }
 
 void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-      const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
+        const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
   dataspace.getSimpleExtentDims( DIMS );
@@ -189,7 +189,7 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
 }
 
 void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-      const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
+        const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
   dataspace.getSimpleExtentDims( DIMS );
@@ -240,7 +240,7 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
 }
 
 void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
-      H5::DataSet& dataset ) const {
+        H5::DataSet& dataset ) const {
   hsize_t cnt = dataset.getNumAttrs( );
 
   for ( int i = 0; i < cnt; i++ ) {
@@ -313,7 +313,6 @@ std::string Hdf5Reader::metastr( const H5::Attribute& attr ) const {
 
 std::string Hdf5Reader::upgradeMetaKey( const std::string& oldkey ) const {
   std::map<std::string, std::string> updates;
-  updates["Sample Frequency"] = SignalData::HERTZ;
-
+  //updates["Sample Frequency"] = SignalData::HERTZ;
   return ( 0 == updates.count( oldkey ) ? oldkey : updates[oldkey] );
 }

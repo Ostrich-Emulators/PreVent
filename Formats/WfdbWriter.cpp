@@ -123,7 +123,7 @@ void WfdbWriter::syncAndWrite( double freq, std::vector<std::unique_ptr<SignalDa
 
   const auto& first = ( olddata.begin( )->get( ) );
   if ( first->wave( ) ) {
-    int ifrq = ( olddata.begin( ) )->get( )->valuesPerDataRow( );
+    int ifrq = ( olddata.begin( ) )->get( )->readingsPerSample( );
 
     // waveforms
 
