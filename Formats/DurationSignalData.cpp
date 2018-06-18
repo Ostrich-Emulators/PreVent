@@ -8,8 +8,8 @@
 #include "DataRow.h"
 #include "DurationSpecification.h"
 
-DurationSignalData::DurationSignalData( std::unique_ptr<SignalData> data, const DurationSpecification& dur )
-: SignalDataWrapper( std::move( data ) ), spec( dur ) {
+DurationSignalData::DurationSignalData( SignalData * data, const DurationSpecification& dur )
+: SignalDataWrapper( data ), spec( dur ) {
 }
 
 DurationSignalData::~DurationSignalData( ) {

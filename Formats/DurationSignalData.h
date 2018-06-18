@@ -26,7 +26,7 @@ class DurationSpecification;
  */
 class DurationSignalData : public SignalDataWrapper {
 public:
-  DurationSignalData( std::unique_ptr<SignalData> data, const DurationSpecification& spec);
+  DurationSignalData( SignalData * data, const DurationSpecification& spec);
   virtual ~DurationSignalData();
 
   virtual void add(const DataRow& row) override;

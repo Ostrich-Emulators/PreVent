@@ -16,6 +16,11 @@
         <itemPath>XmlReaderBase.h</itemPath>
         <itemPath>ZlReader.h</itemPath>
       </logicalFolder>
+      <logicalFolder name="f3" displayName="SignalData" projectFiles="true">
+        <itemPath>BasicSignalData.h</itemPath>
+        <itemPath>DurationSignalData.h</itemPath>
+        <itemPath>SignalDataWrapper.h</itemPath>
+      </logicalFolder>
       <logicalFolder name="f2" displayName="Writers" projectFiles="true">
         <itemPath>CsvWriter.h</itemPath>
         <itemPath>Hdf5Writer.h</itemPath>
@@ -25,16 +30,13 @@
         <itemPath>json.hpp</itemPath>
       </logicalFolder>
       <itemPath>Base64.h</itemPath>
-      <itemPath>BasicSignalData.h</itemPath>
       <itemPath>ConversionListener.h</itemPath>
       <itemPath>DataRow.h</itemPath>
-      <itemPath>DurationSignalData.h</itemPath>
       <itemPath>DurationSpecification.h</itemPath>
       <itemPath>FileNamer.h</itemPath>
       <itemPath>Formats.h</itemPath>
       <itemPath>Reader.h</itemPath>
       <itemPath>SignalData.h</itemPath>
-      <itemPath>SignalDataWrapper.h</itemPath>
       <itemPath>SignalSet.h</itemPath>
       <itemPath>SignalUtils.h</itemPath>
       <itemPath>Writer.h</itemPath>
@@ -58,6 +60,8 @@
         <itemPath>WfdbReader.cpp</itemPath>
         <itemPath>XmlReaderBase.cpp</itemPath>
         <itemPath>ZlReader.cpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f3" displayName="SignalData" projectFiles="true">
       </logicalFolder>
       <logicalFolder name="f2" displayName="Writers" projectFiles="true">
         <itemPath>CsvWriter.cpp</itemPath>

@@ -24,7 +24,17 @@ class DurationSpecification;
  */
 class SignalDataWrapper : public SignalData {
 public:
-  SignalDataWrapper( std::unique_ptr<SignalData> data );
+  /**
+   * Creates a new wrapper around this signaldata, but does not take ownership
+   * @param data
+   */
+  SignalDataWrapper( const std::unique_ptr<SignalData>& data );
+
+  /**
+   * Creates a new Wrapper around this pointer AND TAKES OWNERSHIP OF IT
+   * @param data
+   */
+  SignalDataWrapper( SignalData * data );
   virtual ~SignalDataWrapper( );
 
   virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) override;
@@ -60,7 +70,7 @@ public:
   virtual std::vector<std::string> extras( ) const override;
 
 private:
-  std::unique_ptr<SignalData> signal;
+  const std::unique_ptr<SignalData>& signal;
 };
 
 #endif /* SIGNALDATAWRAPPER_H */

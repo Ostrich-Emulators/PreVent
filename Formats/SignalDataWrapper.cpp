@@ -7,8 +7,12 @@
 #include "DataRow.h"
 #include "SignalDataWrapper.h"
 
-SignalDataWrapper::SignalDataWrapper( std::unique_ptr<SignalData> data )
-: signal( std::move( data ) ) {
+SignalDataWrapper::SignalDataWrapper( const std::unique_ptr<SignalData>& data )
+: signal( data ) {
+}
+
+SignalDataWrapper::SignalDataWrapper( SignalData * data )
+:signal( std::unique_ptr<SignalData>( data ) ){
 }
 
 SignalDataWrapper::~SignalDataWrapper( ) {
