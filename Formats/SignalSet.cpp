@@ -11,6 +11,7 @@
 #include "DurationSignalData.h"
 
 #include <limits>
+#include <iostream>
 
 SignalSet::SignalSet( ) : largefile( false ) {
 }
@@ -117,13 +118,14 @@ void SignalSet::addMeta( const std::string& key, const std::string & val ) {
 
 std::unique_ptr<SignalData>& SignalSet::addVital( const std::string& name, bool * added ) {
   int cnt = vmap.count( name );
+  
   if ( 0 == cnt ) {
     SignalData * data = new BasicSignalData( name, largefile );
     std::unique_ptr<SignalData> sig( duration
         ? new DurationSignalData( data, *duration )
         : data );
 
-    vmap.insert( std::make_pair( name, std::move( sig ) ) );
+    vmap[name] = std::move( sig );
   }
 
   if ( NULL != added ) {
@@ -135,13 +137,14 @@ std::unique_ptr<SignalData>& SignalSet::addVital( const std::string& name, bool 
 
 std::unique_ptr<SignalData>& SignalSet::addWave( const std::string& name, bool * added ) {
   int cnt = wmap.count( name );
+
   if ( 0 == cnt ) {
     SignalData * data = new BasicSignalData( name, largefile, true );
     std::unique_ptr<SignalData> sig( duration ?
         new DurationSignalData( data, *duration )
         : data );
 
-    wmap.insert( std::make_pair( name, std::move( sig ) ) );
+    wmap[name] = std::move( sig );
   }
 
   if ( NULL != added ) {

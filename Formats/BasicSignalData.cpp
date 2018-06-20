@@ -30,7 +30,7 @@ datacount( 0 ), popping( false ), iswave( wavedata ), highval( -std::numeric_lim
 lowval( std::numeric_limits<double>::max( ) ) {
   //file = ( largefile ? fopen( std::tmpnam( nullptr ), "w+" ) : NULL );
   if ( largefile ) {
-    std::string fname = "/tmp/cache-" + name + ".prevent";
+    std::string fname = "/tmp/cache-" + name + "-" + ( iswave ? "wave" : "vital" ) + ".prevent";
     file = fopen( fname.c_str( ), "wb+" );
   }
   else {
@@ -125,11 +125,11 @@ double BasicSignalData::lowwater( ) const {
 }
 
 void BasicSignalData::cache( ) {
+  std::stringstream ss;
   while ( !data.empty( ) ) {
     std::unique_ptr<DataRow> a = std::move( data.front( ) );
     data.pop_front( );
 
-    std::stringstream ss;
     ss << a->time << " " << a->data << " " << a->high << " " << a->low << " ";
     if ( !a->extras.empty( ) ) {
       for ( const auto& x : a->extras ) {
@@ -137,17 +137,19 @@ void BasicSignalData::cache( ) {
       }
     }
     ss << "\n";
-    std::fputs( ss.str( ).c_str( ), file );
   }
+  std::fputs( ss.str( ).c_str( ), file );
+  fflush( file );
 }
 
 void BasicSignalData::add( const DataRow& row ) {
-  datacount++;
-  
+
   if ( NULL != file && data.size( ) >= CACHE_LIMIT ) {
     // copy current data list to disk
     cache( );
   }
+
+  datacount++;
 
   int rowscale = DataRow::scale( row.data, iswave );
   DataRow::hilo( row.data, highval, lowval );

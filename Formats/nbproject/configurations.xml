@@ -62,6 +62,9 @@
         <itemPath>ZlReader.cpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="SignalData" projectFiles="true">
+        <itemPath>BasicSignalData.cpp</itemPath>
+        <itemPath>DurationSignalData.cpp</itemPath>
+        <itemPath>SignalDataWrapper.cpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Writers" projectFiles="true">
         <itemPath>CsvWriter.cpp</itemPath>
@@ -71,15 +74,12 @@
         <itemPath>ZlWriter.cpp</itemPath>
       </logicalFolder>
       <itemPath>Base64.cpp</itemPath>
-      <itemPath>BasicSignalData.cpp</itemPath>
       <itemPath>DataRow.cpp</itemPath>
-      <itemPath>DurationSignalData.cpp</itemPath>
       <itemPath>DurationSpecification.cpp</itemPath>
       <itemPath>FileNamer.cpp</itemPath>
       <itemPath>Formats.cpp</itemPath>
       <itemPath>Reader.cpp</itemPath>
       <itemPath>SignalData.cpp</itemPath>
-      <itemPath>SignalDataWrapper.cpp</itemPath>
       <itemPath>SignalSet.cpp</itemPath>
       <itemPath>SignalUtils.cpp</itemPath>
       <itemPath>Writer.cpp</itemPath>
