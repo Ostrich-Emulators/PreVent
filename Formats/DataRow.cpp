@@ -58,7 +58,7 @@ void DataRow::clear( ) {
 
 int DataRow::scale( const std::string& val, bool iswave ) {
   if ( iswave ) {
-    int myscale = 1;
+    int myscale = 0;
     std::stringstream ss( val );
     for ( std::string each; std::getline( ss, each, ',' ); ) {
       int newscale = scale( each, false );
@@ -73,10 +73,10 @@ int DataRow::scale( const std::string& val, bool iswave ) {
   // makes the extension the number of decimal places in the mantissa
   size_t pos = val.find_last_of( '.', val.length( ) );
   if ( val.npos == pos || ".0" == val.substr( pos ) ) {
-    return 1;
+    return 0;
   }
 
-  return (int) std::pow( 10, val.length( ) - pos - 1 ); // -1 for the .
+  return val.length( ) - pos - 1; // -1 for the .
 }
 
 void DataRow::hilo( const std::string& data, double& highval, double& lowval ) {
@@ -103,6 +103,9 @@ std::vector<short> DataRow::shorts( int scale ) const {
 }
 
 std::vector<int> DataRow::ints( const std::string& data, int scale ) {
+
+  const int scalefactor = std::pow( 10, scale );
+
   std::stringstream stream( data );
   std::vector<int> vals;
   for ( std::string each; std::getline( stream, each, ',' ); ) {
@@ -110,17 +113,19 @@ std::vector<int> DataRow::ints( const std::string& data, int scale ) {
       // don't scale missing numbers
       vals.push_back( SignalData::MISSING_VALUE );
     }
-    else if ( 1 == scale ) {
+    else if ( 0 == scale ) {
       vals.push_back( std::stoi( each ) );
     }
     else {
-      vals.push_back( (int) ( std::stof( each ) * scale ) );
+      vals.push_back( (int) ( std::stof( each ) * scalefactor ) );
     }
   }
   return vals;
 }
 
 std::vector<short> DataRow::shorts( const std::string& data, int scale ) {
+  const int scalefactor = std::pow( 10, scale );
+
   std::stringstream stream( data );
   std::vector<short> vals;
   for ( std::string each; std::getline( stream, each, ',' ); ) {
@@ -128,13 +133,13 @@ std::vector<short> DataRow::shorts( const std::string& data, int scale ) {
       // don't scale missing values
       vals.push_back( SignalData::MISSING_VALUE );
     }
-    else if ( 1 == scale ) {
+    else if ( 0 == scale ) {
       // FIXME: check against short limits?
       int val = std::stoi( each );
       vals.push_back( (short) val );
     }
     else {
-      vals.push_back( (short) ( std::stof( each ) * scale ) );
+      vals.push_back( (short) ( std::stof( each ) * scalefactor ) );
     }
   }
   return vals;

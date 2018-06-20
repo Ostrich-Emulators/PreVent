@@ -35,7 +35,7 @@ const short SignalData::MISSING_VALUE = -32768;
 const std::string SignalData::MISSING_VALUESTR = std::to_string( SignalData::MISSING_VALUE );
 
 SignalData::SignalData( ) {
-  scale( 1 );
+  scale( 0 );
   setChunkIntervalAndSampleRate( 2000, 1 );
   setUom( "Uncalib" );
   metadatai[SignalData::MSM] = SignalData::MISSING_VALUE;

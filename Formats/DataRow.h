@@ -56,9 +56,10 @@ public:
   virtual ~DataRow( );
 
   /**
-   * Figures out how many decimal places are in these numbers. 
+   * Figures out the appropriate power of 10 to multiply a value (or csv) to
+   * convert it from a double to an integer. 
    * 
-   * @param val the value string (will be converted to a float for comparison
+   * @param val the value string (will be converted to a float for comparison)
    * @param iswave should this value be checked for comma-separated values?
    * @return a power of 10 for small numbers, or a negative power for big numbers
    */
