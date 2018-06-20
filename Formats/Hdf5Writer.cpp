@@ -26,7 +26,7 @@
 #include "H5public.h"
 #include "LocaltimeSignalData.h"
 
-const std::string Hdf5Writer::LAYOUT_VERSION = "3.0.2";
+const std::string Hdf5Writer::LAYOUT_VERSION = "4.0.0";
 
 Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
 }

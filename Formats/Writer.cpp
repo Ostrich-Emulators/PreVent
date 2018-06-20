@@ -73,6 +73,10 @@ int Writer::initDataSet( ) {
   return 0;
 }
 
+void Writer::stopAfterFirstFile( bool onlyone ) {
+  testrun = onlyone;
+}
+
 FileNamer& Writer::filenamer( ) const {
   return *namer.get( );
 }
@@ -97,6 +101,11 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
   while ( retcode != ReadResult::ERROR ) {
     drain( data );
     namer->fileOrdinal( files++ );
+    
+    if( testrun ){
+      retcode = ReadResult::END_OF_FILE;
+    }
+    
 
     if ( ReadResult::END_OF_DAY == retcode || ReadResult::END_OF_PATIENT == retcode ) {
       std::vector<std::string> files = closeDataSet( );

@@ -40,6 +40,7 @@ SignalData::SignalData( ) {
   setUom( "Uncalib" );
   metadatai[SignalData::MSM] = SignalData::MISSING_VALUE;
   metadatas[SignalData::TIMEZONE] = "UTC";
+  metadatas["Note on Scale"] = "To get from a scaled value back to the real value, divide by 10^<scale>";
 }
 
 SignalData::SignalData( const SignalData& orig ) : metadatas( orig.metadatas ),

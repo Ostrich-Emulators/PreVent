@@ -34,6 +34,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
         << std::endl << "\t-e or --export <vital/wave to export>"
         << std::endl << "\t-s or --sqlite <db file>"
         << std::endl << "\t-q or --quiet"
+        << std::endl << "\t-1 or --stop-after-one"
         << std::endl << "\t-l or --localtime"
         << std::endl << "\t-p or --pattern <naming pattern>"
         << std::endl << "\t-n or --no-break or --one-file"
@@ -75,6 +76,7 @@ struct option longopts[] = {
   { "pattern", required_argument, NULL, 'p' },
   { "localtime", no_argument, NULL, 'l' },
   { "local", no_argument, NULL, 'l' },
+  { "stop-after-one", no_argument, NULL, '1' },
   { 0, 0, 0, 0 }
 };
 
@@ -91,9 +93,10 @@ int main( int argc, char** argv ) {
   bool quiet = false;
   bool nobreak = false;
   bool localtime = false;
+  bool stopatone = false;
   int compression = Writer::DEFAULT_COMPRESSION;
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -125,6 +128,9 @@ int main( int argc, char** argv ) {
       case 'n':
         nobreak = true;
         pattern = "%i.%t";
+        break;
+      case '1':
+        stopatone = true;
         break;
       case ':':
         std::cerr << "missing option argument" << std::endl;
@@ -203,6 +209,7 @@ int main( int argc, char** argv ) {
     to = Writer::get( tofmt );
     to->quiet( quiet );
     to->compression( compression );
+    to->stopAfterFirstFile( stopatone );
     FileNamer namer = FileNamer::parse( pattern );
     namer.tofmt( to->ext( ) );
     to->filenamer( namer );
