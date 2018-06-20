@@ -68,7 +68,7 @@ int Reader::prepare( const std::string& input, SignalSet& info ) {
 
     largefile = ( sz > 1024 * 1024 * 750 );
   }
-  largefile=true;
+  
   info.setFileSupport( largefile );
   info.addMeta( "Source Reader", name( ) );
 
