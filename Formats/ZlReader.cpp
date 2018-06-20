@@ -23,6 +23,7 @@
 #include <fstream>
 #include <sstream>
 #include <sys/stat.h>
+#include <experimental/filesystem>
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
 #include <fcntl.h>
@@ -37,6 +38,7 @@ const std::string ZlReader::VITAL = "VITAL";
 const std::string ZlReader::WAVE = "WAVE";
 const std::string ZlReader::TIME = "TIME";
 
+namespace fs = std::experimental::filesystem::v1;
 ZlReader::ZlReader( ) : Reader( "Zl" ), firstread( true ) {
 }
 
@@ -67,8 +69,16 @@ size_t ZlReader::getSize( const std::string& input ) const {
 
 int ZlReader::prepare( const std::string& input, SignalSet& data ) {
   int rslt = Reader::prepare( input, data );
-  if ( 0 != rslt ) {
-    return rslt;
+  
+  // Zl format is really a directory containing a bunch of gzip files
+  // so we should iterate through all the gzip files
+  fs::path p1 = input;
+  if( !fs::is_directory(p1)){
+    return -1;
+  }
+  
+  for( const auto& path: fs::directory_iterator(p1)){
+    wavefiles.push_back(path.path().filename());
   }
 
   firstread = true;

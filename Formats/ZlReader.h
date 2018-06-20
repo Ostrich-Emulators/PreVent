@@ -52,6 +52,7 @@ private:
 	dr_time currentTime;
 	zlReaderState state;
 	std::unique_ptr<StreamChunkReader> stream;
+    std::vector<std::string> wavefiles;
 
 	void handleInputChunk( std::string& chunk, SignalSet& info );
 	void handleOneLine( const std::string& chunk, SignalSet& info );
