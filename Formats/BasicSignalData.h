@@ -36,8 +36,8 @@ public:
   virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) override;
   virtual void add( const DataRow& row ) override;
   virtual size_t size( ) const override;
-  virtual const dr_time& startTime( ) const override;
-  virtual const dr_time& endTime( ) const override;
+  virtual dr_time startTime( ) const override;
+  virtual dr_time endTime( ) const override;
   virtual const std::string& name( ) const override;
 
   virtual std::unique_ptr<DataRow> pop( ) override;

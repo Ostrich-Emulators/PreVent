@@ -45,8 +45,8 @@ public:
   virtual int scale( ) const override;
   virtual size_t size( ) const override;
   virtual double hz( ) const override;
-  virtual const dr_time& startTime( ) const override;
-  virtual const dr_time& endTime( ) const override;
+  virtual dr_time startTime( ) const override;
+  virtual dr_time endTime( ) const override;
   virtual const std::string& name( ) const override;
   virtual int readingsPerSample( ) const override;
   virtual void setChunkIntervalAndSampleRate( int chunk_ms, int sr ) override;

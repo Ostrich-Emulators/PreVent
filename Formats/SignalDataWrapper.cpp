@@ -50,11 +50,11 @@ double SignalDataWrapper::hz( ) const {
   return signal->hz( );
 }
 
-const dr_time& SignalDataWrapper::startTime( ) const {
+dr_time SignalDataWrapper::startTime( ) const {
   return signal->startTime( );
 }
 
-const dr_time& SignalDataWrapper::endTime( ) const {
+dr_time SignalDataWrapper::endTime( ) const {
   return signal->endTime( );
 }
 

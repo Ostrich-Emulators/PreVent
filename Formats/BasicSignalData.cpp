@@ -72,11 +72,11 @@ std::unique_ptr<SignalData> BasicSignalData::shallowcopy( bool includedates ) {
   return std::move( copy );
 }
 
-const dr_time& BasicSignalData::startTime( ) const {
+dr_time BasicSignalData::startTime( ) const {
   return firstdata;
 }
 
-const dr_time& BasicSignalData::endTime( ) const {
+dr_time BasicSignalData::endTime( ) const {
   return lastdata;
 }
 

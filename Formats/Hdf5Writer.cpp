@@ -24,6 +24,7 @@
 #include "SignalUtils.h"
 #include "FileNamer.h"
 #include "H5public.h"
+#include "LocaltimeSignalData.h"
 
 const std::string Hdf5Writer::LAYOUT_VERSION = "3.0.2";
 
@@ -365,6 +366,9 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet& data ) 
   std::map<dr_time, int> timecounter;
   for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {
     std::map<dr_time, int> sigcounter;
+
+
+
     for ( auto& dr : m->times( tz_offset( ) * 1000 ) ) {
       sigcounter[dr] = ( 0 == sigcounter.count( dr ) ? 1 : sigcounter[dr] + 1 );
     }

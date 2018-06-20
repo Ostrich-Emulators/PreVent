@@ -48,8 +48,8 @@ public:
   virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) = 0;
   virtual void add( const DataRow& row ) = 0;
   virtual size_t size( ) const = 0;
-  virtual const dr_time& startTime( ) const = 0;
-  virtual const dr_time& endTime( ) const = 0;
+  virtual dr_time startTime( ) const = 0;
+  virtual dr_time endTime( ) const = 0;
   virtual const std::string& name( ) const = 0;
   /**
    * Gets the dr_times for this dataset.
