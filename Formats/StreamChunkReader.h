@@ -29,34 +29,34 @@
  */
 class StreamChunkReader {
 public:
-  StreamChunkReader(std::istream * input, bool compressed, bool isStdin,
-          int chunksize = DEFAULT_CHUNKSIZE);
+  StreamChunkReader( std::istream * input, bool compressed, bool isStdin,
+      bool isGzip = false, int chunksize = DEFAULT_CHUNKSIZE );
 
-  virtual ~StreamChunkReader();
-  void close();
+  virtual ~StreamChunkReader( );
+  void close( );
 
   /**
    * Reads this many bytes 
    * @param numbytes
    * @return
    */
-  std::string read(int numbytes);
-  std::string readNextChunk();
+  std::string read( int numbytes );
+  std::string readNextChunk( );
   /**
    * Reads this many bytes into the given vector. This function only works on
    * uncompressed streams (for now)
    * @param vec
    * @return the number of bytes read
    */
-  int read(std::vector<char>& vec, int numbytes);
-  void setChunkSize(int size);
+  int read( std::vector<char>& vec, int numbytes );
+  void setChunkSize( int size );
 
   ReadResult rr;
 private:
   static const int DEFAULT_CHUNKSIZE;
 
-  std::string readNextCompressedChunk(int numbytes);
-  void initZlib();
+  std::string readNextCompressedChunk( int numbytes );
+  void initZlib( bool forGzip = false );
 
   bool iscompressed;
   bool usestdin;

@@ -31,11 +31,11 @@
 
 const int StreamChunkReader::DEFAULT_CHUNKSIZE = 16384 * 16;
 
-StreamChunkReader::StreamChunkReader( std::istream * cin, bool compressed, bool isStdin,
-    int chunks ) : iscompressed( compressed ), usestdin( isStdin ), stream( cin ),
-rr( ReadResult::NORMAL ), chunksize( chunks ) {
+StreamChunkReader::StreamChunkReader( std::istream * cin, bool compressed, 
+    bool isStdin, bool isGzip, int chunks ) : iscompressed( compressed ),
+    usestdin( isStdin ), stream( cin ), rr( ReadResult::NORMAL ), chunksize( chunks ) {
   if ( iscompressed ) {
-    initZlib( );
+    initZlib( isGzip );
   }
 }
 
@@ -43,13 +43,16 @@ StreamChunkReader::~StreamChunkReader( ) {
   close( );
 }
 
-void StreamChunkReader::initZlib( ) {
+void StreamChunkReader::initZlib( bool forGzip ) {
   strm.zalloc = Z_NULL;
   strm.zfree = Z_NULL;
   strm.opaque = Z_NULL;
   strm.avail_in = 0;
   strm.next_in = Z_NULL;
-  int ret = inflateInit( &strm );
+
+  int ret = ( forGzip
+      ? inflateInit2( &strm, 16 + MAX_WBITS )
+      : inflateInit( &strm ) );
 
   if ( ret != Z_OK ) {
     std::cerr << "zlib error code: " << ret << std::endl;
@@ -78,9 +81,9 @@ std::string StreamChunkReader::readNextChunk( ) {
   return read( chunksize );
 }
 
-int StreamChunkReader:: read( std::vector<char>& vec, int numbytes ){
+int StreamChunkReader::read( std::vector<char>& vec, int numbytes ) {
   if ( stream->good( ) ) {
-    stream->read( vec.data(), numbytes );
+    stream->read( vec.data( ), numbytes );
     int bytesread = stream->gcount( );
     return bytesread;
   }

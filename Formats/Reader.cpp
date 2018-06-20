@@ -56,7 +56,7 @@ std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
 int Reader::prepare( const std::string& input, SignalSet& info ) {
   info.reset( false );
 
-  if ( "-" == input || "-zl" == input ) {
+  if ( "-" == input || "-zl" == input || "-gz" == input ) {
     largefile = false;
   }
   else {

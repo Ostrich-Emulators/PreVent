@@ -65,7 +65,7 @@ Format Formats::guess( const std::string& filename ) {
     else if ( "xml" == suffix ) {
       return Format::STPXML;
     }
-    else if ( "zl" == suffix ) {
+    else if ( "zl" == suffix || "gzip" == suffix || "gz" == suffix ) {
       return Format::DSZL;
     }
     else if ( "hea" == suffix ) {

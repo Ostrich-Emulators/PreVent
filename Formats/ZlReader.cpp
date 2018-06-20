@@ -40,6 +40,9 @@ const std::string ZlReader::TIME = "TIME";
 ZlReader::ZlReader( ) : Reader( "Zl" ), firstread( true ) {
 }
 
+ZlReader::ZlReader( const std::string& name ) : Reader( name ), firstread( true ) {
+}
+
 ZlReader::ZlReader( const ZlReader& orig ) : Reader( orig ), firstread( orig.firstread ) {
 }
 
@@ -62,30 +65,40 @@ size_t ZlReader::getSize( const std::string& input ) const {
   return info.st_size;
 }
 
-int ZlReader::prepare( const std::string& input, SignalSet& info ) {
-  int rslt = Reader::prepare( input, info );
+int ZlReader::prepare( const std::string& input, SignalSet& data ) {
+  int rslt = Reader::prepare( input, data );
   if ( 0 != rslt ) {
     return rslt;
   }
 
   firstread = true;
 
-  bool usestdin = ( "-" == input || "-zl" == input );
+  bool usestdin = ( "-" == input || "-zl" == input || "-gz" == input );
 
   // zlib-compressed (first char='x'). Unfortunately, if we're reading from
   // stdin, we can't reset the stream back to the start, so we need to trust
   // that the user used the right switch
   if ( usestdin ) {
-    stream.reset( new StreamChunkReader( &( std::cin ), ( "-zl" == input ), true ) );
+    bool isgz = ( "-gz" == input );
+    bool islibz = ( "-lz" == input );
+
+    stream.reset( new StreamChunkReader( &( std::cin ), ( islibz || isgz ),
+        true, isgz ) );
   }
   else {
     // we need to read the first byte of the input stream to decide if it's 
     unsigned char firstbyte;
+    unsigned char secondbyte;
     std::ifstream * myfile = new std::ifstream( input, std::ios::binary );
     ( *myfile ) >> firstbyte;
+    ( *myfile ) >> secondbyte;
+
+    bool islibz = ( 0x78 == firstbyte );
+    bool isgz = ( 0x1F == firstbyte && 0x8B == secondbyte );
+
 
     myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
-    stream.reset( new StreamChunkReader( myfile, ( 'x' == firstbyte ), false ) );
+    stream.reset( new StreamChunkReader( myfile, ( islibz || isgz ), false, isgz ) );
   }
   return 0;
 }
@@ -134,7 +147,7 @@ ReadResult ZlReader::fill( SignalSet& info, const ReadResult& ) {
   // we either ran out of file, or we hit a HEADER line...figure out which
   if ( ReadResult::NORMAL == retcode ) {
     // we hit a new HEADER
-    retcode = ( this->nonbreaking() ? ReadResult::NORMAL : ReadResult::END_OF_PATIENT );
+    retcode = ( this->nonbreaking( ) ? ReadResult::NORMAL : ReadResult::END_OF_PATIENT );
   }
 
   if ( retcode != ReadResult::ERROR ) {
@@ -183,7 +196,7 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
 
       if ( added ) {
         dataset->setUom( uom );
-        dataset->setChunkIntervalAndSampleRate(2000,1 );
+        dataset->setChunkIntervalAndSampleRate( 2000, 1 );
       }
       dataset->add( DataRow( currentTime, val, high, low ) );
     }
@@ -202,7 +215,7 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       points >> wavename >> uom >> val;
 
       if ( first ) {
-        dataset->setChunkIntervalAndSampleRate(2000, 480 );
+        dataset->setChunkIntervalAndSampleRate( 2000, 480 );
         dataset->setUom( uom );
       }
 

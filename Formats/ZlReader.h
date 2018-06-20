@@ -33,6 +33,7 @@ public:
 	static const int CHUNKSIZE;
 
 	ZlReader( );
+  ZlReader( const std::string& name );
 	virtual ~ZlReader( );
 
 protected:
