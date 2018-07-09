@@ -114,8 +114,8 @@ const std::map<std::string, double>& SignalDataWrapper::metad( ) const {
   return signal->metad( );
 }
 
-const std::deque<dr_time> SignalDataWrapper::times( long offset_ms ) const {
-  return signal->times( offset_ms );
+const std::deque<dr_time> SignalDataWrapper::times() const {
+  return signal->times();
 }
 
 std::vector<std::string> SignalDataWrapper::extras( ) const {

@@ -27,11 +27,13 @@
 class LocaltimeSignalData : public SignalDataWrapper {
 public:
   LocaltimeSignalData( SignalData * data, const std::string& tzname, const long tz_offset_ms );
+  LocaltimeSignalData( const std::unique_ptr<SignalData>& data, const std::string& tzname,
+      const long tz_offset_ms );
   virtual ~LocaltimeSignalData( );
 
   dr_time startTime( ) const override;
   dr_time endTime( ) const override;
-  const std::deque<dr_time> times( long ms = 0 ) const override;
+  const std::deque<dr_time> times( ) const override;
 
 private:
   const std::string& tzname;

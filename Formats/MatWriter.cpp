@@ -86,12 +86,16 @@ int MatWriter::drain( SignalSet& info ) {
   dataptr = &info;
   filenamer( ).filename( info );
 
-  writeVitals( info.vitals( ) );
+  std::vector<std::unique_ptr<SignalData>> vitvec;
+  for( auto&x : dataptr->vitals( ) ){
+    vitvec.push_back( std::move( x.get() ) );
+  }
 
-  std::map<int, std::vector<std::unique_ptr < SignalData>>> freqgroups;
+  writeVitals( vitvec );
+
+  std::map<double, std::vector<std::unique_ptr<SignalData>>> freqgroups;
   for ( auto& ds : info.waves( ) ) {
-    int freq = (int) ds.second->hz( );
-    freqgroups[freq].push_back( std::move( ds.second ) );
+    freqgroups[ds.get( )->hz( )].push_back( std::move( ds.get() ) );
   }
 
   for ( auto& ds : freqgroups ) {
@@ -146,32 +150,25 @@ int MatWriter::writeStrings( const std::string& label, std::vector<std::string>&
   return ok;
 }
 
-int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&oldmap ) {
+int MatWriter::writeVitals( std::vector<std::unique_ptr<SignalData>>& signals ) {
   dr_time earliest;
   dr_time latest;
 
-  std::vector<std::unique_ptr < SignalData>> signals = SignalUtils::vectorize( oldmap );
-
-  // the call to vectorize moves the signaldata, so re-add some skeletons
-  for ( const auto& sd : signals ) {
-    oldmap[sd->name( )] = sd->shallowcopy( true );
-  }
-
   SignalUtils::firstlast( signals, &earliest, &latest );
 
-  float freq = ( *signals.begin( ) )->hz( );
+  float freq = ( *signals.begin( ) ).get( )->hz( );
   const int timestep = ( freq < 1 ? 1 / freq : 1 );
 
   std::vector<std::string> labels;
   std::vector<std::string> uoms;
   std::map<std::string, int> scales;
   for ( auto& m : signals ) {
-    labels.push_back( m->name( ) );
-    scales[m->name( )] = m->scale( );
-    uoms.push_back( m->uom( ) );
+    labels.push_back( m.get( )->name( ) );
+    scales[m.get( )->name( )] = m.get( )->scale( );
+    uoms.push_back( m.get( )->uom( ) );
   }
 
-  std::vector<std::vector < std::string>> syncd = SignalUtils::syncDatas( signals );
+  std::vector<std::vector<std::string>> syncd = SignalUtils::syncDatas( signals );
   const int rows = syncd.size( );
   const int cols = signals.size( );
 
@@ -231,12 +228,14 @@ int MatWriter::writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&o
   return 0;
 }
 
-int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalData>>&oldsignals ) {
+int MatWriter::writeWaves( double freq, std::vector<std::unique_ptr<SignalData>>& oldsignals ) {
   dr_time earliest;
   dr_time latest;
 
   const std::string sfx = std::to_string( freq ) + "hz";
 
+  // FIXME: need to sync times
+  output( ) << "need to sync times first!" << std::endl;
   std::vector<std::unique_ptr < SignalData>> signals = SignalUtils::sync( oldsignals );
   SignalUtils::firstlast( signals, &earliest, &latest );
 
@@ -254,7 +253,9 @@ int MatWriter::writeWaves( const int& freq, std::vector<std::unique_ptr<SignalDa
     uoms.push_back( m->uom( ) );
 
     // re-add signals (metadata only) to dataptr
-    dataptr->waves( )[m->name( )] = m->shallowcopy( true );
+    
+    // FIXME: we need this line!
+    //dataptr->waves( )[m->name( )] = m->shallowcopy( true );
   }
 
   // units of measure

@@ -46,7 +46,7 @@ public:
    * @param outputnum
    * @return
    */
-  std::string filename( const SignalSet& data );
+  std::string filename( const std::unique_ptr<SignalSet>& data );
 
   /**
    * Gets a filename (including directory) without an extension (or the preceding .)
@@ -54,7 +54,7 @@ public:
    * @param outputnum
    * @return
    */
-  std::string filenameNoExt( const SignalSet& data );
+  std::string filenameNoExt( const std::unique_ptr<SignalSet>& data );
   /**
    * Gets a filename (including directory) based on whatever information we
    * already have. Some conversions cannot be performed with this function,

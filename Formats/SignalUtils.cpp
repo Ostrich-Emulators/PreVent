@@ -284,10 +284,10 @@ DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const dr_ti
 std::vector<dr_time> SignalUtils::alltimes( const SignalSet& ss ) {
   std::set<dr_time> times;
   for ( const auto& signal : ss.vitals( ) ) {
-    times.insert( signal.second->times( ).begin( ), signal.second->times( ).end( ) );
+    times.insert( signal.get()->times( ).begin( ), signal.get()->times( ).end( ) );
   }
   for ( const auto& signal : ss.waves( ) ) {
-    times.insert( signal.second->times( ).begin( ), signal.second->times( ).end( ) );
+    times.insert( signal.get()->times( ).begin( ), signal.get()->times( ).end( ) );
   }
 
   std::vector<dr_time> vec( times.begin( ), times.end( ) );

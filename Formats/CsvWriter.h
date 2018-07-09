@@ -33,7 +33,7 @@ public:
 
 protected:
   std::vector<std::string> closeDataSet();
-  int drain( SignalSet& );
+  int drain( std::unique_ptr<SignalSet>& );
 
 private:
   CsvWriter( const CsvWriter& orig );

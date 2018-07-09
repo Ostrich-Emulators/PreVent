@@ -97,8 +97,8 @@ std::string XmlReaderBase::trim( std::string & totrim ) {
 }
 
 void XmlReaderBase::startSaving( ) {
-  saved.setMetadataFrom( *filler );
-  filler = &saved;
+  saved->setMetadataFrom( *filler );
+  filler = saved;
   filler->clearOffsets( );
 }
 
@@ -111,7 +111,7 @@ void XmlReaderBase::setResult( ReadResult rslt ) {
   this->rslt = rslt;
 }
 
-int XmlReaderBase::prepare( const std::string& fname, SignalSet& info ) {
+int XmlReaderBase::prepare( const std::string& fname, std::unique_ptr<SignalSet>& info ) {
   int rr = Reader::prepare( fname, info );
   if ( 0 == rr ) {
     parser = XML_ParserCreate( NULL );
@@ -138,14 +138,14 @@ void XmlReaderBase::comment( void* data, const char* text ) {
 }
 
 void XmlReaderBase::copysaved( SignalSet& tgt ) {
-  tgt.setMetadataFrom( saved );
-  saved.metadata( ).clear( );
+  tgt.setMetadataFrom( *saved );
+  saved->metadata( ).clear( );
 
-  for ( auto& m : saved.vitals( ) ) {
-    std::unique_ptr<SignalData>& savedsignal = m.second;
+  for ( auto& m : saved->vitals( ) ) {
+    std::unique_ptr<SignalData>& savedsignal = m.get( );
 
     bool added = false;
-    std::unique_ptr<SignalData>& infodata = tgt.addVital( m.first, &added );
+    std::unique_ptr<SignalData>& infodata = tgt.addVital( m.get( )->name( ), &added );
 
     infodata->setMetadataFrom( *savedsignal );
     int rows = savedsignal->size( );
@@ -155,11 +155,11 @@ void XmlReaderBase::copysaved( SignalSet& tgt ) {
     }
   }
 
-  for ( auto& m : saved.waves( ) ) {
-    std::unique_ptr<SignalData>& savedsignal = m.second;
+  for ( auto& m : saved->waves( ) ) {
+    std::unique_ptr<SignalData>& savedsignal = m.get( );
 
     bool added = false;
-    std::unique_ptr<SignalData>& infodata = tgt.addWave( m.first, &added );
+    std::unique_ptr<SignalData>& infodata = tgt.addWave( m.get( )->name( ), &added );
 
     infodata->setMetadataFrom( *savedsignal );
     int rows = savedsignal->size( );
@@ -169,11 +169,10 @@ void XmlReaderBase::copysaved( SignalSet& tgt ) {
     }
   }
 
-  saved.vitals( ).clear( );
-  saved.waves( ).clear( );
+  saved->reset( false );
 }
 
-ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
+ReadResult XmlReaderBase::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastfill ) {
   if ( ReadResult::END_OF_DAY == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
     copysaved( info );
   }
@@ -198,7 +197,7 @@ ReadResult XmlReaderBase::fill( SignalSet & info, const ReadResult& lastfill ) {
     }
     if ( ReadResult::NORMAL != rslt ) {
       if ( ReadResult::END_OF_PATIENT == rslt && anonymizing( ) ) {
-        info.metadata( )["Patient Name"] = "Anonymous";
+        info->metadata( )["Patient Name"] = "Anonymous";
       }
 
       return rslt;

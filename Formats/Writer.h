@@ -9,11 +9,11 @@
 #include <sstream>
 
 #include "Formats.h"
-#include "SignalSet.h"
 #include "ConversionListener.h"
 
 class Reader;
 class FileNamer;
+class SignalSet;
 
 class Writer {
 public:
@@ -31,7 +31,7 @@ public:
   const std::string& ext( ) const;
 
   virtual std::vector<std::string> write( std::unique_ptr<Reader>& from,
-      SignalSet& data );
+      std::unique_ptr<SignalSet>& data );
 
 protected:
   Writer( const std::string& extension );
@@ -59,7 +59,7 @@ protected:
    * @param info The data to drain
    * @return 0 (success) -1 (error)
    */
-  virtual int drain( SignalSet& info ) = 0;
+  virtual int drain( std::unique_ptr<SignalSet>& info ) = 0;
 
   int tz_offset() const;
   const std::string& tz_name() const;

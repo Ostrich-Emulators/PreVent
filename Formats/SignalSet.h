@@ -15,6 +15,7 @@
 #define SIGNALSET_H
 
 #include "DataRow.h"
+#include "SignalDataIterator.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -22,7 +23,7 @@
 #include <functional>
 
 class SignalData;
-class DurationSpecification;
+class PartionedSignalData;
 
 enum TimeCounter {
   VITAL, WAVE, EITHER
@@ -30,13 +31,20 @@ enum TimeCounter {
 
 class SignalSet {
 public:
-  SignalSet( );
+  SignalSet( bool largefilesupport = false );
   virtual ~SignalSet( );
-  const std::map<std::string, std::unique_ptr<SignalData>>&vitals( ) const;
-  const std::map<std::string, std::unique_ptr<SignalData>>&waves( ) const;
+//  virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>vitals( ) const = 0;
+//  virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>waves( ) const = 0;
+//  virtual std::vector<std::reference_wrapper<std::unique_ptr<SignalData>>>vitals( ) = 0;
+//  virtual std::vector<std::reference_wrapper<std::unique_ptr<SignalData>>>waves( ) = 0;
+
+  virtual SignalDataIterator begin( ) = 0;
+  virtual SignalDataIterator end( ) = 0;
+
+  virtual PartionedSignalData vitals() = 0;
+  virtual PartionedSignalData waves() = 0;
+
   std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const;
-  std::map<std::string, std::unique_ptr<SignalData>>&vitals( );
-  std::map<std::string, std::unique_ptr<SignalData>>&waves( );
   std::map<std::string, std::string>& metadata( );
   const std::map<std::string, std::string>& metadata( ) const;
 
@@ -48,7 +56,7 @@ public:
    *  has been called for this vital
    * @return
    */
-  std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = NULL );
+  virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) = 0;
   /**
    * Adds a new waveform if it has not already been added. If it already
    * exists, the old dataset is returned
@@ -57,35 +65,38 @@ public:
    *  has been called for this vital
    * @return
    */
-  std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = NULL );
+  virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) = 0;
   void addMeta( const std::string& key, const std::string& val );
-  void reset( bool signalDataOnly = true );
+  virtual void reset( bool signalDataOnly = true );
   void setFileSupport( bool );
-  dr_time earliest( const TimeCounter& tc = EITHER ) const;
-  dr_time latest( const TimeCounter& tc = EITHER ) const;
+  virtual dr_time earliest( const TimeCounter& tc = EITHER ) const = 0;
+  virtual dr_time latest( const TimeCounter& tc = EITHER ) const = 0;
   void setMetadataFrom( const SignalSet& target );
   const std::map<long, dr_time>& offsets( ) const;
   void addOffset( long seg, dr_time time );
   void clearOffsets( );
-  void moveTo( SignalSet& dest );
-  /**
-   * Sets the valid duration for this signal set. This value will alter the
-   * way SignalData instances are created, so it should be set before
-   * creating any of them.
-   * @param
-   */
-  void validDuration( const DurationSpecification& );
+  //void moveTo( SignalSet& dest );
+
+protected:
+  bool isLargeFile( ) const;
 
 private:
-  SignalSet( const SignalSet& );
-  SignalSet operator=(const SignalSet&);
-
-  std::map<std::string, std::unique_ptr<SignalData>> vmap;
-  std::map<std::string, std::unique_ptr<SignalData>> wmap;
+  //std::map<std::string, std::unique_ptr<SignalData>> vmap;
+  //std::map<std::string, std::unique_ptr<SignalData>> wmap;
   std::map<std::string, std::string> metamap;
   std::map<long, dr_time> segs; // segment index->time
   bool largefile;
-  std::unique_ptr<DurationSpecification> duration;
+
+};
+
+class PartionedSignalData {
+public:
+  PartionedSignalData( std::vector<std::unique_ptr<SignalData>>& vec );
+  virtual ~PartionedSignalData();
+  SignalDataIterator begin();
+  SignalDataIterator end();
+private:
+  std::vector<std::unique_ptr<SignalData>>& vector;
 };
 
 

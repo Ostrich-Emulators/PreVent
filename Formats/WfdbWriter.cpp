@@ -54,13 +54,13 @@ std::vector<std::string> WfdbWriter::closeDataSet( ) {
 int WfdbWriter::drain( SignalSet& info ) {
   std::map<double, std::vector<std::unique_ptr < SignalData>>> freqgroups;
   for ( auto& ds : info.vitals( ) ) {
-    double freq = ds.second->hz( );
-    freqgroups[freq].push_back( std::move( ds.second ) );
+    double freq = ds.get()->hz( );
+    freqgroups[freq].push_back( std::move( ds.get() ) );
   }
 
   for ( auto& ds : info.waves( ) ) {
-    double freq = ds.second->hz( );
-    freqgroups[freq].push_back( std::move( ds.second ) );
+    double freq = ds.get()->hz( );
+    freqgroups[freq].push_back( std::move( ds.get() ) );
   }
 
   for ( auto& ds : freqgroups ) {
@@ -76,8 +76,8 @@ int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&dat
 
   sigmap.clear( );
   for ( auto& signal : data ) {
-    const std::string& name = signal->name( );
-    sigmap[name].units = (char *) signal->uom( ).c_str( );
+    const std::string& name = signal.get()->name( );
+    sigmap[name].units = (char *) signal.get()->uom( ).c_str( );
     sigmap[name].group = 0;
     sigmap[name].desc = (char *) name.c_str( );
     sigmap[name].fmt = 16;
@@ -119,7 +119,7 @@ int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&dat
 
 void WfdbWriter::syncAndWrite( double freq, std::vector<std::unique_ptr<SignalData>>&olddata ) {
 
-  std::vector<std::vector < std::string>> data = SignalUtils::syncDatas( olddata );
+  std::vector<std::vector<std::string>> data = SignalUtils::syncDatas( olddata );
 
   const auto& first = ( olddata.begin( )->get( ) );
   if ( first->wave( ) ) {

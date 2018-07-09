@@ -35,8 +35,8 @@ public:
   XmlReaderBase( const std::string& name );
   virtual ~XmlReaderBase( );
 
-  virtual int prepare( const std::string& input, SignalSet& info ) override;
-  virtual ReadResult fill( SignalSet & info, const ReadResult& lastfill = ReadResult::FIRST_READ ) override;
+  virtual int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
+  virtual ReadResult fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastfill = ReadResult::FIRST_READ ) override;
   virtual void finish( ) override;
 
 protected:
@@ -74,7 +74,7 @@ protected:
   bool isFirstRead( ) const;
   void setDateModifier( const dr_time& mod );
 
-  SignalSet saved;
+  SignalSet * saved;
   SignalSet * filler;
 private:
 

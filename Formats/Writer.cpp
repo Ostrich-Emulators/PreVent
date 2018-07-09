@@ -8,7 +8,6 @@
 #include "config.h"
 #include "Hdf5Writer.h"
 #include "WfdbWriter.h"
-#include "ZlWriter.h"
 #include "MatWriter.h"
 #include "CsvWriter.h"
 #include "ConversionListener.h"
@@ -41,8 +40,8 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
       return std::unique_ptr<Writer>( new Hdf5Writer( ) );
     case WFDB:
       return std::unique_ptr<Writer>( new WfdbWriter( ) );
-    case DSZL:
-      return std::unique_ptr<Writer>( new ZlWriter( ) );
+    //case DSZL:
+      //return std::unique_ptr<Writer>( new ZlWriter( ) );
     case MAT73:
       return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV7 ) );
     case MAT5:
@@ -82,7 +81,7 @@ FileNamer& Writer::filenamer( ) const {
 }
 
 std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
-      SignalSet& data ) {
+      std::unique_ptr<SignalSet>& data ) {
   int patientno = 1;
 
   output( ) << "init data set" << std::endl;

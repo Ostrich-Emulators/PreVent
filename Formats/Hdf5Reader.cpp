@@ -27,7 +27,7 @@ Hdf5Reader::Hdf5Reader( const Hdf5Reader& ) : Reader( "HDF5" ) {
 Hdf5Reader::~Hdf5Reader( ) {
 }
 
-int Hdf5Reader::prepare( const std::string& filename, SignalSet& info ) {
+int Hdf5Reader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& info ) {
   int rslt = Reader::prepare( filename, info );
   if ( 0 == rslt ) {
     file = H5::H5File( filename, H5F_ACC_RDONLY );
@@ -39,7 +39,7 @@ void Hdf5Reader::finish( ) {
   file.close( );
 }
 
-ReadResult Hdf5Reader::fill( SignalSet& info, const ReadResult& ) {
+ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
   H5::Group root = file.openGroup( "/" );
 
   for ( int i = 0; i < root.getNumAttrs( ); i++ ) {
@@ -47,7 +47,7 @@ ReadResult Hdf5Reader::fill( SignalSet& info, const ReadResult& ) {
 
     // std::cout << a.getName( ) << ": " << aval << std::endl;
     if ( 0 == IGNORABLE_PROPS.count( a.getName( ) ) ) {
-      info.addMeta( a.getName( ), metastr( a ) );
+      info->addMeta( a.getName( ), metastr( a ) );
     }
   }
 
@@ -98,12 +98,12 @@ std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet& dataset ) const {
 }
 
 void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
-        const bool& iswave, SignalSet& info ) const {
+        const bool& iswave, std::unique_ptr<SignalSet>& info ) const {
   std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
 
   std::unique_ptr<SignalData>& signal = ( iswave
-          ? info.addWave( name )
-          : info.addVital( name ) );
+          ? info->addWave( name )
+          : info->addVital( name ) );
   int timeinterval = 2000;
   if ( dataAndTimeGroup.attrExists( SignalData::CHUNK_INTERVAL_MS ) ) {
     timeinterval = metaint( dataAndTimeGroup, SignalData::CHUNK_INTERVAL_MS );

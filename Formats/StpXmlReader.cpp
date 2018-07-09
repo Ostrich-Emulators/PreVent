@@ -176,7 +176,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
         // we've cut over to a new set of data, so
         // save the data we parse now to a different SignalSet
         startSaving( );
-        saved.metadata( )["Patient Name"] = text;
+        saved->metadata( )["Patient Name"] = text;
       }
     }
     setstate( INDETERMINATE );

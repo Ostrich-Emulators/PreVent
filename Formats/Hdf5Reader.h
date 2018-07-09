@@ -26,9 +26,9 @@ public:
   virtual ~Hdf5Reader( );
   static const std::set<std::string> IGNORABLE_PROPS;
 
-  int prepare( const std::string& input, SignalSet& info ) override;
+  int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
   void finish( ) override;
-  ReadResult fill( SignalSet& data,
+  ReadResult fill( std::unique_ptr<SignalSet>& data,
        const ReadResult& lastresult = ReadResult::FIRST_READ ) override;
 
 protected:
@@ -51,7 +51,7 @@ private:
   void fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
       const std::vector<dr_time>& tmes, int valsPerTime, int scale ) const;
   void readDataSet( H5::Group& dataAndTimeGroup, const bool& iswave,
-      SignalSet& info ) const;
+      std::unique_ptr<SignalSet>& info ) const;
   std::vector<dr_time> readTimes( H5::DataSet& times ) const;
   std::string upgradeMetaKey( const std::string& oldkey ) const;
 

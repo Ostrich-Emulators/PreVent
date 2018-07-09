@@ -20,6 +20,7 @@
 
 #include <ctime>
 #include <matio.h>
+#include <memory>
 
 class SignalData;
 class SignalSet;
@@ -46,8 +47,8 @@ private:
    * @param data
    * @return
    */
-  int writeVitals( std::map<std::string, std::unique_ptr<SignalData>>&data );
-  int writeWaves( const int& freq, std::vector<std::unique_ptr<SignalData>>&data );
+  int writeVitals( std::vector<std::unique_ptr<SignalData>>& data );
+  int writeWaves( double freq, std::vector<std::unique_ptr<SignalData>>& data );
 
   int writeStrings( const std::string& label, std::vector<std::string>& strings );
 

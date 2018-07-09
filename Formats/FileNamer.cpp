@@ -56,16 +56,16 @@ void FileNamer::inputfilename( const std::string& inny ) {
   }
 }
 
-std::string FileNamer::filenameNoExt( const SignalSet& data ) {
+std::string FileNamer::filenameNoExt( const std::unique_ptr<SignalSet>& data ) {
   // for now, always the same thing
   const size_t pos = lastname.rfind( "." );
   return lastname.substr( 0, pos );
 }
 
-std::string FileNamer::filename( const SignalSet& data ) {
+std::string FileNamer::filename( const std::unique_ptr<SignalSet>& data ) {
   // we need to have data for all the conversion keys in here
 
-  conversions["%s"] = getDateSuffix( data.earliest( ), "" );
+  conversions["%s"] = getDateSuffix( data->earliest( ), "" );
 
   lastname = pattern;
   const std::string replacements[] = {

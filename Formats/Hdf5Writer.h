@@ -22,8 +22,9 @@
 #include <memory>
 #include <ctime>
 #include "Writer.h"
+#include "dr_time.h"
 
-
+class SignalSet;
 class SignalData;
 
 class Hdf5Writer : public Writer {
@@ -34,7 +35,7 @@ public:
 
 protected:
   std::vector<std::string> closeDataSet( );
-  int drain( SignalSet& );
+  int drain( std::unique_ptr<SignalSet>& );
 
 private:
 
@@ -52,23 +53,23 @@ private:
       const std::string& attr, dr_time val );
   void writeTimesAndDurationAttributes( H5::H5Location& loc,
       const dr_time& start, const dr_time& end );
-  static void writeAttributes( H5::H5Location& ds, const SignalData& data );
-  void writeVital( H5::Group& group, SignalData& data );
-  void writeVitalGroup( H5::Group& group, SignalData& data );
-  void writeWave( H5::Group& group, SignalData& data );
-  void writeWaveGroup( H5::Group& group, SignalData& data );
-  void writeTimes( H5::Group& group, SignalData& data );
-  void writeGroupAttrs( H5::Group& group, SignalData& data );
+  static void writeAttributes( H5::H5Location& ds, const std::unique_ptr<SignalData>& data );
+  void writeVital( H5::Group& group, std::unique_ptr<SignalData>& data );
+  void writeVitalGroup( H5::Group& group,  std::unique_ptr<SignalData>& data );
+  void writeWave( H5::Group& group, std::unique_ptr<SignalData>& data );
+  void writeWaveGroup( H5::Group& group, std::unique_ptr<SignalData>& data );
+  void writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data );
+  void writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data );
   static void autochunk( hsize_t* dims, int rank, hsize_t* rslts );
-  void createEventsAndTimes( H5::H5File, const SignalSet& data );
-  static std::string getDatasetName( const SignalData& data );
+  void createEventsAndTimes( H5::H5File, const std::unique_ptr<SignalSet>& data );
+  static std::string getDatasetName( const std::unique_ptr<SignalData>& data );
 
   /**
    * Rescale the data to fit in shorts
    * @param data
    * @return true, if the data was rescaled
    */
-  bool rescaleForShortsIfNeeded( SignalData& data ) const;
+  bool rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data ) const;
   SignalSet * dataptr;
 };
 
