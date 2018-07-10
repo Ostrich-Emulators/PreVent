@@ -34,7 +34,7 @@ dr_time TdmsReader::parsetime( const std::string& timestr ) {
   return sinceEpoch * 1000;
 }
 
-int TdmsReader::prepare( const std::string& recordset, SignalSet& info ) {
+int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
   int rslt = Reader::prepare( recordset, info );
   if ( 0 != rslt ) {
     return rslt;
@@ -47,7 +47,7 @@ int TdmsReader::prepare( const std::string& recordset, SignalSet& info ) {
 void TdmsReader::finish( ) {
 }
 
-ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
+ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
   int retcode = 0;
   parser->read( false );
 
@@ -82,8 +82,8 @@ ReadResult TdmsReader::fill( SignalSet& info, const ReadResult& ) {
 
           // figure out if this is a wave or a vital
           std::unique_ptr<SignalData>& signal = ( iswave
-                ? info.addWave( name )
-                : info.addVital( name ) );
+                ? info->addWave( name )
+                : info->addVital( name ) );
 
           string unit = ch->getUnit( );
           if ( !unit.empty( ) ) {

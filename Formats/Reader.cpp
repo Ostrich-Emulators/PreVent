@@ -54,7 +54,7 @@ std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
 }
 
 int Reader::prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) {
-  info.reset( false );
+  info->reset( false );
 
   if ( "-" == input || "-zl" == input || "-gz" == input ) {
     largefile = false;
@@ -69,11 +69,11 @@ int Reader::prepare( const std::string& input, std::unique_ptr<SignalSet>& info 
     largefile = ( sz > 1024 * 1024 * 750 );
   }
   
-  info.setFileSupport( largefile );
-  info.addMeta( "Source Reader", name( ) );
+  info->setFileSupport( largefile );
+  info->addMeta( "Source Reader", name( ) );
 
   // figure out a string for our timezone by getting a reference time
-  info.addMeta( SignalData::TIMEZONE, localizingTime( ) ? tz_name() : "UTC" );
+  info->addMeta( SignalData::TIMEZONE, localizingTime( ) ? tz_name() : "UTC" );
 
   return 0;
 }

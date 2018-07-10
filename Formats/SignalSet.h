@@ -33,18 +33,14 @@ class SignalSet {
 public:
   SignalSet( bool largefilesupport = false );
   virtual ~SignalSet( );
-//  virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>vitals( ) const = 0;
-//  virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>waves( ) const = 0;
-//  virtual std::vector<std::reference_wrapper<std::unique_ptr<SignalData>>>vitals( ) = 0;
-//  virtual std::vector<std::reference_wrapper<std::unique_ptr<SignalData>>>waves( ) = 0;
+  virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) =0;
+  virtual std::vector<std::unique_ptr<SignalData>>&waves( ) =0;
 
-  virtual SignalDataIterator begin( ) = 0;
-  virtual SignalDataIterator end( ) = 0;
-
-  virtual PartionedSignalData vitals() = 0;
-  virtual PartionedSignalData waves() = 0;
+  virtual const std::vector<std::unique_ptr<SignalData>>&vitals( ) const =0;
+  virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const =0;
 
   std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const;
+
   std::map<std::string, std::string>& metadata( );
   const std::map<std::string, std::string>& metadata( ) const;
 
@@ -88,17 +84,6 @@ private:
   bool largefile;
 
 };
-
-class PartionedSignalData {
-public:
-  PartionedSignalData( std::vector<std::unique_ptr<SignalData>>& vec );
-  virtual ~PartionedSignalData();
-  SignalDataIterator begin();
-  SignalDataIterator end();
-private:
-  std::vector<std::unique_ptr<SignalData>>& vector;
-};
-
 
 #endif /* SIGNALSET_H */
 

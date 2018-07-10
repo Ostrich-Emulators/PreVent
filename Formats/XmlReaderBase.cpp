@@ -16,6 +16,7 @@
 #include "XmlReaderBase.h"
 #include "SignalData.h"
 #include "StreamChunkReader.h"
+#include "BasicSignalSet.h"
 
 #include <ctime>
 #include <iostream>
@@ -31,10 +32,12 @@ bool XmlReaderBase::accumulateText = false;
 std::string XmlReaderBase::working;
 const int XmlReaderBase::READCHUNK = 16384 * 16;
 
-XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ), datemodifier( 0 ) {
+XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ), datemodifier( 0 ),
+filler( nullptr ) {
 }
 
-XmlReaderBase::XmlReaderBase( const XmlReaderBase& orig ) : Reader( orig ), datemodifier( 0 ) {
+XmlReaderBase::XmlReaderBase( const XmlReaderBase& orig ) : Reader( orig ), datemodifier( 0 ),
+filler( nullptr ) {
 }
 
 XmlReaderBase::~XmlReaderBase( ) {
@@ -97,8 +100,10 @@ std::string XmlReaderBase::trim( std::string & totrim ) {
 }
 
 void XmlReaderBase::startSaving( ) {
+  saved.reset( new BasicSignalSet( ) );
+  std::cout<<filler<<std::endl;
   saved->setMetadataFrom( *filler );
-  filler = saved;
+  filler = saved.get();
   filler->clearOffsets( );
 }
 
@@ -137,15 +142,16 @@ void XmlReaderBase::comment( void* data, const char* text ) {
   rdr->comment( trim( comment ) );
 }
 
-void XmlReaderBase::copysaved( SignalSet& tgt ) {
-  tgt.setMetadataFrom( *saved );
+void XmlReaderBase::copySavedInto( std::unique_ptr<SignalSet>& tgt ) {
+  // copy all our saved data into this new tgt signalset
+  tgt->setMetadataFrom( *saved );
   saved->metadata( ).clear( );
 
   for ( auto& m : saved->vitals( ) ) {
-    std::unique_ptr<SignalData>& savedsignal = m.get( );
+    const std::unique_ptr<SignalData>& savedsignal = m;
 
     bool added = false;
-    std::unique_ptr<SignalData>& infodata = tgt.addVital( m.get( )->name( ), &added );
+    std::unique_ptr<SignalData>& infodata = tgt->addVital( m->name( ), &added );
 
     infodata->setMetadataFrom( *savedsignal );
     int rows = savedsignal->size( );
@@ -156,10 +162,10 @@ void XmlReaderBase::copysaved( SignalSet& tgt ) {
   }
 
   for ( auto& m : saved->waves( ) ) {
-    std::unique_ptr<SignalData>& savedsignal = m.get( );
+    const std::unique_ptr<SignalData>& savedsignal = m;
 
     bool added = false;
-    std::unique_ptr<SignalData>& infodata = tgt.addWave( m.get( )->name( ), &added );
+    std::unique_ptr<SignalData>& infodata = tgt->addWave( m->name( ), &added );
 
     infodata->setMetadataFrom( *savedsignal );
     int rows = savedsignal->size( );
@@ -169,14 +175,14 @@ void XmlReaderBase::copysaved( SignalSet& tgt ) {
     }
   }
 
-  saved->reset( false );
+  saved.reset( ); // delete our saved data
 }
 
 ReadResult XmlReaderBase::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastfill ) {
   if ( ReadResult::END_OF_DAY == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
-    copysaved( info );
+    copySavedInto( info );
   }
-  filler = &info;
+  filler = info.get();
   setResult( ReadResult::NORMAL );
 
   firstread = ( ReadResult::FIRST_READ == lastfill );

@@ -67,7 +67,7 @@ size_t ZlReader::getSize( const std::string& input ) const {
   return info.st_size;
 }
 
-int ZlReader::prepare( const std::string& input, SignalSet& data ) {
+int ZlReader::prepare( const std::string& input, std::unique_ptr<SignalSet>& data ) {
   int rslt = Reader::prepare( input, data );
   
   // Zl format is really a directory containing a bunch of gzip files
@@ -113,7 +113,7 @@ int ZlReader::prepare( const std::string& input, SignalSet& data ) {
   return 0;
 }
 
-ReadResult ZlReader::fill( SignalSet& info, const ReadResult& ) {
+ReadResult ZlReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
   // for this class we say a chunk is a full data set for one patient,
   // so read until we see another HEADER line in the text
   std::string onepatientdata = leftoverText + stream->readNextChunk( );
@@ -174,7 +174,7 @@ ReadResult ZlReader::fill( SignalSet& info, const ReadResult& ) {
   return retcode;
 }
 
-void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
+void ZlReader::handleOneLine( const std::string& chunk, std::unique_ptr<SignalSet>& info ) {
   if ( HEADER == chunk ) {
     state = zlReaderState::ZIN_HEADER;
   }
@@ -198,7 +198,7 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       std::getline( points, low, '|' );
 
       bool added;
-      std::unique_ptr<SignalData>& dataset = info.addVital( vital, &added );
+      std::unique_ptr<SignalData>& dataset = info->addVital( vital, &added );
 
       if ( val.empty( ) ) {
         output( ) << "empty val? " << chunk << std::endl;
@@ -221,7 +221,7 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       std::getline( points, val, '|' );
 
       bool first;
-      std::unique_ptr<SignalData>& dataset = info.addWave( wavename, &first );
+      std::unique_ptr<SignalData>& dataset = info->addWave( wavename, &first );
       points >> wavename >> uom >> val;
 
       if ( first ) {
@@ -239,7 +239,7 @@ void ZlReader::handleOneLine( const std::string& chunk, SignalSet& info ) {
       const int epos = chunk.find( '=' );
       std::string key = chunk.substr( 0, epos );
       std::string val = chunk.substr( epos + 1 );
-      info.addMeta( key, val );
+      info->addMeta( key, val );
     }
   }
 }

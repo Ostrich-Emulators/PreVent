@@ -22,8 +22,8 @@
 class SignalDataIterator : public std::iterator<std::random_access_iterator_tag, SignalData> {
 public:
 
-  SignalDataIterator( std::vector<std::unique_ptr<SignalData>> * vec, int idx = -1,
-      std::vector<std::unique_ptr<SignalData>> * vec2 = nullptr )
+  SignalDataIterator( std::vector<std::unique_ptr<SignalData>> *vec, int idx = -1,
+      std::vector<std::unique_ptr<SignalData>> *vec2 = nullptr )
   : loc( idx ) {
     for ( auto& x : *vec ) {
       vector.push_back( std::ref( x ) );
@@ -131,7 +131,7 @@ public:
   }
 
   std::unique_ptr<SignalData>* operator->( ) {
-    return &(vector.at(loc).get() );
+    return &( vector.at( loc ).get( ) );
   }
 
 protected:
@@ -139,5 +139,24 @@ protected:
   std::vector<std::reference_wrapper<std::unique_ptr<SignalData>>> vector;
 };
 
+class PartionedSignalData {
+public:
+  PartionedSignalData( std::vector<std::unique_ptr<SignalData>>&vec ) : vector( vec ) {
+  }
+
+  ~PartionedSignalData( ) {
+  }
+
+  SignalDataIterator begin( ) {
+    return SignalDataIterator( &vector );
+  }
+
+  SignalDataIterator end( ) {
+    return SignalDataIterator( &vector, vector.size( ) );
+  }
+
+private:
+  std::vector<std::unique_ptr<SignalData>>&vector;
+};
 #endif /* SIGNALDATAITERATOR_H */
 

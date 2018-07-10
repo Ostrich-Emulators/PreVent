@@ -22,16 +22,12 @@ class BasicSignalSet : public SignalSet {
 public:
   BasicSignalSet( );
   virtual ~BasicSignalSet( );
-//  virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> vitals( ) const override;
-//  virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> waves( ) const override;
-//
-//  virtual std::vector<std::reference_wrapper<std::unique_ptr<SignalData>>> vitals( ) override;
-//  virtual std::vector<std::reference_wrapper<std::unique_ptr<SignalData>>> waves( ) override;
 
-  virtual SignalDataIterator begin( ) override;
-  virtual SignalDataIterator end( ) override;
-  virtual PartionedSignalData vitals( ) override;
-  virtual PartionedSignalData waves( ) override;
+  virtual std::vector<std::unique_ptr<SignalData>>& vitals( ) override;
+  virtual std::vector<std::unique_ptr<SignalData>>& waves( ) override;
+
+  virtual const std::vector<std::unique_ptr<SignalData>>&vitals( ) const override;
+  virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const override;
 
   /**
    * Adds a new vital sign if it has not already been added. If it already

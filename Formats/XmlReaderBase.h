@@ -56,7 +56,7 @@ protected:
    */
   static std::string trim( std::string& totrim );
 
-  void copysaved( SignalSet& newset );
+  void copySavedInto( std::unique_ptr<SignalSet>& newset );
   virtual void start( const std::string& element, std::map<std::string, std::string>& attrs ) = 0;
   virtual void end( const std::string& element, const std::string& text ) = 0;
   virtual void comment( const std::string& text ) = 0;
@@ -74,7 +74,7 @@ protected:
   bool isFirstRead( ) const;
   void setDateModifier( const dr_time& mod );
 
-  SignalSet * saved;
+  std::unique_ptr<SignalSet> saved;
   SignalSet * filler;
 private:
 

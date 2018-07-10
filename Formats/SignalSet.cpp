@@ -79,21 +79,3 @@ void SignalSet::addOffset( long seg, dr_time time ) {
 void SignalSet::clearOffsets( ) {
   segs.clear( );
 }
-
-class PartionedSignalData{
-public:
-
-  PartionedSignalData::PartionedSignalData( std::vector<std::unique_ptr<SignalData>>&vec ) : vector( vec ) {
-  }
-
-  PartionedSignalData::~PartionedSignalData( ) {
-  }
-
-  SignalDataIterator begin( ) {
-    return SignalDataIterator( *vector );
-  }
-
-  SignalDataIterator end( ) {
-    return SignalDataIterator( *vector, vector->size( ) );
-  }
-};

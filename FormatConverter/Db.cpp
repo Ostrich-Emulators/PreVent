@@ -131,10 +131,10 @@ int Db::getOrAddUnit( const std::string& name ) {
   return unitids.at( name );
 }
 
-int Db::getOrAddSignal( const SignalData& data ) {
-  std::string name = data.name( );
-  double hz = data.hz( );
-  auto pairkey = std::make_tuple( name, hz, data.wave( ) );
+int Db::getOrAddSignal( const std::unique_ptr<SignalData>& data ) {
+  std::string name = data->name( );
+  double hz = data->hz( );
+  auto pairkey = std::make_tuple( name, hz, data->wave( ) );
 
   if ( 0 == signalids.count( pairkey ) ) {
     std::string sql = "INSERT INTO signal( name, hz, uom, iswave ) VALUES( ?, ?, ?, ? )";
@@ -148,14 +148,14 @@ int Db::getOrAddSignal( const SignalData& data ) {
     sqlite3_bind_text( stmt, 1, name.c_str( ), name.length( ), nullptr );
     sqlite3_bind_double( stmt, 2, hz );
 
-    if ( data.uom( ).empty( ) ) {
+    if ( data->uom( ).empty( ) ) {
       sqlite3_bind_null( stmt, 3 );
     }
     else {
-      sqlite3_bind_text( stmt, 3, data.uom( ).c_str( ), data.uom( ).length( ), nullptr );
+      sqlite3_bind_text( stmt, 3, data->uom( ).c_str( ), data->uom( ).length( ), nullptr );
     }
 
-    sqlite3_bind_int( stmt, 4, ( data.wave( ) ? 1 : 0 ) );
+    sqlite3_bind_int( stmt, 4, ( data->wave( ) ? 1 : 0 ) );
 
     rc = sqlite3_step( stmt );
     if ( rc != SQLITE_DONE ) {
@@ -172,7 +172,7 @@ int Db::getOrAddSignal( const SignalData& data ) {
   return signalids.at( pairkey );
 }
 
-void Db::addSignal( int fileid, const SignalData& sig ) {
+void Db::addSignal( int fileid, const std::unique_ptr<SignalData>& sig ) {
   //CREATE TABLE file_signal (  file_id INTEGER,  signal_id INTEGER,  start INTEGER,  end INTEGER,  PRIMARY KEY( file_id, signal_id ));
   int sid = getOrAddSignal( sig );
   std::string sql = "INSERT INTO file_signal( file_id, signal_id, start, end ) VALUES( ?, ?, ?, ? )";
@@ -184,8 +184,8 @@ void Db::addSignal( int fileid, const SignalData& sig ) {
   }
   sqlite3_bind_int( stmt, 1, fileid );
   sqlite3_bind_int( stmt, 2, sid );
-  sqlite3_bind_int( stmt, 3, sig.startTime( ) );
-  sqlite3_bind_int( stmt, 4, sig.endTime( ) );
+  sqlite3_bind_int( stmt, 3, sig->startTime( ) );
+  sqlite3_bind_int( stmt, 4, sig->endTime( ) );
 
   rc = sqlite3_step( stmt );
   if ( rc != SQLITE_DONE ) {
@@ -211,8 +211,8 @@ int Db::getOrAddBed( const std::string& name, const std::string& unitname ) {
   return bedids.at( pairkey );
 }
 
-void Db::addOffsets( int fileid, const SignalSet& sig ) {
-  std::map<long, dr_time> offsets = sig.offsets( );
+void Db::addOffsets( int fileid, const std::unique_ptr<SignalSet>& sig ) {
+  std::map<long, dr_time> offsets = sig->offsets( );
   if ( !offsets.empty( ) ) {
     sqlite3_stmt * stmt = nullptr;
     std::string sql = "INSERT INTO offset( file_id, time, offset ) VALUES ( ?, ?, ? )";
@@ -243,7 +243,7 @@ void Db::setProperty( ConversionProperty key, const std::string& val ) {
   }
 }
 
-void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
+void Db::onFileCompleted( const std::string& filename, const std::unique_ptr<SignalSet>& data ) {
   if ( !quiet ) {
     std::cout << "updating database...";
   }
@@ -252,14 +252,14 @@ void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
 
   int pid = 0;
   int bid = 0;
-  if ( 0 != data.metadata( ).count( "Patient Name" ) ) {
-    std::string pname = data.metadata( ).at( "Patient Name" );
+  if ( 0 != data->metadata( ).count( "Patient Name" ) ) {
+    std::string pname = data->metadata( ).at( "Patient Name" );
     pid = getOrAddPatient( pname );
   }
 
-  if ( 0 != ( data.metadata( ).count( "Bed" ) + data.metadata( ).count( "Unit" ) ) ) {
-    std::string unitname = data.metadata( ).at( "Unit" );
-    std::string bedname = data.metadata( ).at( "Bed" );
+  if ( 0 != ( data->metadata( ).count( "Bed" ) + data->metadata( ).count( "Unit" ) ) ) {
+    std::string unitname = data->metadata( ).at( "Unit" );
+    std::string bedname = data->metadata( ).at( "Bed" );
     bid = getOrAddBed( bedname, unitname );
   }
 
@@ -287,8 +287,8 @@ void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
     sqlite3_bind_int( stmt, 3, pid );
   }
 
-  sqlite3_bind_int( stmt, 4, data.earliest( ) );
-  sqlite3_bind_int( stmt, 5, data.latest( ) );
+  sqlite3_bind_int( stmt, 4, data->earliest( ) );
+  sqlite3_bind_int( stmt, 5, data->latest( ) );
 
   rc = sqlite3_step( stmt );
   if ( rc != SQLITE_DONE ) {
@@ -301,8 +301,8 @@ void Db::onFileCompleted( const std::string& filename, const SignalSet& data ) {
 
   addOffsets( fileid, data );
 
-  for ( const std::unique_ptr<SignalData>& signal : data.allsignals( ) ) {
-    addSignal( fileid, *signal );
+  for ( const auto& signal : data->allsignals( ) ) {
+    addSignal( fileid, signal.get() );
   }
 
   exec( "COMMIT;" );

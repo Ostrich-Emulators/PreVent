@@ -27,10 +27,10 @@ public:
   virtual ~TdmsReader( );
 
 protected:
-  int prepare( const std::string& input, SignalSet& info ) override;
+  int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
   void finish( ) override;
 
-  ReadResult fill( SignalSet& data, const ReadResult& lastfill ) override;
+  ReadResult fill( std::unique_ptr<SignalSet>& data, const ReadResult& lastfill ) override;
   size_t getSize( const std::string& input ) const override;
 
 private:

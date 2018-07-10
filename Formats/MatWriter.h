@@ -37,7 +37,7 @@ public:
 protected:
   int initDataSet();
   std::vector<std::string> closeDataSet();
-  int drain( SignalSet& );
+  int drain( std::unique_ptr<SignalSet>& );
 
 private:
   MatWriter( const MatWriter& orig );

@@ -405,7 +405,7 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
 }
 
 int Hdf5Writer::drain( std::unique_ptr<SignalSet>& info ) {
-  dataptr = info.get();
+  dataptr = info.get( );
   return 0;
 }
 
@@ -422,7 +422,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 
   std::string outy = filenamer( ).filename( data );
 
-  if ( data->begin() == data->end() ){
+  if ( data->vitals( ).empty( ) && data->waves( ).empty( ) ) {
     std::cerr << "Nothing to write to " << outy << std::endl;
     return ret;
   }
@@ -438,23 +438,23 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   output( ) << "Writing " << data->vitals( ).size( ) << " Vitals" << std::endl;
   for ( auto& vits : data->vitals( ) ) {
     if ( vits.get( )->empty( ) ) {
-      output( ) << "Skipping Vital: " << vits.get( )->name( ) << "(no data)" << std::endl;
+      output( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
     }
     else {
-      H5::Group g = grp.createGroup( getDatasetName( vits.get( ) ) );
-      writeVitalGroup( g, vits.get( ) );
+      H5::Group g = grp.createGroup( getDatasetName( vits ) );
+      writeVitalGroup( g, vits );
     }
   }
 
   grp = file.createGroup( "Waveforms" );
   output( ) << "Writing " << data->waves( ).size( ) << " Waveforms" << std::endl;
   for ( auto& wavs : data->waves( ) ) {
-    if ( wavs.get( )->empty( ) ) {
-      output( ) << "Skipping Wave: " << wavs.get()->name() << "(no data)" << std::endl;
+    if ( wavs->empty( ) ) {
+      output( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
     }
     else {
-      H5::Group g = grp.createGroup( getDatasetName( wavs.get( ) ) );
-      writeWaveGroup( g, wavs.get( ) );
+      H5::Group g = grp.createGroup( getDatasetName( wavs ) );
+      writeWaveGroup( g, wavs );
     }
   }
 

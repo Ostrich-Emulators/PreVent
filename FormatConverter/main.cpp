@@ -16,7 +16,7 @@
 #include "Formats.h"
 #include "SignalData.h"
 #include "DataRow.h"
-#include "SignalSet.h"
+#include "BasicSignalSet.h"
 #include "Db.h"
 #include "config.h"
 #include "FileNamer.h"
@@ -239,7 +239,7 @@ int main( int argc, char** argv ) {
   int returncode = 0;
   // send the files through
   for ( int i = optind; i < argc; i++ ) {
-    std::unique_ptr<SignalSet>data( new SignalSet( ) );
+    std::unique_ptr<SignalSet>data( new BasicSignalSet( ) );
     std::string input( argv[i] );
     to->filenamer( ).inputfilename( input );
     std::cout << "converting " << input

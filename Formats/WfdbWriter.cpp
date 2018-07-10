@@ -51,16 +51,16 @@ std::vector<std::string> WfdbWriter::closeDataSet( ) {
   return files;
 }
 
-int WfdbWriter::drain( SignalSet& info ) {
+int WfdbWriter::drain( std::unique_ptr<SignalSet>& info ) {
   std::map<double, std::vector<std::unique_ptr < SignalData>>> freqgroups;
-  for ( auto& ds : info.vitals( ) ) {
-    double freq = ds.get()->hz( );
-    freqgroups[freq].push_back( std::move( ds.get() ) );
+  for ( auto& ds : info->vitals( ) ) {
+    double freq = ds->hz( );
+    freqgroups[freq].push_back( std::move( ds ) );
   }
 
-  for ( auto& ds : info.waves( ) ) {
-    double freq = ds.get()->hz( );
-    freqgroups[freq].push_back( std::move( ds.get() ) );
+  for ( auto& ds : info->waves( ) ) {
+    double freq = ds->hz( );
+    freqgroups[freq].push_back( std::move( ds ) );
   }
 
   for ( auto& ds : freqgroups ) {

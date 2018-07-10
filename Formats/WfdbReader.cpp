@@ -58,7 +58,7 @@ dr_time WfdbReader::convert( const char * timestr ) {
   return timegm( &timeDate )* 1000;
 }
 
-int WfdbReader::prepare( const std::string& recordset, SignalSet& info ) {
+int WfdbReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
   int rslt = Reader::prepare( recordset, info );
   if ( 0 != rslt ) {
     return rslt;
@@ -74,8 +74,8 @@ int WfdbReader::prepare( const std::string& recordset, SignalSet& info ) {
 
     for ( int i = 0; i < sigcount; i++ ) {
       std::unique_ptr<SignalData>& dataset = ( iswave
-              ? info.addWave( siginfo[i].desc )
-              : info.addVital( siginfo[i].desc ) );
+              ? info->addWave( siginfo[i].desc )
+              : info->addVital( siginfo[i].desc ) );
 
       dataset->setChunkIntervalAndSampleRate( 1000, freqhz );
 
@@ -93,7 +93,7 @@ void WfdbReader::finish( ) {
   wfdbquit( );
 }
 
-ReadResult WfdbReader::fill( SignalSet& info, const ReadResult& ) {
+ReadResult WfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
   WFDB_Sample v[sigcount];
   int retcode = getvec( v );
   int sampleno = 0;
@@ -119,8 +119,8 @@ ReadResult WfdbReader::fill( SignalSet& info, const ReadResult& ) {
         lasttime = timet;
 
         std::unique_ptr<SignalData>& dataset = ( iswave
-                ? info.addWave( siginfo[j].desc )
-                : info.addVital( siginfo[j].desc ) );
+                ? info->addWave( siginfo[j].desc )
+                : info->addVital( siginfo[j].desc ) );
 
         if ( !currents[j].data.empty( ) ) {
           // don't add a row on the very first loop through
@@ -145,8 +145,8 @@ ReadResult WfdbReader::fill( SignalSet& info, const ReadResult& ) {
   // now add our last data point
   for ( int j = 0; j < sigcount; j++ ) {
     std::unique_ptr<SignalData>& dataset = ( iswave
-            ? info.addWave( siginfo[j].desc )
-            : info.addVital( siginfo[j].desc ) );
+            ? info->addWave( siginfo[j].desc )
+            : info->addVital( siginfo[j].desc ) );
 
     currents[j].time = lasttime;
     dataset->add( currents[j] );

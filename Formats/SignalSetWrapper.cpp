@@ -42,29 +42,20 @@ std::unique_ptr<SignalData>& SignalSetWrapper::addWave( const std::string& name,
 //std::vector<std::reference_wrapper<std::unique_ptr<SignalData>>> SignalSetWrapper::waves( ) {
 //  return set->waves( );
 //}
-
-SignalDataIterator SignalSetWrapper::begin( ) {
-  return set->begin( );
+std::vector<std::unique_ptr<SignalData>>& SignalSetWrapper::vitals( ) {
+  return set->vitals();
 }
 
-SignalDataIterator SignalSetWrapper::end( ) {
-  return set->end( );
+std::vector<std::unique_ptr<SignalData>>& SignalSetWrapper::waves( ) {
+  return set->waves();
 }
 
-SignalDataIterator SignalSetWrapper::vbegin( ) {
-  return set->vbegin( );
+const std::vector<std::unique_ptr<SignalData>>& SignalSetWrapper::vitals( ) const {
+  return set->vitals();
 }
 
-SignalDataIterator SignalSetWrapper::vend( ) {
-  return set->vend( );
-}
-
-SignalDataIterator SignalSetWrapper::wbegin( ) {
-  return set->wbegin( );
-}
-
-SignalDataIterator SignalSetWrapper::wend( ) {
-  return set->wend( );
+const std::vector<std::unique_ptr<SignalData>>& SignalSetWrapper::waves( ) const {
+  return set->waves();
 }
 
 void SignalSetWrapper::reset( bool signalDataOnly ) {

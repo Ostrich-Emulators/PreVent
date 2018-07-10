@@ -125,7 +125,7 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
         patientno++;
       }
 
-      data.reset( false );
+      data->reset( false );
       output( ) << "init data set" << std::endl;
       namer->patientOrdinal( patientno );
       initDataSet( );

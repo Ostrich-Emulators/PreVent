@@ -82,20 +82,20 @@ std::vector<std::string> MatWriter::closeDataSet( ) {
   return ret;
 }
 
-int MatWriter::drain( SignalSet& info ) {
-  dataptr = &info;
+int MatWriter::drain( std::unique_ptr<SignalSet>& info ) {
+  dataptr = info.get();
   filenamer( ).filename( info );
 
   std::vector<std::unique_ptr<SignalData>> vitvec;
   for( auto&x : dataptr->vitals( ) ){
-    vitvec.push_back( std::move( x.get() ) );
+    vitvec.push_back( std::move( x ) );
   }
 
   writeVitals( vitvec );
 
   std::map<double, std::vector<std::unique_ptr<SignalData>>> freqgroups;
-  for ( auto& ds : info.waves( ) ) {
-    freqgroups[ds.get( )->hz( )].push_back( std::move( ds.get() ) );
+  for ( auto& ds : info->waves( ) ) {
+    freqgroups[ds->hz( )].push_back( std::move( ds ) );
   }
 
   for ( auto& ds : freqgroups ) {

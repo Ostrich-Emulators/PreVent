@@ -57,20 +57,20 @@ BasicSignalSet BasicSignalSet::operator=(const BasicSignalSet&) {
 //  return ret;
 //}
 
-SignalDataIterator BasicSignalSet::begin( ) {
-  return SignalDataIterator( &vits, -1, &wavs );
+std::vector<std::unique_ptr<SignalData>>& BasicSignalSet::vitals( ) {
+  return vits;
 }
 
-SignalDataIterator BasicSignalSet::end( ) {
-  return SignalDataIterator( &vits, vits.size( ) + wavs.size( ), &wavs );
+std::vector<std::unique_ptr<SignalData>>& BasicSignalSet::waves( ) {
+  return wavs;
 }
 
-PartionedSignalData BasicSignalSet::vitals( ) {
-  return PartionedSignalData( vits );
+const std::vector<std::unique_ptr<SignalData>>& BasicSignalSet::vitals( ) const {
+  return vits;
 }
 
-PartionedSignalData BasicSignalSet::waves( ) {
-  return SignalDataIterator( wavs, wavs.size( ) );
+const std::vector<std::unique_ptr<SignalData>>& BasicSignalSet::waves( ) const {
+  return wavs;
 }
 
 dr_time BasicSignalSet::earliest( const TimeCounter& type ) const {

@@ -16,6 +16,8 @@
 
 #include "Writer.h"
 
+#include <map>
+#include <memory>
 #include <wfdb/wfdb.h>
 
 class SignalData;
@@ -28,7 +30,7 @@ public:
 protected:
   int initDataSet();
   std::vector<std::string> closeDataSet( );
-  int drain( SignalSet& );
+  int drain( std::unique_ptr<SignalSet>& );
 
 private:
   WfdbWriter( const WfdbWriter& orig );

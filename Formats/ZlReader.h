@@ -37,10 +37,10 @@ public:
 	virtual ~ZlReader( );
 
 protected:
-	ReadResult fill( SignalSet&, const ReadResult& lastfill ) override;
+	ReadResult fill( std::unique_ptr<SignalSet>&, const ReadResult& lastfill ) override;
 	size_t getSize( const std::string& input ) const override;
 
-	int prepare( const std::string& input, SignalSet& info ) override;
+	int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
 	void finish( ) override;
 
 private:
@@ -54,8 +54,8 @@ private:
 	std::unique_ptr<StreamChunkReader> stream;
     std::vector<std::string> wavefiles;
 
-	void handleInputChunk( std::string& chunk, SignalSet& info );
-	void handleOneLine( const std::string& chunk, SignalSet& info );
+	void handleInputChunk( std::string& chunk, std::unique_ptr<SignalSet>& info );
+	void handleOneLine( const std::string& chunk, std::unique_ptr<SignalSet>& info );
 
 	static const std::string HEADER;
 	static const std::string VITAL;
