@@ -155,7 +155,6 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
   }
 
   if ( ReadResult::ERROR == retcode ) {
-
     std::cerr << "error reading file" << std::endl;
   }
 

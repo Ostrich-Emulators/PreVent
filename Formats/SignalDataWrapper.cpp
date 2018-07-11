@@ -6,16 +6,21 @@
 
 #include "DataRow.h"
 #include "SignalDataWrapper.h"
+#include <iostream>
 
 SignalDataWrapper::SignalDataWrapper( const std::unique_ptr<SignalData>& data )
-: signal( data ) {
+: signal( data.get() ), iOwnThisPtr( false ) {
 }
 
 SignalDataWrapper::SignalDataWrapper( SignalData * data )
-:signal( std::unique_ptr<SignalData>( data ) ){
+:signal( data ), iOwnThisPtr( true ) {
+  std::cout<<data<<std::endl;
 }
 
 SignalDataWrapper::~SignalDataWrapper( ) {
+  if( iOwnThisPtr ){
+    delete signal;
+  }
 }
 
 std::unique_ptr<SignalData> SignalDataWrapper::shallowcopy( bool includedates ) {

@@ -43,19 +43,22 @@ public:
    */
   virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = NULL ) override;
 
-  virtual std::vector<std::unique_ptr<SignalData>>& vitals( ) override;
-  virtual std::vector<std::unique_ptr<SignalData>>& waves( ) override;
+  virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) override;
+  virtual std::vector<std::unique_ptr<SignalData>>&waves( ) override;
 
-  virtual const std::vector<std::unique_ptr<SignalData>>& vitals( ) const override;
-  virtual const std::vector<std::unique_ptr<SignalData>>& waves( ) const override;
+  virtual const std::vector<std::unique_ptr<SignalData>>&vitals( ) const override;
+  virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const override;
 
-  virtual  void reset( bool signalDataOnly = true ) override;
+  virtual void reset( bool signalDataOnly = true ) override;
   virtual dr_time earliest( const TimeCounter& tc = EITHER ) const override;
   virtual dr_time latest( const TimeCounter& tc = EITHER ) const override;
 
+protected:
+  virtual bool isLargeFile() const override;
+  const std::unique_ptr<SignalSet>& set;
 
 private:
-  const std::unique_ptr<SignalSet>& set;
+  std::unique_ptr<SignalSet> tmp; // use for raw-pointer ctor
 };
 
 #endif /* SIGNALSETWRAPPER_H */

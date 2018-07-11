@@ -77,7 +77,7 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     if ( isRollover( lastvstime, currvstime ) ) {
       setResult( ReadResult::END_OF_DAY );
       prevtime = currvstime;
-      startSaving( );
+      startSaving( currvstime );
     }
   }
   else if ( "Waveforms" == element ) {
@@ -101,7 +101,7 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
     if ( isRollover( lastwavetime, currwavetime ) ) {
       setResult( ReadResult::END_OF_DAY );
       prevtime = currwavetime;
-      startSaving( );
+      startSaving( currwavetime );
     }
   }
   else if ( "PatientName" == element ) {
@@ -175,8 +175,8 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
         setResult( ReadResult::END_OF_PATIENT );
         // we've cut over to a new set of data, so
         // save the data we parse now to a different SignalSet
-        startSaving( );
-        saved->metadata( )["Patient Name"] = text;
+        startSaving( 0 );
+        saved.metadata( )["Patient Name"] = text;
       }
     }
     setstate( INDETERMINATE );
@@ -201,6 +201,8 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
 
           if ( added ) {
+            output()<<sig.get()<<std::endl;
+
             sig->setChunkIntervalAndSampleRate( ( isphilips ? 1024 : 2000 ), 1 );
 
             for ( auto x : sig->metad( ) ) {

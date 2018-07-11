@@ -57,7 +57,7 @@ void CpcXmlReader::start( const std::string& element,
 
     if ( isRollover( lasttime, currtime ) ) {
       setResult( ReadResult::END_OF_DAY );
-      startSaving( );
+      startSaving( currtime );
     }
     inmg = false;
   }

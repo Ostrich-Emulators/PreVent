@@ -20,6 +20,7 @@
 #include "Db.h"
 #include "config.h"
 #include "FileNamer.h"
+#include "OffsetTimeSignalSet.h"
 
 #ifndef GIT_BUILD
 #define GIT_BUILD "--------"
@@ -92,7 +93,7 @@ int main( int argc, char** argv ) {
   bool anonymize = false;
   bool quiet = false;
   bool nobreak = false;
-  bool localtime = false;
+  bool dolocaltime = false;
   bool stopatone = false;
   int compression = Writer::DEFAULT_COMPRESSION;
 
@@ -123,7 +124,7 @@ int main( int argc, char** argv ) {
         anonymize = true;
         break;
       case 'l':
-        localtime = true;
+        dolocaltime = true;
         break;
       case 'n':
         nobreak = true;
@@ -217,7 +218,7 @@ int main( int argc, char** argv ) {
     from->setQuiet( quiet );
     from->setAnonymous( anonymize );
     from->setNonbreaking( nobreak );
-    from->localizeTime( localtime );
+    from->localizeTime( dolocaltime );
 
     if ( !exp.empty( ) ) {
       from->extractOnly( exp );
@@ -240,6 +241,11 @@ int main( int argc, char** argv ) {
   // send the files through
   for ( int i = optind; i < argc; i++ ) {
     std::unique_ptr<SignalSet>data( new BasicSignalSet( ) );
+    if ( dolocaltime ) {
+      time_t reftime = std::time( nullptr );
+      tm * reftm = localtime( &reftime );
+      data.reset( new OffsetTimeSignalSet( data.release( ), reftm->tm_zone, reftm->tm_gmtoff * 1000 ) );
+    }
     std::string input( argv[i] );
     to->filenamer( ).inputfilename( input );
     std::cout << "converting " << input

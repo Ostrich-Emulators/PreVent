@@ -74,15 +74,14 @@ public:
   //void moveTo( SignalSet& dest );
 
 protected:
-  bool isLargeFile( ) const;
+  virtual bool isLargeFile( ) const;
 
 private:
-  //std::map<std::string, std::unique_ptr<SignalData>> vmap;
-  //std::map<std::string, std::unique_ptr<SignalData>> wmap;
   std::map<std::string, std::string> metamap;
   std::map<long, dr_time> segs; // segment index->time
   bool largefile;
 
+  friend class SignalSetWrapper;
 };
 
 #endif /* SIGNALSET_H */

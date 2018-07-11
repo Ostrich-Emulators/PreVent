@@ -16,8 +16,6 @@
 
 #include "SignalData.h"
 
-class DurationSpecification;
-
 /**
  * A base class for other wrappers. Every function call gets passed to the base
  * SignalData
@@ -70,7 +68,8 @@ public:
   virtual std::vector<std::string> extras( ) const override;
 
 private:
-  const std::unique_ptr<SignalData>& signal;
+  SignalData * signal;
+  bool iOwnThisPtr;
 };
 
 #endif /* SIGNALDATAWRAPPER_H */

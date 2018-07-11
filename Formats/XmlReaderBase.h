@@ -16,7 +16,7 @@
 
 #include "Reader.h"
 #include "DataRow.h"
-#include "SignalSet.h"
+#include "BasicSignalSet.h"
 
 #include <string>
 #include <list>
@@ -69,12 +69,12 @@ protected:
    */
   dr_time time( const std::string& val, bool valIsLocal = false ) const;
   bool isRollover( const dr_time& now, const dr_time& then ) const;
-  void startSaving( );
+  void startSaving( dr_time now );
   void setResult( ReadResult rslt );
   bool isFirstRead( ) const;
   void setDateModifier( const dr_time& mod );
 
-  std::unique_ptr<SignalSet> saved;
+  BasicSignalSet saved;
   SignalSet * filler;
 private:
 
@@ -91,6 +91,7 @@ private:
 
   dr_time datemodifier;
   bool firstread;
+  dr_time lastSaveTime;
 };
 
 #endif /* XMLREADER_H */

@@ -13,7 +13,7 @@
 #include <limits>
 #include <iostream>
 
-BasicSignalSet::BasicSignalSet( ) : SignalSet( false ) {
+BasicSignalSet::BasicSignalSet( bool lfs ) : SignalSet( lfs ) {
 }
 
 BasicSignalSet::~BasicSignalSet( ) {
@@ -57,19 +57,19 @@ BasicSignalSet BasicSignalSet::operator=(const BasicSignalSet&) {
 //  return ret;
 //}
 
-std::vector<std::unique_ptr<SignalData>>& BasicSignalSet::vitals( ) {
+std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::vitals( ) {
   return vits;
 }
 
-std::vector<std::unique_ptr<SignalData>>& BasicSignalSet::waves( ) {
+std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::waves( ) {
   return wavs;
 }
 
-const std::vector<std::unique_ptr<SignalData>>& BasicSignalSet::vitals( ) const {
+const std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::vitals( ) const {
   return vits;
 }
 
-const std::vector<std::unique_ptr<SignalData>>& BasicSignalSet::waves( ) const {
+const std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::waves( ) const {
   return wavs;
 }
 

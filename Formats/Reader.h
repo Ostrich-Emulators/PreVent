@@ -16,7 +16,12 @@ class SignalData;
 class DataRow;
 
 enum ReadResult {
-  FIRST_READ, NORMAL, END_OF_PATIENT, END_OF_DAY, END_OF_FILE, ERROR
+  FIRST_READ = 0,
+  NORMAL = 1,
+  END_OF_PATIENT = 2,
+  END_OF_DAY = 3,
+  END_OF_FILE = 4,
+  ERROR = 5
 };
 
 class Reader {
@@ -55,7 +60,7 @@ public:
    * @return the result code
    */
   virtual ReadResult fill( std::unique_ptr<SignalSet>& read,
-        const ReadResult& lastresult = ReadResult::FIRST_READ ) = 0;
+      const ReadResult& lastresult = ReadResult::FIRST_READ ) = 0;
 
   /**
    *  Gets a user-friendly name for this reader
@@ -90,8 +95,8 @@ protected:
   bool nonbreaking( ) const;
 
   std::ostream& output( ) const;
-  int tz_offset() const;
-  const std::string& tz_name() const;
+  int tz_offset( ) const;
+  const std::string& tz_name( ) const;
 private:
 
   bool largefile;

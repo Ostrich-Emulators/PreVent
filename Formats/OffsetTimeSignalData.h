@@ -24,12 +24,12 @@
  * @param data
  * @param spec
  */
-class LocaltimeSignalData : public SignalDataWrapper {
+class OffsetTimeSignalData : public SignalDataWrapper {
 public:
-  LocaltimeSignalData( SignalData * data, const std::string& tzname, const long tz_offset_ms );
-  LocaltimeSignalData( const std::unique_ptr<SignalData>& data, const std::string& tzname,
+  OffsetTimeSignalData( SignalData * data, const std::string& tzname, const long tz_offset_ms );
+  OffsetTimeSignalData( const std::unique_ptr<SignalData>& data, const std::string& tzname,
       const long tz_offset_ms );
-  virtual ~LocaltimeSignalData( );
+  virtual ~OffsetTimeSignalData( );
 
   dr_time startTime( ) const override;
   dr_time endTime( ) const override;

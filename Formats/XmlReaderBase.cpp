@@ -99,12 +99,13 @@ std::string XmlReaderBase::trim( std::string & totrim ) {
   return totrim;
 }
 
-void XmlReaderBase::startSaving( ) {
-  saved.reset( new BasicSignalSet( ) );
-  std::cout<<filler<<std::endl;
-  saved->setMetadataFrom( *filler );
-  filler = saved.get();
-  filler->clearOffsets( );
+void XmlReaderBase::startSaving( dr_time savetime ) {
+  if ( savetime != lastSaveTime ) {
+    saved.setMetadataFrom( *filler );
+    filler = &saved;
+    filler->clearOffsets( );
+    lastSaveTime = savetime;
+  }
 }
 
 void XmlReaderBase::setResult( ReadResult rslt ) {
@@ -144,10 +145,10 @@ void XmlReaderBase::comment( void* data, const char* text ) {
 
 void XmlReaderBase::copySavedInto( std::unique_ptr<SignalSet>& tgt ) {
   // copy all our saved data into this new tgt signalset
-  tgt->setMetadataFrom( *saved );
-  saved->metadata( ).clear( );
+  tgt->setMetadataFrom( saved );
+  saved.metadata( ).clear( );
 
-  for ( auto& m : saved->vitals( ) ) {
+  for ( auto& m : saved.vitals( ) ) {
     const std::unique_ptr<SignalData>& savedsignal = m;
 
     bool added = false;
@@ -161,7 +162,7 @@ void XmlReaderBase::copySavedInto( std::unique_ptr<SignalSet>& tgt ) {
     }
   }
 
-  for ( auto& m : saved->waves( ) ) {
+  for ( auto& m : saved.waves( ) ) {
     const std::unique_ptr<SignalData>& savedsignal = m;
 
     bool added = false;
@@ -175,14 +176,14 @@ void XmlReaderBase::copySavedInto( std::unique_ptr<SignalSet>& tgt ) {
     }
   }
 
-  saved.reset( ); // delete our saved data
+  saved.reset( false );
 }
 
 ReadResult XmlReaderBase::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastfill ) {
   if ( ReadResult::END_OF_DAY == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
     copySavedInto( info );
   }
-  filler = info.get();
+  filler = info.get( );
   setResult( ReadResult::NORMAL );
 
   firstread = ( ReadResult::FIRST_READ == lastfill );

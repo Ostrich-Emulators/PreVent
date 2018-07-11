@@ -20,11 +20,11 @@ class SignalData;
 
 class BasicSignalSet : public SignalSet {
 public:
-  BasicSignalSet( );
+  BasicSignalSet( bool lfs = false );
   virtual ~BasicSignalSet( );
 
-  virtual std::vector<std::unique_ptr<SignalData>>& vitals( ) override;
-  virtual std::vector<std::unique_ptr<SignalData>>& waves( ) override;
+  virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) override;
+  virtual std::vector<std::unique_ptr<SignalData>>&waves( ) override;
 
   virtual const std::vector<std::unique_ptr<SignalData>>&vitals( ) const override;
   virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const override;
@@ -52,7 +52,14 @@ public:
   dr_time latest( const TimeCounter& tc = EITHER ) const override;
 
 protected:
-  virtual std::unique_ptr<SignalData> createSignalData( const std::string& name, bool iswave );
+  /**
+   * A function to actually make the (custom?) signal data object for
+   * addWave() and addVital()
+   * @param name
+   * @param iswave
+   * @return
+   */
+   virtual std::unique_ptr<SignalData> createSignalData( const std::string& name, bool iswave );
 
 private:
   BasicSignalSet( const BasicSignalSet& );

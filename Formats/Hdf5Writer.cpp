@@ -25,7 +25,7 @@
 #include "SignalUtils.h"
 #include "FileNamer.h"
 #include "H5public.h"
-#include "LocaltimeSignalData.h"
+#include "OffsetTimeSignalData.h"
 #include "OffsetTimeSignalSet.h"
 
 const std::string Hdf5Writer::LAYOUT_VERSION = "4.0.0";
@@ -405,17 +405,22 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
 }
 
 int Hdf5Writer::drain( std::unique_ptr<SignalSet>& info ) {
+  // WARNING: we're stripping the pointer of it's uniqueness here
   dataptr = info.get( );
   return 0;
 }
 
 std::vector<std::string> Hdf5Writer::closeDataSet( ) {
-  std::unique_ptr<SignalSet> data( new SignalSetWrapper( dataptr ) );
+  // UH OH: we're making another unique_ptr to this dataptr,
+  // which is itself already owned by some other unique_ptr.
+  // we MUST release it prior to ending this function
+  std::unique_ptr<SignalSet> data( dataptr );
 
   dr_time firstTime = data->earliest( );
   dr_time lastTime = data->latest( );
   std::vector<std::string> ret;
   if ( 0 == lastTime ) {
+    data.release();
     // we don't have any data at all!
     return ret;
   }
@@ -424,6 +429,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 
   if ( data->vitals( ).empty( ) && data->waves( ).empty( ) ) {
     std::cerr << "Nothing to write to " << outy << std::endl;
+    data.release();
     return ret;
   }
 
@@ -459,6 +465,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   }
 
   ret.push_back( outy );
+  data.release();
 }
 
 void Hdf5Writer::writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data ) {
