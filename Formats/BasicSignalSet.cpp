@@ -69,7 +69,7 @@ const std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::vitals( ) const {
   return vits;
 }
 
-const std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::waves( ) const {
+const std::vector<std::unique_ptr<SignalData>>& BasicSignalSet::waves( ) const {
   return wavs;
 }
 

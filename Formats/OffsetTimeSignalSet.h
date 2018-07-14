@@ -25,8 +25,8 @@ public:
   OffsetTimeSignalSet( SignalSet * w, const std::string& name, long offset_ms = 0 );
   ~OffsetTimeSignalSet( );
 
-  virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = NULL ) override;
-  virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = NULL ) override;
+  virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
+  virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) override;
 
 private:
   std::string tz_name;

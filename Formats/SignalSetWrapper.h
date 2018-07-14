@@ -32,7 +32,7 @@ public:
    *  has been called for this vital
    * @return
    */
-  virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = NULL ) override;
+  virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
   /**
    * Adds a new waveform if it has not already been added. If it already
    * exists, the old dataset is returned
@@ -41,7 +41,7 @@ public:
    *  has been called for this vital
    * @return
    */
-  virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = NULL ) override;
+  virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) override;
 
   virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) override;
   virtual std::vector<std::unique_ptr<SignalData>>&waves( ) override;
@@ -54,11 +54,11 @@ public:
   virtual dr_time latest( const TimeCounter& tc = EITHER ) const override;
 
 protected:
-  virtual bool isLargeFile() const override;
-  const std::unique_ptr<SignalSet>& set;
+  virtual bool isLargeFile( ) const override;
+  SignalSet * set;
 
 private:
-  std::unique_ptr<SignalSet> tmp; // use for raw-pointer ctor
+  bool iOwnThisPointer;
 };
 
 #endif /* SIGNALSETWRAPPER_H */

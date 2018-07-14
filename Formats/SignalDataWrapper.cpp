@@ -14,7 +14,6 @@ SignalDataWrapper::SignalDataWrapper( const std::unique_ptr<SignalData>& data )
 
 SignalDataWrapper::SignalDataWrapper( SignalData * data )
 :signal( data ), iOwnThisPtr( true ) {
-  std::cout<<data<<std::endl;
 }
 
 SignalDataWrapper::~SignalDataWrapper( ) {

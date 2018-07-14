@@ -10,7 +10,6 @@
 
 OffsetTimeSignalData::OffsetTimeSignalData( SignalData * data, const std::string& tzname, const long tz_offset_ms )
 : SignalDataWrapper( data ), tzname( tzname ), tz_offset_ms( tz_offset_ms ) {
-  std::cout << "offsetr data:" << data << std::endl;
   metas( )[SignalData::TIMEZONE] = tzname;
 }
 

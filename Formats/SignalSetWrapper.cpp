@@ -8,13 +8,16 @@
 #include <iostream>
 
 SignalSetWrapper::SignalSetWrapper( const std::unique_ptr<SignalSet>& model )
-: tmp(nullptr), set( model ) {
+: set( model.get( ) ), iOwnThisPointer( false ) {
 }
 
-SignalSetWrapper::SignalSetWrapper( SignalSet * model ) : tmp( model ), set(tmp) {
+SignalSetWrapper::SignalSetWrapper( SignalSet * model ) : set( model ), iOwnThisPointer( true ) {
 }
 
 SignalSetWrapper::~SignalSetWrapper( ) {
+  if ( iOwnThisPointer ) {
+    delete set;
+  }
 }
 
 std::unique_ptr<SignalData>& SignalSetWrapper::addVital( const std::string& name,
@@ -27,8 +30,8 @@ std::unique_ptr<SignalData>& SignalSetWrapper::addWave( const std::string& name,
   return set->addWave( name, added );
 }
 
-bool SignalSetWrapper::isLargeFile() const {
-  return set->isLargeFile();
+bool SignalSetWrapper::isLargeFile( ) const {
+  return set->isLargeFile( );
 }
 
 

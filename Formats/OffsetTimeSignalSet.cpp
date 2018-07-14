@@ -31,15 +31,16 @@ OffsetTimeSignalSet::~OffsetTimeSignalSet( ) {
 
 std::unique_ptr<SignalData>& OffsetTimeSignalSet::addVital( const std::string& name, bool * added ) {
   std::unique_ptr<SignalData>& data = set->addVital( name, added );
-  std::cout<<"offset: "<<data.get()<<std::endl;
-  SignalData * sd = data.release();
-  data.reset( new OffsetTimeSignalData( sd, tz_name, tz_offset_ms ) );
-  std::cout<<"new offset: "<<data.get()<<std::endl;
+  if ( nullptr != added && *added ) {
+    data.reset( new OffsetTimeSignalData( data.release( ), tz_name, tz_offset_ms ) );
+  }
   return data;
 }
 
 std::unique_ptr<SignalData>& OffsetTimeSignalSet::addWave( const std::string& name, bool * added ) {
   std::unique_ptr<SignalData>& data = set->addWave( name, added );
-  data.reset( new OffsetTimeSignalData( data.release( ), tz_name, tz_offset_ms ) );
+  if ( nullptr != added && *added ) {
+    data.reset( new OffsetTimeSignalData( data.release( ), tz_name, tz_offset_ms ) );
+  }
   return data;
 }

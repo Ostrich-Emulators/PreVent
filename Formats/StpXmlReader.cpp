@@ -201,8 +201,6 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
 
           if ( added ) {
-            output()<<sig.get()<<std::endl;
-
             sig->setChunkIntervalAndSampleRate( ( isphilips ? 1024 : 2000 ), 1 );
 
             for ( auto x : sig->metad( ) ) {
