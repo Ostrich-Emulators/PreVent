@@ -16,7 +16,6 @@
 #include "StpJsonReader.h"
 #include "SignalData.h"
 #include "DataRow.h"
-#include "Hdf5Writer.h"
 #include "StreamChunkReader.h"
 
 #include <iostream>

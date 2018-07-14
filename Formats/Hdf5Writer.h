@@ -38,7 +38,6 @@ protected:
   int drain( std::unique_ptr<SignalSet>& );
 
 private:
-
   Hdf5Writer( const Hdf5Writer& orig );
 
   void writeFileAttributes( H5::H5File file, std::map<std::string, std::string> datasetattrs,

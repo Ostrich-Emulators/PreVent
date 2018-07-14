@@ -420,7 +420,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   dr_time lastTime = data->latest( );
   std::vector<std::string> ret;
   if ( 0 == lastTime ) {
-    data.release();
+    data.release( );
     // we don't have any data at all!
     return ret;
   }
@@ -429,43 +429,58 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 
   if ( data->vitals( ).empty( ) && data->waves( ).empty( ) ) {
     std::cerr << "Nothing to write to " << outy << std::endl;
-    data.release();
+    data.release( );
     return ret;
   }
 
   output( ) << "Writing to " << outy << std::endl;
 
-  H5::H5File file( outy, H5F_ACC_TRUNC );
-  writeFileAttributes( file, data->metadata( ), firstTime, lastTime );
+  H5::Exception::dontPrint();
+  try {
+    H5::H5File file( outy, H5F_ACC_TRUNC );
+    writeFileAttributes( file, data->metadata( ), firstTime, lastTime );
 
-  createEventsAndTimes( file, data );
+    createEventsAndTimes( file, data );
 
-  H5::Group grp = file.createGroup( "VitalSigns" );
-  output( ) << "Writing " << data->vitals( ).size( ) << " Vitals" << std::endl;
-  for ( auto& vits : data->vitals( ) ) {
-    if ( vits.get( )->empty( ) ) {
-      output( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
+    H5::Group grp = file.createGroup( "VitalSigns" );
+    output( ) << "Writing " << data->vitals( ).size( ) << " Vitals" << std::endl;
+    for ( auto& vits : data->vitals( ) ) {
+      if ( vits.get( )->empty( ) ) {
+        output( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
+      }
+      else {
+        H5::Group g = grp.createGroup( getDatasetName( vits ) );
+        writeVitalGroup( g, vits );
+      }
     }
-    else {
-      H5::Group g = grp.createGroup( getDatasetName( vits ) );
-      writeVitalGroup( g, vits );
+
+    grp = file.createGroup( "Waveforms" );
+    output( ) << "Writing " << data->waves( ).size( ) << " Waveforms" << std::endl;
+    for ( auto& wavs : data->waves( ) ) {
+      if ( wavs->empty( ) ) {
+        output( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
+      }
+      else {
+        H5::Group g = grp.createGroup( getDatasetName( wavs ) );
+        writeWaveGroup( g, wavs );
+      }
     }
+
+    ret.push_back( outy );
   }
-
-  grp = file.createGroup( "Waveforms" );
-  output( ) << "Writing " << data->waves( ).size( ) << " Waveforms" << std::endl;
-  for ( auto& wavs : data->waves( ) ) {
-    if ( wavs->empty( ) ) {
-      output( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
-    }
-    else {
-      H5::Group g = grp.createGroup( getDatasetName( wavs ) );
-      writeWaveGroup( g, wavs );
-    }
+  // catch failure caused by the H5File operations
+  catch ( H5::FileIException error ) {
+    error.printError( );
   }
-
-  ret.push_back( outy );
-  data.release();
+  // catch failure caused by the DataSet operations
+  catch ( H5::DataSetIException error ) {
+    error.printError( );
+  }
+  // catch failure caused by the DataSpace operations
+  catch ( H5::DataSpaceIException error ) {
+    error.printError( );
+  }
+  data.release( );
 }
 
 void Hdf5Writer::writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data ) {

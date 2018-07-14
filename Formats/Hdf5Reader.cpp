@@ -28,9 +28,21 @@ Hdf5Reader::~Hdf5Reader( ) {
 }
 
 int Hdf5Reader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& info ) {
+  H5::Exception::dontPrint( );
   int rslt = Reader::prepare( filename, info );
   if ( 0 == rslt ) {
-    file = H5::H5File( filename, H5F_ACC_RDONLY );
+    try {
+      file = H5::H5File( filename, H5F_ACC_RDONLY );
+    }
+    catch ( H5::FileIException error ) {
+      output( ) << error.getDetailMsg( ) << std::endl;
+      return -1;
+    }
+    // catch failure caused by the DataSet operations
+    catch ( H5::DataSetIException error ) {
+      output( ) << error.getDetailMsg( ) << std::endl;
+      return -2;
+    }
   }
   return rslt;
 }
@@ -51,21 +63,39 @@ ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
     }
   }
 
-  H5::Group vgroup = file.openGroup( "/VitalSigns" );
-  for ( int i = 0; i < vgroup.getNumObjs( ); i++ ) {
-    std::string vital = vgroup.getObjnameByIdx( i );
-    H5::Group dataAndTimeGroup = vgroup.openGroup( vital );
-    readDataSet( dataAndTimeGroup, false, info );
+  try {
+    H5::Group vgroup = file.openGroup( "/VitalSigns" );
+    for ( int i = 0; i < vgroup.getNumObjs( ); i++ ) {
+      std::string vital = vgroup.getObjnameByIdx( i );
+      H5::Group dataAndTimeGroup = vgroup.openGroup( vital );
+      readDataSet( dataAndTimeGroup, false, info );
+    }
+    vgroup.close( );
   }
-  vgroup.close( );
+  catch ( H5::FileIException error ) {
+    output( ) << "/VitalSigns: " << error.getDetailMsg( ) << std::endl;
+  }
+  // catch failure caused by the DataSet operations
+  catch ( H5::DataSetIException error ) {
+    output( ) << "/VitalSigns: " << error.getDetailMsg( ) << std::endl;
+  }
 
-  H5::Group wgroup = file.openGroup( "/Waveforms" );
-  for ( int i = 0; i < wgroup.getNumObjs( ); i++ ) {
-    std::string wave = wgroup.getObjnameByIdx( i );
-    H5::Group dataAndTimeGroup = wgroup.openGroup( wave );
-    readDataSet( dataAndTimeGroup, true, info );
+  try {
+    H5::Group wgroup = file.openGroup( "/Waveforms" );
+    for ( int i = 0; i < wgroup.getNumObjs( ); i++ ) {
+      std::string wave = wgroup.getObjnameByIdx( i );
+      H5::Group dataAndTimeGroup = wgroup.openGroup( wave );
+      readDataSet( dataAndTimeGroup, true, info );
+    }
+    wgroup.close( );
   }
-  wgroup.close( );
+  catch ( H5::FileIException error ) {
+    output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
+  }
+  // catch failure caused by the DataSet operations
+  catch ( H5::DataSetIException error ) {
+    output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
+  }
 
   return ReadResult::END_OF_FILE;
 }
@@ -98,21 +128,21 @@ std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet& dataset ) const {
 }
 
 void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
-        const bool& iswave, std::unique_ptr<SignalSet>& info ) const {
+    const bool& iswave, std::unique_ptr<SignalSet>& info ) const {
   std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
 
   std::unique_ptr<SignalData>& signal = ( iswave
-          ? info->addWave( name )
-          : info->addVital( name ) );
+      ? info->addWave( name )
+      : info->addVital( name ) );
   int timeinterval = 2000;
   if ( dataAndTimeGroup.attrExists( SignalData::CHUNK_INTERVAL_MS ) ) {
     timeinterval = metaint( dataAndTimeGroup, SignalData::CHUNK_INTERVAL_MS );
-    signal->metai()[SignalData::CHUNK_INTERVAL_MS] = timeinterval;
+    signal->metai( )[SignalData::CHUNK_INTERVAL_MS] = timeinterval;
   }
   int valsPerChunk = 1;
   if ( dataAndTimeGroup.attrExists( SignalData::READINGS_PER_CHUNK ) ) {
     valsPerChunk = metaint( dataAndTimeGroup, SignalData::READINGS_PER_CHUNK );
-    signal->metai()[SignalData::READINGS_PER_CHUNK] = valsPerChunk;
+    signal->metai( )[SignalData::READINGS_PER_CHUNK] = valsPerChunk;
   }
 
   H5::DataSet dataset = dataAndTimeGroup.openDataSet( "data" );
@@ -150,7 +180,7 @@ void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
 }
 
 void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-        const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
+    const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
   dataspace.getSimpleExtentDims( DIMS );
@@ -189,7 +219,7 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
 }
 
 void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-        const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
+    const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
   dataspace.getSimpleExtentDims( DIMS );
@@ -240,7 +270,7 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
 }
 
 void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
-        H5::DataSet& dataset ) const {
+    H5::DataSet& dataset ) const {
   hsize_t cnt = dataset.getNumAttrs( );
 
   for ( int i = 0; i < cnt; i++ ) {
