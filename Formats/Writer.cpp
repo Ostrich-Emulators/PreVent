@@ -125,9 +125,9 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
         patientno++;
       }
 
-      data->reset( false );
-      output( ) << "init data set" << std::endl;
+      data->reset( true );
       namer->patientOrdinal( patientno );
+      output( ) << "init data set" << std::endl;
       initDataSet( );
     }
     else if ( ReadResult::END_OF_FILE == retcode ) {

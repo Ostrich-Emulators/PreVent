@@ -40,7 +40,7 @@ std::unique_ptr<SignalData>& AnonymizingSignalSet::addWave( const std::string& n
 }
 
 void AnonymizingSignalSet::setMeta( const std::string& key, const std::string& val ) {
-  if ( !( "Patient Name" == key || "MRN" == key ) ) {
+  if ( !( "Patient Name" == key || "MRN" == key || "Unit" == key || "Bed" == key ) ) {
     SignalSetWrapper::setMeta( key, val );
   }
 }

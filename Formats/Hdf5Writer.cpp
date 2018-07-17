@@ -387,9 +387,9 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
   ds.write( &alltimes[0], H5::PredType::STD_I64LE );
   writeAttribute( ds, "Columns", "timestamp (ms)" );
 
-  for ( auto x : data->metadata( ) ) {
-    std::cout << "hdf5writer: " << x.first << ": " << x.second << std::endl;
-  }
+  //for ( auto x : data->metadata( ) ) {
+  //  std::cout << "hdf5writer: " << x.first << ": " << x.second << std::endl;
+  //}
   writeAttribute( ds, SignalData::TIMEZONE, data->metadata( ).at( SignalData::TIMEZONE ) );
 }
 
