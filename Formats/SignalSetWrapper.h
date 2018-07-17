@@ -50,14 +50,16 @@ public:
   virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const override;
 
   virtual void reset( bool signalDataOnly = true ) override;
+  virtual void setMeta( const std::string& key, const std::string& val ) override;
   virtual dr_time earliest( const TimeCounter& tc = EITHER ) const override;
   virtual dr_time latest( const TimeCounter& tc = EITHER ) const override;
+  virtual const std::map<std::string, std::string>& metadata( ) const override;
 
 protected:
   virtual bool isLargeFile( ) const override;
-  SignalSet * set;
 
 private:
+  SignalSet * set;
   bool iOwnThisPointer;
 };
 

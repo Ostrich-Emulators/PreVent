@@ -56,16 +56,16 @@ void SignalSet::setMetadataFrom( const SignalSet& src ) {
   }
 }
 
-std::map<std::string, std::string>& SignalSet::metadata( ) {
-  return metamap;
-}
-
 const std::map<std::string, std::string>& SignalSet::metadata( ) const {
   return metamap;
 }
 
-void SignalSet::addMeta( const std::string& key, const std::string & val ) {
+void SignalSet::setMeta( const std::string& key, const std::string & val ) {
   metamap[key] = val;
+}
+
+void SignalSet::clearMetas(){
+  metamap.clear();
 }
 
 const std::map<long, dr_time>& SignalSet::offsets( ) const {

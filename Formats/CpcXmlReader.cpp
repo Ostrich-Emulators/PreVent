@@ -63,7 +63,7 @@ void CpcXmlReader::start( const std::string& element,
   }
   else if ( "device" == element ) {
     for ( auto& x : attrs ) {
-      filler->addMeta( x.first, x.second );
+      filler->setMeta( x.first, x.second );
     }
   }
   else if ( "m" == element ) {

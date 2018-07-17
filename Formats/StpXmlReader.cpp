@@ -66,12 +66,8 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
       currvstime = time( attributes[0 == attributes.count( "CollectionTime" ) ? "Time" : "CollectionTime"], true );
     }
 
-    if ( anonymizing( ) && isFirstRead( ) ) {
-      setDateModifier( currvstime );
-    }
-
     if ( 0 == filler->offsets( ).count( currsegidx ) ) {
-      filler->addOffset( currsegidx, datemod( currvstime ) );
+      filler->addOffset( currsegidx, currvstime );
     }
 
     if ( isRollover( lastvstime, currvstime ) ) {
@@ -90,12 +86,8 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
       currwavetime = time( attributes[0 == attributes.count( "CollectionTime" ) ? "Time" : "CollectionTime"], true );
     }
 
-    if ( anonymizing( ) && isFirstRead( ) ) {
-      setDateModifier( currvstime );
-    }
-
     if ( 0 == filler->offsets( ).count( currsegidx ) ) {
-      filler->addOffset( currsegidx, datemod( currwavetime ) );
+      filler->addOffset( currsegidx, currwavetime );
     }
 
     if ( isRollover( lastwavetime, currwavetime ) ) {
@@ -162,21 +154,24 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
       }
     }
     else if ( "Size" != element ) {
-      filler->metadata( )[element] = text;
+      filler->setMeta( element, text );
     }
   }
   else if ( INNAME == state ) {
     if ( 0 == prevtime ) {
-      filler->metadata( )["Patient Name"] = text;
+      filler->setMeta( "Patient Name", text );
     }
     else {
-      std::string pname = filler->metadata( )["Patient Name"];
+
+      std::string pname = ( 0 == filler->metadata( ).count( "Patient Name" )
+          ? ""
+          : filler->metadata( ).at( "Patient Name" ) );
       if ( text != pname ) {
         setResult( ReadResult::END_OF_PATIENT );
         // we've cut over to a new set of data, so
         // save the data we parse now to a different SignalSet
         startSaving( 0 );
-        saved.metadata( )["Patient Name"] = text;
+        saved.setMeta( "Patient Name", text );
       }
     }
     setstate( INDETERMINATE );
@@ -207,19 +202,14 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
               output( ) << x.first << ":=>" << x.second << std::endl;
             }
 
-            if ( localizingTime( ) ) {
-              time_t reftime = std::time( nullptr );
-              tm * reftm = localtime( &reftime );
-              sig->metas( )[SignalData::TIMEZONE] = reftm->tm_zone;
-            }
-
             if ( !uom.empty( ) ) {
               sig->setUom( uom );
             }
 
           }
 
-          sig->add( DataRow( datemod( currvstime ), value, "", "", attrs ) );
+          DataRow row( currvstime, value, "", "", attrs );
+          sig->add( row );
         }
         catch ( std::invalid_argument ) {
           // don't really care since we're not adding the data to our dataset
@@ -277,13 +267,6 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
               sig->setChunkIntervalAndSampleRate( ( isphilips ? 1024 : 2000 ), ( isphilips ? hz : 2 * hz ) );
             }
 
-            if ( localizingTime( ) ) {
-              time_t reftime = std::time( nullptr );
-              tm * reftm = localtime( &reftime );
-              sig->metas( )[SignalData::TIMEZONE] = reftm->tm_zone;
-            }
-
-
             if ( !uom.empty( ) ) {
               sig->setUom( uom );
             }
@@ -291,10 +274,10 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
             if ( 0 != attrs.count( "Cal" ) ) {
               sig->metas( )["Cal"] = attrs["Cal"];
             }
-
           }
 
-          sig->add( DataRow( datemod( currwavetime ), wavepoints, "", "", attrs ) );
+          DataRow row( currwavetime, wavepoints, "", "", attrs );
+          sig->add( row );
         }
         else if ( warnJunkData ) {
           warnJunkData = false;
@@ -303,7 +286,6 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
       }
     }
     else if ( "WaveformData" == element ) {
-
       setstate( INDETERMINATE );
     }
   }

@@ -26,29 +26,29 @@ class SignalData;
 class CpcXmlReader : public XmlReaderBase {
 public:
 
-	CpcXmlReader( );
-	virtual ~CpcXmlReader( );
+  CpcXmlReader( );
+  virtual ~CpcXmlReader( );
 
 protected:
-	virtual void start( const std::string& element, std::map<std::string, std::string>& attrs ) override;
-	virtual void end( const std::string& element, const std::string& text ) override;
-    virtual void comment( const std::string& text ) override;
+  virtual void start( const std::string& element, std::map<std::string, std::string>& attrs ) override;
+  virtual void end( const std::string& element, const std::string& text ) override;
+  virtual void comment( const std::string& text ) override;
 
 private:
-	const static std::set<std::string> ignorables;
-	CpcXmlReader( const CpcXmlReader& orig );
-	dr_time currtime;
-	dr_time lasttime;
-	std::string label;
-	std::string value;
-	double wavehz;
-    int valsperdr;
-    double gain;
-	bool inmg;
-	bool inwave;
-	bool inhz;
-    bool inpoints;
-    bool ingain;
+  const static std::set<std::string> ignorables;
+  CpcXmlReader( const CpcXmlReader& orig );
+  dr_time currtime;
+  dr_time lasttime;
+  std::string label;
+  std::string value;
+  double wavehz;
+  int valsperdr;
+  double gain;
+  bool inmg;
+  bool inwave;
+  bool inhz;
+  bool inpoints;
+  bool ingain;
 
 };
 

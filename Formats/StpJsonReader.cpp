@@ -185,7 +185,8 @@ void StpJsonReader::handleOneLine( const std::string& chunk, std::unique_ptr<Sig
         dataset->setUom( uom );
         dataset->setChunkIntervalAndSampleRate( 2000, 1 );
       }
-      dataset->add( DataRow( currentTime, val, high, low ) );
+      DataRow row( currentTime, val, high, low );
+      dataset->add( row );
     }
     else if ( WAVE == firstword ) {
       state = jsonReaderState::JIN_WAVE;
@@ -206,7 +207,8 @@ void StpJsonReader::handleOneLine( const std::string& chunk, std::unique_ptr<Sig
         dataset->setUom( uom );
       }
 
-      dataset->add( DataRow( currentTime, val ) );
+      DataRow row( currentTime, val );
+      dataset->add( row );
     }
     else if ( TIME == firstword ) {
       state = jsonReaderState::JIN_TIME;
@@ -216,7 +218,7 @@ void StpJsonReader::handleOneLine( const std::string& chunk, std::unique_ptr<Sig
       const int epos = chunk.find( '=' );
       std::string key = chunk.substr( 0, epos );
       std::string val = chunk.substr( epos + 1 );
-      info->addMeta( key, val );
+      info->setMeta( key, val );
     }
   }
 }

@@ -21,6 +21,7 @@
 #include "config.h"
 #include "FileNamer.h"
 #include "OffsetTimeSignalSet.h"
+#include "AnonymizingSignalSet.h"
 
 #ifndef GIT_BUILD
 #define GIT_BUILD "--------"
@@ -216,7 +217,6 @@ int main( int argc, char** argv ) {
     to->filenamer( namer );
 
     from->setQuiet( quiet );
-    from->setAnonymous( anonymize );
     from->setNonbreaking( nobreak );
     from->localizeTime( dolocaltime );
 
@@ -246,6 +246,10 @@ int main( int argc, char** argv ) {
       tm * reftm = localtime( &reftime );
       data.reset( new OffsetTimeSignalSet( data.release( ), reftm->tm_zone, reftm->tm_gmtoff * 1000 ) );
     }
+    if ( anonymize ) {
+      data.reset( new AnonymizingSignalSet( data.release( ) ) );
+    }
+
     std::string input( argv[i] );
     to->filenamer( ).inputfilename( input );
     std::cout << "converting " << input

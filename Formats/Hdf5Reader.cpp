@@ -59,7 +59,7 @@ ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
 
     // std::cout << a.getName( ) << ": " << aval << std::endl;
     if ( 0 == IGNORABLE_PROPS.count( a.getName( ) ) ) {
-      info->addMeta( a.getName( ), metastr( a ) );
+      info->setMeta( a.getName( ), metastr( a ) );
     }
   }
 

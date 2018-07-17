@@ -166,11 +166,11 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
   dr_time latest;
   firstlast( data, &earliest, &latest );
 
-//  std::cout << "f/l:\t" << earliest << "\t" << latest << std::endl;
-//  for ( const auto& s : data ) {
-//    std::cout << s->name( ) << "\t" << s->startTime( ) << "\t"
-//        << s->endTime( ) << "\t" << s->size( ) << std::endl;
-//  }
+  //  std::cout << "f/l:\t" << earliest << "\t" << latest << std::endl;
+  //  for ( const auto& s : data ) {
+  //    std::cout << s->name( ) << "\t" << s->startTime( ) << "\t"
+  //        << s->endTime( ) << "\t" << s->size( ) << std::endl;
+  //  }
 
   float freq = ( *data.begin( ) )->hz( );
 
@@ -204,12 +204,14 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
         }
         else if ( currenttimes[i]->time > earliest ) {
           // don't have a datapoint for this time, so make a dummy one
-          ret[i]->add( dummyfill( data[i], earliest ) );
+          DataRow row( dummyfill( data[i], earliest ) );
+          ret[i]->add( row );
         }
       }
       else {
         // ran out of times fo this signal, so make dummy data for this time
-        ret[i]->add( dummyfill( data[i], earliest ) );
+        DataRow row( dummyfill( data[i], earliest ) );
+        ret[i]->add( row );
       }
     }
 
@@ -250,7 +252,8 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
 
   dr_time fillstart = nexttime;
   for ( nexttime; nexttime < row->time - timestep; nexttime += timestep ) {
-    signal->add( dummyfill( signal, nexttime ) );
+    DataRow row( dummyfill( signal, nexttime ) );
+    signal->add( row );
   }
 
   if ( nexttime != fillstart ) {
@@ -266,7 +269,8 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
   }
   else {
     std::cout << signal->name( ) << " added filler row at " << nexttime << std::endl;
-    signal->add( dummyfill( signal, nexttime ) );
+    DataRow row( dummyfill( signal, nexttime ) );
+    signal->add( row );
   }
 }
 
@@ -284,10 +288,10 @@ DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const dr_ti
 std::vector<dr_time> SignalUtils::alltimes( const SignalSet& ss ) {
   std::set<dr_time> times;
   for ( const auto& signal : ss.vitals( ) ) {
-    times.insert( signal.get()->times( ).begin( ), signal.get()->times( ).end( ) );
+    times.insert( signal.get( )->times( ).begin( ), signal.get( )->times( ).end( ) );
   }
   for ( const auto& signal : ss.waves( ) ) {
-    times.insert( signal.get()->times( ).begin( ), signal.get()->times( ).end( ) );
+    times.insert( signal.get( )->times( ).begin( ), signal.get( )->times( ).end( ) );
   }
 
   std::vector<dr_time> vec( times.begin( ), times.end( ) );

@@ -70,9 +70,7 @@ public:
   virtual std::string name( ) const;
 
   void setQuiet( bool quiet = true );
-  void setAnonymous( bool anon = true );
   void setNonbreaking( bool nb = false );
-  bool anonymizing( ) const;
   void localizeTime( bool local = true );
   bool localizingTime( ) const;
 
@@ -95,8 +93,6 @@ protected:
   bool nonbreaking( ) const;
 
   std::ostream& output( ) const;
-  int tz_offset( ) const;
-  const std::string& tz_name( ) const;
 private:
 
   bool largefile;
@@ -107,8 +103,6 @@ private:
   bool onefile;
   bool local_time;
   std::stringstream ss;
-  int gmt_offset;
-  std::string timezone;
 };
 
 #endif /* READER_H */

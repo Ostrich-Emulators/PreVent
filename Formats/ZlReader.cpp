@@ -239,7 +239,7 @@ void ZlReader::handleOneLine( const std::string& chunk, std::unique_ptr<SignalSe
       const int epos = chunk.find( '=' );
       std::string key = chunk.substr( 0, epos );
       std::string val = chunk.substr( epos + 1 );
-      info->addMeta( key, val );
+      info->setMeta( key, val );
     }
   }
 }

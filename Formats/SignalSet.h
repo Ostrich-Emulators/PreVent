@@ -41,8 +41,7 @@ public:
 
   std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const;
 
-  std::map<std::string, std::string>& metadata( );
-  const std::map<std::string, std::string>& metadata( ) const;
+  virtual const std::map<std::string, std::string>& metadata( ) const;
 
   /**
    * Adds a new vital sign if it has not already been added. If it already
@@ -62,12 +61,13 @@ public:
    * @return
    */
   virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) = 0;
-  void addMeta( const std::string& key, const std::string& val );
+  virtual void setMeta( const std::string& key, const std::string& val );
   virtual void reset( bool signalDataOnly = true );
+  virtual void clearMetas();
   void setFileSupport( bool );
   virtual dr_time earliest( const TimeCounter& tc = EITHER ) const = 0;
   virtual dr_time latest( const TimeCounter& tc = EITHER ) const = 0;
-  void setMetadataFrom( const SignalSet& target );
+  virtual void setMetadataFrom( const SignalSet& target );
   const std::map<long, dr_time>& offsets( ) const;
   void addOffset( long seg, dr_time time );
   void clearOffsets( );

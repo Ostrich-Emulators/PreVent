@@ -45,11 +45,6 @@ protected:
 
 protected:
   /**
-   * modify the given date. This is important when anonymizing data
-   * @param 
-   */
-  dr_time datemod( const dr_time& rawdate ) const;
-  /**
    * Trims the given string in-place, and returns it
    * @param totrim
    * @return
@@ -71,8 +66,6 @@ protected:
   bool isRollover( const dr_time& now, const dr_time& then ) const;
   void startSaving( dr_time now );
   void setResult( ReadResult rslt );
-  bool isFirstRead( ) const;
-  void setDateModifier( const dr_time& mod );
 
   BasicSignalSet saved;
   SignalSet * filler;
@@ -88,9 +81,9 @@ private:
   XML_Parser parser;
   std::unique_ptr<StreamChunkReader> input;
   ReadResult rslt;
+  long tz_offset;
+  std::string tz_name;
 
-  dr_time datemodifier;
-  bool firstread;
   dr_time lastSaveTime;
 };
 

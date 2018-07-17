@@ -79,32 +79,17 @@ void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
 
   time_t stime = start / 1000;
   time_t etime = end / 1000;
-  if ( dataptr->metadata( )[SignalData::TIMEZONE] != "UTC" ) {
-    writeAttribute( loc, "Start Time", start + tz_offset( ) );
-    writeAttribute( loc, "End Time", end + tz_offset( ) );
+  writeAttribute( loc, "Start Time", start );
+  writeAttribute( loc, "End Time", end );
 
-    stime += tz_offset( );
-    etime += tz_offset( );
-    char buf[sizeof "2011-10-08T07:07:09"];
-    strftime( buf, sizeof buf, "%FT%T", gmtime( &stime ) );
+  char buf[sizeof "2011-10-08T07:07:09Z"];
+  strftime( buf, sizeof buf, "%FT%TZ", gmtime( &stime ) );
 
-    writeAttribute( loc, "Start Date/Time", buf );
-    buf[sizeof "2011-10-08T07:07:09"];
-    strftime( buf, sizeof buf, "%FT%T", gmtime( &etime ) );
-    writeAttribute( loc, "End Date/Time", buf );
-  }
-  else {
-    writeAttribute( loc, "Start Time", start );
-    writeAttribute( loc, "End Time", end );
+  writeAttribute( loc, "Start Date/Time", buf );
+  buf[sizeof "2011-10-08T07:07:09Z"];
+  strftime( buf, sizeof buf, "%FT%TZ", gmtime( &etime ) );
+  writeAttribute( loc, "End Date/Time", buf );
 
-    char buf[sizeof "2011-10-08T07:07:09Z"];
-    strftime( buf, sizeof buf, "%FT%TZ", gmtime( &stime ) );
-
-    writeAttribute( loc, "Start Date/Time", buf );
-    buf[sizeof "2011-10-08T07:07:09Z"];
-    strftime( buf, sizeof buf, "%FT%TZ", gmtime( &etime ) );
-    writeAttribute( loc, "End Date/Time", buf );
-  }
   time_t xx( etime - stime );
   tm * t = gmtime( &xx );
 
@@ -401,6 +386,10 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
       H5::PredType::STD_I64LE, space );
   ds.write( &alltimes[0], H5::PredType::STD_I64LE );
   writeAttribute( ds, "Columns", "timestamp (ms)" );
+
+  for ( auto x : data->metadata( ) ) {
+    std::cout << "hdf5writer: " << x.first << ": " << x.second << std::endl;
+  }
   writeAttribute( ds, SignalData::TIMEZONE, data->metadata( ).at( SignalData::TIMEZONE ) );
 }
 
@@ -435,7 +424,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 
   output( ) << "Writing to " << outy << std::endl;
 
-  H5::Exception::dontPrint();
+  H5::Exception::dontPrint( );
   try {
     H5::H5File file( outy, H5F_ACC_TRUNC );
     writeFileAttributes( file, data->metadata( ), firstTime, lastTime );

@@ -20,6 +20,14 @@ SignalSetWrapper::~SignalSetWrapper( ) {
   }
 }
 
+void SignalSetWrapper::setMeta( const std::string& key, const std::string& val ) {
+  set->setMeta( key, val );
+}
+
+const std::map<std::string, std::string>& SignalSetWrapper::metadata( ) const {
+  return set->metadata( );
+}
+
 std::unique_ptr<SignalData>& SignalSetWrapper::addVital( const std::string& name,
     bool * added ) {
   return set->addVital( name, added );

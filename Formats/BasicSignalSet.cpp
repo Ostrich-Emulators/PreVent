@@ -14,12 +14,15 @@
 #include <iostream>
 
 BasicSignalSet::BasicSignalSet( bool lfs ) : SignalSet( lfs ) {
+  setMeta( SignalData::TIMEZONE, "UTC" );
 }
 
 BasicSignalSet::~BasicSignalSet( ) {
+
 }
 
 BasicSignalSet::BasicSignalSet( const BasicSignalSet& ) {
+  setMeta( SignalData::TIMEZONE, "UTC" );
 }
 
 BasicSignalSet BasicSignalSet::operator=(const BasicSignalSet&) {
@@ -69,7 +72,7 @@ const std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::vitals( ) const {
   return vits;
 }
 
-const std::vector<std::unique_ptr<SignalData>>& BasicSignalSet::waves( ) const {
+const std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::waves( ) const {
   return wavs;
 }
 

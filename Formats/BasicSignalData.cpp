@@ -36,6 +36,8 @@ lowval( std::numeric_limits<double>::max( ) ) {
   else {
     file = NULL;
   }
+
+  metas( )[SignalData::TIMEZONE] = "UTC";
 }
 
 BasicSignalData::BasicSignalData( const BasicSignalData& orig ) : SignalData( orig ),
@@ -45,6 +47,7 @@ highval( orig.highval ), lowval( orig.lowval ) {
   for ( auto const& i : orig.data ) {
     data.push_front( std::unique_ptr<DataRow>( new DataRow( *i ) ) );
   }
+  metas( )[SignalData::TIMEZONE] = "UTC";
 }
 
 BasicSignalData::~BasicSignalData( ) {

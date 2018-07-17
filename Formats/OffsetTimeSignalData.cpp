@@ -6,7 +6,6 @@
 
 #include "OffsetTimeSignalData.h"
 #include "DataRow.h"
-#include <iostream>
 
 OffsetTimeSignalData::OffsetTimeSignalData( SignalData * data, const std::string& tzname, const long tz_offset_ms )
 : SignalDataWrapper( data ), tzname( tzname ), tz_offset_ms( tz_offset_ms ) {

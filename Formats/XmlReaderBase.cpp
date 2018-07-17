@@ -32,12 +32,18 @@ bool XmlReaderBase::accumulateText = false;
 std::string XmlReaderBase::working;
 const int XmlReaderBase::READCHUNK = 16384 * 16;
 
-XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ), datemodifier( 0 ),
-filler( nullptr ) {
+XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ), filler( nullptr ) {
+  time_t reftime = std::time( nullptr );
+  tm * reftm = localtime( &reftime );
+  tz_name = reftm->tm_zone;
+  tz_offset = reftm->tm_gmtoff;
 }
 
-XmlReaderBase::XmlReaderBase( const XmlReaderBase& orig ) : Reader( orig ), datemodifier( 0 ),
-filler( nullptr ) {
+XmlReaderBase::XmlReaderBase( const XmlReaderBase& orig ) : Reader( orig ), filler( nullptr ) {
+  time_t reftime = std::time( nullptr );
+  tm * reftm = localtime( &reftime );
+  tz_name = reftm->tm_zone;
+  tz_offset = reftm->tm_gmtoff;
 }
 
 XmlReaderBase::~XmlReaderBase( ) {
@@ -146,7 +152,7 @@ void XmlReaderBase::comment( void* data, const char* text ) {
 void XmlReaderBase::copySavedInto( std::unique_ptr<SignalSet>& tgt ) {
   // copy all our saved data into this new tgt signalset
   tgt->setMetadataFrom( saved );
-  saved.metadata( ).clear( );
+  saved.clearMetas( );
 
   for ( auto& m : saved.vitals( ) ) {
     const std::unique_ptr<SignalData>& savedsignal = m;
@@ -186,8 +192,6 @@ ReadResult XmlReaderBase::fill( std::unique_ptr<SignalSet>& info, const ReadResu
   filler = info.get( );
   setResult( ReadResult::NORMAL );
 
-  firstread = ( ReadResult::FIRST_READ == lastfill );
-
   std::vector<char> buffer( READCHUNK, 0 );
   int bytesread = input->read( buffer, READCHUNK );
   while ( 0 != bytesread ) {
@@ -203,10 +207,6 @@ ReadResult XmlReaderBase::fill( std::unique_ptr<SignalSet>& info, const ReadResu
       return ReadResult::ERROR;
     }
     if ( ReadResult::NORMAL != rslt ) {
-      if ( ReadResult::END_OF_PATIENT == rslt && anonymizing( ) ) {
-        info->metadata( )["Patient Name"] = "Anonymous";
-      }
-
       return rslt;
     }
 
@@ -222,8 +222,8 @@ bool XmlReaderBase::isRollover( const dr_time& then, const dr_time& now ) const 
   }
 
   if ( 0 != then ) {
-    time_t modnow = datemod( now ) / 1000;
-    time_t modthen = datemod( then ) / 1000;
+    time_t modnow = now / 1000;
+    time_t modthen = then / 1000;
 
     const int cdoy = ( localizingTime( ) ? localtime( &modnow ) : gmtime( &modnow ) )->tm_yday;
     const int pdoy = ( localizingTime( ) ? localtime( &modthen ) : gmtime( &modthen ) )->tm_yday;
@@ -255,8 +255,8 @@ dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal ) const {
 
   // now convert our local time to UTC
   if ( valIsLocal ) {
-    mytime.tm_zone = tz_name( ).c_str( );
-    mytime.tm_gmtoff = tz_offset( );
+    mytime.tm_zone = tz_name.c_str( );
+    mytime.tm_gmtoff = tz_offset;
 
     time_t local = mktime( &mytime );
     mytime = *gmtime( &local );
@@ -264,18 +264,4 @@ dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal ) const {
   }
 
   return mktime( &mytime )* 1000; // convert seconds to ms
-}
-
-bool XmlReaderBase::isFirstRead( ) const {
-  return firstread;
-}
-
-void XmlReaderBase::setDateModifier( const dr_time& mod ) {
-  firstread = false;
-  datemodifier = mod;
-}
-
-dr_time XmlReaderBase::datemod( const dr_time& rawdate ) const {
-  dr_time timer = ( rawdate - datemodifier );
-  return timer;
 }

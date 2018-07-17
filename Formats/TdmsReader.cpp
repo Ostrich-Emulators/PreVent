@@ -78,12 +78,12 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
           bool doDoubleValues = false;
 
           bool iswave = ( propmap.count( "wf_increment" ) > 0 &&
-                ( std::stod( propmap.at( "wf_increment" ) ) * 1000 ) < 1024 );
+              ( std::stod( propmap.at( "wf_increment" ) ) * 1000 ) < 1024 );
 
           // figure out if this is a wave or a vital
           std::unique_ptr<SignalData>& signal = ( iswave
-                ? info->addWave( name )
-                : info->addVital( name ) );
+              ? info->addWave( name )
+              : info->addVital( name ) );
 
           string unit = ch->getUnit( );
           if ( !unit.empty( ) ) {
@@ -132,9 +132,9 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
           unsigned int type = ch->getDataType( );
           std::vector<double> data = ch->getDataVector( );
           if ( type == TdmsChannel::tdsTypeComplexSingleFloat
-                || type == TdmsChannel::tdsTypeComplexDoubleFloat ) {
+              || type == TdmsChannel::tdsTypeComplexDoubleFloat ) {
             std::cerr << "WARNING: complex data types are not yet supported"
-                  << std::endl;
+                << std::endl;
             //            std::vector<double> imData = ch->getImaginaryDataVector( );
             //            double iVal1 = imData.front( ), iVal2 = imData.back( );
             //            std::string fmt = ":\n\t%g";
@@ -174,7 +174,7 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
 
                 if ( cnt == freq ) {
                   writeWaveChunkAndReset( cnt, nancount, doubles, seenFloat,
-                        signal, time, timeinc );
+                      signal, time, timeinc );
                 }
 
                 // if we're doubling values, we need to do the whole thing again
@@ -196,7 +196,7 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
 
                   if ( cnt == freq ) {
                     writeWaveChunkAndReset( cnt, nancount, doubles, seenFloat,
-                          signal, time, timeinc );
+                        signal, time, timeinc );
                   }
                 }
               }
@@ -226,7 +226,8 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
                   vals << "," << SignalData::MISSING_VALUESTR;
                 }
 
-                signal->add( DataRow( time, vals.str( ) ) );
+                DataRow row( time, vals.str( ) );
+                signal->add( row );
                 time += timeinc;
               }
             }
@@ -239,10 +240,12 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
                   double mantissa = std::modf( d, &intpart );
                   bool isint = ( 0 == mantissa );
                   if ( isint ) {
-                    signal->add( DataRow( time, std::to_string( (int) intpart ) ) );
+                    DataRow row( time, std::to_string( (int) intpart ) );
+                    signal->add( row );
                   }
                   else {
-                    signal->add( DataRow( time, std::to_string( d ) ) );
+                    DataRow row( time, std::to_string( d ) );
+                    signal->add( row );
                   }
                 }
                 time += timeinc;
@@ -277,7 +280,7 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
 }
 
 bool TdmsReader::writeWaveChunkAndReset( int& count, int& nancount, std::vector<double>& doubles,
-      bool& seenFloat, std::unique_ptr<SignalData>& signal, dr_time& time, int timeinc ) {
+    bool& seenFloat, std::unique_ptr<SignalData>& signal, dr_time& time, int timeinc ) {
 
   // make sure we have some data!
   if ( nancount != count ) {
@@ -300,7 +303,8 @@ bool TdmsReader::writeWaveChunkAndReset( int& count, int& nancount, std::vector<
     }
 
     //output( ) << vals.str( ) << std::endl;
-    signal->add( DataRow( time, vals.str( ) ) );
+    DataRow row( time, vals.str( ) );
+    signal->add( row );
   }
 
   doubles.clear( );

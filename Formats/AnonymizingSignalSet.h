@@ -11,28 +11,27 @@
  * Created on July 2, 2018, 3:16 PM
  */
 
-#ifndef OFFSETSIGNALSET_H
-#define OFFSETSIGNALSET_H
+#ifndef ANONYMIZINGSIGNALSET_H
+#define ANONYMIZINGSIGNALSET_H
 
 #include "SignalSetWrapper.h"
 
-class OffsetTimeSignalSet : public SignalSetWrapper {
+class AnonymizingSignalSet : public SignalSetWrapper {
 public:
 
-  OffsetTimeSignalSet( const std::string& name, long offset_ms = 0 );
-  OffsetTimeSignalSet( const std::unique_ptr<SignalSet>& w, const std::string& name,
-      long offset_ms = 0 );
-  OffsetTimeSignalSet( SignalSet * w, const std::string& name, long offset_ms = 0 );
-  ~OffsetTimeSignalSet( );
+  AnonymizingSignalSet( );
+  AnonymizingSignalSet( const std::unique_ptr<SignalSet>& w );
+  AnonymizingSignalSet( SignalSet * w );
+  ~AnonymizingSignalSet( );
 
   virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
   virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) override;
-  virtual void reset( bool signalDataOnly = false ) override;
+
+  virtual void setMeta( const std::string& key, const std::string& val ) override;
 
 private:
-  std::string tz_name;
-  long tz_offset_ms;
+  dr_time firsttime;
 };
 
-#endif /* OFFSETSIGNALSET_H */
+#endif /* ANONYMIZINGSIGNALSET_H */
 
