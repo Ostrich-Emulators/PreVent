@@ -493,10 +493,10 @@ void Hdf5Writer::writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>&
   writeAttribute( group, SignalData::READINGS_PER_CHUNK, data->metai( ).at( SignalData::READINGS_PER_CHUNK ) );
   writeAttribute( group, SignalData::UOM, data->uom( ) );
 
-  data->erases( SignalData::TIMEZONE );
-  data->erased( SignalData::CHUNK_INTERVAL_MS );
-  data->erased( SignalData::READINGS_PER_CHUNK );
-  data->erases( SignalData::UOM );
+  //data->erases( SignalData::TIMEZONE );
+  //data->erased( SignalData::CHUNK_INTERVAL_MS );
+  //data->erased( SignalData::READINGS_PER_CHUNK );
+  //data->erases( SignalData::UOM );
 }
 
 void Hdf5Writer::writeVitalGroup( H5::Group& group, std::unique_ptr<SignalData>& data ) {
@@ -571,4 +571,12 @@ void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data
   writeAttribute( ds, "Columns", "timestamp (ms)" );
   writeAttribute( ds, SignalData::TIMEZONE, data->metas( ).at( SignalData::TIMEZONE ) );
   // writeAttribute( ds, SignalData::VALS_PER_DR, data.valuesPerDataRow( ) );
+  if ( 0 != data->metas( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
+    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metas( )
+        .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
+  }
+  if ( 0 != data->metai( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) ) {
+    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET,
+        data->metai( ).at( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) );
+  }
 }

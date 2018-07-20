@@ -28,8 +28,8 @@ tz_offset_ms( offset_ms ) {
 OffsetTimeSignalSet::OffsetTimeSignalSet( SignalSet * w, const std::string& tzname, long offset_ms )
 : SignalSetWrapper( w ), tz_name( tzname ), tz_offset_ms( offset_ms ) {
   SignalSetWrapper::setMeta( SignalData::TIMEZONE, "UTC" );
-  SignalSetWrapper::setMeta( "Collection Timezone", tz_name );
-  SignalSetWrapper::setMeta( "Collection Timezone Offset", std::to_string( tz_offset_ms ) );
+  SignalSetWrapper::setMeta( COLLECTION_TIMEZONE, tz_name );
+  SignalSetWrapper::setMeta( COLLECTION_TIMEZONE_OFFSET, std::to_string( tz_offset_ms ) );
 }
 
 OffsetTimeSignalSet::~OffsetTimeSignalSet( ) {
@@ -39,8 +39,8 @@ std::unique_ptr<SignalData>& OffsetTimeSignalSet::addVital( const std::string& n
   std::unique_ptr<SignalData>& data = SignalSetWrapper::addVital( name, added );
   if ( nullptr != added && *added ) {
     data->setMeta( SignalData::TIMEZONE, "UTC" );
-    data->setMeta( "Collection Timezone", tz_name );
-    data->setMeta( "Collection Timezone Offset", (int) tz_offset_ms );
+    data->setMeta( COLLECTION_TIMEZONE, tz_name );
+    data->setMeta( COLLECTION_TIMEZONE_OFFSET, (int) tz_offset_ms );
   }
   return data;
 }
@@ -49,8 +49,8 @@ std::unique_ptr<SignalData>& OffsetTimeSignalSet::addWave( const std::string& na
   std::unique_ptr<SignalData>& data = SignalSetWrapper::addWave( name, added );
   if ( nullptr != added && *added ) {
     data->setMeta( SignalData::TIMEZONE, "UTC" );
-    data->setMeta( "Collection Timezone", tz_name );
-    data->setMeta( "Collection Timezone Offset", (int) tz_offset_ms );
+    data->setMeta( COLLECTION_TIMEZONE, tz_name );
+    data->setMeta( COLLECTION_TIMEZONE_OFFSET, (int) tz_offset_ms );
   }
   return data;
 }
@@ -58,7 +58,7 @@ std::unique_ptr<SignalData>& OffsetTimeSignalSet::addWave( const std::string& na
 void OffsetTimeSignalSet::reset( bool signalDataOnly ) {
   std::string tz = SignalSetWrapper::metadata( ).at( SignalData::TIMEZONE );
   SignalSetWrapper::reset( signalDataOnly );
-  SignalSetWrapper::setMeta( SignalData::TIMEZONE, tz );
-  SignalSetWrapper::setMeta( "Collection Timezone", tz_name );
-  SignalSetWrapper::setMeta( "Collection Timezone Offset", std::to_string( tz_offset_ms ) );
+  SignalSetWrapper::setMeta( SignalData::TIMEZONE, "UTC" );
+  SignalSetWrapper::setMeta( COLLECTION_TIMEZONE, tz_name );
+  SignalSetWrapper::setMeta( COLLECTION_TIMEZONE_OFFSET, std::to_string( tz_offset_ms ) );
 }

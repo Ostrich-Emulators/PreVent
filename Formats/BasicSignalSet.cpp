@@ -13,11 +13,11 @@
 #include <iostream>
 
 BasicSignalSet::BasicSignalSet() {
-  setMeta( SignalData::TIMEZONE, "UTC" );
+  SignalSet::setMeta( SignalData::TIMEZONE, "UTC" );
 }
 
 BasicSignalSet::BasicSignalSet( const BasicSignalSet& ) {
-  setMeta( SignalData::TIMEZONE, "UTC" );
+  SignalSet::setMeta( SignalData::TIMEZONE, "UTC" );
 }
 
 BasicSignalSet::~BasicSignalSet( ) {

@@ -12,16 +12,18 @@
 #include <limits>
 #include <iostream>
 
-SignalSet::SignalSet() {
+SignalSet::SignalSet( ) {
 }
 
 SignalSet::~SignalSet( ) {
 }
 
 void SignalSet::reset( bool signalDataOnly ) {
+  std::string tz = metamap.at( SignalData::TIMEZONE );
   if ( !signalDataOnly ) {
     metamap.clear( );
   }
+  metamap[SignalData::TIMEZONE] = tz;
 }
 
 std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> SignalSet::allsignals( ) const {
@@ -55,8 +57,8 @@ void SignalSet::setMeta( const std::string& key, const std::string & val ) {
   metamap[key] = val;
 }
 
-void SignalSet::clearMetas(){
-  metamap.clear();
+void SignalSet::clearMetas( ) {
+  metamap.clear( );
 }
 
 const std::map<long, dr_time>& SignalSet::offsets( ) const {
