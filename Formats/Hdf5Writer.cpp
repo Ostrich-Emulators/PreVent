@@ -157,7 +157,12 @@ void Hdf5Writer::writeFileAttributes( H5::H5File file,
   for ( std::map<std::string, std::string>::const_iterator it = datasetattrs.begin( );
       it != datasetattrs.end( ); ++it ) {
     //std::cout << "writing file attr: " << it->first << ": " << it->second << std::endl;
-    writeAttribute( file, it->first, it->second );
+    if ( it->first == OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) {
+      writeAttribute( file, it->first, std::stoi( it->second ) );
+    }
+    else {
+      writeAttribute( file, it->first, it->second );
+    }
   }
 
   writeAttribute( file, "Layout Version", LAYOUT_VERSION );
@@ -338,7 +343,7 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
       row++;
     }
     ds.write( indexes, H5::PredType::STD_I64LE );
-    writeAttribute( ds, "Columns", "timestamp, segment offset" );
+    writeAttribute( ds, "Columns", "timestamp (ms), segment offset" );
   }
 
   // we want "sort of unique" global times. That is, if a time is duplicated
@@ -390,13 +395,14 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
   //  std::cout << "hdf5writer: " << x.first << ": " << x.second << std::endl;
   //}
   writeAttribute( ds, SignalData::TIMEZONE, data->metadata( ).at( SignalData::TIMEZONE ) );
+
   if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
     writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metadata( )
         .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
   }
   if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) ) {
-    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET, data->metadata( )
-        .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) );
+    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET, std::stoi( data->metadata( )
+        .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) ) );
   }
 }
 

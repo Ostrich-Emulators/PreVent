@@ -16,12 +16,11 @@ BasicSignalSet::BasicSignalSet() {
   setMeta( SignalData::TIMEZONE, "UTC" );
 }
 
-BasicSignalSet::~BasicSignalSet( ) {
-
-}
-
 BasicSignalSet::BasicSignalSet( const BasicSignalSet& ) {
   setMeta( SignalData::TIMEZONE, "UTC" );
+}
+
+BasicSignalSet::~BasicSignalSet( ) {
 }
 
 BasicSignalSet BasicSignalSet::operator=(const BasicSignalSet&) {
