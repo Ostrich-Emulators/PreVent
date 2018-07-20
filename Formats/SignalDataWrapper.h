@@ -58,9 +58,14 @@ public:
   virtual void setWave( bool wave = false ) override;
   virtual bool wave( ) const override;
 
-  virtual std::map<std::string, std::string>& metas( ) override;
-  virtual std::map<std::string, int>& metai( ) override;
-  virtual std::map<std::string, double>& metad( ) override;
+  virtual void setMeta( const std::string& key, const std::string& val ) override;
+  virtual void setMeta( const std::string& key, int val ) override;
+  virtual void setMeta( const std::string& key, double val ) override;
+  virtual void erases( const std::string& key = "" ) override;
+  virtual void erasei( const std::string& key = "" ) override;
+  virtual void erased( const std::string& key = "" ) override;
+
+
   virtual const std::map<std::string, std::string>& metas( ) const override;
   virtual const std::map<std::string, int>& metai( ) const override;
   virtual const std::map<std::string, double>& metad( ) const override;

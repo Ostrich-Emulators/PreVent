@@ -118,12 +118,13 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
                   doDoubleValues = true;
                   freq = (int) ( f * 2 );
 
-                  signal->metas( )["Notes"] = "The sampling values have been doubled to correct non-integer sample rate";
+                  signal->setMeta( "Notes",
+                      "The sampling values have been doubled to correct non-integer sample rate" );
                 }
               }
             }
             else {
-              signal->metas( )[p.first] = p.second;
+              signal->setMeta(p.first, p.second );
             }
           }
 

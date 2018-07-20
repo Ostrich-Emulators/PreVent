@@ -31,7 +31,7 @@ enum TimeCounter {
 
 class SignalSet {
 public:
-  SignalSet( bool largefilesupport = false );
+  SignalSet();
   virtual ~SignalSet( );
   virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) =0;
   virtual std::vector<std::unique_ptr<SignalData>>&waves( ) =0;
@@ -73,15 +73,11 @@ public:
   void clearOffsets( );
   //void moveTo( SignalSet& dest );
 
-protected:
-  virtual bool isLargeFile( ) const;
-
 private:
   std::map<std::string, std::string> metamap;
   std::map<long, dr_time> segs; // segment index->time
-  bool largefile;
 
-  friend class SignalSetWrapper;
+  //friend class SignalSetWrapper;
 };
 
 #endif /* SIGNALSET_H */

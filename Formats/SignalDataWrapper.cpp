@@ -9,15 +9,15 @@
 #include <iostream>
 
 SignalDataWrapper::SignalDataWrapper( const std::unique_ptr<SignalData>& data )
-: signal( data.get() ), iOwnThisPtr( false ) {
+: signal( data.get( ) ), iOwnThisPtr( false ) {
 }
 
 SignalDataWrapper::SignalDataWrapper( SignalData * data )
-:signal( data ), iOwnThisPtr( true ) {
+: signal( data ), iOwnThisPtr( true ) {
 }
 
 SignalDataWrapper::~SignalDataWrapper( ) {
-  if( iOwnThisPtr ){
+  if ( iOwnThisPtr ) {
     delete signal;
   }
 }
@@ -94,16 +94,28 @@ bool SignalDataWrapper::wave( ) const {
   return signal->wave( );
 }
 
-std::map<std::string, std::string>& SignalDataWrapper::metas( ) {
-  return signal->metas( );
+void SignalDataWrapper::setMeta( const std::string& key, const std::string& val ) {
+  signal->setMeta( key, val );
 }
 
-std::map<std::string, int>& SignalDataWrapper::metai( ) {
-  return signal->metai( );
+void SignalDataWrapper::setMeta( const std::string& key, int val ) {
+  signal->setMeta( key, val );
 }
 
-std::map<std::string, double>& SignalDataWrapper::metad( ) {
-  return signal->metad( );
+void SignalDataWrapper::setMeta( const std::string& key, double val ) {
+  signal->setMeta( key, val );
+}
+
+void SignalDataWrapper::erases( const std::string& key ) {
+  signal->erases( key );
+}
+
+void SignalDataWrapper::erasei( const std::string& key ) {
+  signal->erasei( key );
+}
+
+void SignalDataWrapper::erased( const std::string& key ) {
+  signal->erased( key );
 }
 
 const std::map<std::string, std::string>& SignalDataWrapper::metas( ) const {
@@ -118,8 +130,8 @@ const std::map<std::string, double>& SignalDataWrapper::metad( ) const {
   return signal->metad( );
 }
 
-const std::deque<dr_time> SignalDataWrapper::times() const {
-  return signal->times();
+const std::deque<dr_time> SignalDataWrapper::times( ) const {
+  return signal->times( );
 }
 
 std::vector<std::string> SignalDataWrapper::extras( ) const {

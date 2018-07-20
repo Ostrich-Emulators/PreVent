@@ -8,12 +8,11 @@
 #include "BasicSignalData.h"
 #include "SignalUtils.h"
 #include "DurationSpecification.h"
-#include "DurationSignalData.h"
 
 #include <limits>
 #include <iostream>
 
-BasicSignalSet::BasicSignalSet( bool lfs ) : SignalSet( lfs ) {
+BasicSignalSet::BasicSignalSet() {
   setMeta( SignalData::TIMEZONE, "UTC" );
 }
 
@@ -27,38 +26,6 @@ BasicSignalSet::BasicSignalSet( const BasicSignalSet& ) {
 
 BasicSignalSet BasicSignalSet::operator=(const BasicSignalSet&) {
 }
-
-//std::vector<std::reference_wrapper<const std::unique_ptr>> BasicSignalSet::vitals( ) const {
-//  std::vector<std::reference_wrapper<const std::unique_ptr < SignalData>>> ret;
-//  for ( const auto& x : vits ) {
-//    ret.push_back( std::cref( x ) );
-//  }
-//  return ret;
-//}
-//
-//std::vector<std::reference_wrapper<const std::unique_ptr>> BasicSignalSet::waves( ) const {
-//  std::vector<std::reference_wrapper<const std::unique_ptr < SignalData>>> ret;
-//  for ( const auto& x : wavs ) {
-//    ret.push_back( std::cref( x ) );
-//  }
-//  return ret;
-//}
-//
-//std::vector<std::reference_wrapper<std::unique_ptr>> BasicSignalSet::vitals( ) {
-//  std::vector<std::reference_wrapper<std::unique_ptr < SignalData>>> ret;
-//  for ( auto& x : vits ) {
-//    ret.push_back( std::ref( x ) );
-//  }
-//  return ret;
-//}
-//
-//std::vector<std::reference_wrapper<std::unique_ptr>> BasicSignalSet::waves( ) {
-//  std::vector<std::reference_wrapper<std::unique_ptr < SignalData>>> ret;
-//  for ( auto& x : wavs ) {
-//    ret.push_back( std::ref( x ) );
-//  }
-//  return ret;
-//}
 
 std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::vitals( ) {
   return vits;
@@ -111,7 +78,7 @@ dr_time BasicSignalSet::latest( const TimeCounter& type ) const {
 }
 
 std::unique_ptr<SignalData> BasicSignalSet::createSignalData( const std::string& name, bool iswave ) {
-  return std::unique_ptr<SignalData>( new BasicSignalData( name, isLargeFile( ), iswave ) );
+  return std::unique_ptr<SignalData>( new BasicSignalData( name, iswave ) );
 }
 
 std::unique_ptr<SignalData>& BasicSignalSet::addVital( const std::string& name, bool * added ) {

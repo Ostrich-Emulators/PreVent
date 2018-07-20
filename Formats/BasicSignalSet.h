@@ -20,7 +20,7 @@ class SignalData;
 
 class BasicSignalSet : public SignalSet {
 public:
-  BasicSignalSet( bool lfs = false );
+  BasicSignalSet();
   virtual ~BasicSignalSet( );
 
   virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) override;

@@ -15,9 +15,12 @@
 #define OFFSETSIGNALSET_H
 
 #include "SignalSetWrapper.h"
+#include "SignalDataWrapper.h"
 
 class OffsetTimeSignalSet : public SignalSetWrapper {
 public:
+  static const std::string COLLECTION_TIMEZONE;
+  static const std::string COLLECTION_TIMEZONE_OFFSET;
 
   OffsetTimeSignalSet( const std::string& name, long offset_ms = 0 );
   OffsetTimeSignalSet( const std::unique_ptr<SignalSet>& w, const std::string& name,

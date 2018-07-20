@@ -55,9 +55,6 @@ public:
   virtual dr_time latest( const TimeCounter& tc = EITHER ) const override;
   virtual const std::map<std::string, std::string>& metadata( ) const override;
 
-protected:
-  virtual bool isLargeFile( ) const override;
-
 private:
   SignalSet * set;
   bool iOwnThisPointer;

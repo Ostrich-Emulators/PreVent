@@ -33,7 +33,6 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-f or --from <input format>"
       << std::endl << "\t-t or --to <output format>"
       << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
-      << std::endl << "\t-e or --export <vital/wave to export>"
       << std::endl << "\t-s or --sqlite <db file>"
       << std::endl << "\t-q or --quiet"
       << std::endl << "\t-1 or --stop-after-one"
@@ -67,7 +66,6 @@ struct option longopts[] = {
   { "from", required_argument, NULL, 'f' },
   { "to", required_argument, NULL, 't' },
   { "compression", required_argument, NULL, 'z' },
-  { "export", required_argument, NULL, 'e' },
   { "sqlite", required_argument, NULL, 's' },
   { "quiet", no_argument, NULL, 'q' },
   { "anonymize", no_argument, NULL, 'a' },
@@ -88,7 +86,6 @@ int main( int argc, char** argv ) {
   extern char * optarg;
   std::string fromstr;
   std::string tostr;
-  std::string exp;
   std::string sqlitedb;
   std::string pattern = FileNamer::DEFAULT_PATTERN;
   bool anonymize = false;
@@ -108,9 +105,6 @@ int main( int argc, char** argv ) {
         break;
       case 'z':
         compression = std::atoi( optarg );
-        break;
-      case 'e':
-        exp = optarg;
         break;
       case 'q':
         quiet = true;
@@ -219,10 +213,6 @@ int main( int argc, char** argv ) {
     from->setQuiet( quiet );
     from->setNonbreaking( nobreak );
     from->localizeTime( dolocaltime );
-
-    if ( !exp.empty( ) ) {
-      from->extractOnly( exp );
-    }
   }
   catch ( std::string x ) {
     std::cerr << x << std::endl;

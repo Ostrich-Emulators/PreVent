@@ -137,12 +137,12 @@ void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
   int timeinterval = 2000;
   if ( dataAndTimeGroup.attrExists( SignalData::CHUNK_INTERVAL_MS ) ) {
     timeinterval = metaint( dataAndTimeGroup, SignalData::CHUNK_INTERVAL_MS );
-    signal->metai( )[SignalData::CHUNK_INTERVAL_MS] = timeinterval;
+    signal->setMeta(SignalData::CHUNK_INTERVAL_MS, timeinterval);
   }
   int valsPerChunk = 1;
   if ( dataAndTimeGroup.attrExists( SignalData::READINGS_PER_CHUNK ) ) {
     valsPerChunk = metaint( dataAndTimeGroup, SignalData::READINGS_PER_CHUNK );
-    signal->metai( )[SignalData::READINGS_PER_CHUNK] = valsPerChunk;
+    signal->setMeta( SignalData::READINGS_PER_CHUNK, valsPerChunk );
   }
 
   H5::DataSet dataset = dataAndTimeGroup.openDataSet( "data" );
@@ -150,9 +150,10 @@ void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
   copymetas( signal, dataset );
   int scale = signal->scale( );
   for ( auto& x : IGNORABLE_PROPS ) {
-    signal->metad( ).erase( x );
-    signal->metas( ).erase( x );
-    signal->metai( ).erase( x );
+    // FIXME: this is a problem...we need to remove props so we don't get an error
+    //signal->metad( ).erase( x );
+    //signal->metas( ).erase( x );
+    //signal->metai( ).erase( x );
   }
 
   //  for ( auto& m : signal->metad( ) ) {
@@ -283,20 +284,20 @@ void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
       {
         int inty = 0;
         attr.read( type, &inty );
-        signal->metai( )[key] = inty;
+        signal->setMeta( key, inty );
       }
         break;
       case H5T_FLOAT:
       {
         double dbl = 0;
         attr.read( type, &dbl );
-        signal->metad( )[key] = dbl;
+        signal->setMeta( key, dbl );
       }
         break;
       default:
         std::string aval;
         attr.read( type, aval );
-        signal->metas( )[key] = aval;
+        signal->setMeta( key, aval );
     }
   }
 }

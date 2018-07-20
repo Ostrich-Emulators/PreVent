@@ -107,7 +107,7 @@ void CpcXmlReader::end( const std::string& element, const std::string& text ) {
     signal->add( DataRow( currtime, vals ) );
     if ( added ) {
       signal->setChunkIntervalAndSampleRate( 2000, valsperdr );
-      signal->metad( )["Gain"] = gain;
+      signal->setMeta( "Gain", gain );
     }
 
     inmg = inhz = inpoints = false;

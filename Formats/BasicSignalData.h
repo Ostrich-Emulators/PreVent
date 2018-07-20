@@ -30,7 +30,7 @@ class DataRow;
 
 class BasicSignalData : public SignalData {
 public:
-  BasicSignalData( const std::string& name, bool largefilesupport = false, bool iswave = false );
+  BasicSignalData( const std::string& name, bool iswave = false );
   virtual ~BasicSignalData( );
 
   virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) override;

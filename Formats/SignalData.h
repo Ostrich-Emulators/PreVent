@@ -80,9 +80,14 @@ public:
 
   virtual void moveDataTo( std::unique_ptr<SignalData>& signal );
   virtual void setMetadataFrom( const SignalData& model );
-  virtual std::map<std::string, std::string>& metas( );
-  virtual std::map<std::string, int>& metai( );
-  virtual std::map<std::string, double>& metad( );
+  virtual void setMeta( const std::string& key, const std::string& val );
+  virtual void setMeta( const std::string& key, int val );
+  virtual void setMeta( const std::string& key, double val );
+
+  virtual void erases( const std::string& key = "" );
+  virtual void erasei( const std::string& key = "" );
+  virtual void erased( const std::string& key = "" );
+
   virtual const std::map<std::string, std::string>& metas( ) const;
   virtual const std::map<std::string, int>& metai( ) const;
   virtual const std::map<std::string, double>& metad( ) const;

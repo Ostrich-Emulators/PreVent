@@ -46,13 +46,6 @@ public:
   virtual void finish( );
 
   /**
-   * Tells this reader to only produce data for the given dataset during
-   * calls to {@link #fill}.
-   * @param toexport
-   */
-  virtual void extractOnly( const std::string& toExtract );
-
-  /**
    * Fills the given ReadInfo with the next chunk of data from the input.
    * A chunk is defined as one patient-day.
    * @param read the data structure to populate with the newly-read data
@@ -84,19 +77,12 @@ protected:
    */
   virtual size_t getSize( const std::string& input ) const = 0;
 
-  /**
-   * Should we extract this waveform/vital?
-   * @return
-   */
-  bool shouldExtract( const std::string& vitalOrWave ) const;
-
   bool nonbreaking( ) const;
 
   std::ostream& output( ) const;
 private:
 
   bool largefile;
-  std::string toextract;
   const std::string rdrname;
   bool quiet;
   bool anon;

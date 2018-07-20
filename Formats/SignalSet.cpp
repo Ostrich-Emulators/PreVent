@@ -8,23 +8,14 @@
 #include "BasicSignalData.h"
 #include "SignalUtils.h"
 #include "DurationSpecification.h"
-#include "DurationSignalData.h"
 
 #include <limits>
 #include <iostream>
 
-SignalSet::SignalSet( bool lf ) : largefile( lf ) {
+SignalSet::SignalSet() {
 }
 
 SignalSet::~SignalSet( ) {
-}
-
-void SignalSet::setFileSupport( bool b ) {
-  largefile = b;
-}
-
-bool SignalSet::isLargeFile( ) const {
-  return largefile;
 }
 
 void SignalSet::reset( bool signalDataOnly ) {

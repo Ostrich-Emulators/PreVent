@@ -56,16 +56,43 @@ void SignalData::moveDataTo( std::unique_ptr<SignalData>& dest ) {
   }
 }
 
-std::map<std::string, std::string>& SignalData::metas( ) {
-  return metadatas;
+void SignalData::setMeta( const std::string& key, const std::string& val ) {
+  metadatas[key] = val;
 }
 
-std::map<std::string, int>& SignalData::metai( ) {
-  return metadatai;
+void SignalData::setMeta( const std::string& key, int val ) {
+  metadatai[key] = val;
 }
 
-std::map<std::string, double>& SignalData::metad( ) {
-  return metadatad;
+void SignalData::setMeta( const std::string& key, double val ) {
+  metadatad[key] = val;
+}
+
+void SignalData::erases( const std::string& key ) {
+  if ( "" == key ) {
+    metadatas.clear( );
+  }
+  else{
+    metadatas.erase( key );
+  }
+}
+
+void SignalData::erasei( const std::string& key ) {
+  if ( "" == key ) {
+    metadatai.clear( );
+  }
+  else{
+    metadatai.erase( key );
+  }
+}
+
+void SignalData::erased( const std::string& key ) {
+  if ( "" == key ) {
+    metadatad.clear( );
+  }
+  else{
+    metadatad.erase( key );
+  }
 }
 
 const std::map<std::string, std::string>& SignalData::metas( ) const {
@@ -82,7 +109,7 @@ const std::map<std::string, double>& SignalData::metad( ) const {
 
 double SignalData::hz( ) const {
   double ratio = 1000.0 / (double) metadatai.at( SignalData::CHUNK_INTERVAL_MS );
-  return ratio * (double)metadatai.at( SignalData::READINGS_PER_CHUNK );
+  return ratio * (double) metadatai.at( SignalData::READINGS_PER_CHUNK );
 }
 
 std::vector<std::string> SignalData::extras( ) const {

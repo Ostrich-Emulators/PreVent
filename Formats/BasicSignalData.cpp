@@ -22,52 +22,49 @@
 #include <limits>
 #include <queue>
 
-const int BasicSignalData::CACHE_LIMIT = 15000;
+const int BasicSignalData::CACHE_LIMIT = 30000;
 
-BasicSignalData::BasicSignalData( const std::string& name, bool largefile, bool wavedata )
+BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
 datacount( 0 ), popping( false ), iswave( wavedata ), highval( -std::numeric_limits<double>::max( ) ),
-lowval( std::numeric_limits<double>::max( ) ) {
-  //file = ( largefile ? fopen( std::tmpnam( nullptr ), "w+" ) : NULL );
-  if ( largefile ) {
-    std::string fname = "/tmp/cache-" + name + "-" + ( iswave ? "wave" : "vital" ) + ".prevent";
-    file = fopen( fname.c_str( ), "wb+" );
-  }
-  else {
-    file = NULL;
-  }
-
-  metas( )[SignalData::TIMEZONE] = "UTC";
+lowval( std::numeric_limits<double>::max( ) ), file( nullptr ) {
+  setMeta( SignalData::TIMEZONE, "UTC" );
 }
 
 BasicSignalData::BasicSignalData( const BasicSignalData& orig ) : SignalData( orig ),
 label( orig.label ), firstdata( orig.firstdata ), lastdata( orig.lastdata ),
 datacount( orig.datacount ), popping( orig.popping ), iswave( orig.iswave ),
-highval( orig.highval ), lowval( orig.lowval ) {
+highval( orig.highval ), lowval( orig.lowval ), file( nullptr ) {
   for ( auto const& i : orig.data ) {
     data.push_front( std::unique_ptr<DataRow>( new DataRow( *i ) ) );
   }
-  metas( )[SignalData::TIMEZONE] = "UTC";
+  setMeta( SignalData::TIMEZONE, "UTC" );
 }
 
 BasicSignalData::~BasicSignalData( ) {
   data.clear( );
-  if ( NULL != file ) {
+  if ( nullptr != file ) {
     std::fclose( file );
   }
 }
 
 std::unique_ptr<SignalData> BasicSignalData::shallowcopy( bool includedates ) {
-  std::unique_ptr<BasicSignalData> copy( new BasicSignalData( label, ( NULL != file ) ) );
+  std::unique_ptr<BasicSignalData> copy( new BasicSignalData( label ) );
 
   if ( includedates ) {
     copy->firstdata = this->firstdata;
     copy->lastdata = this->lastdata;
   }
 
-  copy->metad( ).insert( metad( ).begin( ), metad( ).end( ) );
-  copy->metai( ).insert( metai( ).begin( ), metai( ).end( ) );
-  copy->metas( ).insert( metas( ).begin( ), metas( ).end( ) );
+  for ( auto x : metad( ) ) {
+    copy->setMeta( x.first, x.second );
+  }
+  for ( auto x : metai( ) ) {
+    copy->setMeta( x.first, x.second );
+  }
+  for ( auto x : metas( ) ) {
+    copy->setMeta( x.first, x.second );
+  }
   copy->popping = this->popping;
   for ( std::string& s : extras( ) ) {
     copy->extras( ).push_back( s );
@@ -88,11 +85,11 @@ std::unique_ptr<DataRow> BasicSignalData::pop( ) {
     startPopping( );
   }
 
-  if ( NULL != file && data.empty( ) ) {
+  if ( nullptr != file && data.empty( ) ) {
     int lines = uncache( );
     if ( 0 == lines ) {
       std::fclose( file );
-      file = NULL;
+      file = nullptr;
     }
   }
 
@@ -113,7 +110,7 @@ const std::string& BasicSignalData::name( ) const {
 
 void BasicSignalData::startPopping( ) {
   popping = true;
-  if ( NULL != file ) {
+  if ( nullptr != file ) {
     cache( ); // copy any extra rows to disk
     std::rewind( file );
   }
@@ -129,6 +126,11 @@ double BasicSignalData::lowwater( ) const {
 
 void BasicSignalData::cache( ) {
   std::stringstream ss;
+
+  if( nullptr == file ){
+    file = tmpfile();
+  }
+
   while ( !data.empty( ) ) {
     std::unique_ptr<DataRow> a = std::move( data.front( ) );
     data.pop_front( );
@@ -147,7 +149,7 @@ void BasicSignalData::cache( ) {
 
 void BasicSignalData::add( const DataRow& row ) {
 
-  if ( NULL != file && data.size( ) >= CACHE_LIMIT ) {
+  if ( data.size( ) >= CACHE_LIMIT ) {
     // copy current data list to disk
     cache( );
   }

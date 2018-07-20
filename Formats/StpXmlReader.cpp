@@ -229,7 +229,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           warnMissingName = false;
         }
       }
-      else if ( shouldExtract( label ) ) {
+      else {
         std::string wavepoints = text;
         // reverse the oversampling (if any) and set the true Hz
         int thz = 240;
@@ -272,7 +272,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
             }
 
             if ( 0 != attrs.count( "Cal" ) ) {
-              sig->metas( )["Cal"] = attrs["Cal"];
+              sig->setMeta( "Cal", attrs["Cal"] );
             }
           }
 

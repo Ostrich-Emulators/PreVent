@@ -38,29 +38,6 @@ std::unique_ptr<SignalData>& SignalSetWrapper::addWave( const std::string& name,
   return set->addWave( name, added );
 }
 
-bool SignalSetWrapper::isLargeFile( ) const {
-  return set->isLargeFile( );
-}
-
-
-//std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> SignalSetWrapper::vitals( ) const {
-//  const SignalSet * x = set.get( );
-//  return x->vitals( );
-//}
-//
-//std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> SignalSetWrapper::waves( ) const {
-//  const SignalSet * x = set.get( );
-//  return x->waves( );
-//}
-//
-//std::vector<std::reference_wrapper<std::unique_ptr<SignalData>>> SignalSetWrapper::vitals( ) {
-//  return set->vitals( );
-//}
-//
-//std::vector<std::reference_wrapper<std::unique_ptr<SignalData>>> SignalSetWrapper::waves( ) {
-//  return set->waves( );
-//}
-
 std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::vitals( ) {
   return set->vitals( );
 }

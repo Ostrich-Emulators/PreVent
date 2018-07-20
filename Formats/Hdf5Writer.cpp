@@ -25,7 +25,6 @@
 #include "SignalUtils.h"
 #include "FileNamer.h"
 #include "H5public.h"
-#include "OffsetTimeSignalData.h"
 #include "OffsetTimeSignalSet.h"
 
 const std::string Hdf5Writer::LAYOUT_VERSION = "4.0.0";
@@ -391,6 +390,14 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
   //  std::cout << "hdf5writer: " << x.first << ": " << x.second << std::endl;
   //}
   writeAttribute( ds, SignalData::TIMEZONE, data->metadata( ).at( SignalData::TIMEZONE ) );
+  if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
+    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metadata( )
+        .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
+  }
+  if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) ) {
+    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET, data->metadata( )
+        .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) );
+  }
 }
 
 int Hdf5Writer::drain( std::unique_ptr<SignalSet>& info ) {
@@ -475,15 +482,15 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
 void Hdf5Writer::writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data ) {
   writeTimesAndDurationAttributes( group, data->startTime( ), data->endTime( ) );
   writeAttribute( group, SignalData::LABEL, data->name( ) );
-  writeAttribute( group, SignalData::TIMEZONE, data->metas( )[SignalData::TIMEZONE] );
-  writeAttribute( group, SignalData::CHUNK_INTERVAL_MS, data->metai( )[SignalData::CHUNK_INTERVAL_MS] );
-  writeAttribute( group, SignalData::READINGS_PER_CHUNK, data->metai( )[SignalData::READINGS_PER_CHUNK] );
+  writeAttribute( group, SignalData::TIMEZONE, data->metas( ).at( SignalData::TIMEZONE ) );
+  writeAttribute( group, SignalData::CHUNK_INTERVAL_MS, data->metai( ).at( SignalData::CHUNK_INTERVAL_MS ) );
+  writeAttribute( group, SignalData::READINGS_PER_CHUNK, data->metai( ).at( SignalData::READINGS_PER_CHUNK ) );
   writeAttribute( group, SignalData::UOM, data->uom( ) );
 
-  data->metas( ).erase( SignalData::TIMEZONE );
-  data->metad( ).erase( SignalData::CHUNK_INTERVAL_MS );
-  data->metad( ).erase( SignalData::READINGS_PER_CHUNK );
-  data->metas( ).erase( SignalData::UOM );
+  data->erases( SignalData::TIMEZONE );
+  data->erased( SignalData::CHUNK_INTERVAL_MS );
+  data->erased( SignalData::READINGS_PER_CHUNK );
+  data->erases( SignalData::UOM );
 }
 
 void Hdf5Writer::writeVitalGroup( H5::Group& group, std::unique_ptr<SignalData>& data ) {
@@ -556,6 +563,6 @@ void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data
   ds.write( &times[0], H5::PredType::STD_I64LE );
   writeAttribute( ds, "Time Source", "raw" );
   writeAttribute( ds, "Columns", "timestamp (ms)" );
-  writeAttribute( ds, SignalData::TIMEZONE, data->metas( )[SignalData::TIMEZONE] );
+  writeAttribute( ds, SignalData::TIMEZONE, data->metas( ).at( SignalData::TIMEZONE ) );
   // writeAttribute( ds, SignalData::VALS_PER_DR, data.valuesPerDataRow( ) );
 }

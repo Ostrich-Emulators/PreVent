@@ -18,16 +18,20 @@
       </logicalFolder>
       <logicalFolder name="f3" displayName="SignalData" projectFiles="true">
         <itemPath>BasicSignalData.h</itemPath>
-        <itemPath>DurationSignalData.h</itemPath>
-        <itemPath>LocaltimeSignalData.h</itemPath>
+        <itemPath>SignalDataIterator.h</itemPath>
         <itemPath>SignalDataWrapper.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f4" displayName="SignalSet" projectFiles="true">
+        <itemPath>AnonymizingSignalSet.h</itemPath>
+        <itemPath>BasicSignalSet.h</itemPath>
+        <itemPath>OffsetTimeSignalSet.h</itemPath>
+        <itemPath>SignalSetWrapper.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Writers" projectFiles="true">
         <itemPath>CsvWriter.h</itemPath>
         <itemPath>Hdf5Writer.h</itemPath>
         <itemPath>MatWriter.h</itemPath>
         <itemPath>WfdbWriter.h</itemPath>
-        <itemPath>ZlWriter.h</itemPath>
         <itemPath>json.hpp</itemPath>
       </logicalFolder>
       <itemPath>Base64.h</itemPath>
@@ -64,16 +68,19 @@
       </logicalFolder>
       <logicalFolder name="f3" displayName="SignalData" projectFiles="true">
         <itemPath>BasicSignalData.cpp</itemPath>
-        <itemPath>DurationSignalData.cpp</itemPath>
-        <itemPath>LocaltimeSignalData.cpp</itemPath>
         <itemPath>SignalDataWrapper.cpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f4" displayName="SignalSet" projectFiles="true">
+        <itemPath>AnonymizingSignalSet.cpp</itemPath>
+        <itemPath>BasicSignalSet.cpp</itemPath>
+        <itemPath>OffsetTimeSignalSet.cpp</itemPath>
+        <itemPath>SignalSetWrapper.cpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Writers" projectFiles="true">
         <itemPath>CsvWriter.cpp</itemPath>
         <itemPath>Hdf5Writer.cpp</itemPath>
         <itemPath>MatWriter.cpp</itemPath>
         <itemPath>WfdbWriter.cpp</itemPath>
-        <itemPath>ZlWriter.cpp</itemPath>
       </logicalFolder>
       <itemPath>Base64.cpp</itemPath>
       <itemPath>DataRow.cpp</itemPath>
@@ -110,12 +117,11 @@
       <compileType>
         <ccTool>
           <stripSymbols>true</stripSymbols>
-          <standard>11</standard>
           <commandlineTool>h5c++</commandlineTool>
           <incDir>
             <pElem>../libtdms/include</pElem>
           </incDir>
-          <commandLine>-Wno-deprecated -O0 -pg -g `wfdb-config --cflags`</commandLine>
+          <commandLine>-Wno-deprecated -O0 -pg -g `wfdb-config --cflags` -std=c++17</commandLine>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libFormats.${CND_DLIB_EXT}</output>
@@ -138,10 +144,15 @@
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
+            <linkerLibLibItem>stdc++fs</linkerLibLibItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
       </compileType>
+      <item path="AnonymizingSignalSet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="AnonymizingSignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="Base64.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Base64.h" ex="false" tool="3" flavor2="0">
@@ -149,6 +160,10 @@
       <item path="BasicSignalData.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="BasicSignalData.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="BasicSignalSet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="BasicSignalSet.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ConversionListener.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -163,10 +178,6 @@
       <item path="DataRow.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="DataRow.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="DurationSignalData.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="DurationSignalData.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="DurationSpecification.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -188,10 +199,6 @@
       </item>
       <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="LocaltimeSignalData.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="LocaltimeSignalData.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="MatWriter.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="MatWriter.h" ex="false" tool="3" flavor2="0">
@@ -199,6 +206,10 @@
       <item path="NullReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="NullReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="OffsetTimeSignalSet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="OffsetTimeSignalSet.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Reader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -208,6 +219,8 @@
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="SignalDataIterator.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="SignalDataWrapper.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="SignalDataWrapper.h" ex="false" tool="3" flavor2="0">
@@ -215,6 +228,10 @@
       <item path="SignalSet.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalSetWrapper.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalSetWrapper.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -256,10 +273,6 @@
       </item>
       <item path="ZlReader.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="ZlWriter.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="ZlWriter.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="dr_time.h" ex="false" tool="3" flavor2="0">
@@ -279,12 +292,11 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
-          <standard>11</standard>
           <commandlineTool>h5c++</commandlineTool>
           <incDir>
             <pElem>../libtdms/include</pElem>
           </incDir>
-          <commandLine>-Wno-deprecated `wfdb-config --cflags`</commandLine>
+          <commandLine>-Wno-deprecated `wfdb-config --cflags` -std=c++17</commandLine>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -312,10 +324,15 @@
                             OP="${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}">
               </makeArtifact>
             </linkerLibProjectItem>
+            <linkerLibLibItem>stdc++fs</linkerLibLibItem>
           </linkerLibItems>
           <commandLine>`wfdb-config --libs`</commandLine>
         </linkerTool>
       </compileType>
+      <item path="AnonymizingSignalSet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="AnonymizingSignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="Base64.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="Base64.h" ex="false" tool="3" flavor2="0">
@@ -323,6 +340,10 @@
       <item path="BasicSignalData.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="BasicSignalData.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="BasicSignalSet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="BasicSignalSet.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="ConversionListener.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -337,10 +358,6 @@
       <item path="DataRow.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="DataRow.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="DurationSignalData.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="DurationSignalData.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="DurationSpecification.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -362,10 +379,6 @@
       </item>
       <item path="Hdf5Writer.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="LocaltimeSignalData.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="LocaltimeSignalData.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="MatWriter.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="MatWriter.h" ex="false" tool="3" flavor2="0">
@@ -373,6 +386,10 @@
       <item path="NullReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="NullReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="OffsetTimeSignalSet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="OffsetTimeSignalSet.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Reader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -382,6 +399,8 @@
       </item>
       <item path="SignalData.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="SignalDataIterator.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="SignalDataWrapper.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="SignalDataWrapper.h" ex="false" tool="3" flavor2="0">
@@ -389,6 +408,10 @@
       <item path="SignalSet.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="SignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="SignalSetWrapper.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="SignalSetWrapper.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="SignalUtils.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -429,10 +452,6 @@
       <item path="ZlReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="ZlReader.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="ZlWriter.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="ZlWriter.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="config.h" ex="false" tool="3" flavor2="0">
       </item>

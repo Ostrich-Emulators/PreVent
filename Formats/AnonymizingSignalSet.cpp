@@ -6,7 +6,6 @@
 
 #include "AnonymizingSignalSet.h"
 #include "BasicSignalSet.h"
-#include "AnonymizingSignalData.h"
 
 AnonymizingSignalSet::AnonymizingSignalSet( )
 : SignalSetWrapper( new BasicSignalSet( ) ), firsttime( 0 ) {
@@ -43,4 +42,24 @@ void AnonymizingSignalSet::setMeta( const std::string& key, const std::string& v
   if ( !( "Patient Name" == key || "MRN" == key || "Unit" == key || "Bed" == key ) ) {
     SignalSetWrapper::setMeta( key, val );
   }
+}
+
+AnonymizingSignalData::AnonymizingSignalData( SignalData * data, dr_time& first )
+: SignalDataWrapper( data ), firsttime( first ) {
+}
+
+AnonymizingSignalData::AnonymizingSignalData( const std::unique_ptr<SignalData>& data, dr_time& first )
+: SignalDataWrapper( data ), firsttime( first ) {
+}
+
+AnonymizingSignalData::~AnonymizingSignalData( ) {
+}
+
+void AnonymizingSignalData::add( const DataRow& row ) {
+  if ( 0 == firsttime ) {
+    firsttime = row.time;
+  }
+  DataRow newrow( row );
+  newrow.time -= firsttime;
+  SignalDataWrapper::add( newrow );
 }

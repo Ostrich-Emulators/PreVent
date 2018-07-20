@@ -53,36 +53,12 @@ int Reader::prepare( const std::string& input, std::unique_ptr<SignalSet>& info 
       : info->metadata( ).at( SignalData::TIMEZONE ) );
   info->reset( false );
   info->setMeta( SignalData::TIMEZONE, timezone );
-
-  if ( "-" == input || "-zl" == input || "-gz" == input ) {
-    largefile = false;
-  }
-  else {
-    // arbitrary: "large file" is anything over 750M
-    size_t sz = getSize( input );
-    if ( 0 == sz ) {
-      return -1;
-    }
-
-    largefile = ( sz > 1024 * 1024 * 750 );
-  }
-
-  info->setFileSupport( largefile );
   info->setMeta( "Source Reader", name( ) );
-
   return 0;
 }
 
 void Reader::finish( ) {
   ss.clear( );
-}
-
-void Reader::extractOnly( const std::string& toExtract ) {
-  toextract = toExtract;
-}
-
-bool Reader::shouldExtract( const std::string& q ) const {
-  return ( toextract.empty( ) ? true : toextract == q );
 }
 
 void Reader::setQuiet( bool q ) {
