@@ -34,17 +34,5 @@ private:
   dr_time firsttime;
 };
 
-class AnonymizingSignalData : public SignalDataWrapper {
-public:
-  AnonymizingSignalData( SignalData * data, dr_time& firsttime );
-  AnonymizingSignalData( const std::unique_ptr<SignalData>& data, dr_time& firsttime );
-  virtual ~AnonymizingSignalData( );
-
-  virtual void add( const DataRow& row ) override;
-
-private:
-  dr_time& firsttime;
-};
-
 #endif /* ANONYMIZINGSIGNALSET_H */
 
