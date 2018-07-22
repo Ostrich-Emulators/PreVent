@@ -39,7 +39,7 @@ Hdf5Writer::~Hdf5Writer( ) {
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-    const std::string& attr, const std::string& val ) {
+        const std::string& attr, const std::string& val ) {
   if ( !val.empty( ) ) {
     //std::cout << attr << ": " << val << std::endl;
 
@@ -52,7 +52,7 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-    const std::string& attr, int val ) {
+        const std::string& attr, int val ) {
   //std::cout << "writing attribute (int):" << attr << ": "<<val<<std::endl;
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I32LE, space );
@@ -60,21 +60,21 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-    const std::string& attr, dr_time val ) {
+        const std::string& attr, dr_time val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I64LE, space );
   attrib.write( H5::PredType::STD_I64LE, &val );
 }
 
 void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-    const std::string& attr, double val ) {
+        const std::string& attr, double val ) {
   H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
   H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::IEEE_F64LE, space );
   attrib.write( H5::PredType::IEEE_F64LE, &val );
 }
 
 void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
-    const dr_time& start, const dr_time& end ) {
+        const dr_time& start, const dr_time& end ) {
 
   time_t stime = start / 1000;
   time_t etime = end / 1000;
@@ -149,13 +149,13 @@ std::string Hdf5Writer::getDatasetName( const std::unique_ptr<SignalData>& data 
 }
 
 void Hdf5Writer::writeFileAttributes( H5::H5File file,
-    std::map<std::string, std::string> datasetattrs,
-    const dr_time& firstTime, const dr_time& lastTime ) {
+        std::map<std::string, std::string> datasetattrs,
+        const dr_time& firstTime, const dr_time& lastTime ) {
 
   writeTimesAndDurationAttributes( file, firstTime, lastTime );
 
   for ( std::map<std::string, std::string>::const_iterator it = datasetattrs.begin( );
-      it != datasetattrs.end( ); ++it ) {
+          it != datasetattrs.end( ); ++it ) {
     //std::cout << "writing file attr: " << it->first << ": " << it->second << std::endl;
     if ( it->first == OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) {
       writeAttribute( file, it->first, std::stoi( it->second ) );
@@ -167,9 +167,9 @@ void Hdf5Writer::writeFileAttributes( H5::H5File file,
 
   writeAttribute( file, "Layout Version", LAYOUT_VERSION );
   writeAttribute( file, "HDF5 Version",
-      std::to_string( H5_VERS_MAJOR ) + "."
-      + std::to_string( H5_VERS_MINOR ) + "."
-      + std::to_string( H5_VERS_RELEASE ) );
+          std::to_string( H5_VERS_MAJOR ) + "."
+          + std::to_string( H5_VERS_MINOR ) + "."
+          + std::to_string( H5_VERS_RELEASE ) );
 }
 
 void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data ) {
@@ -203,18 +203,27 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
 
   writeAttribute( ds, "Columns", cols );
 
-  const int rows = data->size( );
   const size_t exc = extras.size( );
-  short buffer[rows * ( exc + 1 )] = { 0 };
-  int scale = data->scale( );
+  const int scale = data->scale( );
+
+  const size_t rows = data->size( );
+  const hsize_t maxslabcnt = ( rows * ( exc + 1 ) > 125000
+          ? 125000
+          : rows * ( exc + 1 ) );
+  hsize_t offset[] = { 0, 0 };
+  hsize_t count[] = { 0, exc + 1 };
+
+  std::vector<short> buffer;
+  buffer.reserve( maxslabcnt );
+
+  // We're keeping a buffer to eventually write to the file. However, this 
+  // buffer is based on a number of rows, *not* some multiple of the data size.
+  // This means we are really keeping two counters going at all times, and 
+  // once we're out of all the loops, we need to write any residual data.
 
   for ( int row = 0; row < rows; row++ ) {
-    const std::unique_ptr<DataRow>& datarow = data->pop( );
-
-    long baseidx = ( exc + 1 ) * row;
-    // FIXME: we don't want to scale missing values
-    buffer[baseidx] = datarow->shorts( scale )[0];
-
+    std::unique_ptr<DataRow> datarow = data->pop( );
+    buffer.push_back( datarow->shorts( scale )[0] );
     if ( !extras.empty( ) ) {
       for ( int i = 0; i < exc; i++ ) {
         short val = SignalData::MISSING_VALUE;
@@ -223,12 +232,29 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
           const auto& x = datarow->extras.at( xkey );
           val = (short) ( std::stoi( x ) );
         }
-        buffer[baseidx + ( i + 1 )] = val;
+        buffer.push_back( val );
       }
+    }
+
+    if ( buffer.size( ) >= maxslabcnt ) {
+      count[0] = buffer.size( );
+      space.selectHyperslab( H5S_SELECT_SET, count, offset );
+      offset[0] += count[0];
+
+      H5::DataSpace memspace( 2, count );
+      ds.write( &buffer[0], H5::PredType::STD_I16LE, memspace, space );
+      buffer.clear( );
+      buffer.reserve( maxslabcnt );
     }
   }
 
-  ds.write( &buffer, H5::PredType::STD_I16LE );
+  // finally, write whatever's left in the buffer
+  if ( !buffer.empty( ) ) {
+    count[0] = buffer.size( );
+    space.selectHyperslab( H5S_SELECT_SET, count, offset );
+    H5::DataSpace memspace( 2, count );
+    ds.write( &buffer[0], H5::PredType::STD_I16LE, memspace, space );
+  }
 }
 
 void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data ) {
@@ -257,15 +283,15 @@ void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data 
 
   const size_t rows = data->size( );
   const hsize_t maxslabcnt = ( rows * data->readingsPerSample( ) > 125000
-      ? 125000
-      : rows * data->readingsPerSample( ) );
+          ? 125000
+          : rows * data->readingsPerSample( ) );
   hsize_t offset[] = { 0, 0 };
   hsize_t count[] = { 0, 1 };
 
   std::vector<short> buffer;
   buffer.reserve( maxslabcnt );
 
-  const int scale = std::pow( 10, data->scale( ) );
+  const int scale = data->scale( );
 
   // We're keeping a buffer to eventually write to the file. However, this 
   // buffer is based on a number of rows, *not* some multiple of the data size.
@@ -334,7 +360,7 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
     H5::DataSpace space( 2, dims );
 
     H5::DataSet ds = events.createDataSet( "Segment_Offsets",
-        H5::PredType::STD_I64LE, space );
+            H5::PredType::STD_I64LE, space );
     long long indexes[segmentsizes.size( ) * 2] = { 0 };
     int row = 0;
     for ( const auto& e : segmentsizes ) {
@@ -385,9 +411,16 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
   // now we can make our dataset
   hsize_t dims[] = { alltimes.size( ), 1 };
   H5::DataSpace space( 2, dims );
+  
+  H5::DSetCreatPropList props;
+  if ( compression( ) > 0 ) {
+    hsize_t chunkdims[] = { 0, 0 };
+    autochunk( dims, 2, chunkdims );
+    props.setChunk( 2, chunkdims );
+    props.setDeflate( compression( ) );
+  }
 
-  H5::DataSet ds = events.createDataSet( "Global_Times",
-      H5::PredType::STD_I64LE, space );
+  H5::DataSet ds = events.createDataSet( "Global_Times", H5::PredType::STD_I64LE, space, props );
   ds.write( &alltimes[0], H5::PredType::STD_I64LE );
   writeAttribute( ds, "Columns", "timestamp (ms)" );
 
@@ -398,11 +431,11 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
 
   if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
     writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metadata( )
-        .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
+            .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
   }
   if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) ) {
     writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET, std::stoi( data->metadata( )
-        .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) ) );
+            .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) ) );
   }
 }
 
@@ -512,11 +545,12 @@ bool Hdf5Writer::rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data ) c
 
   const short int max = std::numeric_limits<short>::max( );
   const short int min = std::numeric_limits<short>::min( );
-  int scale = std::pow( 10, data->scale( ) );
-  int hi = scale * data->highwater( );
+  int scale = data->scale( );
+  int powscale = std::pow( 10, data->scale( ) );
+  int hi = powscale * data->highwater( );
   int low = ( data->lowwater( ) == SignalData::MISSING_VALUE
-      ? data->lowwater( )
-      : scale * data->lowwater( ) );
+          ? data->lowwater( )
+          : powscale * data->lowwater( ) );
   //std::cerr << " high/low water marks: " << data.highwater( ) << "/" << data.lowwater( ) << "(scale: " << data.scale( ) << ")" << std::endl;
   //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
 
@@ -524,10 +558,11 @@ bool Hdf5Writer::rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data ) c
   // FIXME: if we can't fit in shorts, we're screwed
   while ( ( hi > max || low < min ) && scale > 0 ) {
     scale--;
-    hi = std::pow( 10, scale ) * data->highwater( );
+    powscale = std::pow( 10, data->scale( ) );
+    hi = powscale * data->highwater( );
     low = ( data->lowwater( ) == SignalData::MISSING_VALUE
-        ? data->lowwater( )
-        : scale * data->lowwater( ) );
+            ? data->lowwater( )
+            : powscale * data->lowwater( ) );
     rescaled = true;
     //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
   }
@@ -564,8 +599,16 @@ void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data
 
   hsize_t dims[] = { times.size( ), 1 };
   H5::DataSpace space( 2, dims );
+  
+  H5::DSetCreatPropList props;
+  if ( compression( ) > 0 ) {
+    hsize_t chunkdims[] = { 0, 0 };
+    autochunk( dims, 2, chunkdims );
+    props.setChunk( 2, chunkdims );
+    props.setDeflate( compression( ) );
+  }
 
-  H5::DataSet ds = group.createDataSet( "time", H5::PredType::STD_I64LE, space );
+  H5::DataSet ds = group.createDataSet( "time", H5::PredType::STD_I64LE, space, props );
   ds.write( &times[0], H5::PredType::STD_I64LE );
   writeAttribute( ds, "Time Source", "raw" );
   writeAttribute( ds, "Columns", "timestamp (ms)" );
@@ -573,10 +616,10 @@ void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data
   // writeAttribute( ds, SignalData::VALS_PER_DR, data.valuesPerDataRow( ) );
   if ( 0 != data->metas( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
     writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metas( )
-        .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
+            .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
   }
   if ( 0 != data->metai( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) ) {
     writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET,
-        data->metai( ).at( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) );
+            data->metai( ).at( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) );
   }
 }

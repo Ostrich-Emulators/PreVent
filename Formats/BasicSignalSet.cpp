@@ -109,7 +109,7 @@ std::unique_ptr<SignalData>& BasicSignalSet::addWave( const std::string& name, b
     }
   }
 
-  wavs.push_back( createSignalData( name, false ) );
+  wavs.push_back( createSignalData( name, true ) );
 
   if ( nullptr != added ) {
     *added = true;
