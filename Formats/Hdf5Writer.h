@@ -59,7 +59,7 @@ private:
   void writeWaveGroup( H5::Group& group, std::unique_ptr<SignalData>& data );
   void writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data );
   void writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data );
-  static void autochunk( hsize_t* dims, int rank, hsize_t* rslts );
+  static void autochunk( hsize_t* dims, int rank, int bytesperdim, hsize_t* rslts );
   void createEventsAndTimes( H5::H5File, const std::unique_ptr<SignalSet>& data );
   static std::string getDatasetName( const std::unique_ptr<SignalData>& data );
 
