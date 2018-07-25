@@ -4,10 +4,10 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   Hdf5Writer.cpp
  * Author: ryan
- * 
+ *
  * Created on August 26, 2016, 12:58 PM
  */
 
@@ -216,9 +216,9 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
   std::vector<short> buffer;
   buffer.reserve( maxslabcnt );
 
-  // We're keeping a buffer to eventually write to the file. However, this 
+  // We're keeping a buffer to eventually write to the file. However, this
   // buffer is based on a number of rows, *not* some multiple of the data size.
-  // This means we are really keeping two counters going at all times, and 
+  // This means we are really keeping two counters going at all times, and
   // once we're out of all the loops, we need to write any residual data.
 
   for ( int row = 0; row < rows; row++ ) {
@@ -293,9 +293,9 @@ void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data 
 
   const int scale = data->scale( );
 
-  // We're keeping a buffer to eventually write to the file. However, this 
+  // We're keeping a buffer to eventually write to the file. However, this
   // buffer is based on a number of rows, *not* some multiple of the data size.
-  // This means we are really keeping two counters going at all times, and 
+  // This means we are really keeping two counters going at all times, and
   // once we're out of all the loops, we need to write any residual data.
 
   for ( int row = 0; row < rows; row++ ) {
@@ -325,60 +325,67 @@ void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data 
 }
 
 void Hdf5Writer::autochunk( hsize_t* dims, int rank, int bytesperelement, hsize_t* rslts ) {
-  // goal: keep 2^4 kb <= chunk size <= 2^10 kb
+  // goal: keep chunksize betwee 16kb and 1M (2^4 to 2^10 kb)
   // with smaller chunks for smaller datasets
 
-  const size_t KB = 1024;
-  const size_t ONE_CHUNK_LIMIT = 32 * KB;
+  const hsize_t KB = 1024;
+  const hsize_t MB = 1024 * KB;
 
-  // datasets up to 256MB are deemed to fall under the "regular" algorithm
-  const size_t NORMAL_MAX = 1024 * 1024 * 256;
+  // dataset limits for one-chunk
+  const hsize_t ONE_CHUNK_SIZE_LIMIT = 512 * KB;
+  const hsize_t ONE_CHUNK_ROW_LIMIT = 128 * KB;
 
-  size_t dselements = 1;
-  size_t rowelements = 1;
+  // datasets up to this size are deemed to fall under the "regular" algorithm
+  const hsize_t NORMAL_MAX_SIZE_LIMIT = 128 * MB;
+
+  hsize_t rows = 0;
+  hsize_t dselements = 1;
+  hsize_t rowelements = 1;
   for ( int i = 0; i < rank; i++ ) {
     rslts[i] = dims[i];
     dselements *= dims[i];
 
-    if ( i > 0 ) {
+    if ( 0 == i ) {
+      rows = dims[i];
+    }
+    else {
       rowelements *= dims[i];
     }
   }
-  const size_t datasetsize = dselements * bytesperelement;
-  const size_t bytesperrow = rowelements * bytesperelement;
+  const hsize_t datasetsize = dselements * bytesperelement;
+  const hsize_t bytesperrow = rowelements * bytesperelement;
 
   // if our total dataset size is small enough, use a single chunk
-  if ( datasetsize < ONE_CHUNK_LIMIT ) {
+  if ( datasetsize < ONE_CHUNK_SIZE_LIMIT || rows < ONE_CHUNK_ROW_LIMIT ) {
     return;
   }
 
-  if ( datasetsize <= NORMAL_MAX ) {
-    // idea: if our dataset size > 32MB, use 1MB chunks; else something smaller
-    size_t LIMITS[] = {
-      std::pow( 2, 19 ),
-      std::pow( 2, 20 ),
-      // arbitrarily skipping 21
-      std::pow( 2, 22 ),
-      std::pow( 2, 23 ),
-      std::pow( 2, 24 ),
-      std::pow( 2, 25 )
-    };
+  // if don't have too much data, scale our chunksize based on the data size
+  if ( datasetsize <= NORMAL_MAX_SIZE_LIMIT ) {
+    std::map<hsize_t, hsize_t> LIMITS;
+    LIMITS[256 * KB] = 64 * KB;
+    LIMITS[MB] = 128 * KB;
+    LIMITS[8 * MB] = 512 * KB;
+    LIMITS[NORMAL_MAX_SIZE_LIMIT] = MB;
 
-    int chunkpowerx = 20;
-    for ( int chunkpower2 = 14; chunkpower2 < 20; chunkpower2++ ) {
-      if ( datasetsize <= LIMITS[chunkpower2 - 14] ) {
-        chunkpowerx = chunkpower2;
+
+    int chunksize;
+    for ( auto x : LIMITS ) {
+      if ( datasetsize <= x.first ) {
+        chunksize = x.second;
         break;
       }
     }
 
-    // whew, baby! I sure hope we only have rank=2!
-    rslts[0] = std::pow( 2, chunkpowerx ) / bytesperrow;
+    // now convert our desired chunk size into the number of rows per chunk
+    // NOTE: only changing the first dimension, so our other dimensions better be small!
+    rslts[0] = chunksize / bytesperrow;
     return;
   }
 
-  // we have a dataset over 256MB, so only chunk every column
-  rslts[0] = 1024 * 1024 / bytesperrow;
+  // we have a dataset over our size limit, so chunk every column
+  // instead of every row, with a big chunk size
+  rslts[0] = 4 * MB / bytesperrow;
   for ( int i = 1; i < rank; i++ ) {
     rslts[i] = 1;
   }
