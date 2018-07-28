@@ -31,17 +31,17 @@ enum TimeCounter {
 
 class SignalSet {
 public:
-  SignalSet();
+  SignalSet( );
   virtual ~SignalSet( );
-  virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) =0;
-  virtual std::vector<std::unique_ptr<SignalData>>&waves( ) =0;
+  virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) = 0;
+  virtual std::vector<std::unique_ptr<SignalData>>&waves( ) = 0;
 
-  virtual const std::vector<std::unique_ptr<SignalData>>&vitals( ) const =0;
-  virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const =0;
+  virtual const std::vector<std::unique_ptr<SignalData>>&vitals( ) const = 0;
+  virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const = 0;
 
-  std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const;
+  virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const = 0;
 
-  virtual const std::map<std::string, std::string>& metadata( ) const;
+  virtual const std::map<std::string, std::string>& metadata( ) const = 0;
 
   /**
    * Adds a new vital sign if it has not already been added. If it already
@@ -61,23 +61,15 @@ public:
    * @return
    */
   virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) = 0;
-  virtual void setMeta( const std::string& key, const std::string& val );
-  virtual void reset( bool signalDataOnly = true );
-  virtual void clearMetas();
-  void setFileSupport( bool );
+  virtual void setMeta( const std::string& key, const std::string& val ) = 0;
+  virtual void reset( bool signalDataOnly = true ) = 0;
+  virtual void clearMetas( ) = 0;
   virtual dr_time earliest( const TimeCounter& tc = EITHER ) const = 0;
   virtual dr_time latest( const TimeCounter& tc = EITHER ) const = 0;
-  virtual void setMetadataFrom( const SignalSet& target );
-  const std::map<long, dr_time>& offsets( ) const;
-  void addOffset( long seg, dr_time time );
-  void clearOffsets( );
-  //void moveTo( SignalSet& dest );
-
-private:
-  std::map<std::string, std::string> metamap;
-  std::map<long, dr_time> segs; // segment index->time
-
-  //friend class SignalSetWrapper;
+  virtual void setMetadataFrom( const SignalSet& target ) = 0;
+  virtual const std::map<long, dr_time>& offsets( ) const = 0;
+  virtual void addOffset( long seg, dr_time time ) = 0;
+  virtual void clearOffsets( ) = 0;
 };
 
 #endif /* SIGNALSET_H */

@@ -6,11 +6,14 @@
 
 #include "FileNamer.h"
 #include "SignalSet.h"
-#include <sys/stat.h>
 #include "config.h"
+#include <sys/stat.h>
+#include <experimental/filesystem>
 
 const std::string FileNamer::DEFAULT_PATTERN = "%d%i-p%p-%s.%t";
-const std::string FileNamer::FILENAME_PATTERN = "%d%i.%t";
+const std::string FileNamer::FILENAME_PATTERN = "%C%i.%t";
+
+namespace fs = std::experimental::filesystem::v1;
 
 FileNamer::FileNamer( const std::string& pat ) : pattern( pat ) {
 }
@@ -37,6 +40,8 @@ FileNamer FileNamer::parse( const std::string& pattern ) {
 }
 
 void FileNamer::inputfilename( const std::string& inny ) {
+  conversions["%C"] = fs::current_path( ).generic_string( ) + dirsep;
+
   const size_t sfxpos = inny.rfind( "." );
   std::string input = inny;
   if ( std::string::npos != sfxpos ) {
@@ -49,7 +54,7 @@ void FileNamer::inputfilename( const std::string& inny ) {
   const size_t basepos = input.rfind( dirsep );
   if ( std::string::npos != basepos ) {
     conversions["%i"] = input.substr( basepos + 1 );
-    conversions["%d"] = input.substr( 0, basepos );
+    conversions["%d"] = input.substr( 0, basepos ) + dirsep;
   }
   else {
     conversions["%d"] = "";
@@ -74,7 +79,8 @@ std::string FileNamer::filename( const std::unique_ptr<SignalSet>& data ) {
     "%p",
     "%s",
     "%t",
-    "%o"
+    "%o",
+    "%C"
   };
 
   for ( auto x : replacements ) {

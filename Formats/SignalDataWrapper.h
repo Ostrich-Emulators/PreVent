@@ -71,6 +71,7 @@ public:
   virtual const std::map<std::string, double>& metad( ) const override;
   virtual const std::deque<dr_time> times( ) const override;
   virtual std::vector<std::string> extras( ) const override;
+  virtual void extras( const std::string& ext ) override;
 
 private:
   SignalData * signal;

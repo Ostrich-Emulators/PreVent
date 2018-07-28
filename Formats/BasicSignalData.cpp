@@ -28,17 +28,14 @@ BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
 datacount( 0 ), popping( false ), iswave( wavedata ), highval( -std::numeric_limits<double>::max( ) ),
 lowval( std::numeric_limits<double>::max( ) ), file( nullptr ) {
-  setMeta( SignalData::TIMEZONE, "UTC" );
-}
 
-BasicSignalData::BasicSignalData( const BasicSignalData& orig ) : SignalData( orig ),
-label( orig.label ), firstdata( orig.firstdata ), lastdata( orig.lastdata ),
-datacount( orig.datacount ), popping( orig.popping ), iswave( orig.iswave ),
-highval( orig.highval ), lowval( orig.lowval ), file( nullptr ) {
-  for ( auto const& i : orig.data ) {
-    data.push_front( std::unique_ptr<DataRow>( new DataRow( *i ) ) );
-  }
+  scale( 0 );
+  setChunkIntervalAndSampleRate( 2000, 1 );
+  setUom( "Uncalib" );
+
+  setMeta( SignalData::MSM, SignalData::MISSING_VALUE );
   setMeta( SignalData::TIMEZONE, "UTC" );
+  setMeta ("Note on Scale", "To get from a scaled value back to the real value, divide by 10^<scale>" );  
 }
 
 BasicSignalData::~BasicSignalData( ) {
@@ -252,4 +249,78 @@ int BasicSignalData::uncache( int max ) {
 
 const std::deque<dr_time> BasicSignalData::times( ) const {
   return std::deque<dr_time>( dates.begin( ), dates.end( ) );
+}
+
+void BasicSignalData::setMetadataFrom( const SignalData& model ) {
+  metadatai.clear( );
+  metadatai.insert( model.metai( ).begin( ), model.metai( ).end( ) );
+
+  metadatas.clear( );
+  metadatas.insert( model.metas( ).begin( ), model.metas( ).end( ) );
+
+  metadatad.clear( );
+  metadatad.insert( model.metad( ).begin( ), model.metad( ).end( ) );
+
+  extrafields.clear( );
+  std::vector<std::string> vec = model.extras( );
+  extrafields.insert( vec.begin( ), vec.end( ) );
+}
+
+std::vector<std::string> BasicSignalData::extras( ) const {
+  return std::vector<std::string>( extrafields.begin( ), extrafields.end( ) );
+}
+
+void BasicSignalData::extras( const std::string& ext ) {
+  extrafields.insert( ext );
+}
+
+void BasicSignalData::setMeta( const std::string& key, const std::string& val ) {
+  metadatas[key] = val;
+}
+
+void BasicSignalData::setMeta( const std::string& key, int val ) {
+  metadatai[key] = val;
+}
+
+void BasicSignalData::setMeta( const std::string& key, double val ) {
+  metadatad[key] = val;
+}
+
+void BasicSignalData::erases( const std::string& key ) {
+  if ( "" == key ) {
+    metadatas.clear( );
+  }
+  else{
+    metadatas.erase( key );
+  }
+}
+
+void BasicSignalData::erasei( const std::string& key ) {
+  if ( "" == key ) {
+    metadatai.clear( );
+  }
+  else{
+    metadatai.erase( key );
+  }
+}
+
+void BasicSignalData::erased( const std::string& key ) {
+  if ( "" == key ) {
+    metadatad.clear( );
+  }
+  else{
+    metadatad.erase( key );
+  }
+}
+
+const std::map<std::string, std::string>& BasicSignalData::metas( ) const {
+  return metadatas;
+}
+
+const std::map<std::string, int>& BasicSignalData::metai( ) const {
+  return metadatai;
+}
+
+const std::map<std::string, double>& BasicSignalData::metad( ) const {
+  return metadatad;
 }

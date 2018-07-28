@@ -35,17 +35,9 @@ const short SignalData::MISSING_VALUE = -32768;
 const std::string SignalData::MISSING_VALUESTR = std::to_string( SignalData::MISSING_VALUE );
 
 SignalData::SignalData( ) {
-  scale( 0 );
-  setChunkIntervalAndSampleRate( 2000, 1 );
-  setUom( "Uncalib" );
-  metadatai[SignalData::MSM] = SignalData::MISSING_VALUE;
-  metadatas[SignalData::TIMEZONE] = "UTC";
-  metadatas["Note on Scale"] = "To get from a scaled value back to the real value, divide by 10^<scale>";
 }
 
-SignalData::SignalData( const SignalData& orig ) : metadatas( orig.metadatas ),
-metadatai( orig.metadatai ), metadatad( orig.metadatad ),
-extrafields( orig.extrafields.begin( ), orig.extrafields.end( ) ) {
+SignalData::~SignalData( ) {
 }
 
 void SignalData::moveDataTo( std::unique_ptr<SignalData>& dest ) {
@@ -56,113 +48,36 @@ void SignalData::moveDataTo( std::unique_ptr<SignalData>& dest ) {
   }
 }
 
-void SignalData::setMeta( const std::string& key, const std::string& val ) {
-  metadatas[key] = val;
-}
-
-void SignalData::setMeta( const std::string& key, int val ) {
-  metadatai[key] = val;
-}
-
-void SignalData::setMeta( const std::string& key, double val ) {
-  metadatad[key] = val;
-}
-
-void SignalData::erases( const std::string& key ) {
-  if ( "" == key ) {
-    metadatas.clear( );
-  }
-  else{
-    metadatas.erase( key );
-  }
-}
-
-void SignalData::erasei( const std::string& key ) {
-  if ( "" == key ) {
-    metadatai.clear( );
-  }
-  else{
-    metadatai.erase( key );
-  }
-}
-
-void SignalData::erased( const std::string& key ) {
-  if ( "" == key ) {
-    metadatad.clear( );
-  }
-  else{
-    metadatad.erase( key );
-  }
-}
-
-const std::map<std::string, std::string>& SignalData::metas( ) const {
-  return metadatas;
-}
-
-const std::map<std::string, int>& SignalData::metai( ) const {
-  return metadatai;
-}
-
-const std::map<std::string, double>& SignalData::metad( ) const {
-  return metadatad;
-}
-
 double SignalData::hz( ) const {
-  double ratio = 1000.0 / (double) metadatai.at( SignalData::CHUNK_INTERVAL_MS );
-  return ratio * (double) metadatai.at( SignalData::READINGS_PER_CHUNK );
-}
-
-std::vector<std::string> SignalData::extras( ) const {
-  return std::vector<std::string>( extrafields.begin( ), extrafields.end( ) );
-}
-
-void SignalData::extras( const std::string& ext ) {
-  extrafields.insert( ext );
+  double ratio = 1000.0 / (double) metai().at( SignalData::CHUNK_INTERVAL_MS );
+  return ratio * (double) metai().at( SignalData::READINGS_PER_CHUNK );
 }
 
 bool SignalData::empty( ) const {
   return ( 0 == size( ) );
 }
 
-SignalData::~SignalData( ) {
-}
-
 void SignalData::setUom( const std::string& u ) {
-  metadatas[UOM] = u;
+  setMeta( UOM, u );
 }
 
 const std::string& SignalData::uom( ) const {
-  return metadatas.at( UOM );
+  return metas().at( UOM );
 }
 
 int SignalData::scale( ) const {
-  return metadatai.at( SCALE );
+  return metai().at( SCALE );
 }
 
 void SignalData::scale( int x ) {
-  metadatai[SCALE] = x;
+  setMeta( SCALE, x );
 }
 
 int SignalData::readingsPerSample( ) const {
-  return metadatai.at( READINGS_PER_CHUNK );
+  return metai().at( READINGS_PER_CHUNK );
 }
 
 void SignalData::setChunkIntervalAndSampleRate( int chunktime_ms, int samplerate ) {
-  metadatai[CHUNK_INTERVAL_MS] = chunktime_ms;
-  metadatai[READINGS_PER_CHUNK] = samplerate;
-}
-
-void SignalData::setMetadataFrom( const SignalData& model ) {
-  metadatai.clear( );
-  metadatai.insert( model.metai( ).begin( ), model.metai( ).end( ) );
-
-  metadatas.clear( );
-  metadatas.insert( model.metas( ).begin( ), model.metas( ).end( ) );
-
-  metadatad.clear( );
-  metadatad.insert( model.metad( ).begin( ), model.metad( ).end( ) );
-
-  extrafields.clear( );
-  std::vector<std::string> vec = model.extras( );
-  extrafields.insert( vec.begin( ), vec.end( ) );
+  setMeta( CHUNK_INTERVAL_MS, chunktime_ms );
+  setMeta( READINGS_PER_CHUNK, samplerate );
 }

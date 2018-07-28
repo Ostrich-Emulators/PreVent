@@ -42,7 +42,6 @@ public:
   static const short MISSING_VALUE;
 
   SignalData( );
-  SignalData( const SignalData& orig );
   virtual ~SignalData( );
 
   virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) = 0;
@@ -75,35 +74,29 @@ public:
 
   virtual void setUom( const std::string& u );
   virtual const std::string& uom( ) const;
-  virtual int scale( ) const;
   virtual double hz( ) const;
-
-  virtual void moveDataTo( std::unique_ptr<SignalData>& signal );
-  virtual void setMetadataFrom( const SignalData& model );
-  virtual void setMeta( const std::string& key, const std::string& val );
-  virtual void setMeta( const std::string& key, int val );
-  virtual void setMeta( const std::string& key, double val );
-
-  virtual void erases( const std::string& key = "" );
-  virtual void erasei( const std::string& key = "" );
-  virtual void erased( const std::string& key = "" );
-
-  virtual const std::map<std::string, std::string>& metas( ) const;
-  virtual const std::map<std::string, int>& metai( ) const;
-  virtual const std::map<std::string, double>& metad( ) const;
-  virtual std::vector<std::string> extras( ) const;
   virtual int readingsPerSample( ) const;
   virtual void setChunkIntervalAndSampleRate( int chunktime_ms, int samplerate );
-  virtual void scale( int scaling );
   virtual bool empty( ) const;
+  virtual void moveDataTo( std::unique_ptr<SignalData>& signal );
+  virtual void scale( int scaling );
+  virtual int scale( ) const;
 
-  void extras( const std::string& ext );
+  virtual void setMetadataFrom( const SignalData& model ) = 0;
+  virtual void setMeta( const std::string& key, const std::string& val ) = 0;
+  virtual void setMeta( const std::string& key, int val ) = 0;
+  virtual void setMeta( const std::string& key, double val ) = 0;
 
-private:
-  std::map<std::string, std::string> metadatas;
-  std::map<std::string, int> metadatai;
-  std::map<std::string, double> metadatad;
-  std::set<std::string> extrafields;
+  virtual void erases( const std::string& key = "" ) = 0;
+  virtual void erasei( const std::string& key = "" ) = 0;
+  virtual void erased( const std::string& key = "" ) = 0;
+
+  virtual const std::map<std::string, std::string>& metas( ) const = 0;
+  virtual const std::map<std::string, int>& metai( ) const = 0;
+  virtual const std::map<std::string, double>& metad( ) const = 0;
+  virtual std::vector<std::string> extras( ) const = 0;
+
+  virtual void extras( const std::string& ext ) = 0;
 };
 
 #endif /* SIGNALDATA_H */

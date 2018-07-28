@@ -12,12 +12,12 @@
 #include <limits>
 #include <iostream>
 
-BasicSignalSet::BasicSignalSet() {
-  SignalSet::setMeta( SignalData::TIMEZONE, "UTC" );
+BasicSignalSet::BasicSignalSet( ) {
+  setMeta( SignalData::TIMEZONE, "UTC" );
 }
 
 BasicSignalSet::BasicSignalSet( const BasicSignalSet& ) {
-  SignalSet::setMeta( SignalData::TIMEZONE, "UTC" );
+  setMeta( SignalData::TIMEZONE, "UTC" );
 }
 
 BasicSignalSet::~BasicSignalSet( ) {
@@ -121,5 +121,55 @@ std::unique_ptr<SignalData>& BasicSignalSet::addWave( const std::string& name, b
 void BasicSignalSet::reset( bool signalDataOnly ) {
   vits.clear( );
   wavs.clear( );
-  SignalSet::reset( signalDataOnly );
+  if ( !signalDataOnly ) {
+    metamap.clear( );
+    metamap[SignalData::TIMEZONE] = "UTC";
+  }
+}
+
+std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> BasicSignalSet::allsignals( ) const {
+  std::vector<std::reference_wrapper<const std::unique_ptr < SignalData>>> vec;
+
+  for ( const auto& m : vitals( ) ) {
+    vec.push_back( std::cref( m ) );
+  }
+  for ( const auto& m : waves( ) ) {
+    vec.push_back( std::cref( m ) );
+  }
+
+  return vec;
+}
+
+void BasicSignalSet::setMetadataFrom( const SignalSet& src ) {
+  if ( this != &src ) {
+    metamap.clear( );
+    metamap.insert( src.metadata( ).begin( ), src.metadata( ).end( ) );
+
+    segs.clear( );
+    segs.insert( src.offsets( ).begin( ), src.offsets( ).end( ) );
+  }
+}
+
+const std::map<std::string, std::string>& BasicSignalSet::metadata( ) const {
+  return metamap;
+}
+
+void BasicSignalSet::setMeta( const std::string& key, const std::string & val ) {
+  metamap[key] = val;
+}
+
+void BasicSignalSet::clearMetas( ) {
+  metamap.clear( );
+}
+
+const std::map<long, dr_time>& BasicSignalSet::offsets( ) const {
+  return segs;
+}
+
+void BasicSignalSet::addOffset( long seg, dr_time time ) {
+  segs[seg] = time;
+}
+
+void BasicSignalSet::clearOffsets( ) {
+  segs.clear( );
 }

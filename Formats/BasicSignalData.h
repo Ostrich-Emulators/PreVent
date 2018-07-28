@@ -49,9 +49,22 @@ public:
   virtual double highwater( ) const override;
   virtual double lowwater( ) const override;
 
-private:
-  BasicSignalData( const BasicSignalData& orig );
+  virtual void setMetadataFrom( const SignalData& model ) override;
+  virtual void setMeta( const std::string& key, const std::string& val ) override;
+  virtual void setMeta( const std::string& key, int val ) override;
+  virtual void setMeta( const std::string& key, double val ) override;
 
+  virtual void erases( const std::string& key = "" ) override;
+  virtual void erasei( const std::string& key = "" ) override;
+  virtual void erased( const std::string& key = "" ) override;
+
+  virtual const std::map<std::string, std::string>& metas( ) const override;
+  virtual const std::map<std::string, int>& metai( ) const override;
+  virtual const std::map<std::string, double>& metad( ) const override;
+  virtual std::vector<std::string> extras( ) const override;
+  virtual void extras( const std::string& ext ) override;
+
+private:
   void startPopping( );
 
   /**
@@ -74,6 +87,11 @@ private:
   double highval;
   double lowval;
   static const int CACHE_LIMIT;
+
+  std::map<std::string, std::string> metadatas;
+  std::map<std::string, int> metadatai;
+  std::map<std::string, double> metadatad;
+  std::set<std::string> extrafields;
 };
 
 #endif /* DATASETDATACACHE_H */

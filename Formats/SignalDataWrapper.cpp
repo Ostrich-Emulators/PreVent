@@ -138,6 +138,10 @@ std::vector<std::string> SignalDataWrapper::extras( ) const {
   return signal->extras( );
 }
 
+void SignalDataWrapper::extras( const std::string& ext ) {
+  signal->extras( ext );
+}
+
 double SignalDataWrapper::highwater( ) const {
   return signal->highwater( );
 }

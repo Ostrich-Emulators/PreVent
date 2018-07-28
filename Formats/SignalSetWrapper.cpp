@@ -29,12 +29,12 @@ const std::map<std::string, std::string>& SignalSetWrapper::metadata( ) const {
 }
 
 std::unique_ptr<SignalData>& SignalSetWrapper::addVital( const std::string& name,
-    bool * added ) {
+        bool * added ) {
   return set->addVital( name, added );
 }
 
 std::unique_ptr<SignalData>& SignalSetWrapper::addWave( const std::string& name,
-    bool * added ) {
+        bool * added ) {
   return set->addWave( name, added );
 }
 
@@ -64,4 +64,29 @@ dr_time SignalSetWrapper::earliest( const TimeCounter& tc ) const {
 
 dr_time SignalSetWrapper::latest( const TimeCounter& tc ) const {
   return set->latest( tc );
+}
+
+const std::map<long, dr_time>& SignalSetWrapper::offsets( ) const {
+  return set->offsets( );
+
+}
+
+void SignalSetWrapper::addOffset( long seg, dr_time time ) {
+  set->addOffset( seg, time );
+}
+
+void SignalSetWrapper::clearOffsets( ) {
+  set->clearOffsets( );
+}
+
+std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> SignalSetWrapper::allsignals( ) const {
+  return set->allsignals( );
+}
+
+void SignalSetWrapper::clearMetas( ) {
+  set->clearMetas( );
+}
+
+void SignalSetWrapper::setMetadataFrom( const SignalSet& target ) {
+  set->setMetadataFrom( target );
 }

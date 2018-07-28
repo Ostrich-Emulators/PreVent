@@ -20,7 +20,7 @@ class SignalData;
 
 class BasicSignalSet : public SignalSet {
 public:
-  BasicSignalSet();
+  BasicSignalSet( );
   virtual ~BasicSignalSet( );
 
   virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) override;
@@ -51,6 +51,20 @@ public:
   dr_time earliest( const TimeCounter& tc = EITHER ) const override;
   dr_time latest( const TimeCounter& tc = EITHER ) const override;
 
+  virtual const std::map<long, dr_time>& offsets( ) const;
+  virtual void addOffset( long seg, dr_time time );
+  virtual void clearOffsets( );
+
+  virtual void setMetadataFrom( const SignalSet& target ) override;
+
+  virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const override;
+
+  virtual const std::map<std::string, std::string>& metadata( ) const override;
+
+
+  virtual void setMeta( const std::string& key, const std::string& val );
+  virtual void clearMetas( );
+
 protected:
   /**
    * A function to actually make the (custom?) signal data object for
@@ -59,7 +73,7 @@ protected:
    * @param iswave
    * @return
    */
-   virtual std::unique_ptr<SignalData> createSignalData( const std::string& name, bool iswave );
+  virtual std::unique_ptr<SignalData> createSignalData( const std::string& name, bool iswave );
 
 private:
   BasicSignalSet( const BasicSignalSet& );
@@ -67,6 +81,9 @@ private:
 
   std::vector<std::unique_ptr<SignalData>> vits;
   std::vector<std::unique_ptr<SignalData>> wavs;
+
+  std::map<std::string, std::string> metamap;
+  std::map<long, dr_time> segs;
 };
 
 
