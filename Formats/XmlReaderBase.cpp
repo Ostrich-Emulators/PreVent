@@ -30,7 +30,7 @@
 
 bool XmlReaderBase::accumulateText = false;
 std::string XmlReaderBase::working;
-const int XmlReaderBase::READCHUNK = 16384 * 16;
+const int XmlReaderBase::READCHUNK = 1024 * 1024;
 
 XmlReaderBase::XmlReaderBase( const std::string& name ) : Reader( name ), filler( nullptr ) {
   time_t reftime = std::time( nullptr );
