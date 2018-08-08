@@ -233,6 +233,13 @@ int main( int argc, char** argv ) {
   int returncode = 0;
   // send the files through
   for ( int i = optind; i < argc; i++ ) {
+    // see if the file exists before we do anything
+    struct stat buffer;
+    if( 0!=stat( argv[i], &buffer)){
+      std::cerr<<"could not open file: "<<argv[i]<<std::endl;
+      continue;
+    }    
+    
     std::unique_ptr<SignalSet>data( new BasicSignalSet( ) );
     if ( dolocaltime ) {
       time_t reftime = std::time( nullptr );

@@ -29,7 +29,7 @@ TdmsReader::~TdmsReader( ) {
 dr_time TdmsReader::parsetime( const std::string& timestr ) {
   // sample: 14.12.2017 17:49:24,0.000000
   tm brokenTime;
-  strptime( timestr.c_str( ), "%d.%m.%Y %H:%M:%S", &brokenTime );
+  strptime2( timestr.c_str( ), "%d.%m.%Y %H:%M:%S", &brokenTime );
   time_t sinceEpoch = timegm( &brokenTime );
   return sinceEpoch * 1000;
 }

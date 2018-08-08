@@ -46,12 +46,12 @@ dr_time WfdbReader::convert( const char * timestr ) {
     }
     else {
       // hour, minute, second
-      strptime( timestr, "%H:%M:%S", &timeDate );
+      strptime2( timestr, "%H:%M:%S", &timeDate );
     }
   }
   else {
     // we have a date and time
-    strptime( timestr, "[%H:%M:%S %D]", &timeDate );
+    strptime2( timestr, "[%H:%M:%S %D]", &timeDate );
   }
 
   // mktime includes timezone, and we want UTC

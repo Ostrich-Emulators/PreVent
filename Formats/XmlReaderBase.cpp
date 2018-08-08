@@ -20,6 +20,7 @@
 
 #include <ctime>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sys/stat.h>
 #include <algorithm>
@@ -250,7 +251,8 @@ dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal ) const {
       : "%Y-%m-%dT%H:%M:%S" ); // CPC time string
 
   tm mytime = { 0, };
-  strptime( timer.c_str( ), format.c_str( ), &mytime );
+  
+  strptime2( timer, format, &mytime );
   //output( ) << mytime.tm_hour << ":" << mytime.tm_min << ":" << mytime.tm_sec << std::endl;
 
   // now convert our local time to UTC

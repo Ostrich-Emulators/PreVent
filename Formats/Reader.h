@@ -66,6 +66,9 @@ public:
   void setNonbreaking( bool nb = false );
   void localizeTime( bool local = true );
   bool localizingTime( ) const;
+  
+  static void strptime2( const std::string& input, const std::string& format,
+    std::tm * tm );
 
 protected:
   Reader( const Reader& );
