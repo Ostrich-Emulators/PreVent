@@ -124,7 +124,7 @@ int main( int argc, char** argv ) {
         break;
       case 'n':
         nobreak = true;
-        if ( FileNamer::DEFAULT_PATTERN != pattern ) {
+        if ( FileNamer::DEFAULT_PATTERN == pattern ) {
           pattern = FileNamer::FILENAME_PATTERN;
         }
         break;

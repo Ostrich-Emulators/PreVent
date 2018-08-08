@@ -9,9 +9,10 @@
 #include "config.h"
 #include <sys/stat.h>
 #include <experimental/filesystem>
+#include <iostream>
 
 const std::string FileNamer::DEFAULT_PATTERN = "%d%i-p%p-%s.%t";
-const std::string FileNamer::FILENAME_PATTERN = "%C%i.%t";
+const std::string FileNamer::FILENAME_PATTERN = "%i.%t";
 
 namespace fs = std::experimental::filesystem::v1;
 
@@ -40,7 +41,9 @@ FileNamer FileNamer::parse( const std::string& pattern ) {
 }
 
 void FileNamer::inputfilename( const std::string& inny ) {
-  conversions["%C"] = fs::current_path( ).generic_string( ) + dirsep;
+  //std::cout<<"curent path: "<<fs::current_path()<<" | or : "<<fs::current_path().generic_string()<<std::endl;
+  // FIXME: cygwin blows this up
+  conversions["%C"] = "";//fs::current_path( ).generic_string( ) + dirsep;
 
   const size_t sfxpos = inny.rfind( "." );
   std::string input = inny;
@@ -88,6 +91,7 @@ std::string FileNamer::filename( const std::unique_ptr<SignalSet>& data ) {
 
     // FIXME: what if a key is in the pattern more than once?
     if ( std::string::npos != pos ) {
+			std::cout<<"replacing "<<x<<" with "<<conversions[x]<<std::endl;
       lastname.replace( pos, 2, conversions[x] );
     }
   }
