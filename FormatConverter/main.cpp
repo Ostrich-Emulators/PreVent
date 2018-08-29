@@ -64,21 +64,21 @@ void helpAndExit( char * progname, std::string msg = "" ) {
 }
 
 struct option longopts[] = {
-  { "from", required_argument, NULL, 'f' },
-  { "to", required_argument, NULL, 't' },
-  { "compression", required_argument, NULL, 'z' },
-  { "sqlite", required_argument, NULL, 's' },
-  { "quiet", no_argument, NULL, 'q' },
-  { "anonymize", no_argument, NULL, 'a' },
-  { "anon", no_argument, NULL, 'a' },
-  { "anonymous", no_argument, NULL, 'a' },
-  { "no-break", no_argument, NULL, 'n' },
-  { "one-file", no_argument, NULL, 'n' },
-  { "pattern", required_argument, NULL, 'p' },
-  { "localtime", no_argument, NULL, 'l' },
-  { "local", no_argument, NULL, 'l' },
-  { "stop-after-one", no_argument, NULL, '1' },
-  { 0, 0, 0, 0 }
+  { "from", required_argument, NULL, 'f'},
+  { "to", required_argument, NULL, 't'},
+  { "compression", required_argument, NULL, 'z'},
+  { "sqlite", required_argument, NULL, 's'},
+  { "quiet", no_argument, NULL, 'q'},
+  { "anonymize", no_argument, NULL, 'a'},
+  { "anon", no_argument, NULL, 'a'},
+  { "anonymous", no_argument, NULL, 'a'},
+  { "no-break", no_argument, NULL, 'n'},
+  { "one-file", no_argument, NULL, 'n'},
+  { "pattern", required_argument, NULL, 'p'},
+  { "localtime", no_argument, NULL, 'l'},
+  { "local", no_argument, NULL, 'l'},
+  { "stop-after-one", no_argument, NULL, '1'},
+  { 0, 0, 0, 0}
 };
 
 int main( int argc, char** argv ) {
@@ -235,16 +235,17 @@ int main( int argc, char** argv ) {
   for ( int i = optind; i < argc; i++ ) {
     // see if the file exists before we do anything
     struct stat buffer;
-    if( 0!=stat( argv[i], &buffer)){
-      std::cerr<<"could not open file: "<<argv[i]<<std::endl;
+    if ( 0 != stat( argv[i], &buffer ) ) {
+      std::cerr << "could not open file: " << argv[i] << std::endl;
       continue;
-    }    
-    
+    }
+
     std::unique_ptr<SignalSet>data( new BasicSignalSet( ) );
     if ( dolocaltime ) {
       time_t reftime = std::time( nullptr );
       tm * reftm = localtime( &reftime );
       data.reset( new OffsetTimeSignalSet( data.release( ), reftm->tm_zone, reftm->tm_gmtoff * 1000 ) );
+      to->filenamer( ).timeoffset_ms( reftm->tm_gmtoff * 1000 );
     }
     if ( anonymize ) {
       data.reset( new AnonymizingSignalSet( data.release( ) ) );
@@ -262,19 +263,6 @@ int main( int argc, char** argv ) {
       continue;
     }
     else {
-      if ( nobreak ) {
-        //        const size_t sfxpos = input.rfind( "." );
-        //        if ( std::string::npos != sfxpos ) {
-        //          input = input.substr( 0, sfxpos );
-        //        }
-        //
-        //        const size_t basepos = input.rfind( dirsep );
-        //        if ( std::string::npos != basepos ) {
-        //          input = input.substr( basepos + 1 );
-        //        }
-        //        to->setNonbreakingOutputName( outdir + dirsep + input );
-      }
-
       std::vector<std::string> files = to->write( from, data );
       from->finish( );
 

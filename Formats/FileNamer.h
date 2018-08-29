@@ -26,18 +26,19 @@ public:
   static const std::string DEFAULT_PATTERN;
   static const std::string FILENAME_PATTERN;
 
-  virtual ~FileNamer( );
-  FileNamer& operator=(const FileNamer& orig );
-  FileNamer( const FileNamer& orig );
+  virtual ~FileNamer();
+  FileNamer& operator=(const FileNamer& orig);
+  FileNamer(const FileNamer& orig);
 
-  static FileNamer parse( const std::string& pattern );
+  static FileNamer parse(const std::string& pattern);
 
-  void outputdir( const std::string& dir );
+  void outputdir(const std::string& dir);
   std::string outputdir() const;
-  void tofmt( const std::string& ext );
-  void patientOrdinal( int patientnum );
-  void fileOrdinal( int filenum );
-  void inputfilename( const std::string& input );
+  void tofmt(const std::string& ext);
+  void patientOrdinal(int patientnum);
+  void fileOrdinal(int filenum);
+  void inputfilename(const std::string& input);
+  void timeoffset_ms(long offset);
 
   /**
    * Provides a filename (including directory) for the given SignalData and
@@ -46,7 +47,7 @@ public:
    * @param outputnum
    * @return
    */
-  std::string filename( const std::unique_ptr<SignalSet>& data );
+  std::string filename(const std::unique_ptr<SignalSet>& data);
 
   /**
    * Gets a filename (including directory) without an extension (or the preceding .)
@@ -54,7 +55,7 @@ public:
    * @param outputnum
    * @return
    */
-  std::string filenameNoExt( const std::unique_ptr<SignalSet>& data );
+  std::string filenameNoExt(const std::unique_ptr<SignalSet>& data);
   /**
    * Gets a filename (including directory) based on whatever information we
    * already have. Some conversions cannot be performed with this function,
@@ -68,15 +69,17 @@ public:
    * What was the last-generated filename?
    * @return 
    */
-  std::string last( ) const;
+  std::string last() const;
 
-  static std::string getDateSuffix( const dr_time& date, const std::string& sep = "-" );
+  static std::string getDateSuffix(const dr_time& date, const std::string& sep = "-",
+          long offset_ms = 0);
 
 private:
-  FileNamer( const std::string& pat );
+  FileNamer(const std::string& pat);
   std::string pattern;
   std::map<std::string, std::string> conversions;
   std::string lastname;
+  long offset;
 };
 
 

@@ -130,10 +130,12 @@ void Hdf5Writer::writeAttributes( H5::H5Location& ds, const std::unique_ptr<Sign
 std::string Hdf5Writer::getDatasetName( const std::unique_ptr<SignalData>& data ) {
   std::string name( data->name( ) );
   std::map<std::string, std::string> replacements;
-  replacements["%"] = "perc";
+  replacements["%"] = "pct";
   replacements["("] = "_";
   replacements[")"] = "_";
   replacements["/"] = "_";
+  replacements["-"] = "_";
+  replacements["."] = "_";
 
   for ( auto&pr : replacements ) {
     size_t pos = name.find( pr.first );

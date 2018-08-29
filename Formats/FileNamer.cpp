@@ -16,11 +16,12 @@ const std::string FileNamer::FILENAME_PATTERN = "%i.%t";
 
 namespace fs = std::experimental::filesystem::v1;
 
-FileNamer::FileNamer( const std::string& pat ) : pattern( pat ) {
+FileNamer::FileNamer( const std::string& pat ) : pattern( pat ), offset( 0 ) {
 }
 
 FileNamer::FileNamer( const FileNamer& orig ) : pattern( orig.pattern ),
-conversions( orig.conversions.begin( ), orig.conversions.end( ) ), lastname( orig.lastname ) {
+conversions( orig.conversions.begin( ), orig.conversions.end( ) ),
+lastname( orig.lastname ), offset( 0 ) {
 }
 
 FileNamer::~FileNamer( ) {
@@ -32,6 +33,7 @@ FileNamer& FileNamer::operator=(const FileNamer& orig ) {
     conversions.clear( );
     conversions.insert( orig.conversions.begin( ), orig.conversions.end( ) );
     lastname = orig.lastname;
+    offset = orig.offset;
   }
   return *this;
 }
@@ -43,7 +45,7 @@ FileNamer FileNamer::parse( const std::string& pattern ) {
 void FileNamer::inputfilename( const std::string& inny ) {
   //std::cout<<"curent path: "<<fs::current_path()<<" | or : "<<fs::current_path().generic_string()<<std::endl;
   // FIXME: cygwin blows this up
-  conversions["%C"] = "";//fs::current_path( ).generic_string( ) + dirsep;
+  conversions["%C"] = ""; //fs::current_path( ).generic_string( ) + dirsep;
 
   const size_t sfxpos = inny.rfind( "." );
   std::string input = inny;
@@ -70,10 +72,14 @@ std::string FileNamer::filenameNoExt( const std::unique_ptr<SignalSet>& data ) {
   return lastname.substr( 0, pos );
 }
 
+void FileNamer::timeoffset_ms( long off ) {
+  offset = off;
+}
+
 std::string FileNamer::filename( const std::unique_ptr<SignalSet>& data ) {
   // we need to have data for all the conversion keys in here
 
-  conversions["%s"] = getDateSuffix( data->earliest( ), "" );
+  conversions["%s"] = getDateSuffix( data->earliest( ), "", offset );
 
   lastname = pattern;
   const std::string replacements[] = {
@@ -91,7 +97,7 @@ std::string FileNamer::filename( const std::unique_ptr<SignalSet>& data ) {
 
     // FIXME: what if a key is in the pattern more than once?
     if ( std::string::npos != pos ) {
-			std::cout<<"replacing "<<x<<" with "<<conversions[x]<<std::endl;
+      std::cout << "replacing " << x << " with " << conversions[x] << std::endl;
       lastname.replace( pos, 2, conversions[x] );
     }
   }
@@ -152,8 +158,9 @@ std::string FileNamer::last( ) const {
   return lastname;
 }
 
-std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& sep ) {
-  time_t mytime = date / 1000;
+std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& sep,
+        long offset_ms ) {
+  time_t mytime = ( date - offset_ms ) / 1000;
   tm * dater = std::gmtime( &mytime );
   // we want YYYYMMDD format, but cygwin seems to misinterpret %m for strftime
   // so we're doing it manually (for now)
