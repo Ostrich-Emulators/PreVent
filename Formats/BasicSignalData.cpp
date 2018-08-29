@@ -26,9 +26,9 @@ const int BasicSignalData::CACHE_LIMIT = 30000;
 
 BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
-datacount( 0 ), popping( false ), iswave( wavedata ), highval( -std::numeric_limits<double>::max( ) ),
+datacount( 0 ), livecount( 0 ), popping( false ), iswave( wavedata ), 
+highval( -std::numeric_limits<double>::max( ) ),
 lowval( std::numeric_limits<double>::max( ) ), file( nullptr ) {
-
   scale( 0 );
   setChunkIntervalAndSampleRate( 2000, 1 );
   setUom( "Uncalib" );
@@ -41,7 +41,7 @@ lowval( std::numeric_limits<double>::max( ) ), file( nullptr ) {
 BasicSignalData::~BasicSignalData( ) {
   data.clear( );
   if ( nullptr != file ) {
-    std::fclose( file );
+    std::fclose( file );    
   }
 }
 
@@ -84,6 +84,7 @@ std::unique_ptr<DataRow> BasicSignalData::pop( ) {
 
   if ( nullptr != file && data.empty( ) ) {
     int lines = uncache( );
+    livecount += lines;
     if ( 0 == lines ) {
       std::fclose( file );
       file = nullptr;
@@ -91,6 +92,7 @@ std::unique_ptr<DataRow> BasicSignalData::pop( ) {
   }
 
   datacount--;
+  livecount--;
   std::unique_ptr<DataRow> row = std::move( data.front( ) );
   data.pop_front( );
   dates.pop_front( );
@@ -142,16 +144,18 @@ void BasicSignalData::cache( ) {
   }
   std::fputs( ss.str( ).c_str( ), file );
   fflush( file );
+  livecount = 0;
 }
 
 void BasicSignalData::add( const DataRow& row ) {
 
-  if ( data.size( ) >= CACHE_LIMIT ) {
+  if ( livecount >= CACHE_LIMIT ) {
     // copy current data list to disk
     cache( );
   }
 
   datacount++;
+  livecount++;
 
   int rowscale = DataRow::scale( row.data, iswave );
   DataRow::hilo( row.data, highval, lowval );
@@ -240,7 +244,6 @@ int BasicSignalData::uncache( int max ) {
 
 
     data.push_back( std::unique_ptr<DataRow>( new DataRow( t, val, high, low, attrs ) ) );
-
     loop++;
   }
 

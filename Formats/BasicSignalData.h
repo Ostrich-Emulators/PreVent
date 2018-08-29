@@ -79,6 +79,7 @@ private:
   dr_time firstdata;
   dr_time lastdata;
   size_t datacount;
+  size_t livecount; // how big is out data list in memory?
   std::list<std::unique_ptr<DataRow>> data;
   std::deque<dr_time> dates;
   std::FILE * file;
