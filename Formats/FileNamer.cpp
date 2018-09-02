@@ -160,7 +160,7 @@ std::string FileNamer::last( ) const {
 
 std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& sep,
         long offset_ms ) {
-  time_t mytime = ( date - offset_ms ) / 1000;
+  time_t mytime = ( date + offset_ms ) / 1000;
   tm * dater = std::gmtime( &mytime );
   // we want YYYYMMDD format, but cygwin seems to misinterpret %m for strftime
   // so we're doing it manually (for now)
