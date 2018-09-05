@@ -54,7 +54,7 @@ private:
       const dr_time& start, const dr_time& end );
   static void writeAttributes( H5::H5Location& ds, const std::unique_ptr<SignalData>& data );
   void writeVital( H5::Group& group, std::unique_ptr<SignalData>& data );
-  void writeVitalGroup( H5::Group& group,  std::unique_ptr<SignalData>& data );
+  void writeVitalGroup( H5::Group& group, std::unique_ptr<SignalData>& data );
   void writeWave( H5::Group& group, std::unique_ptr<SignalData>& data );
   void writeWaveGroup( H5::Group& group, std::unique_ptr<SignalData>& data );
   void writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data );
@@ -66,9 +66,11 @@ private:
   /**
    * Rescale the data to fit in shorts
    * @param data
+   * @param useIntsNotShorts (output arg) if true, use integers instead of shorts
+   * for saving data to dataset
    * @return true, if the data was rescaled
    */
-  bool rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data ) const;
+  bool rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data, bool& useIntsNotShorts ) const;
   SignalSet * dataptr;
 };
 

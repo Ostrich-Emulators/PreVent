@@ -196,7 +196,13 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
 
           if ( added ) {
-            sig->setChunkIntervalAndSampleRate( ( isphilips ? 1024 : 2000 ), 1 );
+            if ( isphilips ) {
+              sig->setChunkIntervalAndSampleRate( isix ? 1024 : 1000, 1 );
+
+            }
+            else {
+              sig->setChunkIntervalAndSampleRate( 2000, 1 );
+            }
 
             for ( auto x : sig->metad( ) ) {
               output( ) << x.first << ":=>" << x.second << std::endl;

@@ -192,11 +192,13 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
     props.setDeflate( compression( ) );
   }
 
-  if ( rescaleForShortsIfNeeded( data ) ) {
+  bool useInts = false;
+  if ( rescaleForShortsIfNeeded( data, useInts ) ) {
     std::cerr << std::endl << " coercing out-of-range numbers (possible loss of precision)";
   }
 
-  H5::DataSet ds = group.createDataSet( "data", H5::PredType::STD_I16LE, space, props );
+  H5::DataSet ds = group.createDataSet( "data",
+      ( useInts ? H5::PredType::STD_I32LE : H5::PredType::STD_I16LE ), space, props );
   writeAttributes( ds, data );
 
   std::string cols = "scaled value";
@@ -216,8 +218,15 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
   hsize_t offset[] = { 0, 0 };
   hsize_t count[] = { 0, exc + 1 };
 
-  std::vector<short> buffer;
-  buffer.reserve( maxslabcnt * ( exc + 1 ) );
+  std::vector<short> sbuffer;
+  std::vector<int> ibuffer;
+
+  if ( useInts ) {
+    ibuffer.reserve( maxslabcnt * ( exc + 1 ) );
+  }
+  else {
+    sbuffer.reserve( maxslabcnt * ( exc + 1 ) );
+  }
 
   // We're keeping a buffer to eventually write to the file. However, this
   // buffer is based on a number of rows, *not* some multiple of the data size.
@@ -226,7 +235,12 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
   size_t rowcount = 0;
   for ( int row = 0; row < rows; row++ ) {
     std::unique_ptr<DataRow> datarow = data->pop( );
-    buffer.push_back( datarow->shorts( scale )[0] );
+    if ( useInts ) {
+      ibuffer.push_back( datarow->ints( scale )[0] );
+    }
+    else {
+      sbuffer.push_back( datarow->shorts( scale )[0] );
+    }
     if ( !extras.empty( ) ) {
       for ( int i = 0; i < exc; i++ ) {
         short val = SignalData::MISSING_VALUE;
@@ -235,7 +249,12 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
           const auto& x = datarow->extras.at( xkey );
           val = (short) ( std::stoi( x ) );
         }
-        buffer.push_back( val );
+        if ( useInts ) {
+          ibuffer.push_back( val );
+        }
+        else {
+          sbuffer.push_back( val );
+        }
       }
     }
 
@@ -245,20 +264,38 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
       space.selectHyperslab( H5S_SELECT_SET, count, offset );
 
       H5::DataSpace memspace( 2, count );
-      ds.write( &buffer[0], H5::PredType::STD_I16LE, memspace, space );
-      buffer.clear( );
-      buffer.reserve( maxslabcnt * ( exc + 1 ) );
+      if ( useInts ) {
+        ds.write( &sbuffer[0], H5::PredType::STD_I32LE, memspace, space );
+        ibuffer.clear( );
+        ibuffer.reserve( maxslabcnt * ( exc + 1 ) );
+      }
+      else {
+        ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
+        sbuffer.clear( );
+        sbuffer.reserve( maxslabcnt * ( exc + 1 ) );
+      }
       rowcount = 0;
     }
   }
 
   // finally, write whatever's left in the buffer
-  if ( !buffer.empty( ) ) {
-    offset[0] += count[0];
-    count[0] = rowcount;
-    space.selectHyperslab( H5S_SELECT_SET, count, offset );
-    H5::DataSpace memspace( 2, count );
-    ds.write( &buffer[0], H5::PredType::STD_I16LE, memspace, space );
+  if ( useInts ) {
+    if ( !ibuffer.empty( ) ) {
+      offset[0] += count[0];
+      count[0] = rowcount;
+      space.selectHyperslab( H5S_SELECT_SET, count, offset );
+      H5::DataSpace memspace( 2, count );
+      ds.write( &ibuffer[0], H5::PredType::STD_I32LE, memspace, space );
+    }
+  }
+  else {
+    if ( !sbuffer.empty( ) ) {
+      offset[0] += count[0];
+      count[0] = rowcount;
+      space.selectHyperslab( H5S_SELECT_SET, count, offset );
+      H5::DataSpace memspace( 2, count );
+      ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
+    }
   }
 }
 
@@ -278,11 +315,13 @@ void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data 
     props.setDeflate( compression( ) );
   }
 
-  if ( rescaleForShortsIfNeeded( data ) ) {
+  bool useInts = false;
+  if ( rescaleForShortsIfNeeded( data, useInts ) ) {
     std::cerr << std::endl << "  coercing out-of-range numbers (possible loss of precision)";
   }
 
-  H5::DataSet ds = group.createDataSet( "data", H5::PredType::STD_I16LE, space, props );
+  H5::DataSet ds = group.createDataSet( "data",
+      ( useInts ? H5::PredType::STD_I32LE : H5::PredType::STD_I16LE ), space, props );
   writeAttributes( ds, data );
   writeAttribute( ds, "Columns", "scaled value" );
 
@@ -294,8 +333,14 @@ void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data 
   hsize_t offset[] = { 0, 0 };
   hsize_t count[] = { 0, 1 };
 
-  std::vector<short> buffer;
-  buffer.reserve( maxslabcnt );
+  std::vector<short> sbuffer;
+  std::vector<int> ibuffer;
+  if ( useInts ) {
+    ibuffer.reserve( maxslabcnt );
+  }
+  else {
+    sbuffer.reserve( maxslabcnt );
+  }
 
   const int scale = data->scale( );
 
@@ -306,27 +351,57 @@ void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data 
 
   for ( int row = 0; row < rows; row++ ) {
     std::unique_ptr<DataRow> datarow = data->pop( );
-    std::vector<short> ints = datarow->shorts( scale );
-    buffer.insert( buffer.end( ), ints.begin( ), ints.end( ) );
+    if ( useInts ) {
+      std::vector<int> ints = datarow->ints( scale );
+      ibuffer.insert( ibuffer.end( ), ints.begin( ), ints.end( ) );
+    }
+    else {
+      std::vector<short> ints = datarow->shorts( scale );
+      sbuffer.insert( sbuffer.end( ), ints.begin( ), ints.end( ) );
+    }
 
-    if ( buffer.size( ) >= maxslabcnt ) {
-      count[0] = buffer.size( );
-      space.selectHyperslab( H5S_SELECT_SET, count, offset );
-      offset[0] += count[0];
+    if ( useInts ) {
+      if ( ibuffer.size( ) >= maxslabcnt ) {
+        count[0] = ibuffer.size( );
+        space.selectHyperslab( H5S_SELECT_SET, count, offset );
+        offset[0] += count[0];
 
-      H5::DataSpace memspace( 2, count );
-      ds.write( &buffer[0], H5::PredType::STD_I16LE, memspace, space );
-      buffer.clear( );
-      buffer.reserve( maxslabcnt );
+        H5::DataSpace memspace( 2, count );
+        ds.write( &ibuffer[0], H5::PredType::STD_I32LE, memspace, space );
+        ibuffer.clear( );
+        ibuffer.reserve( maxslabcnt );
+      }
+    }
+    else {
+      if ( sbuffer.size( ) >= maxslabcnt ) {
+        count[0] = sbuffer.size( );
+        space.selectHyperslab( H5S_SELECT_SET, count, offset );
+        offset[0] += count[0];
+
+        H5::DataSpace memspace( 2, count );
+        ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
+        sbuffer.clear( );
+        sbuffer.reserve( maxslabcnt );
+      }
     }
   }
 
   // finally, write whatever's left in the buffer
-  if ( !buffer.empty( ) ) {
-    count[0] = buffer.size( );
-    space.selectHyperslab( H5S_SELECT_SET, count, offset );
-    H5::DataSpace memspace( 2, count );
-    ds.write( &buffer[0], H5::PredType::STD_I16LE, memspace, space );
+  if ( useInts ) {
+    if ( !ibuffer.empty( ) ) {
+      count[0] = ibuffer.size( );
+      space.selectHyperslab( H5S_SELECT_SET, count, offset );
+      H5::DataSpace memspace( 2, count );
+      ds.write( &ibuffer[0], H5::PredType::STD_I32LE, memspace, space );
+    }
+  }
+  else {
+    if ( !sbuffer.empty( ) ) {
+      count[0] = sbuffer.size( );
+      space.selectHyperslab( H5S_SELECT_SET, count, offset );
+      H5::DataSpace memspace( 2, count );
+      ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
+    }
   }
 }
 
@@ -587,11 +662,14 @@ void Hdf5Writer::writeVitalGroup( H5::Group& group, std::unique_ptr<SignalData>&
   writeVital( group, data );
 }
 
-bool Hdf5Writer::rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data ) const {
+bool Hdf5Writer::rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data,
+    bool& useIntsNotShorts ) const {
   bool rescaled = false;
+  useIntsNotShorts = false;
 
-  const short int max = std::numeric_limits<short>::max( );
-  const short int min = std::numeric_limits<short>::min( );
+  const short int shortmax = std::numeric_limits<short>::max( );
+  const short int shortmin = std::numeric_limits<short>::min( );
+
   int scale = data->scale( );
   int powscale = std::pow( 10, data->scale( ) );
   int hi = powscale * data->highwater( );
@@ -603,7 +681,7 @@ bool Hdf5Writer::rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data ) c
 
   // keep reducing the scale until we fit in shorts
   // FIXME: if we can't fit in shorts, we're screwed
-  while ( ( hi > max || low < min ) && scale > 0 ) {
+  while ( ( hi > shortmax || low < shortmin ) && scale > 0 ) {
     scale--;
     powscale = std::pow( 10, data->scale( ) );
     hi = powscale * data->highwater( );
@@ -614,14 +692,47 @@ bool Hdf5Writer::rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data ) c
     //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
   }
 
-  if ( hi > max || low < min ) {
-    // this is "we're screwed" time
-    std::cerr << " ERROR: cannot coerce values to be in range";
-  }
-  else {
-    if ( rescaled ) {
-      data->scale( scale );
+  if ( hi > shortmax || low < shortmin ) {
+    rescaled = false;
+    // can't get values into short limits, so try ints
+    //std::cerr << " ERROR: cannot coerce values to be in range";
+    const int intmax = std::numeric_limits<int>::max( );
+    const int intmin = std::numeric_limits<int>::min( );
+
+    int scale = data->scale( );
+    int powscale = std::pow( 10, data->scale( ) );
+    int hi = powscale * data->highwater( );
+    int low = ( data->lowwater( ) == SignalData::MISSING_VALUE
+        ? data->lowwater( )
+        : powscale * data->lowwater( ) );
+    //std::cerr << " high/low water marks: " << data.highwater( ) << "/" << data.lowwater( ) << "(scale: " << data.scale( ) << ")" << std::endl;
+    //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
+
+    // keep reducing the scale until we fit in shorts
+    // FIXME: if we can't fit in shorts, we're screwed
+    while ( ( hi > intmax || low < intmin ) && scale > 0 ) {
+      scale--;
+      powscale = std::pow( 10, data->scale( ) );
+      hi = powscale * data->highwater( );
+      low = ( data->lowwater( ) == SignalData::MISSING_VALUE
+          ? data->lowwater( )
+          : powscale * data->lowwater( ) );
+      rescaled = true;
+      //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
     }
+
+
+    if ( hi > intmax || low < intmin ) {
+      // this is "we're screwed" time
+      std::cerr << " ERROR: cannot coerce values to be in range";
+    }
+    else {
+      useIntsNotShorts = true;
+    }
+  }
+
+  if ( rescaled ) {
+    data->scale( scale );
   }
 
   return rescaled;
