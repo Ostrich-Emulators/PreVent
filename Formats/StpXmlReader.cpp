@@ -270,7 +270,12 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
             }
             else {
               // Stp always reads in 1024ms increments for Philips, 2s for GE monitors
-              sig->setChunkIntervalAndSampleRate( ( isphilips ? 1024 : 2000 ), ( isphilips ? hz : 2 * hz ) );
+              if( isphilips ){
+                sig->setChunkIntervalAndSampleRate( isix ? 1024 : 1000, hz );
+              }
+              else{
+                sig->setChunkIntervalAndSampleRate( 2000, 2 * hz );
+              }
             }
 
             if ( !uom.empty( ) ) {
