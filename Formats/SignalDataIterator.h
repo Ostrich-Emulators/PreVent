@@ -52,8 +52,11 @@ public:
   }
 
   SignalDataIterator& operator=(const SignalDataIterator& rawIterator ) {
-    loc = rawIterator.loc;
-    vector = rawIterator.vector;
+    if( this != &rawIterator ){
+      loc = rawIterator.loc;
+      vector = rawIterator.vector;
+    }
+    return *this;
   }
 
   operator bool( ) const {

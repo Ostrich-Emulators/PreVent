@@ -26,9 +26,9 @@ const int BasicSignalData::CACHE_LIMIT = 30000;
 
 BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
-datacount( 0 ), livecount( 0 ), popping( false ), iswave( wavedata ), 
+datacount( 0 ), livecount( 0 ), file( nullptr ), popping( false ), iswave( wavedata ),
 highval( -std::numeric_limits<double>::max( ) ),
-lowval( std::numeric_limits<double>::max( ) ), file( nullptr ) {
+lowval( std::numeric_limits<double>::max( ) ) {
   scale( 0 );
   setChunkIntervalAndSampleRate( 2000, 1 );
   setUom( "Uncalib" );

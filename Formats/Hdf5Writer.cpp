@@ -134,6 +134,7 @@ std::string Hdf5Writer::getDatasetName( const std::unique_ptr<SignalData>& data 
   replacements["("] = "_";
   replacements[")"] = "_";
   replacements["/"] = "_";
+  replacements["\\"] = "_";
   replacements["-"] = "_";
   replacements["."] = "_";
 
