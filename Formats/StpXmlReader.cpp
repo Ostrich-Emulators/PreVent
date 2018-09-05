@@ -148,6 +148,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
       setstate( INDETERMINATE );
     }
     else if ( "FamilyType" == element || "Family" == element ) {
+      filler->setMeta( element, text );
       if ( text.length( ) >= 7 ) {
         isphilips = ( "Philips" == text.substr( 0, 7 ) );
         isix = ( "PhilipsIX" == text );
