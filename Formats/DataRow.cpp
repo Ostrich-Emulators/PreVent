@@ -21,16 +21,16 @@
 #include <limits>
 
 DataRow::DataRow( const dr_time& t, const std::string& d, const std::string& hi,
-      const std::string& lo, std::map<std::string, std::string> exts ) : time( t ),
-data( d ), high( hi ), low( lo ), extras( exts ) {
+      const std::string& lo, std::map<std::string, std::string> exts ) : data( d ),
+      high( hi ), low( lo ), extras( exts ), time( t ) {
 }
 
-DataRow::DataRow( ) : time( 0 ), data( "" ), high( "" ), low( "" ) {
+DataRow::DataRow( ) : data( "" ), high( "" ), low( "" ), time( 0 ) {
 }
 
 DataRow::DataRow( const DataRow& orig )
-: time( orig.time ), data( orig.data ), high( orig.high ), low( orig.low ),
-extras( orig.extras ) {
+: data( orig.data ), high( orig.high ), low( orig.low ), extras( orig.extras ), 
+time( orig.time ) {
 }
 
 DataRow& DataRow::operator=(const DataRow& orig ) {

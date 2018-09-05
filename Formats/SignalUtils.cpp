@@ -172,10 +172,8 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
   //        << s->endTime( ) << "\t" << s->size( ) << std::endl;
   //  }
 
-  float freq = ( *data.begin( ) )->hz( );
-
   std::unique_ptr<DataRow> currenttimes[data.size( )];
-  for ( int i = 0; i < data.size( ); i++ ) {
+  for ( size_t i = 0; i < data.size( ); i++ ) {
     ret.push_back( data[i]->shallowcopy( ) );
 
     // load the first row for each signal into our current array
@@ -188,7 +186,7 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
     // see if any of our current times match our "earliest" time
     // if they do, add it to the SignalData and replace that time with
     // a new datarow
-    for ( int i = 0; i < data.size( ); i++ ) {
+    for ( size_t i = 0; i < data.size( ); i++ ) {
       if ( currenttimes[i] ) {
         // we have a time to check
         if ( currenttimes[i]->time == earliest ) {
@@ -217,7 +215,7 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
 
     // go through again and figure out which is our new earliest time
     earliest = std::numeric_limits<dr_time>::max( );
-    for ( int i = 0; i < data.size( ); i++ ) {
+    for ( size_t i = 0; i < data.size( ); i++ ) {
       if ( currenttimes[i] && currenttimes[i]->time < earliest ) {
         earliest = currenttimes[i]->time;
       }
@@ -251,7 +249,7 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
   }
 
   dr_time fillstart = nexttime;
-  for ( nexttime; nexttime < row->time - timestep; nexttime += timestep ) {
+  for ( ; nexttime < row->time - timestep; nexttime += timestep ) {
     DataRow row( dummyfill( signal, nexttime ) );
     signal->add( row );
   }

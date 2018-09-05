@@ -92,7 +92,7 @@ void CpcXmlReader::end( const std::string& element, const std::string& text ) {
 
     std::vector<BYTE> data = base64_decode( value );
     std::string vals;
-    for ( int i = 0; i < data.size( ); i += 2 ) {
+    for ( size_t i = 0; i < data.size( ); i += 2 ) {
       BYTE one = data[i];
       BYTE two = data[i + 1];
       short val = ( ( two << 8 ) | one ); // litle-endian (from trial-and-error)

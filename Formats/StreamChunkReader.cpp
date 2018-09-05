@@ -31,9 +31,16 @@
 
 const int StreamChunkReader::DEFAULT_CHUNKSIZE = 16384 * 16;
 
+
+
+  bool iscompressed;
+  bool usestdin;
+  int chunksize;
+
+  std::istream * stream;
 StreamChunkReader::StreamChunkReader( std::istream * cin, bool compressed, 
-    bool isStdin, bool isGzip, int chunks ) : iscompressed( compressed ),
-    usestdin( isStdin ), stream( cin ), rr( ReadResult::NORMAL ), chunksize( chunks ) {
+    bool isStdin, bool isGzip, int chunks ) : rr( ReadResult::NORMAL ), 
+    iscompressed( compressed ), usestdin( isStdin ), chunksize( chunks ), stream( cin ) {
   if ( iscompressed ) {
     initZlib( isGzip );
   }

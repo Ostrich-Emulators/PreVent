@@ -69,6 +69,10 @@ size_t ZlReader::getSize( const std::string& input ) const {
 
 int ZlReader::prepare( const std::string& input, std::unique_ptr<SignalSet>& data ) {
   int rslt = Reader::prepare( input, data );
+  if( rslt != 0 ){
+    return rslt;
+  }
+
   
   // Zl format is really a directory containing a bunch of gzip files
   // so we should iterate through all the gzip files

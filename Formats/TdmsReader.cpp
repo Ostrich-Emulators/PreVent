@@ -223,7 +223,7 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
                     vals << doubles[i];
                   }
                 }
-                for ( cnt; cnt < freq; cnt++ ) {
+                for ( ; cnt < freq; cnt++ ) {
                   vals << "," << SignalData::MISSING_VALUESTR;
                 }
 

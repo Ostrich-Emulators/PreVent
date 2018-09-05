@@ -30,7 +30,7 @@ WfdbWriter::~WfdbWriter( ) {
 int WfdbWriter::initDataSet( ) {
   currdir = getcwd( NULL, 0 );
   std::string directory = filenamer( ).outputdir( );
-  int x = chdir( directory.c_str( ) );
+  chdir( directory.c_str( ) );
 
   files.clear( );
 

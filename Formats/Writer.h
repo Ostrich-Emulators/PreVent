@@ -72,8 +72,8 @@ private:
   bool bequiet;
   bool testrun;
   std::stringstream ss;
-  std::unique_ptr<FileNamer> namer;
   const std::string extension; // filename extension
+  std::unique_ptr<FileNamer> namer;
   int gmt_offset;
   std::string timezone;
 };

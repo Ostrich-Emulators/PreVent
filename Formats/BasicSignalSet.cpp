@@ -24,6 +24,7 @@ BasicSignalSet::~BasicSignalSet( ) {
 }
 
 BasicSignalSet BasicSignalSet::operator=(const BasicSignalSet&) {
+  return *this;
 }
 
 std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::vitals( ) {

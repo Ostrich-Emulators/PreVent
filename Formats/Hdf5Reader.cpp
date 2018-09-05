@@ -65,7 +65,7 @@ ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
 
   try {
     H5::Group vgroup = file.openGroup( "/VitalSigns" );
-    for ( int i = 0; i < vgroup.getNumObjs( ); i++ ) {
+    for ( size_t i = 0; i < vgroup.getNumObjs( ); i++ ) {
       std::string vital = vgroup.getObjnameByIdx( i );
       H5::Group dataAndTimeGroup = vgroup.openGroup( vital );
       readDataSet( dataAndTimeGroup, false, info );
@@ -82,7 +82,7 @@ ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
 
   try {
     H5::Group wgroup = file.openGroup( "/Waveforms" );
-    for ( int i = 0; i < wgroup.getNumObjs( ); i++ ) {
+    for ( size_t i = 0; i < wgroup.getNumObjs( ); i++ ) {
       std::string wave = wgroup.getObjnameByIdx( i );
       H5::Group dataAndTimeGroup = wgroup.openGroup( wave );
       readDataSet( dataAndTimeGroup, true, info );
@@ -149,12 +149,12 @@ void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
 
   copymetas( signal, dataset );
   int scale = signal->scale( );
-  for ( auto& x : IGNORABLE_PROPS ) {
+  //for ( auto& x : IGNORABLE_PROPS ) {
     // FIXME: this is a problem...we need to remove props so we don't get an error
     //signal->metad( ).erase( x );
     //signal->metas( ).erase( x );
     //signal->metai( ).erase( x );
-  }
+  //}
 
   //  for ( auto& m : signal->metad( ) ) {
   //    std::cout << "  " << m.first << ": (d) " << m.second << std::endl;
@@ -207,11 +207,11 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
   // worry about using hyperslabs
   short read[ROWS][COLS] = { };
   dataset.read( read, dataset.getDataType( ) );
-  for ( int row = 0; row < ROWS; row++ ) {
+  for ( size_t row = 0; row < ROWS; row++ ) {
     // FIXME: we better hope valsPerTime is always 1!
     DataRow drow( times[row / valsPerTime], std::to_string( read[row][0] / scale ) );
     if ( COLS > 1 ) {
-      for ( int c = 1; c < COLS; c++ ) {
+      for ( size_t c = 1; c < COLS; c++ ) {
         drow.extras[attrmap[c]] = std::to_string( read[row][c] );
       }
     }
@@ -245,7 +245,7 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
     memspace.selectHyperslab( H5S_SELECT_SET, count, offset0 );
     dataset.read( rere, dataset.getDataType( ), memspace, dataspace );
 
-    for ( int row = 0; row < count[0]; row++ ) {
+    for ( size_t row = 0; row < count[0]; row++ ) {
       if ( !values.empty( ) ) {
         values.append( "," );
       }
@@ -274,7 +274,7 @@ void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
     H5::DataSet& dataset ) const {
   hsize_t cnt = dataset.getNumAttrs( );
 
-  for ( int i = 0; i < cnt; i++ ) {
+  for ( size_t i = 0; i < cnt; i++ ) {
     H5::Attribute attr = dataset.openAttribute( i );
     H5::DataType type = attr.getDataType( );
     const std::string key = upgradeMetaKey( attr.getName( ) );

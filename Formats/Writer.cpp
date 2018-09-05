@@ -15,8 +15,8 @@
 
 const int Writer::DEFAULT_COMPRESSION = 6;
 
-Writer::Writer( const std::string& ext ) : bequiet( false ), extension( ext ),
-compress( DEFAULT_COMPRESSION ),
+Writer::Writer( const std::string& ext ) : compress( DEFAULT_COMPRESSION ), 
+bequiet( false ), extension( ext ),
 namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
   // figure out a string for our timezone by getting a reference time
   time_t reftime = std::time( nullptr );
@@ -25,9 +25,8 @@ namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
   timezone = std::string( reftm->tm_zone );
 }
 
-Writer::Writer( const Writer& w ) : bequiet( false ), extension( w.extension ),
-compress( DEFAULT_COMPRESSION ),
-namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ),
+Writer::Writer( const Writer& w ) : compress( DEFAULT_COMPRESSION ), bequiet( false ),
+extension( w.extension ), namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ),
 gmt_offset( w.gmt_offset ), timezone( w.timezone ) {
 }
 

@@ -136,7 +136,7 @@ int MatWriter::writeStrings( const std::string& label, std::vector<std::string>&
   matvar_t * var = Mat_VarCreate( label.c_str( ), MAT_C_CELL, MAT_T_CELL, 2,
       dims, NULL, 0 );
 
-  for ( int i = 0; i < rows; i++ ) {
+  for ( size_t i = 0; i < rows; i++ ) {
     size_t strdims[2] = { 1, strings[i].size( ) };
     char * text = (char *) strings[i].c_str( );
     matvar_t * vart = Mat_VarCreate( NULL, MAT_C_CHAR, MAT_T_UTF8, 2, strdims,
@@ -276,19 +276,19 @@ int MatWriter::writeWaves( double freq, std::vector<std::unique_ptr<SignalData>>
     vars.push_back( var );
   }
 
-  const int datachunksz = freq * 2000; // arbitrary, but on the big side
+  const size_t datachunksz = freq * 2000; // arbitrary, but on the big side
   std::vector<std::vector<short>> datas( cols );
 
   int start[2] = { 0, 0 };
-  int edge[2] = { datachunksz, 1 };
+  int edge[2] = { (int)datachunksz, 1 };
   int stride[2] = { 1, 1 };
-  for ( int col = 0; col < signals.size( ); col++ ) {
+  for ( size_t col = 0; col < signals.size( ); col++ ) {
     std::unique_ptr<SignalData>& signal = signals[col];
     std::vector<short> data;
     data.reserve( datachunksz );
 
     start[0] = 0;
-    edge[0] = { datachunksz };
+    edge[0] = { (int)datachunksz };
 
     while ( !signal->empty( ) ) {
       const auto& datarow = signal->pop( );

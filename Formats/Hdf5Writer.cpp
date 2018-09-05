@@ -83,9 +83,8 @@ void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
 
   char buf[sizeof "2011-10-08T07:07:09Z"];
   strftime( buf, sizeof buf, "%FT%TZ", gmtime( &stime ) );
-
   writeAttribute( loc, "Start Date/Time", buf );
-  buf[sizeof "2011-10-08T07:07:09Z"];
+
   strftime( buf, sizeof buf, "%FT%TZ", gmtime( &etime ) );
   writeAttribute( loc, "End Date/Time", buf );
 
@@ -234,7 +233,7 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
   // This means we are really keeping two counters going at all times, and
   // once we're out of all the loops, we need to write any residual data.
   size_t rowcount = 0;
-  for ( int row = 0; row < rows; row++ ) {
+  for ( size_t row = 0; row < rows; row++ ) {
     std::unique_ptr<DataRow> datarow = data->pop( );
     if ( useInts ) {
       ibuffer.push_back( datarow->ints( scale )[0] );
@@ -243,7 +242,7 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
       sbuffer.push_back( datarow->shorts( scale )[0] );
     }
     if ( !extras.empty( ) ) {
-      for ( int i = 0; i < exc; i++ ) {
+      for ( size_t i = 0; i < exc; i++ ) {
         short val = SignalData::MISSING_VALUE;
         const std::string xkey = extras.at( i );
         if ( 0 != datarow->extras.count( xkey ) ) {
@@ -350,7 +349,7 @@ void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data 
   // This means we are really keeping two counters going at all times, and
   // once we're out of all the loops, we need to write any residual data.
 
-  for ( int row = 0; row < rows; row++ ) {
+  for ( size_t row = 0; row < rows; row++ ) {
     std::unique_ptr<DataRow> datarow = data->pop( );
     if ( useInts ) {
       std::vector<int> ints = datarow->ints( scale );
@@ -416,17 +415,13 @@ void Hdf5Writer::autochunk( hsize_t* dims, int rank, int bytesperelement, hsize_
   // datasets up to this size are deemed to fall under the "regular" algorithm
   const hsize_t NORMAL_MAX_SIZE_LIMIT = 128 * MB;
 
-  hsize_t rows = 0;
   hsize_t dselements = 1;
   hsize_t rowelements = 1;
   for ( int i = 0; i < rank; i++ ) {
     rslts[i] = dims[i];
     dselements *= dims[i];
 
-    if ( 0 == i ) {
-      rows = dims[i];
-    }
-    else {
+    if ( 0 != i ) {
       rowelements *= dims[i];
     }
   }
@@ -639,6 +634,8 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   }
 
   data.release( );
+  
+  return ret;
 }
 
 void Hdf5Writer::writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data ) {
