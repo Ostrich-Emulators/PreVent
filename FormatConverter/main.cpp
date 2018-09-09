@@ -23,9 +23,7 @@
 #include "OffsetTimeSignalSet.h"
 #include "AnonymizingSignalSet.h"
 
-#ifndef GIT_BUILD
-#define GIT_BUILD "--------"
-#endif        
+#include "build.h"
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl

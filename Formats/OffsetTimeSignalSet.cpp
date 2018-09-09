@@ -56,7 +56,6 @@ std::unique_ptr<SignalData>& OffsetTimeSignalSet::addWave( const std::string& na
 }
 
 void OffsetTimeSignalSet::reset( bool signalDataOnly ) {
-  std::string tz = SignalSetWrapper::metadata( ).at( SignalData::TIMEZONE );
   SignalSetWrapper::reset( signalDataOnly );
   SignalSetWrapper::setMeta( SignalData::TIMEZONE, "UTC" );
   SignalSetWrapper::setMeta( COLLECTION_TIMEZONE, tz_name );

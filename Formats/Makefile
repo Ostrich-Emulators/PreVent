@@ -49,12 +49,17 @@ MKDIR=mkdir
 CP=cp
 CCADMIN=CCadmin
 
+GIT_VERSION := $(shell git describe --abbrev=8 --dirty --always --tags)
 
 # build
 build: .build-post
 
 .build-pre:
 # Add your pre 'build' code here...
+	echo "#ifndef GIT_BUILD " > build.h
+	echo "#define GIT_BUILD \"$(GIT_VERSION)\"">>build.h
+	echo "#endif" >> build.h 
+
 
 .build-post: .build-impl
 # Add your post 'build' code here...

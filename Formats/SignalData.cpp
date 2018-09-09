@@ -26,6 +26,7 @@ const std::string SignalData::SCALE = "Scale";
 const std::string SignalData::UOM = "Unit of Measure";
 const std::string SignalData::MSM = "Missing Value Marker";
 const std::string SignalData::TIMEZONE = "Timezone";
+const std::string SignalData::BUILD_NUM = "Build Number";
 
 const std::string SignalData::CHUNK_INTERVAL_MS = "Sample Period (ms)";
 const std::string SignalData::READINGS_PER_CHUNK = "Readings Per Sample";

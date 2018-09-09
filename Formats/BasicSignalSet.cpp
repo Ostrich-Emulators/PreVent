@@ -11,13 +11,16 @@
 
 #include <limits>
 #include <iostream>
+#include "build.h"
 
 BasicSignalSet::BasicSignalSet( ) {
   setMeta( SignalData::TIMEZONE, "UTC" );
+  setMeta( SignalData::BUILD_NUM, GIT_BUILD );
 }
 
 BasicSignalSet::BasicSignalSet( const BasicSignalSet& ) {
   setMeta( SignalData::TIMEZONE, "UTC" );
+  setMeta( SignalData::BUILD_NUM, GIT_BUILD );
 }
 
 BasicSignalSet::~BasicSignalSet( ) {
@@ -125,6 +128,7 @@ void BasicSignalSet::reset( bool signalDataOnly ) {
   if ( !signalDataOnly ) {
     metamap.clear( );
     metamap[SignalData::TIMEZONE] = "UTC";
+    metamap[SignalData::BUILD_NUM] = GIT_BUILD;
   }
 }
 
