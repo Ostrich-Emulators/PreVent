@@ -13,7 +13,7 @@
 
 const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
   "Start Date/Time", "End Time", "Start Time", SignalData::SCALE, SignalData::MSM,
-  "Layout Version", "HDF5 Version",
+  "Layout Version", "HDF5 Version", "HDF5 Version", "Layout Version",
   "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader" } );
 
 Hdf5Reader::Hdf5Reader( ) : Reader( "HDF5" ) {
@@ -63,6 +63,38 @@ ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
     }
   }
 
+    try {
+    H5::Group egroup = file.openGroup( "/Events" );
+    for ( size_t i = 0; i < egroup.getNumObjs( ); i++ ) {
+      std::string ev = egroup.getObjnameByIdx( i );
+      if ( "Segment_Offsets" == ev ) {
+        H5::DataSet offsets = egroup.openDataSet( ev );
+        H5::DataSpace dataspace = offsets.getSpace( );
+        hsize_t DIMS[2] = { };
+        dataspace.getSimpleExtentDims( DIMS );
+        const hsize_t ROWS = DIMS[0];
+        const hsize_t COLS = DIMS[1];
+
+        // just read everything all at once...offsets should always be small
+        // (yeah, right!)
+        long read[ROWS][COLS] = { };
+        offsets.read( read, offsets.getDataType( ) );
+        for ( size_t row = 0; row < ROWS; row += 2 ) {
+          info->addOffset( read[row][0], read[row][1] );
+        }
+      }
+    }
+    egroup.close( );
+  }
+  catch ( H5::FileIException error ) {
+    output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
+  }
+  // catch failure caused by the DataSet operations
+  catch ( H5::DataSetIException error ) {
+    output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
+  }
+
+
   try {
     H5::Group vgroup = file.openGroup( "/VitalSigns" );
     for ( size_t i = 0; i < vgroup.getNumObjs( ); i++ ) {
@@ -100,11 +132,11 @@ ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
   return ReadResult::END_OF_FILE;
 }
 
-size_t Hdf5Reader::getSize( const std::string& input ) const {
+size_t Hdf5Reader::getSize( const std::string & input ) const {
   return 1;
 }
 
-std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet& dataset ) const {
+std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) const {
   //std::cout << group.getObjName( ) << " " << name << std::endl;
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
@@ -137,7 +169,7 @@ void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
   int timeinterval = 2000;
   if ( dataAndTimeGroup.attrExists( SignalData::CHUNK_INTERVAL_MS ) ) {
     timeinterval = metaint( dataAndTimeGroup, SignalData::CHUNK_INTERVAL_MS );
-    signal->setMeta(SignalData::CHUNK_INTERVAL_MS, timeinterval);
+    signal->setMeta( SignalData::CHUNK_INTERVAL_MS, timeinterval );
   }
   int valsPerChunk = 1;
   if ( dataAndTimeGroup.attrExists( SignalData::READINGS_PER_CHUNK ) ) {
@@ -150,10 +182,10 @@ void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
   copymetas( signal, dataset );
   int scale = signal->scale( );
   //for ( auto& x : IGNORABLE_PROPS ) {
-    // FIXME: this is a problem...we need to remove props so we don't get an error
-    //signal->metad( ).erase( x );
-    //signal->metas( ).erase( x );
-    //signal->metai( ).erase( x );
+  // FIXME: this is a problem...we need to remove props so we don't get an error
+  //signal->metad( ).erase( x );
+  //signal->metas( ).erase( x );
+  //signal->metai( ).erase( x );
   //}
 
   //  for ( auto& m : signal->metad( ) ) {
@@ -271,7 +303,7 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
 }
 
 void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
-    H5::DataSet& dataset ) const {
+    H5::DataSet & dataset ) const {
   hsize_t cnt = dataset.getNumAttrs( );
 
   for ( size_t i = 0; i < cnt; i++ ) {
@@ -302,7 +334,7 @@ void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
   }
 }
 
-int Hdf5Reader::metaint( const H5::H5Location& loc, const std::string& attrname ) const {
+int Hdf5Reader::metaint( const H5::H5Location& loc, const std::string & attrname ) const {
   int val;
   if ( loc.attrExists( attrname ) ) {
     H5::Attribute attr = loc.openAttribute( attrname );
@@ -312,11 +344,11 @@ int Hdf5Reader::metaint( const H5::H5Location& loc, const std::string& attrname 
   return val;
 }
 
-std::string Hdf5Reader::metastr( const H5::H5Location& loc, const std::string& attrname ) const {
+std::string Hdf5Reader::metastr( const H5::H5Location& loc, const std::string & attrname ) const {
   return metastr( loc.openAttribute( attrname ) );
 }
 
-std::string Hdf5Reader::metastr( const H5::Attribute& attr ) const {
+std::string Hdf5Reader::metastr( const H5::Attribute & attr ) const {
   H5::DataType type = attr.getDataType( );
 
   std::string aval;
@@ -342,7 +374,7 @@ std::string Hdf5Reader::metastr( const H5::Attribute& attr ) const {
   return aval;
 }
 
-std::string Hdf5Reader::upgradeMetaKey( const std::string& oldkey ) const {
+std::string Hdf5Reader::upgradeMetaKey( const std::string & oldkey ) const {
   std::map<std::string, std::string> updates;
   //updates["Sample Frequency"] = SignalData::HERTZ;
   return ( 0 == updates.count( oldkey ) ? oldkey : updates[oldkey] );
