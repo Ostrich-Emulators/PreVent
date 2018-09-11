@@ -178,3 +178,7 @@ void BasicSignalSet::addOffset( long seg, dr_time time ) {
 void BasicSignalSet::clearOffsets( ) {
   segs.clear( );
 }
+
+void BasicSignalSet::complete(){
+  // nothing to do
+}

@@ -12,10 +12,11 @@
 #include "CsvWriter.h"
 #include "ConversionListener.h"
 #include "FileNamer.h"
+#include "OffsetTimeSignalSet.h"
 
 const int Writer::DEFAULT_COMPRESSION = 6;
 
-Writer::Writer( const std::string& ext ) : compress( DEFAULT_COMPRESSION ), 
+Writer::Writer( const std::string& ext ) : compress( DEFAULT_COMPRESSION ),
 bequiet( false ), extension( ext ),
 namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
   // figure out a string for our timezone by getting a reference time
@@ -39,7 +40,7 @@ std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
       return std::unique_ptr<Writer>( new Hdf5Writer( ) );
     case WFDB:
       return std::unique_ptr<Writer>( new WfdbWriter( ) );
-    //case DSZL:
+      //case DSZL:
       //return std::unique_ptr<Writer>( new ZlWriter( ) );
     case MAT73:
       return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV7 ) );
@@ -80,7 +81,7 @@ FileNamer& Writer::filenamer( ) const {
 }
 
 std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
-      std::unique_ptr<SignalSet>& data ) {
+    std::unique_ptr<SignalSet>& data ) {
   int patientno = 1;
 
   output( ) << "init data set" << std::endl;
@@ -97,13 +98,18 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
 
   int files = 0;
   while ( retcode != ReadResult::ERROR ) {
+    data->complete( );
     drain( data );
     namer->fileOrdinal( files++ );
-    
-    if( testrun ){
+
+    if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
+      namer->timeoffset_ms( std::stol( data->metadata( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) );
+    }
+
+    if ( testrun ) {
       retcode = ReadResult::END_OF_FILE;
     }
-    
+
 
     if ( ReadResult::END_OF_DAY == retcode || ReadResult::END_OF_PATIENT == retcode ) {
       std::vector<std::string> files = closeDataSet( );
@@ -165,7 +171,7 @@ void Writer::addListener( std::shared_ptr<ConversionListener> l ) {
   listeners.push_back( l );
 }
 
-class NullBuffer : public std::streambuf {
+class NullBuffer : public std::streambuf{
 public:
 
   int overflow( int c ) {

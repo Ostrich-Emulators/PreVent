@@ -47,13 +47,12 @@ private:
   int metaint( const H5::H5Location& loc, const std::string& attrname ) const;
   void copymetas( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
   void fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-      const std::vector<dr_time>& times, int valsPerTime, int scale ) const;
+      const std::vector<dr_time>& times, int valsPerTime, int timeinterval, int scale ) const;
   void fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
       const std::vector<dr_time>& tmes, int valsPerTime, int scale ) const;
   void readDataSet( H5::Group& dataAndTimeGroup, const bool& iswave,
       std::unique_ptr<SignalSet>& info ) const;
   std::vector<dr_time> readTimes( H5::DataSet& times ) const;
-  std::string upgradeMetaKey( const std::string& oldkey ) const;
 
   H5::H5File file;
 };

@@ -90,3 +90,7 @@ void SignalSetWrapper::clearMetas( ) {
 void SignalSetWrapper::setMetadataFrom( const SignalSet& target ) {
   set->setMetadataFrom( target );
 }
+
+void SignalSetWrapper::complete(){
+  set->complete();
+}

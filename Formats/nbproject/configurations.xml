@@ -26,6 +26,7 @@
         <itemPath>BasicSignalSet.h</itemPath>
         <itemPath>OffsetTimeSignalSet.h</itemPath>
         <itemPath>SignalSetWrapper.h</itemPath>
+        <itemPath>TimezoneOffsetTimeSignalSet.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Writers" projectFiles="true">
         <itemPath>CsvWriter.h</itemPath>
@@ -75,6 +76,7 @@
         <itemPath>BasicSignalSet.cpp</itemPath>
         <itemPath>OffsetTimeSignalSet.cpp</itemPath>
         <itemPath>SignalSetWrapper.cpp</itemPath>
+        <itemPath>TimezoneOffsetTimeSignalSet.cpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="Writers" projectFiles="true">
         <itemPath>CsvWriter.cpp</itemPath>
@@ -252,6 +254,10 @@
       <item path="TdmsReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="TdmsReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="TimezoneOffsetTimeSignalSet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="TimezoneOffsetTimeSignalSet.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -432,6 +438,10 @@
       <item path="TdmsReader.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="TdmsReader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="TimezoneOffsetTimeSignalSet.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="TimezoneOffsetTimeSignalSet.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="WfdbReader.cpp" ex="false" tool="1" flavor2="0">
       </item>

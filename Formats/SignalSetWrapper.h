@@ -64,6 +64,8 @@ public:
   virtual void clearMetas( ) override;
 
   virtual void setMetadataFrom( const SignalSet& target ) override;
+
+  virtual void complete() override;
 private:
   SignalSet * set;
   bool iOwnThisPointer;

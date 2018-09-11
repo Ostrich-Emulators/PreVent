@@ -65,6 +65,8 @@ public:
   virtual void setMeta( const std::string& key, const std::string& val );
   virtual void clearMetas( );
 
+  virtual void complete() override;
+
 protected:
   /**
    * A function to actually make the (custom?) signal data object for

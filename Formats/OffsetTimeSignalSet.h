@@ -15,26 +15,25 @@
 #define OFFSETSIGNALSET_H
 
 #include "SignalSetWrapper.h"
-#include "SignalDataWrapper.h"
 
 class OffsetTimeSignalSet : public SignalSetWrapper {
 public:
-  static const std::string COLLECTION_TIMEZONE;
-  static const std::string COLLECTION_TIMEZONE_OFFSET;
+  static const std::string COLLECTION_OFFSET;
 
-  OffsetTimeSignalSet( const std::string& name, long offset_ms = 0 );
-  OffsetTimeSignalSet( const std::unique_ptr<SignalSet>& w, const std::string& name,
-      long offset_ms = 0 );
-  OffsetTimeSignalSet( SignalSet * w, const std::string& name, long offset_ms = 0 );
+  OffsetTimeSignalSet( long offset_ms = 0 );
+  OffsetTimeSignalSet( const std::unique_ptr<SignalSet>& w, long offset_ms = 0 );
+  OffsetTimeSignalSet( SignalSet * w, long offset_ms = 0 );
   ~OffsetTimeSignalSet( );
 
   virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
   virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) override;
   virtual void reset( bool signalDataOnly = false ) override;
 
+protected:
+  void offset( long offset_ms );
+
 private:
-  std::string tz_name;
-  long tz_offset_ms;
+  long offset_ms;
 };
 
 #endif /* OFFSETSIGNALSET_H */

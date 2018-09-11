@@ -10,11 +10,13 @@
 #include "SignalData.h"
 #include <iostream>
 #include <exception>
+#include <cmath>
 
 const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
   "Start Date/Time", "End Time", "Start Time", SignalData::SCALE, SignalData::MSM,
   "Layout Version", "HDF5 Version", "HDF5 Version", "Layout Version",
-  "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader" } );
+  "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader",
+  "Note on Scale" } );
 
 Hdf5Reader::Hdf5Reader( ) : Reader( "HDF5" ) {
 
@@ -63,7 +65,7 @@ ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
     }
   }
 
-    try {
+  try {
     H5::Group egroup = file.openGroup( "/Events" );
     for ( size_t i = 0; i < egroup.getNumObjs( ); i++ ) {
       std::string ev = egroup.getObjnameByIdx( i );
@@ -79,8 +81,8 @@ ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
         // (yeah, right!)
         long read[ROWS][COLS] = { };
         offsets.read( read, offsets.getDataType( ) );
-        for ( size_t row = 0; row < ROWS; row += 2 ) {
-          info->addOffset( read[row][0], read[row][1] );
+        for ( size_t row = 0; row < ROWS; row++ ) {
+          info->addOffset( read[row][1], read[row][0] );
         }
       }
     }
@@ -181,23 +183,6 @@ void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
 
   copymetas( signal, dataset );
   int scale = signal->scale( );
-  //for ( auto& x : IGNORABLE_PROPS ) {
-  // FIXME: this is a problem...we need to remove props so we don't get an error
-  //signal->metad( ).erase( x );
-  //signal->metas( ).erase( x );
-  //signal->metai( ).erase( x );
-  //}
-
-  //  for ( auto& m : signal->metad( ) ) {
-  //    std::cout << "  " << m.first << ": (d) " << m.second << std::endl;
-  //  }
-  //  for ( auto& m : signal->metai( ) ) {
-  //    std::cout << "  " << m.first << ": (i) " << m.second << std::endl;
-  //  }
-  //  auto& strings = signal->metas();
-  //  for ( auto& m : signal->metas( ) ) {
-  //    std::cout << "  " << m.first << ": (s) " << m.second << std::endl;
-  //  }
 
   H5::DataSet ds = dataAndTimeGroup.openDataSet( "time" );
   std::vector<dr_time> times = readTimes( ds );
@@ -207,13 +192,13 @@ void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
     fillWave( signal, dataset, times, timeinterval, scale );
   }
   else {
-    fillVital( signal, dataset, times, timeinterval, scale );
+    fillVital( signal, dataset, times, timeinterval, valsPerChunk, scale );
   }
   dataset.close( );
 }
 
 void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-    const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
+    const std::vector<dr_time>& times, int timeinterval, int valsPerTime, int scale ) const {
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
   dataspace.getSimpleExtentDims( DIMS );
@@ -234,25 +219,83 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
     }
   }
 
-
+  int powscale = std::pow( 10, scale );
   // just read everything all at once...in the future, we probably want to
   // worry about using hyperslabs
-  short read[ROWS][COLS] = { };
-  dataset.read( read, dataset.getDataType( ) );
-  for ( size_t row = 0; row < ROWS; row++ ) {
-    // FIXME: we better hope valsPerTime is always 1!
-    DataRow drow( times[row / valsPerTime], std::to_string( read[row][0] / scale ) );
-    if ( COLS > 1 ) {
-      for ( size_t c = 1; c < COLS; c++ ) {
-        drow.extras[attrmap[c]] = std::to_string( read[row][c] );
+  if ( dataset.getDataType( ) == H5::PredType::STD_I16LE ) {
+    short read[ROWS][COLS] = { };
+    dataset.read( read, dataset.getDataType( ) );
+    for ( size_t row = 0; row < ROWS; row++ ) {
+      short val = read[row][0];
+      std::string valstr;
+
+      if ( 0 != scale ) {
+        valstr = std::to_string( (double) val / powscale );
+        // remove any trailing 0s from the string
+        while ( '0' == valstr[valstr.size( ) - 1] ) {
+          valstr.erase( valstr.size( ) - 1, 1 );
+        }
+        // make sure we don't end in a .
+        if ( '.' == valstr[valstr.size( ) - 1] ) {
+          valstr.erase( valstr.size( ) - 1 );
+        }
       }
+      else {
+        valstr = std::to_string( val );
+      }
+
+      // FIXME: we better hope valsPerTime is always 1!
+      DataRow drow( times[row / valsPerTime], valstr );
+      if ( COLS > 1 ) {
+        for ( size_t c = 1; c < COLS; c++ ) {
+          drow.extras[attrmap[c]] = std::to_string( read[row][c] );
+        }
+      }
+      signal->add( drow );
     }
-    signal->add( drow );
   }
+  else { // data is in integers
+    int read[ROWS][COLS] = { };
+    dataset.read( read, dataset.getDataType( ) );
+    for ( size_t row = 0; row < ROWS; row++ ) {
+
+
+      int val = read[row][0];
+      std::string valstr;
+
+      if ( 0 != scale ) {
+        valstr = std::to_string( (double) val / powscale );
+        // remove any trailing 0s from the string
+        while ( '0' == valstr[valstr.size( ) - 1] ) {
+          valstr.erase( valstr.size( ) - 1, 1 );
+        }
+        // make sure we don't end in a .
+        if ( '.' == valstr[valstr.size( ) - 1] ) {
+          valstr.erase( valstr.size( ) - 1 );
+        }
+      }
+      else {
+        valstr = std::to_string( val );
+      }
+
+      // FIXME: we better hope valsPerTime is always 1!
+      DataRow drow( times[row / valsPerTime], valstr );
+      if ( COLS > 1 ) {
+        for ( size_t c = 1; c < COLS; c++ ) {
+          drow.extras[attrmap[c]] = std::to_string( read[row][c] );
+        }
+      }
+      signal->add( drow );
+    }
+  }
+
+  signal->scale( scale );
 }
 
 void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
     const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
+  return;
+
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
   dataspace.getSimpleExtentDims( DIMS );
@@ -309,27 +352,29 @@ void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
   for ( size_t i = 0; i < cnt; i++ ) {
     H5::Attribute attr = dataset.openAttribute( i );
     H5::DataType type = attr.getDataType( );
-    const std::string key = upgradeMetaKey( attr.getName( ) );
+    const std::string key = attr.getName( );
+    if ( 0 == IGNORABLE_PROPS.count( key ) ) {
 
-    switch ( attr.getTypeClass( ) ) {
-      case H5T_INTEGER:
-      {
-        int inty = 0;
-        attr.read( type, &inty );
-        signal->setMeta( key, inty );
+      switch ( attr.getTypeClass( ) ) {
+        case H5T_INTEGER:
+        {
+          int inty = 0;
+          attr.read( type, &inty );
+          signal->setMeta( key, inty );
+        }
+          break;
+        case H5T_FLOAT:
+        {
+          double dbl = 0;
+          attr.read( type, &dbl );
+          signal->setMeta( key, dbl );
+        }
+          break;
+        default:
+          std::string aval;
+          attr.read( type, aval );
+          signal->setMeta( key, aval );
       }
-        break;
-      case H5T_FLOAT:
-      {
-        double dbl = 0;
-        attr.read( type, &dbl );
-        signal->setMeta( key, dbl );
-      }
-        break;
-      default:
-        std::string aval;
-        attr.read( type, aval );
-        signal->setMeta( key, aval );
     }
   }
 }
@@ -372,10 +417,4 @@ std::string Hdf5Reader::metastr( const H5::Attribute & attr ) const {
   }
 
   return aval;
-}
-
-std::string Hdf5Reader::upgradeMetaKey( const std::string & oldkey ) const {
-  std::map<std::string, std::string> updates;
-  //updates["Sample Frequency"] = SignalData::HERTZ;
-  return ( 0 == updates.count( oldkey ) ? oldkey : updates[oldkey] );
 }

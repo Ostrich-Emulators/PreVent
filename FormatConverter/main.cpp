@@ -20,63 +20,63 @@
 #include "Db.h"
 #include "config.h"
 #include "FileNamer.h"
-#include "OffsetTimeSignalSet.h"
+#include "TimezoneOffsetTimeSignalSet.h"
 #include "AnonymizingSignalSet.h"
 
 #include "build.h"
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
-          << "Syntax: " << progname << " --to <format> <file>..."
-          << std::endl << "\t-f or --from <input format>"
-          << std::endl << "\t-t or --to <output format>"
-          << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
-          << std::endl << "\t-s or --sqlite <db file>"
-          << std::endl << "\t-q or --quiet"
-          << std::endl << "\t-1 or --stop-after-one"
-          << std::endl << "\t-l or --localtime"
-          << std::endl << "\t-p or --pattern <naming pattern>"
-          << std::endl << "\t-n or --no-break or --one-file"
-          << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
-          << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml, stpjson, tdms, "
-          << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
-          << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
-          << std::endl << "\tthe --pattern option recognizes these format specifiers:"
-          << std::endl << "\t  %p - patient ordinal"
-          << std::endl << "\t  %i - input filename (without directory or extension)"
-          << std::endl << "\t  %d - input directory (with trailing separator)"
-          << std::endl << "\t  %C - current directory (with trailing separator)"
-          << std::endl << "\t  %x - input extension"
-          << std::endl << "\t  %m - modified date of input file"
-          << std::endl << "\t  %c - creation date of input file"
-          << std::endl << "\t  %D - date of conversion"
-          << std::endl << "\t  %s - date of first data point"
-          << std::endl << "\t  %e - date of last data point"
-          << std::endl << "\t  %o - output file ordinal"
-          << std::endl << "\t  %t - the --to option's extension (e.g., hdf5, csv)"
-          << std::endl << "\t  all dates are output in YYYYMMDD format"
-          << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file (or pattern)"
-          << std::endl << "\tif file is -, stdin is read for input"
-          << std::endl << std::endl;
+      << "Syntax: " << progname << " --to <format> <file>..."
+      << std::endl << "\t-f or --from <input format>"
+      << std::endl << "\t-t or --to <output format>"
+      << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
+      << std::endl << "\t-s or --sqlite <db file>"
+      << std::endl << "\t-q or --quiet"
+      << std::endl << "\t-1 or --stop-after-one"
+      << std::endl << "\t-l or --localtime"
+      << std::endl << "\t-p or --pattern <naming pattern>"
+      << std::endl << "\t-n or --no-break or --one-file"
+      << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
+      << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml, stpjson, tdms, "
+      << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
+      << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
+      << std::endl << "\tthe --pattern option recognizes these format specifiers:"
+      << std::endl << "\t  %p - patient ordinal"
+      << std::endl << "\t  %i - input filename (without directory or extension)"
+      << std::endl << "\t  %d - input directory (with trailing separator)"
+      << std::endl << "\t  %C - current directory (with trailing separator)"
+      << std::endl << "\t  %x - input extension"
+      << std::endl << "\t  %m - modified date of input file"
+      << std::endl << "\t  %c - creation date of input file"
+      << std::endl << "\t  %D - date of conversion"
+      << std::endl << "\t  %s - date of first data point"
+      << std::endl << "\t  %e - date of last data point"
+      << std::endl << "\t  %o - output file ordinal"
+      << std::endl << "\t  %t - the --to option's extension (e.g., hdf5, csv)"
+      << std::endl << "\t  all dates are output in YYYYMMDD format"
+      << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file (or pattern)"
+      << std::endl << "\tif file is -, stdin is read for input"
+      << std::endl << std::endl;
   exit( 1 );
 }
 
 struct option longopts[] = {
-  { "from", required_argument, NULL, 'f'},
-  { "to", required_argument, NULL, 't'},
-  { "compression", required_argument, NULL, 'z'},
-  { "sqlite", required_argument, NULL, 's'},
-  { "quiet", no_argument, NULL, 'q'},
-  { "anonymize", no_argument, NULL, 'a'},
-  { "anon", no_argument, NULL, 'a'},
-  { "anonymous", no_argument, NULL, 'a'},
-  { "no-break", no_argument, NULL, 'n'},
-  { "one-file", no_argument, NULL, 'n'},
-  { "pattern", required_argument, NULL, 'p'},
-  { "localtime", no_argument, NULL, 'l'},
-  { "local", no_argument, NULL, 'l'},
-  { "stop-after-one", no_argument, NULL, '1'},
-  { 0, 0, 0, 0}
+  { "from", required_argument, NULL, 'f' },
+  { "to", required_argument, NULL, 't' },
+  { "compression", required_argument, NULL, 'z' },
+  { "sqlite", required_argument, NULL, 's' },
+  { "quiet", no_argument, NULL, 'q' },
+  { "anonymize", no_argument, NULL, 'a' },
+  { "anon", no_argument, NULL, 'a' },
+  { "anonymous", no_argument, NULL, 'a' },
+  { "no-break", no_argument, NULL, 'n' },
+  { "one-file", no_argument, NULL, 'n' },
+  { "pattern", required_argument, NULL, 'p' },
+  { "localtime", no_argument, NULL, 'l' },
+  { "local", no_argument, NULL, 'l' },
+  { "stop-after-one", no_argument, NULL, '1' },
+  { 0, 0, 0, 0 }
 };
 
 int main( int argc, char** argv ) {
@@ -142,8 +142,8 @@ int main( int argc, char** argv ) {
 
   if ( !quiet ) {
     std::cout << argv[0] << " version " << FC_VERS_MAJOR
-            << "." << FC_VERS_MINOR << "." << FC_VERS_MICRO
-            << "; build " << GIT_BUILD << std::endl;
+        << "." << FC_VERS_MINOR << "." << FC_VERS_MICRO
+        << "; build " << GIT_BUILD << std::endl;
 
   }
 
@@ -240,10 +240,7 @@ int main( int argc, char** argv ) {
 
     std::unique_ptr<SignalSet>data( new BasicSignalSet( ) );
     if ( dolocaltime ) {
-      time_t reftime = std::time( nullptr );
-      tm * reftm = localtime( &reftime );
-      data.reset( new OffsetTimeSignalSet( data.release( ), reftm->tm_zone, reftm->tm_gmtoff * 1000 ) );
-      to->filenamer( ).timeoffset_ms( reftm->tm_gmtoff * 1000 );
+      data.reset( new TimezoneOffsetTimeSignalSet( data.release( ) ) );
     }
     if ( anonymize ) {
       data.reset( new AnonymizingSignalSet( data.release( ) ) );
@@ -252,8 +249,8 @@ int main( int argc, char** argv ) {
     std::string input( argv[i] );
     to->filenamer( ).inputfilename( input );
     std::cout << "converting " << input
-            << " from " << fromstr
-            << " to " << tostr << std::endl;
+        << " from " << fromstr
+        << " to " << tostr << std::endl;
 
     if ( from->prepare( input, data ) < 0 ) {
       std::cerr << "could not prepare file for reading" << std::endl;

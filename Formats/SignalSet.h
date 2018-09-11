@@ -15,7 +15,7 @@
 #define SIGNALSET_H
 
 #include "DataRow.h"
-#include "SignalDataIterator.h"
+//#include "SignalDataIterator.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -23,7 +23,7 @@
 #include <functional>
 
 class SignalData;
-class PartionedSignalData;
+//class PartionedSignalData;
 
 enum TimeCounter {
   VITAL, WAVE, EITHER
@@ -70,6 +70,7 @@ public:
   virtual const std::map<long, dr_time>& offsets( ) const = 0;
   virtual void addOffset( long seg, dr_time time ) = 0;
   virtual void clearOffsets( ) = 0;
+  virtual void complete() = 0;
 };
 
 #endif /* SIGNALSET_H */

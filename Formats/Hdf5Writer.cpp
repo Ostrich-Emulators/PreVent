@@ -25,7 +25,7 @@
 #include "SignalUtils.h"
 #include "FileNamer.h"
 #include "H5public.h"
-#include "OffsetTimeSignalSet.h"
+#include "TimezoneOffsetTimeSignalSet.h"
 
 const std::string Hdf5Writer::LAYOUT_VERSION = "4.0.0";
 
@@ -159,7 +159,7 @@ void Hdf5Writer::writeFileAttributes( H5::H5File file,
   for ( std::map<std::string, std::string>::const_iterator it = datasetattrs.begin( );
       it != datasetattrs.end( ); ++it ) {
     //std::cout << "writing file attr: " << it->first << ": " << it->second << std::endl;
-    if ( it->first == OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) {
+    if ( it->first == OffsetTimeSignalSet::COLLECTION_OFFSET ) {
       writeAttribute( file, it->first, std::stoi( it->second ) );
     }
     else {
@@ -543,13 +543,13 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
   //}
   writeAttribute( ds, SignalData::TIMEZONE, data->metadata( ).at( SignalData::TIMEZONE ) );
 
-  if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
-    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metadata( )
-        .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
+  if ( 0 != data->metadata( ).count( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
+    writeAttribute( ds, TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metadata( )
+        .at( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
   }
-  if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) ) {
-    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET, std::stoi( data->metadata( )
-        .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) ) );
+  if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
+    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET, std::stoi( data->metadata( )
+        .at( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) );
   }
 }
 
@@ -771,12 +771,12 @@ void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data
   writeAttribute( ds, "Columns", "timestamp (ms)" );
   writeAttribute( ds, SignalData::TIMEZONE, data->metas( ).at( SignalData::TIMEZONE ) );
   // writeAttribute( ds, SignalData::VALS_PER_DR, data.valuesPerDataRow( ) );
-  if ( 0 != data->metas( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
-    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metas( )
-        .at( OffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
+  if ( 0 != data->metas( ).count( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
+    writeAttribute( ds, TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metas( )
+        .at( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
   }
-  if ( 0 != data->metai( ).count( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) ) {
-    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET,
-        data->metai( ).at( OffsetTimeSignalSet::COLLECTION_TIMEZONE_OFFSET ) );
+  if ( 0 != data->metai( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
+    writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET,
+        data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
   }
 }
