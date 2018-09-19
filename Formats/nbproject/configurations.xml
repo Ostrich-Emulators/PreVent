@@ -298,11 +298,13 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
+          <stripSymbols>true</stripSymbols>
           <commandlineTool>h5c++</commandlineTool>
           <incDir>
             <pElem>../libtdms/include</pElem>
           </incDir>
           <commandLine>-Wno-deprecated `wfdb-config --cflags` -std=c++17</commandLine>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
