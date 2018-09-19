@@ -189,7 +189,7 @@ void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
   ds.close( );
 
   if ( iswave ) {
-    fillWave( signal, dataset, times, timeinterval, scale );
+    fillWave( signal, dataset, times, valsPerChunk, scale );
   }
   else {
     fillVital( signal, dataset, times, timeinterval, valsPerChunk, scale );
@@ -259,7 +259,6 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
     dataset.read( read, dataset.getDataType( ) );
     for ( size_t row = 0; row < ROWS; row++ ) {
 
-
       int val = read[row][0];
       std::string valstr;
 
@@ -294,15 +293,13 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
 
 void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
     const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
-  return;
-
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
   dataspace.getSimpleExtentDims( DIMS );
 
   const hsize_t ROWS = DIMS[0];
   const hsize_t COLS = DIMS[1];
-  const hsize_t MAXSLABROWS = 4096 * 32;
+  const hsize_t MAXSLABROWS = 128 * 1024;
   hsize_t slabrows = ( MAXSLABROWS > ROWS ? ROWS : MAXSLABROWS );
 
   hsize_t offset[] = { 0, 0 };
@@ -314,6 +311,7 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
 
   short rere[slabrows][COLS] = { };
   int timecounter = 0;
+  int powscale = std::pow( 10, scale );
   while ( offset[0] < ROWS ) {
     dataspace.selectHyperslab( H5S_SELECT_SET, count, offset );
     H5::DataSpace memspace( 2, count );
@@ -324,10 +322,28 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
       if ( !values.empty( ) ) {
         values.append( "," );
       }
-      values.append( std::to_string( rere[row][0] / scale ) );
+
+      short val = rere[row][0];
+      std::string valstr;
+      if ( 0 != scale ) {
+        valstr = std::to_string( (double) val / powscale );
+        // remove any trailing 0s from the string
+        while ( '0' == valstr[valstr.size( ) - 1] ) {
+          valstr.erase( valstr.size( ) - 1, 1 );
+        }
+        // make sure we don't end in a .
+        if ( '.' == valstr[valstr.size( ) - 1] ) {
+          valstr.erase( valstr.size( ) - 1 );
+        }
+      }
+      else {
+        valstr = std::to_string( val );
+      }
+
+      values.append( valstr );
 
       valcnt++;
-      if ( valsPerTime == valcnt ) {
+      if ( valsPerTime == valcnt || count[0] < slabrows ) {
         DataRow drow( times[timecounter++], values );
         signal->add( drow );
         values.clear( );
@@ -365,6 +381,7 @@ void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
           break;
         case H5T_FLOAT:
         {
+
           double dbl = 0;
           attr.read( type, &dbl );
           signal->setMeta( key, dbl );
@@ -382,6 +399,7 @@ void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
 int Hdf5Reader::metaint( const H5::H5Location& loc, const std::string & attrname ) const {
   int val;
   if ( loc.attrExists( attrname ) ) {
+
     H5::Attribute attr = loc.openAttribute( attrname );
     attr.read( attr.getDataType( ), &val );
   }
@@ -390,6 +408,7 @@ int Hdf5Reader::metaint( const H5::H5Location& loc, const std::string & attrname
 }
 
 std::string Hdf5Reader::metastr( const H5::H5Location& loc, const std::string & attrname ) const {
+
   return metastr( loc.openAttribute( attrname ) );
 }
 

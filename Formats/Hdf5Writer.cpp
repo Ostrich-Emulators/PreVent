@@ -327,9 +327,7 @@ void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data 
 
 
   const size_t rows = data->size( );
-  const hsize_t maxslabcnt = ( rows * data->readingsPerSample( ) > 125000
-      ? 125000
-      : rows * data->readingsPerSample( ) );
+  const hsize_t maxslabcnt = ( rows * valsperrow > 125000 ? 125000 : rows * valsperrow );
   hsize_t offset[] = { 0, 0 };
   hsize_t count[] = { 0, 1 };
 

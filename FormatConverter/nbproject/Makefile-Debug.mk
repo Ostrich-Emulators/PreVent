@@ -43,8 +43,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-Wno-deprecated -O0 -pg -g -DGIT_BUILD=\"`git rev-parse HEAD| cut -c-8`\" -std=c++17
-CXXFLAGS=-Wno-deprecated -O0 -pg -g -DGIT_BUILD=\"`git rev-parse HEAD| cut -c-8`\" -std=c++17
+CCFLAGS=-Wno-deprecated -pg -O0 -std=c++17
+CXXFLAGS=-Wno-deprecated -pg -O0 -std=c++17
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -72,12 +72,12 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/formatconverter: ${OBJECTFILES}
 ${OBJECTDIR}/Db.o: Db.cpp nbproject/Makefile-${CND_CONF}.mk
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I../Formats `pkg-config --cflags sqlite3` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Db.o Db.cpp
+	$(COMPILE.cc) -g -Wall -I../Formats `pkg-config --cflags sqlite3`  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/Db.o Db.cpp
 
 ${OBJECTDIR}/main.o: main.cpp nbproject/Makefile-${CND_CONF}.mk
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I../Formats `pkg-config --cflags sqlite3` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -g -Wall -I../Formats `pkg-config --cflags sqlite3`  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/main.o main.cpp
 
 # Subprojects
 .build-subprojects:

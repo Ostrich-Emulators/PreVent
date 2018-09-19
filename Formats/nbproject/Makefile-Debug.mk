@@ -60,6 +60,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/StpXmlReader.o \
 	${OBJECTDIR}/StreamChunkReader.o \
 	${OBJECTDIR}/TdmsReader.o \
+	${OBJECTDIR}/TimezoneOffsetTimeSignalSet.o \
 	${OBJECTDIR}/WfdbReader.o \
 	${OBJECTDIR}/WfdbWriter.o \
 	${OBJECTDIR}/Writer.o \
@@ -221,6 +222,11 @@ ${OBJECTDIR}/TdmsReader.o: TdmsReader.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -s -I../libtdms/include `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsReader.o TdmsReader.cpp
+
+${OBJECTDIR}/TimezoneOffsetTimeSignalSet.o: TimezoneOffsetTimeSignalSet.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -s -I../libtdms/include `pkg-config --cflags zlib` `pkg-config --cflags matio` `pkg-config --cflags expat`   -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TimezoneOffsetTimeSignalSet.o TimezoneOffsetTimeSignalSet.cpp
 
 ${OBJECTDIR}/WfdbReader.o: WfdbReader.cpp
 	${MKDIR} -p ${OBJECTDIR}
