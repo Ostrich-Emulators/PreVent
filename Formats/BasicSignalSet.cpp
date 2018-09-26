@@ -7,7 +7,6 @@
 #include "BasicSignalSet.h"
 #include "BasicSignalData.h"
 #include "SignalUtils.h"
-#include "DurationSpecification.h"
 
 #include <limits>
 #include <iostream>

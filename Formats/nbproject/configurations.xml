@@ -38,7 +38,6 @@
       <itemPath>Base64.h</itemPath>
       <itemPath>ConversionListener.h</itemPath>
       <itemPath>DataRow.h</itemPath>
-      <itemPath>DurationSpecification.h</itemPath>
       <itemPath>FileNamer.h</itemPath>
       <itemPath>Formats.h</itemPath>
       <itemPath>Reader.h</itemPath>
@@ -86,7 +85,6 @@
       </logicalFolder>
       <itemPath>Base64.cpp</itemPath>
       <itemPath>DataRow.cpp</itemPath>
-      <itemPath>DurationSpecification.cpp</itemPath>
       <itemPath>FileNamer.cpp</itemPath>
       <itemPath>Formats.cpp</itemPath>
       <itemPath>Reader.cpp</itemPath>
@@ -180,10 +178,6 @@
       <item path="DataRow.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="DataRow.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="DurationSpecification.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="DurationSpecification.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="FileNamer.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -366,10 +360,6 @@
       <item path="DataRow.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="DataRow.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="DurationSpecification.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="DurationSpecification.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="FileNamer.cpp" ex="false" tool="1" flavor2="0">
       </item>

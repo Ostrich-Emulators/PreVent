@@ -31,18 +31,18 @@
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
-          << "Syntax: " << progname << "[options] <input hdf5>"
-          << std::endl << "\toptions:"
-          << std::endl << "\t-m or --mrn <mrn>\tsets MRN in file"
-          << std::endl << "\t-n or --name <patient name>\tsets name in file"
-          << std::endl << "\t-o or --output <output file>"
-          << std::endl << "\t-a or --attr <key=value>\tsets the given attribute to the value"
-          << std::endl << "\t-C or --clobber\toverwrite input file"
-          << std::endl << "\t-c or --cat\tconcatenate files from command line, used with --output"
-          << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
-          << std::endl << "\t-e or --end <time>\tstop output immediately before this UTC time (many time formats supported)"
-          << std::endl << "\t-f or --for <s>\toutput this many seconds of data from the start of file (or --start)"
-          << std::endl;
+      << "Syntax: " << progname << "[options] <input hdf5>"
+      << std::endl << "\toptions:"
+      << std::endl << "\t-m or --mrn <mrn>\tsets MRN in file"
+      << std::endl << "\t-n or --name <patient name>\tsets name in file"
+      << std::endl << "\t-o or --output <output file>"
+      << std::endl << "\t-a or --attr <key=value>\tsets the given attribute to the value"
+      << std::endl << "\t-C or --clobber\toverwrite input file"
+      << std::endl << "\t-c or --cat\tconcatenate files from command line, used with --output"
+      << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
+      << std::endl << "\t-e or --end <time>\tstop output immediately before this UTC time (many time formats supported)"
+      << std::endl << "\t-f or --for <s>\toutput this many seconds of data from the start of file (or --start)"
+      << std::endl;
   exit( 1 );
 }
 
@@ -60,13 +60,13 @@ struct option longopts[] = {
 };
 
 void cloneFile( std::unique_ptr<H5::H5File>&infile,
-        std::unique_ptr<H5::H5File>& outfile ) {
+    std::unique_ptr<H5::H5File>& outfile ) {
   hid_t ocpypl_id = H5Pcreate( H5P_OBJECT_COPY );
   for ( hsize_t i = 0; i < infile->getNumObjs( ); i++ ) {
     std::string name = infile->getObjnameByIdx( i );
     H5Ocopy( infile->getId( ), name.c_str( ),
-            outfile->getId( ), name.c_str( ),
-            ocpypl_id, H5P_DEFAULT );
+        outfile->getId( ), name.c_str( ),
+        ocpypl_id, H5P_DEFAULT );
   }
 
   for ( hsize_t i = 0; i < infile->getNumAttrs( ); i++ ) {
@@ -177,12 +177,11 @@ int main( int argc, char** argv ) {
     helpAndExit( argv[0], "no file specified" );
   }
 
-
-  DurationSpecification spec = DurationSpecification::all( );
   if ( dotime ) {
-    spec = ( for_s > 0
-            ? DurationSpecification::for_s( starttime, for_s )
-            : DurationSpecification( starttime, endtime ) );
+    std::cout << "FIXME: duration doesn't work" << std::endl;
+    // spec = ( for_s > 0
+    //      ? DurationSpecification::for_s( starttime, for_s )
+    //   : DurationSpecification( starttime, endtime ) );
   }
 
   if ( catfiles ) {

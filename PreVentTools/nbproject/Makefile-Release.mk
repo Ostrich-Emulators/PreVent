@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/ClippingSignalSet.o \
 	${OBJECTDIR}/H5Cat.o \
 	${OBJECTDIR}/TimeParser.o \
 	${OBJECTDIR}/main.o
@@ -71,6 +72,11 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: ../libtdms/dist/Debug/G
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/preventtools ${OBJECTFILES} ${LDLIBSOPTIONS}
+
+${OBJECTDIR}/ClippingSignalSet.o: ClippingSignalSet.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -I../Formats `pkg-config --cflags zlib` -std=c++14  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ClippingSignalSet.o ClippingSignalSet.cpp
 
 ${OBJECTDIR}/H5Cat.o: H5Cat.cpp
 	${MKDIR} -p ${OBJECTDIR}

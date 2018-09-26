@@ -18,16 +18,15 @@
 #include "H5Cat.h"
 #include "Hdf5Reader.h"
 #include "Hdf5Writer.h"
-#include "SignalData.h"
-#include "SignalSet.h"
+#include "BasicSignalData.h"
+#include "BasicSignalSet.h"
 #include "NullReader.h"
 #include "FileNamer.h"
-#include "DurationSpecification.h"
 
-H5Cat::H5Cat( const std::string& outfile ) : output( outfile ), spec( nullptr ) {
+H5Cat::H5Cat( const std::string& outfile ) : output( outfile ) {
 }
 
-H5Cat::H5Cat( const H5Cat& orig ) : output( orig.output ), spec( nullptr ) {
+H5Cat::H5Cat( const H5Cat& orig ) : output( orig.output ) {
 }
 
 H5Cat::~H5Cat( ) {
@@ -38,14 +37,10 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
   // it's a lot easier to store these things as SignalData objects
   // even though that will write extra temp files
   Hdf5Reader rdr;
-  SignalSet alldata;
-  alldata.setFileSupport( true );
-  if ( spec ) {
-    alldata.validDuration( *spec );
-  }
+  BasicSignalSet alldata;
   for ( const auto& file : filesToCat ) {
     std::cout << "  " << file << std::endl;
-    SignalSet junk;
+    BasicSignalSet junk;
     rdr.prepare( file, junk );
     rdr.fill( alldata );
     rdr.finish( );
@@ -66,10 +61,6 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
 }
 
 void H5Cat::cat( const std::string& outfile,
-      std::vector<std::string>& filesToCat ) {
+    std::vector<std::string>& filesToCat ) {
   H5Cat( outfile ).cat( filesToCat );
-}
-
-void H5Cat::duration( const DurationSpecification& newspec ) {
-  spec.reset( new DurationSpecification( newspec ) );
 }
