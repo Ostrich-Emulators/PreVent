@@ -265,7 +265,7 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
 
       H5::DataSpace memspace( 2, count );
       if ( useInts ) {
-        ds.write( &sbuffer[0], H5::PredType::STD_I32LE, memspace, space );
+        ds.write( &ibuffer[0], H5::PredType::STD_I32LE, memspace, space );
         ibuffer.clear( );
         ibuffer.reserve( maxslabcnt * ( exc + 1 ) );
       }
