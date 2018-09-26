@@ -33,7 +33,7 @@ public:
   virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
   virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) override;
 
-  bool timeok( const dr_time& time ) const;
+  bool timeok( const dr_time& time );
 
 private:
   void init( dr_time * starttime, dr_time * endtime );
@@ -44,7 +44,7 @@ private:
   bool checkstart;
   bool checkend;
 
-  dr_time duration;
+  dr_time duration_ms;
   bool seenfirsttime;
   bool checkduration;
 };

@@ -27,7 +27,6 @@
 #include "H5Cat.h"
 #include "dr_time.h"
 #include "TimeParser.h"
-#include "DurationSpecification.h"
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
@@ -117,6 +116,7 @@ int main( int argc, char** argv ) {
   bool catfiles = false;
   std::vector<std::string> filesToCat;
   bool dotime = false;
+  bool havestarttime = false;
   dr_time starttime = 0;
   dr_time endtime = std::numeric_limits<dr_time>::max( );
   int for_s = -1;
@@ -153,6 +153,7 @@ int main( int argc, char** argv ) {
         break;
       case 's':
         starttime = TimeParser::parse( optarg );
+        havestarttime = true;
         dotime = true;
         break;
       case 'e':
@@ -177,13 +178,6 @@ int main( int argc, char** argv ) {
     helpAndExit( argv[0], "no file specified" );
   }
 
-  if ( dotime ) {
-    std::cout << "FIXME: duration doesn't work" << std::endl;
-    // spec = ( for_s > 0
-    //      ? DurationSpecification::for_s( starttime, for_s )
-    //   : DurationSpecification( starttime, endtime ) );
-  }
-
   if ( catfiles ) {
     if ( outfilename.empty( ) ) {
       helpAndExit( argv[0], "please specify an output filename with --output" );
@@ -204,9 +198,19 @@ int main( int argc, char** argv ) {
       exit( 1 );
     }
 
+    if ( dotime && filesToCat.size( ) > 1 && !havestarttime ) {
+      std::cerr << "must provide a start time when concatenating multiple files" << std::endl;
+      exit( 1 );
+    }
+
     H5Cat catter( outfilename );
     if ( dotime ) {
-      catter.duration( spec );
+      if ( for_s > 0 ) {
+        catter.setDuration( for_s * 1000, ( havestarttime ? &starttime : nullptr ) );
+      }
+      else {
+        catter.setClipping( starttime, endtime );
+      }
     }
     catter.cat( filesToCat );
   }

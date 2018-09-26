@@ -17,6 +17,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include "dr_time.h"
 
 namespace H5 {
   class H5File;
@@ -28,10 +29,21 @@ public:
   H5Cat( const H5Cat& orig );
   virtual ~H5Cat( );
 
+  void setDuration( const dr_time& duration_ms, dr_time * start = nullptr );
+  void setClipping( const dr_time& start, const dr_time& end );
+
   void cat( std::vector<std::string>& filesToCat );
   static void cat( const std::string& outfile, std::vector<std::string>& filesToCat );
 private:
   const std::string output;
+
+  bool doduration;
+  dr_time duration_ms;
+  bool havestart;
+
+  bool doclip;
+  dr_time start;
+  dr_time end;
 };
 
 #endif /* H5CAT_H */
