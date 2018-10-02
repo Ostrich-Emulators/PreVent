@@ -35,6 +35,7 @@ dr_time TdmsReader::parsetime( const std::string& timestr ) {
 }
 
 int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
+  output( ) << "warning: TDMS reader cannot split dataset by day (...yet)" << std::endl;
   int rslt = Reader::prepare( recordset, info );
   if ( 0 != rslt ) {
     return rslt;
@@ -60,9 +61,8 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
 
     unsigned int channelsCount = group->getGroupSize( );
     for ( unsigned int j = 0; j < channelsCount; j++ ) {
-      TdmsChannel *ch = group->getChannel( j );
+      TdmsChannel * ch = group->getChannel( j );
       if ( ch ) {
-
         unsigned int dataCount = ch->getDataCount( );
         unsigned int stringCount = ch->getStringCount( );
         // unsigned int dataSize = ( dataCount > 0 ) ? dataCount : stringCount;
@@ -91,7 +91,7 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
           }
 
           for ( auto& p : propmap ) {
-            // output( ) << p.first << " => " << p.second << std::endl;
+            //output( ) << p.first << " => " << p.second << std::endl;
 
             if ( "Unit_String" == p.first ) {
               signal->setUom( p.second );
@@ -122,9 +122,12 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
                       "The sampling values have been doubled to correct non-integer sample rate" );
                 }
               }
+              else { // vital sign, so one data point per reading
+                freq = 1;
+              }
             }
             else {
-              signal->setMeta(p.first, p.second );
+              signal->setMeta( p.first, p.second );
             }
           }
 
@@ -213,7 +216,13 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
                   vals << std::setprecision( 3 ) << std::fixed;
                 }
 
-                vals << doubles[0];
+                if ( SignalData::MISSING_VALUE == doubles[0] ) {
+                  vals << SignalData::MISSING_VALUESTR;
+                }
+                else {
+                  vals << doubles[0];
+                }
+
                 for ( int i = 1; i < cnt; i++ ) {
                   vals << ",";
                   if ( SignalData::MISSING_VALUE == doubles[i] ) {
@@ -223,7 +232,7 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
                     vals << doubles[i];
                   }
                 }
-                for ( ; cnt < freq; cnt++ ) {
+                for (; cnt < freq; cnt++ ) {
                   vals << "," << SignalData::MISSING_VALUESTR;
                 }
 
@@ -234,6 +243,8 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
             }
             else {
               // vitals are much easier...
+              signal->setChunkIntervalAndSampleRate( timeinc, freq );
+
               for ( auto& d : data ) {
                 if ( !isnan( d ) ) {
                   // check if our number ends in .000000...
@@ -292,7 +303,13 @@ bool TdmsReader::writeWaveChunkAndReset( int& count, int& nancount, std::vector<
       vals << std::setprecision( 3 ) << std::fixed;
     }
 
-    vals << doubles[0];
+    if ( SignalData::MISSING_VALUE == doubles[0] ) {
+      vals << SignalData::MISSING_VALUESTR;
+    }
+    else {
+      vals << doubles[0];
+    }
+
     for ( int i = 1; i < count; i++ ) {
       vals << ",";
       if ( SignalData::MISSING_VALUE == doubles[i] ) {

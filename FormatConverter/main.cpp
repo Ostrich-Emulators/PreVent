@@ -151,7 +151,8 @@ int main( int argc, char** argv ) {
     helpAndExit( argv[0], "no file specified" );
   }
 
-  if ( "-" == argv[optind] ) {
+  const std::string argument( argv[optind] );
+  if ( "-" == argument ) {
     fromstr = "zl";
   }
 
@@ -167,6 +168,12 @@ int main( int argc, char** argv ) {
       case MAT5:
         fromstr = "mat5";
         break;
+      case MAT4:
+        fromstr = "mat4";
+        break;
+      case MAT73:
+        fromstr = "mat73";
+        break;
       case STPXML:
         fromstr = "stpxml";
         break;
@@ -178,6 +185,15 @@ int main( int argc, char** argv ) {
         break;
       case TDMS:
         fromstr = "tdms";
+        break;
+      case CSV:
+        fromstr = "csv";
+        break;
+      case CPCXML:
+        fromstr = "cpcxml";
+        break;
+      case UNRECOGNIZED:
+        fromstr = "";
         break;
     }
   }

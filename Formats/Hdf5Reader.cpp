@@ -309,22 +309,37 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
   std::string values;
   int valcnt = 0;
 
-  short rere[slabrows][COLS] = { };
+  std::vector<short> shortbuff;
+  std::vector<int> intbuff;
+
+  bool doints = ( H5::PredType::STD_I32LE == dataset.getDataType( ) );
+  if ( doints ) {
+    intbuff.reserve( slabrows );
+  }
+  else {
+    shortbuff.reserve( slabrows );
+  }
+
   int timecounter = 0;
   int powscale = std::pow( 10, scale );
   while ( offset[0] < ROWS ) {
     dataspace.selectHyperslab( H5S_SELECT_SET, count, offset );
     H5::DataSpace memspace( 2, count );
     memspace.selectHyperslab( H5S_SELECT_SET, count, offset0 );
-    dataset.read( rere, dataset.getDataType( ), memspace, dataspace );
+    if ( doints ) {
+      dataset.read( &intbuff[0], dataset.getDataType( ), memspace, dataspace );
+    }
+    else {
+      dataset.read( &shortbuff[0], dataset.getDataType( ), memspace, dataspace );
+    }
 
     for ( size_t row = 0; row < count[0]; row++ ) {
       if ( !values.empty( ) ) {
         values.append( "," );
       }
 
-      short val = rere[row][0];
       std::string valstr;
+      int val = ( doints ? intbuff[row] : shortbuff[row] );
       if ( 0 != scale ) {
         valstr = std::to_string( (double) val / powscale );
         // remove any trailing 0s from the string
@@ -335,9 +350,26 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
         if ( '.' == valstr[valstr.size( ) - 1] ) {
           valstr.erase( valstr.size( ) - 1 );
         }
+        else {
+          valstr = std::to_string( val );
+        }
       }
       else {
-        valstr = std::to_string( val );
+        short val = shortbuff[row];
+        if ( 0 != scale ) {
+          valstr = std::to_string( (double) val / powscale );
+          // remove any trailing 0s from the string
+          while ( '0' == valstr[valstr.size( ) - 1] ) {
+            valstr.erase( valstr.size( ) - 1, 1 );
+          }
+          // make sure we don't end in a .
+          if ( '.' == valstr[valstr.size( ) - 1] ) {
+            valstr.erase( valstr.size( ) - 1 );
+          }
+        }
+        else {
+          valstr = std::to_string( val );
+        }
       }
 
       values.append( valstr );

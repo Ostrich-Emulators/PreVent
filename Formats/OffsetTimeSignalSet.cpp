@@ -62,3 +62,8 @@ void OffsetTimeSignalSet::reset( bool signalDataOnly ) {
   SignalSetWrapper::reset( signalDataOnly );
   offset( offset_ms );
 }
+
+void OffsetTimeSignalSet::complete(){
+  SignalSetWrapper::complete();
+  offset( offset_ms );
+}

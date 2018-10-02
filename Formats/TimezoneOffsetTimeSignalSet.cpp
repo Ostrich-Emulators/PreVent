@@ -26,7 +26,7 @@ TimezoneOffsetTimeSignalSet::~TimezoneOffsetTimeSignalSet( ) {
 }
 
 void TimezoneOffsetTimeSignalSet::reset( bool signalDataOnly ) {
-  SignalSetWrapper::reset( signalDataOnly );
+  OffsetTimeSignalSet::reset( signalDataOnly );
 
   // now reset all signals' offsets
   for ( auto& v : vitals( ) ) {

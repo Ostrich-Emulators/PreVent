@@ -24,7 +24,8 @@
 #include "FileNamer.h"
 #include "ClippingSignalSet.h"
 
-H5Cat::H5Cat( const std::string& outfile ) : output( outfile ) {
+H5Cat::H5Cat( const std::string& outfile ) : output( outfile ), doduration( false ),
+    havestart(false), doclip( false ), duration_ms( 0 ), start(0 ), end( 0 ) {
 }
 
 H5Cat::H5Cat( const H5Cat& orig ) : output( orig.output ), doduration( orig.doduration ), havestart( orig.havestart ),

@@ -28,6 +28,7 @@ public:
   virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
   virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) override;
   virtual void reset( bool signalDataOnly = false ) override;
+  virtual void complete() override;
 
 protected:
   void offset( long offset_ms );
