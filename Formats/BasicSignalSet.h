@@ -65,7 +65,7 @@ public:
   virtual void setMeta( const std::string& key, const std::string& val );
   virtual void clearMetas( );
 
-  virtual void complete() override;
+  virtual void complete( ) override;
 
 protected:
   /**

@@ -98,6 +98,18 @@ public:
   virtual std::vector<std::string> extras( ) const = 0;
 
   virtual void extras( const std::string& ext ) = 0;
+
+  /**
+   * Creates an "event" data point at the given time. This is intended to
+   * give us a place to store non-invasive blood pressures, which are performed
+   * manually at arbitrary intervals
+   * @param eventtype what event we're marking (this will be the dataset name)
+   * @param time when the event happened
+   *
+   */
+  virtual void recordEvent( const std::string& eventtype, const dr_time& time ) = 0;
+  virtual std::vector<std::string> eventtypes( ) = 0;
+  virtual std::vector<dr_time> events( const std::string& eventtype ) = 0;
 };
 
 #endif /* SIGNALDATA_H */

@@ -149,3 +149,15 @@ double SignalDataWrapper::highwater( ) const {
 double SignalDataWrapper::lowwater( ) const {
   return signal->lowwater( );
 }
+
+void SignalDataWrapper::recordEvent( const std::string& eventtype, const dr_time& time ) {
+  signal->recordEvent( eventtype, time );
+}
+
+std::vector<std::string> SignalDataWrapper::eventtypes( ) {
+  return signal->eventtypes( );
+}
+
+std::vector<dr_time> SignalDataWrapper::events( const std::string& type ) {
+  return signal->events( type );
+}

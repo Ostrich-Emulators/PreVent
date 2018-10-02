@@ -73,6 +73,10 @@ public:
   virtual std::vector<std::string> extras( ) const override;
   virtual void extras( const std::string& ext ) override;
 
+  virtual void recordEvent( const std::string& eventtype, const dr_time& time ) override;
+  virtual std::vector<std::string> eventtypes( ) override;
+  virtual std::vector<dr_time> events( const std::string& eventtype ) override;
+
 private:
   SignalData * signal;
   bool iOwnThisPtr;

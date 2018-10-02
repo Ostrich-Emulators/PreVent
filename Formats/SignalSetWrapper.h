@@ -54,8 +54,8 @@ public:
   virtual dr_time earliest( const TimeCounter& tc = EITHER ) const override;
   virtual dr_time latest( const TimeCounter& tc = EITHER ) const override;
   virtual const std::map<std::string, std::string>& metadata( ) const override;
-  
-  
+
+
   virtual const std::map<long, dr_time>& offsets( ) const override;
   virtual void addOffset( long seg, dr_time time ) override;
   virtual void clearOffsets( ) override;
@@ -65,7 +65,8 @@ public:
 
   virtual void setMetadataFrom( const SignalSet& target ) override;
 
-  virtual void complete() override;
+  virtual void complete( ) override;
+
 private:
   SignalSet * set;
   bool iOwnThisPointer;

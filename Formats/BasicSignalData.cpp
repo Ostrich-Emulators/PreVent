@@ -35,13 +35,13 @@ lowval( std::numeric_limits<double>::max( ) ) {
 
   setMeta( SignalData::MSM, SignalData::MISSING_VALUE );
   setMeta( SignalData::TIMEZONE, "UTC" );
-  setMeta ("Note on Scale", "To get from a scaled value back to the real value, divide by 10^<scale>" );  
+  setMeta( "Note on Scale", "To get from a scaled value back to the real value, divide by 10^<scale>" );
 }
 
 BasicSignalData::~BasicSignalData( ) {
   data.clear( );
   if ( nullptr != file ) {
-    std::fclose( file );    
+    std::fclose( file );
   }
 }
 
@@ -126,8 +126,8 @@ double BasicSignalData::lowwater( ) const {
 void BasicSignalData::cache( ) {
   std::stringstream ss;
 
-  if( nullptr == file ){
-    file = tmpfile();
+  if ( nullptr == file ) {
+    file = tmpfile( );
   }
 
   while ( !data.empty( ) ) {
@@ -293,7 +293,7 @@ void BasicSignalData::erases( const std::string& key ) {
   if ( "" == key ) {
     metadatas.clear( );
   }
-  else{
+  else {
     metadatas.erase( key );
   }
 }
@@ -302,7 +302,7 @@ void BasicSignalData::erasei( const std::string& key ) {
   if ( "" == key ) {
     metadatai.clear( );
   }
-  else{
+  else {
     metadatai.erase( key );
   }
 }
@@ -311,7 +311,7 @@ void BasicSignalData::erased( const std::string& key ) {
   if ( "" == key ) {
     metadatad.clear( );
   }
-  else{
+  else {
     metadatad.erase( key );
   }
 }
@@ -327,3 +327,21 @@ const std::map<std::string, int>& BasicSignalData::metai( ) const {
 const std::map<std::string, double>& BasicSignalData::metad( ) const {
   return metadatad;
 }
+
+void BasicSignalData::recordEvent( const std::string& eventtype, const dr_time& time ) {
+}
+
+std::vector<std::string> BasicSignalData::eventtypes( ) {
+  std::vector<std::string> keys;
+  for ( auto& x : namedevents ) {
+    keys.push_back( x.first );
+  }
+  return keys;
+}
+
+std::vector<dr_time> BasicSignalData::events( const std::string& type ) {
+  return ( 0 == namedevents.count( type )
+      ? std::vector<dr_time>( )
+      : namedevents.at( type ) );
+}
+
