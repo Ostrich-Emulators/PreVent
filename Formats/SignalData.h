@@ -102,7 +102,8 @@ public:
   /**
    * Creates an "event" data point at the given time. This is intended to
    * give us a place to store non-invasive blood pressures, which are performed
-   * manually at arbitrary intervals
+   * manually at arbitrary intervals. Consecutive events with the same time
+   * will be ignored
    * @param eventtype what event we're marking (this will be the dataset name)
    * @param time when the event happened
    *

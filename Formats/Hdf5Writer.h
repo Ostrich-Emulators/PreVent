@@ -58,10 +58,12 @@ private:
   void writeWave( H5::Group& group, std::unique_ptr<SignalData>& data );
   void writeWaveGroup( H5::Group& group, std::unique_ptr<SignalData>& data );
   void writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data );
+  void writeEvents( H5::Group& group, std::unique_ptr<SignalData>& data );
   void writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data );
   static void autochunk( hsize_t* dims, int rank, int bytesperdim, hsize_t* rslts );
   void createEventsAndTimes( H5::H5File, const std::unique_ptr<SignalSet>& data );
   static std::string getDatasetName( const std::unique_ptr<SignalData>& data );
+  static std::string getDatasetName( const std::string& oldname );
 
   /**
    * Rescale the data to fit in shorts

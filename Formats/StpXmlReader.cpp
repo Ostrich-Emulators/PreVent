@@ -34,23 +34,24 @@ const int StpXmlReader::INWAVE = 4;
 const int StpXmlReader::INNAME = 8;
 
 
- time_t prevtime;
-  time_t currvstime;
-  time_t lastvstime;
-  time_t currwavetime;
-  time_t lastwavetime;
-  long currsegidx;
-  bool warnMissingName;
-  bool warnJunkData;
-  bool v8;
-  bool isphilips;
-  bool isix;
-  bool warnedix;
-StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ),  prevtime( 0 ), 
-      currvstime( 0 ), lastvstime( 0 ), currwavetime( 0 ), lastwavetime( 0 ),
-      currsegidx( 0 ), warnMissingName( true ), warnJunkData( true ),
-      v8( false ), isphilips( false ), isix( false ), warnedix( false ),
-      state( INDETERMINATE ) {
+time_t prevtime;
+time_t currvstime;
+time_t lastvstime;
+time_t currwavetime;
+time_t lastwavetime;
+long currsegidx;
+bool warnMissingName;
+bool warnJunkData;
+bool v8;
+bool isphilips;
+bool isix;
+bool warnedix;
+
+StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ), prevtime( 0 ),
+currvstime( 0 ), lastvstime( 0 ), currwavetime( 0 ), lastwavetime( 0 ),
+recordtime( 0 ), currsegidx( 0 ), warnMissingName( true ), warnJunkData( true ),
+v8( false ), isphilips( false ), isix( false ), warnedix( false ),
+state( INDETERMINATE ) {
 }
 
 StpXmlReader::StpXmlReader( const StpXmlReader& orig ) : XmlReaderBase( orig ) {
@@ -198,6 +199,9 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
     else if ( "Value" == element ) {
       value = text;
     }
+    else if ( "TimeUTC" == element ) {
+      recordtime = time( text );
+    }
     else if ( "VS" == element || "VitalSign" == element ) {
       bool added = false;
 
@@ -231,6 +235,10 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
 
           DataRow row( currvstime, value, "", "", attrs );
           sig->add( row );
+          if ( !( 0 == recordtime || recordtime == currvstime ) ) {
+            sig->recordEvent( "collection discrepancy", recordtime );
+          }
+          recordtime = 0;
         }
         catch ( std::invalid_argument ) {
           // don't really care since we're not adding the data to our dataset
@@ -285,10 +293,10 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
             }
             else {
               // Stp always reads in 1024ms increments for Philips, 2s for GE monitors
-              if( isphilips ){
+              if ( isphilips ) {
                 sig->setChunkIntervalAndSampleRate( isix ? 1024 : 1000, hz );
               }
-              else{
+              else {
                 sig->setChunkIntervalAndSampleRate( 2000, 2 * hz );
               }
             }

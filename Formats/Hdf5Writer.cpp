@@ -127,7 +127,11 @@ void Hdf5Writer::writeAttributes( H5::H5Location& ds, const std::unique_ptr<Sign
 }
 
 std::string Hdf5Writer::getDatasetName( const std::unique_ptr<SignalData>& data ) {
-  std::string name( data->name( ) );
+  return getDatasetName( data->name( ) );
+}
+
+std::string Hdf5Writer::getDatasetName( const std::string& oldname ) {
+  std::string name( oldname );
   std::map<std::string, std::string> replacements;
   replacements["%"] = "pct";
   replacements["("] = "_";
@@ -441,7 +445,7 @@ void Hdf5Writer::autochunk( hsize_t* dims, int rank, int bytesperelement, hsize_
     LIMITS[NORMAL_MAX_SIZE_LIMIT] = MB;
 
 
-    hsize_t chunksize;
+    hsize_t chunksize = 0;
     for ( auto x : LIMITS ) {
       if ( datasetsize <= x.first ) {
         chunksize = x.second;
@@ -632,7 +636,7 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   }
 
   data.release( );
-  
+
   return ret;
 }
 
@@ -656,6 +660,7 @@ void Hdf5Writer::writeVitalGroup( H5::Group& group, std::unique_ptr<SignalData>&
   writeGroupAttrs( group, data );
   writeTimes( group, data );
   writeVital( group, data );
+  writeEvents( group, data );
 }
 
 bool Hdf5Writer::rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data,
@@ -740,6 +745,7 @@ void Hdf5Writer::writeWaveGroup( H5::Group& group, std::unique_ptr<SignalData>& 
 
   writeTimes( group, data );
   writeWave( group, data );
+  writeEvents( group, data );
   writeGroupAttrs( group, data );
 
   auto en = std::chrono::high_resolution_clock::now( );
@@ -749,6 +755,7 @@ void Hdf5Writer::writeWaveGroup( H5::Group& group, std::unique_ptr<SignalData>& 
 
 void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data ) {
   std::deque<dr_time> vec = data->times( );
+  // SignalData stores times from latest to earliest, so we need to reverse them
   std::vector<dr_time> times( vec.rbegin( ), vec.rend( ) );
 
   hsize_t dims[] = { times.size( ), 1 };
@@ -776,5 +783,47 @@ void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data
   if ( 0 != data->metai( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
     writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET,
         data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
+  }
+}
+
+void Hdf5Writer::writeEvents( H5::Group& group, std::unique_ptr<SignalData>& data ) {
+  std::vector<std::string> types = data->eventtypes( );
+  if ( types.empty( ) ) {
+    return;
+  }
+
+  H5::Group eventgroup = group.createGroup( "events" );
+
+  for ( auto& type : types ) {
+    auto times = data->events( type );
+
+    hsize_t dims[] = { times.size( ), 1 };
+    H5::DataSpace space( 2, dims );
+
+    H5::DSetCreatPropList props;
+    if ( compression( ) > 0 ) {
+      hsize_t chunkdims[] = { 0, 0 };
+      autochunk( dims, 2, sizeof (long ), chunkdims );
+      props.setChunk( 2, chunkdims );
+      props.setShuffle( );
+      props.setDeflate( compression( ) );
+    }
+
+    H5::DataSet ds = eventgroup.createDataSet( getDatasetName( type ),
+        H5::PredType::STD_I64LE, space, props );
+    ds.write( &times[0], H5::PredType::STD_I64LE );
+    writeAttribute( ds, SignalData::LABEL, type );
+    writeAttribute( ds, "Time Source", "raw" );
+    writeAttribute( ds, "Columns", "timestamp (ms)" );
+    writeAttribute( ds, SignalData::TIMEZONE, data->metas( ).at( SignalData::TIMEZONE ) );
+    // writeAttribute( ds, SignalData::VALS_PER_DR, data.valuesPerDataRow( ) );
+    if ( 0 != data->metas( ).count( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
+      writeAttribute( ds, TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metas( )
+          .at( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
+    }
+    if ( 0 != data->metai( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
+      writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET,
+          data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
+    }
   }
 }

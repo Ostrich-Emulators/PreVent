@@ -329,6 +329,16 @@ const std::map<std::string, double>& BasicSignalData::metad( ) const {
 }
 
 void BasicSignalData::recordEvent( const std::string& eventtype, const dr_time& time ) {
+  if ( 0 == namedevents.count( eventtype ) ) {
+    namedevents[eventtype] = std::vector<dr_time>( );
+    namedevents[eventtype].push_back( time );
+  }
+  else {
+    auto& list = namedevents[eventtype];
+    if ( list[list.size( ) - 1] != time ) {
+      list.push_back( time );
+    }
+  }
 }
 
 std::vector<std::string> BasicSignalData::eventtypes( ) {
