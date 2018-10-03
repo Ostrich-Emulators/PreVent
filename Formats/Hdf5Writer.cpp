@@ -27,7 +27,7 @@
 #include "H5public.h"
 #include "TimezoneOffsetTimeSignalSet.h"
 
-const std::string Hdf5Writer::LAYOUT_VERSION = "4.0.0";
+const std::string Hdf5Writer::LAYOUT_VERSION = "4.0.1";
 
 Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
 }
