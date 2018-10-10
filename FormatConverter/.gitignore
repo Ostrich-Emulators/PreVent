@@ -27,3 +27,5 @@ ZUMPO_736E-1459787794.xml
 ix.xml
 ix_example.xml
 phClassic_example.xml
+dist/
+build/
