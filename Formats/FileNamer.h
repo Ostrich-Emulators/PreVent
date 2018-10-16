@@ -32,12 +32,11 @@ public:
 
   static FileNamer parse(const std::string& pattern);
 
-  void outputdir(const std::string& dir);
-  std::string outputdir() const;
   void tofmt(const std::string& ext);
   void patientOrdinal(int patientnum);
   void fileOrdinal(int filenum);
   void inputfilename(const std::string& input);
+  std::string inputfilename() const;
   void timeoffset_ms(long offset);
 
   /**
@@ -79,6 +78,7 @@ private:
   std::string pattern;
   std::map<std::string, std::string> conversions;
   std::string lastname;
+  std::string inputfile;
   long offset;
 };
 

@@ -16,13 +16,16 @@
 
 #include "SignalSetWrapper.h"
 #include "SignalDataWrapper.h"
+#include "FileNamer.h"
+
+#include <map>
 
 class AnonymizingSignalSet : public SignalSetWrapper {
 public:
-
-  AnonymizingSignalSet( );
-  AnonymizingSignalSet( const std::unique_ptr<SignalSet>& w );
-  AnonymizingSignalSet( SignalSet * w );
+  static const std::string DEFAULT_FILENAME_PATTERN;
+  AnonymizingSignalSet( FileNamer& filenamer );
+  AnonymizingSignalSet( const std::unique_ptr<SignalSet>& w, FileNamer& filenamer );
+  AnonymizingSignalSet( SignalSet * w, FileNamer& filenamer );
   ~AnonymizingSignalSet( );
 
   virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
@@ -30,8 +33,12 @@ public:
 
   virtual void setMeta( const std::string& key, const std::string& val ) override;
 
+  virtual void complete( ) override;
+
 private:
+  FileNamer& namer;
   dr_time firsttime;
+  std::map<std::string, std::string> saveddata;
 };
 
 #endif /* ANONYMIZINGSIGNALSET_H */

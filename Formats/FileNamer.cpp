@@ -43,6 +43,7 @@ FileNamer FileNamer::parse( const std::string& pattern ) {
 }
 
 void FileNamer::inputfilename( const std::string& inny ) {
+  inputfile = inny;
   //std::cout<<"curent path: "<<fs::current_path()<<" | or : "<<fs::current_path().generic_string()<<std::endl;
   // FIXME: cygwin blows this up
   conversions["%C"] = ""; //fs::current_path( ).generic_string( ) + dirsep;
@@ -64,6 +65,10 @@ void FileNamer::inputfilename( const std::string& inny ) {
   else {
     conversions["%d"] = "";
   }
+}
+
+std::string FileNamer::inputfilename( ) const {
+  return inputfile;
 }
 
 std::string FileNamer::filenameNoExt( const std::unique_ptr<SignalSet>& data ) {
@@ -130,26 +135,6 @@ void FileNamer::fileOrdinal( int fnum ) {
   conversions["%o"] = std::to_string( fnum );
 }
 
-void FileNamer::outputdir( const std::string& out ) {
-  struct stat info;
-  std::string outdir( out );
-  if ( stat( outdir.c_str( ), &info ) != 0 ) {
-    mkdir( outdir.c_str( ), S_IRWXU | S_IRWXG );
-  }
-
-  size_t extpos = outdir.find_last_of( dirsep, outdir.length( ) );
-  if ( outdir.length( ) - 1 != extpos || extpos < 0 ) {
-    // doesn't end with a dirsep, so add it
-    outdir += dirsep;
-  }
-
-  conversions["outputdir"] = outdir;
-}
-
-std::string FileNamer::outputdir( ) const {
-  return conversions.at( "outputdir" );
-}
-
 void FileNamer::tofmt( const std::string& ext ) {
   conversions["%t"] = ext;
 }
@@ -159,7 +144,7 @@ std::string FileNamer::last( ) const {
 }
 
 std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& sep,
-        long offset_ms ) {
+    long offset_ms ) {
   time_t mytime = ( date + offset_ms ) / 1000;
   tm * dater = std::gmtime( &mytime );
   // we want YYYYMMDD format, but cygwin seems to misinterpret %m for strftime

@@ -259,7 +259,7 @@ int main( int argc, char** argv ) {
       data.reset( new TimezoneOffsetTimeSignalSet( data.release( ) ) );
     }
     if ( anonymize ) {
-      data.reset( new AnonymizingSignalSet( data.release( ) ) );
+      data.reset( new AnonymizingSignalSet( data.release( ), to->filenamer() ) );
     }
 
     std::string input( argv[i] );
