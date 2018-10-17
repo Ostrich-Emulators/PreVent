@@ -66,9 +66,19 @@ public:
   void setNonbreaking( bool nb = false );
   void localizeTime( bool local = true );
   bool localizingTime( ) const;
-  
+
   static void strptime2( const std::string& input, const std::string& format,
-    std::tm * tm );
+      std::tm * tm );
+
+
+  /**
+   * Gets root attributes from the given input. If this can be accomplished
+   * without reading the whole file, do it. else set the ok parameter to false
+   * @param inputfile
+   * @param map the map to fill with attributes
+   * @return true, if the read occurred
+   */
+  virtual bool getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map );
 
 protected:
   Reader( const Reader& );

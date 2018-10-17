@@ -198,11 +198,6 @@ int main( int argc, char** argv ) {
       exit( 1 );
     }
 
-    if ( dotime && filesToCat.size( ) > 1 && !havestarttime ) {
-      std::cerr << "must provide a start time when concatenating multiple files" << std::endl;
-      exit( 1 );
-    }
-
     H5Cat catter( outfilename );
     if ( dotime ) {
       if ( for_s > 0 ) {

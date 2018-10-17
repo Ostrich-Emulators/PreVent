@@ -27,6 +27,7 @@ const std::string SignalData::UOM = "Unit of Measure";
 const std::string SignalData::MSM = "Missing Value Marker";
 const std::string SignalData::TIMEZONE = "Timezone";
 const std::string SignalData::BUILD_NUM = "Build Number";
+const std::string SignalData::STARTTIME = "Start Time";
 
 const std::string SignalData::CHUNK_INTERVAL_MS = "Sample Period (ms)";
 const std::string SignalData::READINGS_PER_CHUNK = "Readings Per Sample";
@@ -50,8 +51,8 @@ void SignalData::moveDataTo( std::unique_ptr<SignalData>& dest ) {
 }
 
 double SignalData::hz( ) const {
-  double ratio = 1000.0 / (double) metai().at( SignalData::CHUNK_INTERVAL_MS );
-  return ratio * (double) metai().at( SignalData::READINGS_PER_CHUNK );
+  double ratio = 1000.0 / (double) metai( ).at( SignalData::CHUNK_INTERVAL_MS );
+  return ratio * (double) metai( ).at( SignalData::READINGS_PER_CHUNK );
 }
 
 bool SignalData::empty( ) const {
@@ -63,11 +64,11 @@ void SignalData::setUom( const std::string& u ) {
 }
 
 const std::string& SignalData::uom( ) const {
-  return metas().at( UOM );
+  return metas( ).at( UOM );
 }
 
 int SignalData::scale( ) const {
-  return metai().at( SCALE );
+  return metai( ).at( SCALE );
 }
 
 void SignalData::scale( int x ) {
@@ -75,7 +76,7 @@ void SignalData::scale( int x ) {
 }
 
 int SignalData::readingsPerSample( ) const {
-  return metai().at( READINGS_PER_CHUNK );
+  return metai( ).at( READINGS_PER_CHUNK );
 }
 
 void SignalData::setChunkIntervalAndSampleRate( int chunktime_ms, int samplerate ) {

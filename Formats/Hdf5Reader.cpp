@@ -53,6 +53,32 @@ void Hdf5Reader::finish( ) {
   file.close( );
 }
 
+bool Hdf5Reader::getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) {
+  H5::Exception::dontPrint( );
+  try {
+    file = H5::H5File( inputfile, H5F_ACC_RDONLY );
+    H5::Group root = file.openGroup( "/" );
+
+    for ( int i = 0; i < root.getNumAttrs( ); i++ ) {
+      H5::Attribute a = root.openAttribute( i );
+      map[a.getName( )] = metastr( a );
+    }
+  }
+  catch ( H5::FileIException error ) {
+    output( ) << error.getDetailMsg( ) << std::endl;
+    file.close( );
+    return false;
+  }
+  // catch failure caused by the DataSet operations
+  catch ( H5::DataSetIException error ) {
+    output( ) << error.getDetailMsg( ) << std::endl;
+    file.close( );
+    return false;
+  }
+
+  return true;
+}
+
 ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
   H5::Group root = file.openGroup( "/" );
 
@@ -451,7 +477,7 @@ std::string Hdf5Reader::metastr( const H5::Attribute & attr ) const {
   switch ( attr.getTypeClass( ) ) {
     case H5T_INTEGER:
     {
-      int inty = 0;
+      long inty = 0;
       attr.read( type, &inty );
       aval = std::to_string( inty );
     }

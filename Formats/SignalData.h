@@ -34,6 +34,7 @@ public:
   static const std::string TIMEZONE;
   static const std::string LABEL;
   static const std::string BUILD_NUM;
+  static const std::string STARTTIME;
 
   static const std::string CHUNK_INTERVAL_MS;
   static const std::string READINGS_PER_CHUNK;

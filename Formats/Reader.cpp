@@ -88,6 +88,10 @@ std::ostream& Reader::output( ) const {
   return ( quiet ? ( std::ostream& ) ss : std::cout );
 }
 
+bool Reader::getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ){
+  return false;
+}
+
 void Reader::strptime2( const std::string& input, const std::string& format,
     std::tm * tm ){
   std::locale loc;

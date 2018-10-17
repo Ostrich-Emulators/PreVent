@@ -35,6 +35,8 @@ public:
   void cat( std::vector<std::string>& filesToCat );
   static void cat( const std::string& outfile, std::vector<std::string>& filesToCat );
 private:
+  static bool filesorter( const std::string& a, const std::string& b );
+
   const std::string output;
 
   bool doduration;

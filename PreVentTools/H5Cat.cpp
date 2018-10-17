@@ -24,8 +24,10 @@
 #include "FileNamer.h"
 #include "ClippingSignalSet.h"
 
+#include <algorithm>    // std::sort
+
 H5Cat::H5Cat( const std::string& outfile ) : output( outfile ), doduration( false ),
-    havestart(false), doclip( false ), duration_ms( 0 ), start(0 ), end( 0 ) {
+havestart( false ), doclip( false ), duration_ms( 0 ), start( 0 ), end( 0 ) {
 }
 
 H5Cat::H5Cat( const H5Cat& orig ) : output( orig.output ), doduration( orig.doduration ), havestart( orig.havestart ),
@@ -47,6 +49,25 @@ void H5Cat::setClipping( const dr_time& starttime, const dr_time& endtime ) {
   doclip = true;
 }
 
+bool H5Cat::filesorter( const std::string& a, const std::string& b ) {
+  std::unique_ptr<Reader> areader( Reader::get( Formats::guess( a ) ) );
+  std::unique_ptr<Reader> breader( Reader::get( Formats::guess( b ) ) );
+
+  std::map<std::string, std::string> amap;
+  std::map<std::string, std::string> bmap;
+  areader->getAttributes( a, amap );
+  breader->getAttributes( b, bmap );
+
+  dr_time astart = ( 0 == amap.count( SignalData::STARTTIME )
+      ? 0
+      : std::stol( amap.at( SignalData::STARTTIME ) ) );
+  dr_time bstart = ( 0 == bmap.count( SignalData::STARTTIME )
+      ? 0
+      : std::stol( bmap.at( SignalData::STARTTIME ) ) );
+
+  return ( astart < bstart );
+}
+
 void H5Cat::cat( std::vector<std::string>& filesToCat ) {
   // we need to open all the files and see which datasets we have
   // it's a lot easier to store these things as SignalData objects
@@ -54,19 +75,21 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
   Hdf5Reader rdr;
   std::unique_ptr<SignalSet> alldata( new BasicSignalSet( ) );
 
-  std::cout << "duration not accounted for yet" << std::endl;
   std::cout << "duration? " << doduration << " time: " << duration_ms << " from " << start << std::endl;
 
-
   if ( doduration && !havestart ) {
-    // look at the first file to get the start time
-    std::unique_ptr<SignalSet> junk( new BasicSignalSet( ) );
-    rdr.prepare( filesToCat.at( 0 ), junk );
-    rdr.fill( junk );
+    // order the files so we can figure out our start time
+    std::sort( filesToCat.begin( ), filesToCat.end( ), filesorter );
 
-    start = junk->earliest( );
+    std::unique_ptr<Reader> areader( Reader::get( Formats::guess( filesToCat[0] ) ) );
+    std::map<std::string, std::string> amap;
+    areader->getAttributes( filesToCat[0], amap );
+    start = ( 0 == amap.count( SignalData::STARTTIME )
+        ? 0
+        : std::stol( amap.at( SignalData::STARTTIME ) ) );
     havestart = true;
-    alldata.reset( new ClippingSignalSet( alldata.release( ), &start, &start + duration_ms ) );
+    end = start + duration_ms;
+    doclip = true;
   }
   if ( doclip ) {
     alldata.reset( new ClippingSignalSet( alldata.release( ), &start, &end ) );
@@ -88,11 +111,7 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
 
   fn.tofmt( wrt.ext( ) );
   fn.inputfilename( "-" );
-  fn.outputdir( "." );
   wrt.filenamer( fn );
-
-
-
 
   wrt.write( nullrdr, alldata );
 }
