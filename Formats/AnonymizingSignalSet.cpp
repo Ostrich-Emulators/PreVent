@@ -41,18 +41,30 @@ AnonymizingSignalSet::~AnonymizingSignalSet( ) {
 }
 
 std::unique_ptr<SignalData>& AnonymizingSignalSet::addVital( const std::string& name, bool * added ) {
-  std::unique_ptr<SignalData>& data = SignalSetWrapper::addVital( name, added );
-  if ( nullptr != added && *added ) {
+  bool realadd;
+  std::unique_ptr<SignalData>& data = SignalSetWrapper::addVital( name, &realadd );
+  if ( realadd ) {
     data.reset( new AnonymizingSignalData( data.release( ), firsttime ) );
   }
+
+  if ( nullptr != added ) {
+    added = &realadd;
+  }
+
   return data;
 }
 
 std::unique_ptr<SignalData>& AnonymizingSignalSet::addWave( const std::string& name, bool * added ) {
-  std::unique_ptr<SignalData>& data = SignalSetWrapper::addWave( name, added );
-  if ( nullptr != added && *added ) {
+  bool realadd;
+  std::unique_ptr<SignalData>& data = SignalSetWrapper::addWave( name, &realadd );
+  if ( realadd ) {
     data.reset( new AnonymizingSignalData( data.release( ), firsttime ) );
   }
+
+  if ( nullptr != added ) {
+    added = &realadd;
+  }
+
   return data;
 }
 

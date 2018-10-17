@@ -45,7 +45,7 @@ private:
   bool checkend;
 
   dr_time duration_ms;
-  bool seenfirsttime;
+  bool havefirsttime;
   bool checkduration;
 };
 

@@ -29,18 +29,30 @@ OffsetTimeSignalSet::~OffsetTimeSignalSet( ) {
 }
 
 std::unique_ptr<SignalData>& OffsetTimeSignalSet::addVital( const std::string& name, bool * added ) {
-  std::unique_ptr<SignalData>& data = SignalSetWrapper::addVital( name, added );
-  if ( nullptr != added && *added ) {
+  bool realadd;
+  std::unique_ptr<SignalData>& data = SignalSetWrapper::addVital( name, &realadd );
+  if ( realadd ) {
     data->setMeta( COLLECTION_OFFSET, (int) offset_ms );
   }
+
+  if ( nullptr != added ) {
+    added = &realadd;
+  }
+
   return data;
 }
 
 std::unique_ptr<SignalData>& OffsetTimeSignalSet::addWave( const std::string& name, bool * added ) {
-  std::unique_ptr<SignalData>& data = SignalSetWrapper::addWave( name, added );
-  if ( nullptr != added && *added ) {
+  bool realadd;
+  std::unique_ptr<SignalData>& data = SignalSetWrapper::addWave( name, &realadd );
+  if ( realadd ) {
     data->setMeta( COLLECTION_OFFSET, (int) offset_ms );
   }
+
+  if ( nullptr != added ) {
+    added = &realadd;
+  }
+
   return data;
 }
 
@@ -63,7 +75,7 @@ void OffsetTimeSignalSet::reset( bool signalDataOnly ) {
   offset( offset_ms );
 }
 
-void OffsetTimeSignalSet::complete(){
-  SignalSetWrapper::complete();
+void OffsetTimeSignalSet::complete( ) {
+  SignalSetWrapper::complete( );
   offset( offset_ms );
 }

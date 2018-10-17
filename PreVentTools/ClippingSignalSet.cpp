@@ -49,11 +49,12 @@ ClippingSignalSet::~ClippingSignalSet( ) {
 }
 
 void ClippingSignalSet::init( dr_time* starttime, dr_time* endtime ) {
-  seenfirsttime = false;
+  havefirsttime = false;
 
   checkstart = ( nullptr != starttime );
   if ( checkstart ) {
     start = *starttime;
+    havefirsttime = true;
   }
 
   checkend = ( nullptr != endtime );
@@ -68,26 +69,38 @@ void ClippingSignalSet::initForDuration( const dr_time& dur_ms ) {
 }
 
 std::unique_ptr<SignalData>& ClippingSignalSet::addVital( const std::string& name, bool * added ) {
-  std::unique_ptr<SignalData>& data = SignalSetWrapper::addVital( name, added );
-  if ( nullptr != added && *added ) {
+  bool realadd;
+  std::unique_ptr<SignalData>& data = SignalSetWrapper::addVital( name, &realadd );
+  if ( realadd ) {
     data.reset( new ClippingSignalData( *this, data.release( ) ) );
   }
+
+  if ( nullptr != added ) {
+    added = &realadd;
+  }
+
   return data;
 }
 
 std::unique_ptr<SignalData>& ClippingSignalSet::addWave( const std::string& name, bool * added ) {
-  std::unique_ptr<SignalData>& data = SignalSetWrapper::addWave( name, added );
-  if ( nullptr != added && *added ) {
+  bool realadd;
+  std::unique_ptr<SignalData>& data = SignalSetWrapper::addWave( name, &realadd );
+  if ( realadd ) {
     data.reset( new ClippingSignalData( *this, data.release( ) ) );
   }
+
+  if ( nullptr != added ) {
+    added = &realadd;
+  }
+
   return data;
 }
 
 bool ClippingSignalSet::timeok( const dr_time& time ) {
-  if ( checkduration && ( time < start || !seenfirsttime ) ) {
+  if ( checkduration && ( time < start || !havefirsttime ) ) {
     start = time;
     end = start + duration_ms;
-    seenfirsttime = true;
+    havefirsttime = true;
   }
 
   bool ok = true;
