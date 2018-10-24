@@ -15,6 +15,7 @@
 #define ZLREADER_H
 
 #include "Reader.h"
+#include "StreamChunkReader.h"
 #include <map>
 #include <string>
 #include <memory>
@@ -25,42 +26,39 @@ class SignalData;
 class StreamChunkReader;
 
 enum zlReaderState {
-	ZIN_HEADER, ZIN_VITAL, ZIN_WAVE, ZIN_TIME
+  ZIN_HEADER, ZIN_VITAL, ZIN_WAVE, ZIN_TIME
 };
 
 class ZlReader : public Reader {
 public:
-	static const int CHUNKSIZE;
-
-	ZlReader( );
+  ZlReader( );
   ZlReader( const std::string& name );
-	virtual ~ZlReader( );
+  virtual ~ZlReader( );
 
 protected:
-	ReadResult fill( std::unique_ptr<SignalSet>&, const ReadResult& lastfill ) override;
-	size_t getSize( const std::string& input ) const override;
+  ReadResult fill( std::unique_ptr<SignalSet>&, const ReadResult& lastfill ) override;
+  size_t getSize( const std::string& input ) const override;
 
-	int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
-	void finish( ) override;
+  int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
+  void finish( ) override;
 
 private:
 
-	ZlReader( const ZlReader& orig );
+  ZlReader( const ZlReader& orig );
 
-	bool firstread;
-	std::string leftoverText;
-	dr_time currentTime;
-	zlReaderState state;
-	std::unique_ptr<StreamChunkReader> stream;
-    std::vector<std::string> wavefiles;
+  bool firstread;
+  std::string leftoverText;
+  dr_time currentTime;
+  zlReaderState state;
+  std::unique_ptr<StreamChunkReader> stream;
 
-	void handleInputChunk( std::string& chunk, std::unique_ptr<SignalSet>& info );
-	void handleOneLine( const std::string& chunk, std::unique_ptr<SignalSet>& info );
+  void handleInputChunk( std::string& chunk, std::unique_ptr<SignalSet>& info );
+  void handleOneLine( const std::string& chunk, std::unique_ptr<SignalSet>& info );
 
-	static const std::string HEADER;
-	static const std::string VITAL;
-	static const std::string WAVE;
-	static const std::string TIME;
+  static const std::string HEADER;
+  static const std::string VITAL;
+  static const std::string WAVE;
+  static const std::string TIME;
 };
 
 #endif /* ZLREADER_H */

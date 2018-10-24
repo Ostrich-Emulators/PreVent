@@ -23,7 +23,6 @@
 #include <fstream>
 #include <sstream>
 #include <sys/stat.h>
-#include <experimental/filesystem>
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
 #include <fcntl.h>
@@ -38,7 +37,6 @@ const std::string ZlReader::VITAL = "VITAL";
 const std::string ZlReader::WAVE = "WAVE";
 const std::string ZlReader::TIME = "TIME";
 
-namespace fs = std::experimental::filesystem::v1;
 ZlReader::ZlReader( ) : Reader( "Zl" ), firstread( true ) {
 }
 
@@ -69,20 +67,8 @@ size_t ZlReader::getSize( const std::string& input ) const {
 
 int ZlReader::prepare( const std::string& input, std::unique_ptr<SignalSet>& data ) {
   int rslt = Reader::prepare( input, data );
-  if( rslt != 0 ){
+  if ( rslt != 0 ) {
     return rslt;
-  }
-
-  
-  // Zl format is really a directory containing a bunch of gzip files
-  // so we should iterate through all the gzip files
-  fs::path p1 = input;
-  if( !fs::is_directory(p1)){
-    return -1;
-  }
-  
-  for( const auto& path: fs::directory_iterator(p1)){
-    wavefiles.push_back(path.path().filename());
   }
 
   firstread = true;
@@ -100,7 +86,9 @@ int ZlReader::prepare( const std::string& input, std::unique_ptr<SignalSet>& dat
         true, isgz ) );
   }
   else {
-    // we need to read the first byte of the input stream to decide if it's 
+    // we need to read the first byte of the input stream to decide if it's compressed
+
+    // we're looking at an "old-skool" uva format, so we only have one file
     unsigned char firstbyte;
     unsigned char secondbyte;
     std::ifstream * myfile = new std::ifstream( input, std::ios::binary );
@@ -114,6 +102,7 @@ int ZlReader::prepare( const std::string& input, std::unique_ptr<SignalSet>& dat
     myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
     stream.reset( new StreamChunkReader( myfile, ( islibz || isgz ), false, isgz ) );
   }
+
   return 0;
 }
 

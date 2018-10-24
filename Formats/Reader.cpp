@@ -2,7 +2,7 @@
 #include "Reader.h"
 #include "SignalData.h"
 #include "WfdbReader.h"
-#include "ZlReader.h"
+#include "ZlReader2.h"
 #include "Hdf5Reader.h"
 #include "StpXmlReader.h"
 #include "StpJsonReader.h"
@@ -34,7 +34,7 @@ std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
     case WFDB:
       return std::unique_ptr<Reader>( new WfdbReader( ) );
     case DSZL:
-      return std::unique_ptr<Reader>( new ZlReader( ) );
+      return std::unique_ptr<Reader>( new ZlReader2( ) );
     case STPXML:
       return std::unique_ptr<Reader>( new StpXmlReader( ) );
     case HDF5:

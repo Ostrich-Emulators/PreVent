@@ -29,18 +29,11 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-const int StreamChunkReader::DEFAULT_CHUNKSIZE = 16384 * 16;
+const int StreamChunkReader::DEFAULT_CHUNKSIZE = 1024 * 256;
 
-
-
-  bool iscompressed;
-  bool usestdin;
-  int chunksize;
-
-  std::istream * stream;
-StreamChunkReader::StreamChunkReader( std::istream * cin, bool compressed, 
-    bool isStdin, bool isGzip, int chunks ) : rr( ReadResult::NORMAL ), 
-    iscompressed( compressed ), usestdin( isStdin ), chunksize( chunks ), stream( cin ) {
+StreamChunkReader::StreamChunkReader( std::istream * cin, bool compressed,
+    bool isStdin, bool isGzip, int chunksz ) : rr( ReadResult::NORMAL ),
+iscompressed( compressed ), usestdin( isStdin ), chunksize( chunksz ), stream( cin ) {
   if ( iscompressed ) {
     initZlib( isGzip );
   }
