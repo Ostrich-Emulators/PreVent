@@ -48,7 +48,7 @@ std::unique_ptr<SignalData>& AnonymizingSignalSet::addVital( const std::string& 
   }
 
   if ( nullptr != added ) {
-    added = &realadd;
+    *added = realadd;
   }
 
   return data;
@@ -62,7 +62,7 @@ std::unique_ptr<SignalData>& AnonymizingSignalSet::addWave( const std::string& n
   }
 
   if ( nullptr != added ) {
-    added = &realadd;
+    *added = realadd;
   }
 
   return data;

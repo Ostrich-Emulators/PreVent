@@ -37,75 +37,6 @@
 
 namespace fs = std::experimental::filesystem::v1;
 
-SaxJson::SaxJson( std::unique_ptr<SignalData>& signl ) : signal( signl ) {
-}
-
-bool SaxJson::start_array( std::size_t elements ) {
-  data.clear( );
-  return true;
-}
-
-bool SaxJson::end_array( ) {
-  if ( 3 == data.size( ) ) {
-    signal->add( DataRow( std::stol( data[0] ), data[2] ) );
-  }
-  return true;
-}
-
-bool SaxJson::null( ) {
-  return true;
-}
-
-// called when a boolean is parsed; value is passed
-
-bool SaxJson::boolean( bool val ) {
-  return true;
-}
-
-// called when a signed or unsigned integer number is parsed; value is passed
-
-bool SaxJson::number_integer( number_integer_t val ) {
-  return true;
-}
-
-bool SaxJson::number_unsigned( number_unsigned_t val ) {
-  return true;
-}
-
-// called when a floating-point number is parsed; value and original string is passed
-
-bool SaxJson::number_float( number_float_t val, const string_t& s ) {
-  return true;
-}
-
-// called when a string is parsed; value is passed and can be safely moved away
-
-bool SaxJson::string( string_t& val ) {
-  data.push_back( val );
-  return true;
-}
-
-// called when an object or array begins or ends, resp. The number of elements is passed (or -1 if not known)
-
-bool SaxJson::start_object( std::size_t elements ) {
-  return true;
-}
-
-bool SaxJson::end_object( ) {
-  return true;
-}
-// called when an object key is parsed; value is passed and can be safely moved away
-
-bool SaxJson::key( string_t& val ) {
-  return true;
-}
-
-// called when a parse error occurs; byte position, the last token, and an exception is passed
-
-bool SaxJson::parse_error( std::size_t position, const std::string& last_token, const nlohmann::detail::exception& ex ) {
-  return true;
-}
-
 ZlReader2::ZlReader2( ) : Reader( "Zl" ), firstread( true ) {
 }
 
@@ -122,17 +53,6 @@ void ZlReader2::finish( ) {
   signalToReaderLkp.clear( );
 }
 
-size_t ZlReader2::getSize( const std::string& input ) const {
-  struct stat info;
-
-  if ( stat( input.c_str( ), &info ) < 0 ) {
-    perror( input.c_str( ) );
-    return 0;
-  }
-
-  return info.st_size;
-}
-
 int ZlReader2::prepare( const std::string& input, std::unique_ptr<SignalSet>& data ) {
   int rslt = Reader::prepare( input, data );
   if ( rslt != 0 ) {
@@ -146,7 +66,6 @@ int ZlReader2::prepare( const std::string& input, std::unique_ptr<SignalSet>& da
   }
 
   signalToReaderLkp.clear( );
-  signalToParserLkp.clear( );
   for ( const auto& path : fs::directory_iterator( p1 ) ) {
     std::string filename( path.path( ).generic_string( ) );
 
@@ -166,7 +85,7 @@ int ZlReader2::prepare( const std::string& input, std::unique_ptr<SignalSet>& da
 
     myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
     signalToReaderLkp[signal] = std::unique_ptr<StreamChunkReader>( new StreamChunkReader( myfile,
-        ( islibz || isgz ), false, isgz, 128 ) );
+        ( islibz || isgz ), false, isgz ) );
   }
 
   return 0;
@@ -190,61 +109,114 @@ ReadResult ZlReader2::fill( std::unique_ptr<SignalSet>& info, const ReadResult& 
   //  ...
   // ]
 
+  ReadResult ss = ReadResult::END_OF_FILE;
   for ( const auto& x : signalToReaderLkp ) {
-    if ( 0 == signalToParserLkp.count( x.first ) ) {
-      // haven't seen this signal before, so make a new parser for it
-      signalToParserLkp[x.first]
-          = std::unique_ptr<SaxJson>( new SaxJson( info->addWave( x.first ) ) );
-    }
+    // the pull parsing doesn't seem to work quite yet
+    // for now, just read in the whole file
+
+    bool added;
+    std::unique_ptr<SignalData>& signal = info->addWave( x.first, &added );
 
     std::string data = normalizeText( x.first, x.second->readNextChunk( ) );
-    std::cout << data << std::endl;
+    while ( ReadResult::NORMAL == x.second->rr ) {
+      // process what we just read
+      if ( "" != data ) {
+        auto jj = nlohmann::json::parse( data );
 
-    std::unique_ptr<SaxJson>& parser = signalToParserLkp.at( x.first );
-    if ( "" != data ) {
-      nlohmann::json::sax_parse( data, parser.get( ) );
+        // we have one array of many arrays
+        // iterate through the array, and add DataRows
+        for ( auto j2 : jj ) {
+          std::string timestr = j2[0];
+          std::string data = j2[2];
+
+          if ( added ) {
+            int readings = (int) DataRow::ints( data ).size( );
+            signal->setChunkIntervalAndSampleRate( 250, readings );
+          }
+          if ( waveIsOk( data ) ) {
+            signal->add( DataRow( std::stol( timestr ), data ) );
+          }
+        }
+      }
+
+      data = normalizeText( x.first, x.second->readNextChunk( ) );
     }
 
-    while ( ReadResult::NORMAL == x.second->rr ) {
-      data = normalizeText( x.first, x.second->readNextChunk( ) );
+    if ( ReadResult::END_OF_FILE == x.second->rr ) {
+      // we're done with the file, so load our last bit of data
       if ( "" != data ) {
-        std::cout << data << std::endl;
-        std::cout << leftovers[x.first] << std::endl;
+        auto jj = nlohmann::json::parse( data );
 
-        nlohmann::json::sax_parse( data, parser.get( ) );
+        // we have one array of many arrays
+        // iterate through the array, and add DataRows
+        for ( auto j2 : jj ) {
+          std::string timestr = j2[0];
+          std::string data = j2[2];
+          if ( added ) {
+            int readings = (int) DataRow::ints( data ).size( );
+            signal->setChunkIntervalAndSampleRate( 250, readings );
+          }
+          if ( waveIsOk( data ) ) {
+            signal->add( DataRow( std::stol( timestr ), data ) );
+          }
+        }
       }
     }
+    else {
+      ss == x.second->rr;
+    }
   }
-
-  // for this class we say a chunk is a full data set for one patient,
-  // so read until we see another HEADER line in the text
-  //  ReadResult retcode = stream->rr;
-  //
-  //  if ( ReadResult::ERROR == retcode ) {
-  //    return retcode;
-  //  }
-  //
-  //  if ( ReadResult::NORMAL != retcode ) {
-  //    // we read all the patient data we have, so process the results
-  //    return retcode;
-  //  }
-  //
-  //  firstread = false;
-  //  return retcode;
-  return ReadResult::END_OF_FILE;
+  return ss;
 }
 
 std::string ZlReader2::normalizeText( const std::string& signalname, std::string text ) {
   std::string data = leftovers[signalname] + text;
+
+  // we happened to split *just* before our final
+  // array closing, so there's nothing left now
+  if ( ']' == data[0] ) {
+    leftovers[signalname].clear( );
+    return "";
+  }
+
+  // if we start with a "[[", remove the first [
+  std::string first2 = data.substr( 0, 2 );
+  if ( "[[" == first2 ) {
+    data = data.substr( 1 );
+  }
+  else if ( ", " == first2 ) {
+    // if we start with a comma, remove the it
+    data = data.substr( 2 );
+  }
+
   size_t lastclose = data.find_last_of( ']' );
   if ( std::string::npos == lastclose ) {
     // no ending array marker, so _everything_ goes to leftovers  
-    leftovers[signalname] += data;
+    leftovers[signalname] = data;
     return "";
   }
   else {
-    // we have a ], so sheer off the stuff after it, and return
+    // our JSON will end with "]]", so check for it
+    if ( ']' == data[lastclose - 1] ) {
+      // we're at the very end of our stream
+      leftovers[signalname].clear( );
+      return "[" + data.substr( 0, lastclose + 1 );
+    }
+
+    // we have a ] so save the stuff after it
     leftovers[signalname] = data.substr( lastclose + 1 );
-    return data.substr( 0, lastclose );
+
+    return "[" + data.substr( 0, lastclose + 1 ) + "]";
   }
+}
+
+bool ZlReader2::waveIsOk( const std::string& wavedata ) {
+  // if all the values are -32768 or -32753, this isn't a valid reading
+  std::stringstream stream( wavedata );
+  for ( std::string each; std::getline( stream, each, ',' ); ) {
+    if ( !( "-32768" == each || "-32753" == each ) ) {
+      return true;
+    }
+  }
+  return false;
 }

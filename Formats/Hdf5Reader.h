@@ -32,8 +32,6 @@ public:
        const ReadResult& lastresult = ReadResult::FIRST_READ ) override;
 
   virtual bool getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) override;
-protected:
-  size_t getSize( const std::string& input ) const override;
 
 private:
   Hdf5Reader( const Hdf5Reader& );

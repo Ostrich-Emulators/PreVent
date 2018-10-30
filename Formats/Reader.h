@@ -83,13 +83,6 @@ public:
 protected:
   Reader( const Reader& );
 
-  /**
-   * Gets a size calculation for this input
-   * @param input the input to size
-   * @return size for the input, or 0 for error
-   */
-  virtual size_t getSize( const std::string& input ) const = 0;
-
   bool nonbreaking( ) const;
 
   std::ostream& output( ) const;

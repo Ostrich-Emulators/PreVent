@@ -23,7 +23,3 @@ int NullReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>
 ReadResult NullReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
   return ReadResult::END_OF_FILE;
 }
-
-size_t NullReader::getSize( const std::string& input ) const {
-  return 1;
-}

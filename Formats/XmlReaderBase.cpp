@@ -55,21 +55,6 @@ void XmlReaderBase::finish( ) {
   input->close( );
 }
 
-size_t XmlReaderBase::getSize( const std::string& input ) const {
-  struct stat info;
-
-  if ( "-" == input ) {
-    return 0;
-  }
-
-  if ( stat( input.c_str( ), &info ) < 0 ) {
-    perror( input.c_str( ) );
-    return 0;
-  }
-
-  return info.st_size;
-}
-
 void XmlReaderBase::start( void * data, const char * el, const char ** attr ) {
   std::map<std::string, std::string> attrs;
   for ( int i = 0; attr[i]; i += 2 ) {

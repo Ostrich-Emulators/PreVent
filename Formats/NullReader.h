@@ -27,8 +27,6 @@ public:
   int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
   ReadResult fill( std::unique_ptr<SignalSet>& data,
       const ReadResult& lastresult = ReadResult::FIRST_READ ) override;
-protected:
-  size_t getSize( const std::string& input ) const override;
 };
 
 #endif /* NULLREADER_H */

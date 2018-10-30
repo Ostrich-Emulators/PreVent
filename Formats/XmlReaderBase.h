@@ -41,7 +41,6 @@ public:
 
 protected:
   XmlReaderBase( const XmlReaderBase& orig );
-  size_t getSize( const std::string& input ) const override;
 
 protected:
   /**

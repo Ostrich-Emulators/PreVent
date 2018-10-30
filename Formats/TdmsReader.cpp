@@ -265,15 +265,3 @@ bool TdmsReader::writeWaveChunkAndReset( int& count, int& nancount, std::vector<
 
   return true;
 }
-
-size_t TdmsReader::getSize( const std::string & input ) const {
-  struct stat info;
-
-  if ( stat( input.c_str( ), &info ) < 0 ) {
-    perror( input.c_str( ) );
-    return 0;
-  }
-
-  return info.st_size;
-
-}

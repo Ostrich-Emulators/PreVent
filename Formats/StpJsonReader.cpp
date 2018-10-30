@@ -50,17 +50,6 @@ void StpJsonReader::finish( ) {
   stream.release( );
 }
 
-size_t StpJsonReader::getSize( const std::string& input ) const {
-  struct stat info;
-
-  if ( stat( input.c_str( ), &info ) < 0 ) {
-    perror( input.c_str( ) );
-    return 0;
-  }
-
-  return info.st_size;
-}
-
 int StpJsonReader::prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) {
   int rslt = Reader::prepare( input, info );
   if ( 0 != rslt ) {

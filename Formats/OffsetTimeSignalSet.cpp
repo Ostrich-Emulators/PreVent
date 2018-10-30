@@ -36,7 +36,7 @@ std::unique_ptr<SignalData>& OffsetTimeSignalSet::addVital( const std::string& n
   }
 
   if ( nullptr != added ) {
-    added = &realadd;
+    *added = realadd;
   }
 
   return data;
@@ -50,7 +50,7 @@ std::unique_ptr<SignalData>& OffsetTimeSignalSet::addWave( const std::string& na
   }
 
   if ( nullptr != added ) {
-    added = &realadd;
+    *added = realadd;
   }
 
   return data;

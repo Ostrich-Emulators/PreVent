@@ -37,7 +37,6 @@ public:
 
 protected:
 	ReadResult fill( std::unique_ptr<SignalSet>&, const ReadResult& lastfill ) override;
-	size_t getSize( const std::string& input ) const override;
 
 	int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
 	void finish( ) override;

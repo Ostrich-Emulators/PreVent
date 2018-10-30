@@ -31,7 +31,6 @@ protected:
   void finish( ) override;
 
   ReadResult fill( std::unique_ptr<SignalSet>& data, const ReadResult& lastfill ) override;
-  size_t getSize( const std::string& input ) const override;
 
 private:
   std::unique_ptr<TdmsParser> parser;

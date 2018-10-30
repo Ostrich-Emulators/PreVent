@@ -24,8 +24,6 @@
 
 /**
  * Class to read either raw or zlib-compressed text from either stdin or a file.
- * Unlike other readers, the only provides unprocessed text from the files,
- * without any interpretation of it.
  */
 class StreamChunkReader {
 public:

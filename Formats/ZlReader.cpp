@@ -54,17 +54,6 @@ void ZlReader::finish( ) {
   stream.release( );
 }
 
-size_t ZlReader::getSize( const std::string& input ) const {
-  struct stat info;
-
-  if ( stat( input.c_str( ), &info ) < 0 ) {
-    perror( input.c_str( ) );
-    return 0;
-  }
-
-  return info.st_size;
-}
-
 int ZlReader::prepare( const std::string& input, std::unique_ptr<SignalSet>& data ) {
   int rslt = Reader::prepare( input, data );
   if ( rslt != 0 ) {
