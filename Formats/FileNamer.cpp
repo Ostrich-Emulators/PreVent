@@ -21,7 +21,7 @@ FileNamer::FileNamer( const std::string& pat ) : pattern( pat ), offset( 0 ) {
 
 FileNamer::FileNamer( const FileNamer& orig ) : pattern( orig.pattern ),
 conversions( orig.conversions.begin( ), orig.conversions.end( ) ),
-lastname( orig.lastname ), offset( 0 ) {
+lastname( orig.lastname ), inputfile( orig.inputfile ), offset( 0 ) {
 }
 
 FileNamer::~FileNamer( ) {
@@ -33,6 +33,7 @@ FileNamer& FileNamer::operator=(const FileNamer& orig ) {
     conversions.clear( );
     conversions.insert( orig.conversions.begin( ), orig.conversions.end( ) );
     lastname = orig.lastname;
+    inputfile = orig.inputfile;
     offset = orig.offset;
   }
   return *this;

@@ -397,7 +397,7 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
       values.append( valstr );
 
       valcnt++;
-      if ( valsPerTime == valcnt || count[0] < slabrows ) {
+      if ( valsPerTime == valcnt ) {
         DataRow drow( times[timecounter++], values );
         signal->add( drow );
         values.clear( );

@@ -27,6 +27,11 @@
 #include "H5Cat.h"
 #include "dr_time.h"
 #include "TimeParser.h"
+#include "Writer.h"
+#include "Reader.h"
+#include "FileNamer.h"
+#include "BasicSignalSet.h"
+#include "AnonymizingSignalSet.h"
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
@@ -35,12 +40,13 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-m or --mrn <mrn>\tsets MRN in file"
       << std::endl << "\t-n or --name <patient name>\tsets name in file"
       << std::endl << "\t-o or --output <output file>"
-      << std::endl << "\t-a or --attr <key=value>\tsets the given attribute to the value"
+      << std::endl << "\t-A or --attr <key=value>\tsets the given attribute to the value"
       << std::endl << "\t-C or --clobber\toverwrite input file"
       << std::endl << "\t-c or --cat\tconcatenate files from command line, used with --output"
       << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
       << std::endl << "\t-e or --end <time>\tstop output immediately before this UTC time (many time formats supported)"
       << std::endl << "\t-f or --for <s>\toutput this many seconds of data from the start of file (or --start)"
+      << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
       << std::endl;
   exit( 1 );
 }
@@ -50,10 +56,13 @@ struct option longopts[] = {
   { "name", required_argument, NULL, 'n' },
   { "clobber", no_argument, NULL, 'C' },
   { "output", required_argument, NULL, 'o' },
-  { "attr", required_argument, NULL, 'a' },
+  { "attr", required_argument, NULL, 'A' },
   { "start", required_argument, NULL, 's' },
   { "end", required_argument, NULL, 'e' },
   { "for", required_argument, NULL, 'f' },
+  { "anonymize", no_argument, NULL, 'a' },
+  { "anon", no_argument, NULL, 'a' },
+  { "anonymous", no_argument, NULL, 'a' },
   { "cat", no_argument, NULL, 'c' }, // all remaining args are files
   { 0, 0, 0, 0 }
 };
@@ -114,14 +123,14 @@ int main( int argc, char** argv ) {
   bool clobber = false;
   std::map <std::string, std::string> attrs;
   bool catfiles = false;
-  std::vector<std::string> filesToCat;
   bool dotime = false;
   bool havestarttime = false;
   dr_time starttime = 0;
   dr_time endtime = std::numeric_limits<dr_time>::max( );
   int for_s = -1;
+  bool anon = false;
 
-  while ( ( c = getopt_long( argc, argv, ":m:n:o:Ca:c:s:e:f:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":m:n:o:CA:c:s:e:f:a", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'm':
         attrs["MRN"] = optarg;
@@ -132,7 +141,7 @@ int main( int argc, char** argv ) {
       case 'o':
         outfilename = optarg;
         break;
-      case 'a':
+      case 'A':
       {
         std::string kv( optarg );
         size_t idx = kv.find( '=' );
@@ -144,6 +153,9 @@ int main( int argc, char** argv ) {
           attrs[kv.substr( 0, idx )] = kv.substr( idx + 1 );
         }
       }
+        break;
+      case 'a':
+        anon = true;
         break;
       case 'C':
         clobber = true;
@@ -179,6 +191,8 @@ int main( int argc, char** argv ) {
   }
 
   if ( catfiles ) {
+    std::vector<std::string> filesToCat;
+
     if ( outfilename.empty( ) ) {
       helpAndExit( argv[0], "please specify an output filename with --output" );
     }
@@ -208,6 +222,45 @@ int main( int argc, char** argv ) {
       }
     }
     catter.cat( filesToCat );
+  }
+  else if ( anon ) {
+    if ( outfilename.empty( ) ) {
+      helpAndExit( argv[0], "please specify an output filename with --output" );
+    }
+
+    struct stat buffer;
+    if ( stat( outfilename.c_str( ), &buffer ) == 0 && !clobber ) {
+      std::cerr << "will not overwrite " << outfilename << " (use --clobber)" << std::endl;
+      exit( 1 );
+    }
+
+    FileNamer namer = FileNamer::parse( outfilename );
+
+    for ( int i = optind; i < argc; i++ ) {
+      std::string input = argv[i];
+      std::unique_ptr<Reader> from = Reader::get( Formats::guess( input ) );
+      from->setNonbreaking( true );
+
+      std::unique_ptr<Writer> to = Writer::get( Formats::guess( input ) );
+      namer.tofmt( to->ext( ) );
+      namer.inputfilename( input );
+      to->filenamer( namer );
+
+      std::unique_ptr<SignalSet>data( new AnonymizingSignalSet( to->filenamer( ) ) );
+
+      if ( from->prepare( input, data ) < 0 ) {
+        std::cerr << "could not prepare file for reading" << std::endl;
+        continue;
+      }
+      else {
+        std::vector<std::string> files = to->write( from, data );
+        from->finish( );
+
+        for ( const auto& f : files ) {
+          std::cout << " written to " << f << std::endl;
+        }
+      }
+    }
   }
   else if ( attrs.empty( ) ) {
     // something to acknowledge the program did something

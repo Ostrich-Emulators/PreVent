@@ -26,15 +26,15 @@ private:
 };
 
 AnonymizingSignalSet::AnonymizingSignalSet( FileNamer& filenamer )
-: SignalSetWrapper( new BasicSignalSet( ) ), namer( filenamer ), firsttime( 0 ) {
+: SignalSetWrapper( new BasicSignalSet( ) ), namer( filenamer ), firsttime( std::numeric_limits<long>::max( ) ) {
 }
 
 AnonymizingSignalSet::AnonymizingSignalSet( const std::unique_ptr<SignalSet>& w,
-    FileNamer& filenamer ) : SignalSetWrapper( w ), namer( filenamer ), firsttime( 0 ) {
+    FileNamer& filenamer ) : SignalSetWrapper( w ), namer( filenamer ), firsttime( std::numeric_limits<long>::max( ) ) {
 }
 
 AnonymizingSignalSet::AnonymizingSignalSet( SignalSet * w, FileNamer& filenamer )
-: SignalSetWrapper( w ), namer( filenamer ), firsttime( 0 ) {
+: SignalSetWrapper( w ), namer( filenamer ), firsttime( std::numeric_limits<long>::max( ) ) {
 }
 
 AnonymizingSignalSet::~AnonymizingSignalSet( ) {
@@ -81,7 +81,7 @@ void AnonymizingSignalSet::complete( ) {
   // We want to create a separate file with whatever data was anonymized away
   // We'll use a FileNamer to figure out where our output directory is, 
   // and then use another one to generate a filename based on a new pattern.
-  // then, we'll just write the saveddata to that file
+  // then, we'll just write the saved data to that file
 
   std::unique_ptr<SignalSet> uniquer( this );
   std::string storeagefile = namer.filename( uniquer );
@@ -125,9 +125,10 @@ AnonymizingSignalData::~AnonymizingSignalData( ) {
 }
 
 void AnonymizingSignalData::add( const DataRow& row ) {
-  if ( 0 == firsttime ) {
+  if ( std::numeric_limits<long>::max( ) == firsttime ) {
     firsttime = row.time;
   }
+
   DataRow newrow( row );
   newrow.time -= firsttime;
   SignalDataWrapper::add( newrow );
