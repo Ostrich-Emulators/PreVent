@@ -64,6 +64,7 @@ void FileNamer::inputfilename( const std::string& inny ) {
     conversions["%d"] = input.substr( 0, basepos ) + dirsep;
   }
   else {
+    conversions["%i"] = input;
     conversions["%d"] = "";
   }
 }
