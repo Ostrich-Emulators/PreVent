@@ -13,6 +13,7 @@
 #include <sstream>        // std::istringstream
 #include <ctime>          // std::tm
 #include <locale>         // std::locale, std::time_get, std::use_facet
+#include <iomanip>
 
 Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ),
 quiet( false ), onefile( false ), local_time( false ) {
@@ -88,18 +89,12 @@ std::ostream& Reader::output( ) const {
   return ( quiet ? ( std::ostream& ) ss : std::cout );
 }
 
-bool Reader::getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ){
+bool Reader::getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) {
   return false;
 }
 
 void Reader::strptime2( const std::string& input, const std::string& format,
-    std::tm * tm ){
-  std::locale loc;
-  auto& tmget = std::use_facet <std::time_get<char> > (loc);
-
-  std::ios::iostate state;
-  std::istringstream iss (input);
-
-  tmget.get (iss, std::time_get<char>::iter_type(), iss, state, tm,
-             format.data(), format.data()+format.length() );
+    std::tm * tm ) {
+  std::istringstream iss( input );
+  iss >> std::get_time( tm, format.c_str() );
 }
