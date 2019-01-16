@@ -39,12 +39,8 @@ dr_time TdmsReader::parsetime( const std::string& tmptimestr ) {
     timestr = "0" + timestr;
   }
 
-  if ( "1.10.2018 08:06:02,0.816000" == tmptimestr ) {
-    std::cout << "here I am!" << std::endl;
-  }
-
   tm brokenTime;
-  strptime2( timestr.c_str( ), "%d.%m.%Y %H:%M:%S", &brokenTime );
+  strptime2( timestr, "%d.%m.%Y %H:%M:%S", &brokenTime );
   time_t sinceEpoch = timegm( &brokenTime );
   return sinceEpoch * 1000;
 }
