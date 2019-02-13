@@ -13,6 +13,7 @@
 
 #include "BasicSignalData.h"
 #include "DataRow.h"
+#include "Options.h"
 
 #include <string>
 #include <iostream>
@@ -28,7 +29,7 @@ BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
 datacount( 0 ), livecount( 0 ), file( nullptr ), popping( false ), iswave( wavedata ),
 highval( -std::numeric_limits<double>::max( ) ),
-lowval( std::numeric_limits<double>::max( ) ) {
+lowval( std::numeric_limits<double>::max( ) ), nocache( Options::asBool( OptionsKey::NOCACHE ) ) {
   scale( 0 );
   setChunkIntervalAndSampleRate( 2000, 1 );
   setUom( "Uncalib" );
@@ -51,6 +52,7 @@ std::unique_ptr<SignalData> BasicSignalData::shallowcopy( bool includedates ) {
   if ( includedates ) {
     copy->firstdata = this->firstdata;
     copy->lastdata = this->lastdata;
+    copy->nocache = this->nocache;
   }
 
   for ( auto x : metad( ) ) {
@@ -124,6 +126,10 @@ double BasicSignalData::lowwater( ) const {
 }
 
 void BasicSignalData::cache( ) {
+  if ( nocache ) {
+    return;
+  }
+
   std::stringstream ss;
 
   if ( nullptr == file ) {

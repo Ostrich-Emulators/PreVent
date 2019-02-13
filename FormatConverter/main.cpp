@@ -22,6 +22,7 @@
 #include "FileNamer.h"
 #include "TimezoneOffsetTimeSignalSet.h"
 #include "AnonymizingSignalSet.h"
+#include "Options.h"
 
 #include "build.h"
 
@@ -37,6 +38,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-l or --localtime"
       << std::endl << "\t-p or --pattern <naming pattern>"
       << std::endl << "\t-n or --no-break or --one-file"
+      << std::endl << "\t-C or --no-cache"
       << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
       << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml, stpjson, tdms, "
       << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
@@ -76,6 +78,7 @@ struct option longopts[] = {
   { "localtime", no_argument, NULL, 'l' },
   { "local", no_argument, NULL, 'l' },
   { "stop-after-one", no_argument, NULL, '1' },
+  { "no-cache", no_argument, NULL, 'C' },
   { 0, 0, 0, 0 }
 };
 
@@ -94,7 +97,7 @@ int main( int argc, char** argv ) {
   bool stopatone = false;
   int compression = Writer::DEFAULT_COMPRESSION;
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1C", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -119,6 +122,9 @@ int main( int argc, char** argv ) {
         break;
       case 'l':
         dolocaltime = true;
+        break;
+      case 'C':
+        Options::set( OptionsKey::NOCACHE, true );
         break;
       case 'n':
         nobreak = true;
@@ -259,7 +265,7 @@ int main( int argc, char** argv ) {
       data.reset( new TimezoneOffsetTimeSignalSet( data.release( ) ) );
     }
     if ( anonymize ) {
-      data.reset( new AnonymizingSignalSet( data.release( ), to->filenamer() ) );
+      data.reset( new AnonymizingSignalSet( data.release( ), to->filenamer( ) ) );
     }
 
     std::string input( argv[i] );
