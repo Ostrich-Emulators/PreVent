@@ -26,9 +26,21 @@ TdmsReader::~TdmsReader( ) {
 
 }
 
-dr_time TdmsReader::parsetime( const std::string& tmptimestr ) {
+void TdmsReader::newGroup( TdmsGroup * grp ) {
+  output( ) << "new group: " << grp->getName( ) << std::endl;
+}
+
+void TdmsReader::newChannel( TdmsChannel * channel ) {
+  output( ) << "new channel: " << channel->getName( ) << std::endl;
+}
+
+bool TdmsReader::newValue( TdmsChannel * channel, double val ) {
+  return false;
+}
+
+dr_time TdmsReader::parsetime( const std::string & tmptimestr ) {
   // sample: 14.12.2017 17:49:24,0.000000
-  
+
   // first: remove the comma and everything after it
   size_t x = tmptimestr.rfind( ',' );
   std::string timestr = tmptimestr.substr( 0, x );
@@ -55,6 +67,7 @@ int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet
   }
 
   parser.reset( new TdmsParser( recordset ) );
+  parser->addListener( this );
   return (parser->fileOpeningError( ) ? 1 : 0 );
 }
 
@@ -63,7 +76,7 @@ void TdmsReader::finish( ) {
 
 ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
   int retcode = 0;
-  parser->read( false );
+  parser->read( true );
 
   unsigned int groupCount = parser->getGroupCount( );
   for ( unsigned int i = 0; i < groupCount; i++ ) {
@@ -146,7 +159,7 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
           }
           else {
             if ( signal->wave( ) ) {
-              // for waves, we need to construct a string of values that is 
+              // for waves, we need to construct a string of values that is
               // {Frequency} items big
 
               std::vector<double> doubles;

@@ -10,6 +10,7 @@ using namespace std;
 class TdmsGroup;
 class TdmsObject;
 class TdmsChannel;
+class TdmsListener;
 
 class TdmsParser
 {
@@ -19,6 +20,9 @@ public:
 	TdmsParser(const std::string &);
 	TdmsParser(char *);
 	~TdmsParser();
+
+	void addListener( TdmsListener * );
+	std::vector<TdmsListener *> listeners() const;
 
 	int fileOpeningError(){return file.is_open() ? 0 : 1;}
 
@@ -46,6 +50,8 @@ private:
 	TdmsObject *d_prev_object;
 	unsigned long long d_file_size;
 	std::map<std::string, std::string> properties;
+
+	std::vector<TdmsListener *> listenees;
 };
 
 #endif

@@ -2,10 +2,14 @@
 #include <cstring>
 #include <stdlib.h>
 
+#include "TdmsParser.h"
+#include "TdmsListener.h"
+
 using namespace std;
 
-TdmsChannel::TdmsChannel(const std::string& name, std::iendianfstream& f)
-  : name(name), file(f), dataType(0), typeSize(0), dimension(0), nvalues(0)
+TdmsChannel::TdmsChannel(const std::string& name, std::iendianfstream& f, TdmsParser * p)
+  : name(name), file(f), dataType(0), typeSize(0), dimension(0), nvalues(0),
+    d_parser(p)
 {
 }
 
@@ -175,6 +179,18 @@ void TdmsChannel::readStrings()
 		POS = offset;
 	}
 }
+
+void TdmsChannel::appendValue(double val){
+  bool ok = true;
+  for( auto& l : d_parser->listeners() ){
+    ok = ok && l->newValue( this, val );
+  }
+
+  if( ok ){
+    dataVector.push_back(val);
+  }
+}
+
 
 string TdmsChannel::readValue(unsigned int itype, bool verbose)
 {

@@ -62,6 +62,14 @@ void TdmsParser::read(const bool verbose)
 	file.close();
 }
 
+void TdmsParser::addListener(TdmsListener * l ){
+  listenees.push_back(l);
+}
+
+std::vector<TdmsListener *> TdmsParser::listeners() const {
+  return listenees;
+}
+
 unsigned long long TdmsParser::readSegment(const bool verbose, bool *atEnd)
 {
 	TdmsLeadIn leadIn(this, verbose);//read Lead In;

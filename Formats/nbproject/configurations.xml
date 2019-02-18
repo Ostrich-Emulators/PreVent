@@ -41,6 +41,7 @@
       <itemPath>DataRow.h</itemPath>
       <itemPath>FileNamer.h</itemPath>
       <itemPath>Formats.h</itemPath>
+      <itemPath>Options.h</itemPath>
       <itemPath>Reader.h</itemPath>
       <itemPath>SignalData.h</itemPath>
       <itemPath>SignalSet.h</itemPath>
@@ -89,6 +90,7 @@
       <itemPath>DataRow.cpp</itemPath>
       <itemPath>FileNamer.cpp</itemPath>
       <itemPath>Formats.cpp</itemPath>
+      <itemPath>Options.cpp</itemPath>
       <itemPath>Reader.cpp</itemPath>
       <itemPath>SignalData.cpp</itemPath>
       <itemPath>SignalSet.cpp</itemPath>
@@ -208,6 +210,10 @@
       <item path="OffsetTimeSignalSet.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="OffsetTimeSignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Options.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Options.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Reader.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -394,6 +400,10 @@
       <item path="OffsetTimeSignalSet.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="OffsetTimeSignalSet.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="Options.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="Options.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="Reader.cpp" ex="false" tool="1" flavor2="0">
       </item>

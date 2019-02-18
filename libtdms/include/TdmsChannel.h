@@ -3,6 +3,7 @@
 
 #include "TdmsObject.h"
 #include "endianfstream.hh"
+#include "TdmsParser.h"
 
 #include <map>
 #include <string>
@@ -36,7 +37,7 @@ public:
 		tdsTypeDAQmxRawData = 0xFFFFFFFF
 	} tdsDataType;
 
-	TdmsChannel(const std::string& name, std::iendianfstream &f);
+	TdmsChannel(const std::string& name, std::iendianfstream &f, TdmsParser * p);
 	~TdmsChannel();
 
 	const std::string& getName() const {return name;}
@@ -55,7 +56,7 @@ public:
 	unsigned int getDataType() const {return dataType;}
 	void setDataType(unsigned int);
 
-	void appendValue(double val){dataVector.push_back(val);}
+	void appendValue(double val);
 	std::vector<double> getDataVector() {return dataVector;}
 
 	void appendImaginaryValue(double val){imagDataVector.push_back(val);}
@@ -95,5 +96,6 @@ private:
 	std::vector<double> dataVector;
 	std::vector<double> imagDataVector;
 	std::vector<std::string> stringVector;
+	TdmsParser * d_parser;
 };
 #endif

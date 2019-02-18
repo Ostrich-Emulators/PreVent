@@ -3,6 +3,7 @@
 #include "TdmsObject.h"
 #include "TdmsGroup.h"
 #include "TdmsChannel.h"
+#include "TdmsListener.h"
 
 using namespace std;
 
@@ -44,9 +45,14 @@ void TdmsMetaData::readObject(std::iendianfstream& file, const bool verbose)
 	if (o->isGroup()){
 		TdmsGroup *group = d_parser->getGroup(path);
 		if (!group){
-			d_parser->addGroup(new TdmsGroup(path));
+      group = new TdmsGroup(path);
+			d_parser->addGroup(group);
 			if (verbose)
 				printf("NEW GROUP: %s\n", path.c_str());
+
+      for( auto&x : d_parser->listeners() ){
+        x->newGroup( group );
+      }
 		}
 	} else {
 		int islash = path.find("'/'", 1) + 1;
@@ -59,11 +65,15 @@ void TdmsMetaData::readObject(std::iendianfstream& file, const bool verbose)
 			d_parser->addGroup(group);
 			if (verbose)
 				printf("NEW GROUP: %s\n", path.c_str());
+
+      for( auto&x : d_parser->listeners() ){
+        x->newGroup( group );
+      }
 		}
 
 		TdmsChannel *channel = group->getChannel(channelName);
 		if (channel == 0){
-			channel = new TdmsChannel(channelName, file);
+			channel = new TdmsChannel(channelName, file, d_parser);
 			channel->setProperties(o->getProperties());
 			channel->setDimension(o->getDimension());
 
@@ -74,6 +84,10 @@ void TdmsMetaData::readObject(std::iendianfstream& file, const bool verbose)
 			group->addChannel(channel);
 			if (verbose)
 				printf("NEW CHANNEL: %s\n", channelName.c_str());
+
+      for( auto&x : d_parser->listeners() ){
+        x->newChannel( channel );
+      }
 		}
 
 		std::map<std::string, std::string> properties = o->getProperties();
