@@ -21,6 +21,10 @@ TdmsParser::~TdmsParser()
 {
 }
 
+void TdmsParser::close(){
+  file.close();
+  file.clear();
+}
 void TdmsParser::read(const bool verbose)
 {
 	file.seekg(0, std::ios::end);
@@ -59,7 +63,7 @@ void TdmsParser::read(const bool verbose)
 	if (verbose)
 		printf("\nNumber of segments: %d\n", seg);
 
-	file.close();
+	//file.close();
 }
 
 void TdmsParser::addListener(TdmsListener * l ){

@@ -4,10 +4,12 @@
 #include "TdmsObject.h"
 #include "endianfstream.hh"
 #include "TdmsParser.h"
+#include "ChannelOffsetInfo.h"
 
 #include <map>
 #include <string>
 #include <vector>
+#include <list>
 
 class TdmsChannel
 {
@@ -82,6 +84,9 @@ public:
 	void readDAQmxData(std::vector<FormatChangingScaler>, std::vector<unsigned int>);
 	void readDAQmxValue(unsigned int type, double slope, double intercept, bool verbose = false);
 
+	void addOffset( const ChannelOffsetInfo& );
+	std::vector<double> nextChunk();
+
 private:
 	void readStrings();
 
@@ -97,5 +102,6 @@ private:
 	std::vector<double> imagDataVector;
 	std::vector<std::string> stringVector;
 	TdmsParser * d_parser;
+	std::list<ChannelOffsetInfo> offsets;
 };
 #endif

@@ -548,7 +548,7 @@ void TdmsObject::readRawData(unsigned long long total_chunk_size, TdmsChannel* c
 
 	if (channel){
 		channel->setDataType(rawDataType);
-		channel->readRawData(total_chunk_size, false);
+		channel->readRawData(total_chunk_size,d_verbose);
 	}
 }
 

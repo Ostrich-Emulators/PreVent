@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/ChannelOffsetInfo.o \
 	${OBJECTDIR}/TdmsChannel.o \
 	${OBJECTDIR}/TdmsGroup.o \
 	${OBJECTDIR}/TdmsLeadIn.o \
@@ -66,6 +67,11 @@ LDLIBSOPTIONS=
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
+
+${OBJECTDIR}/ChannelOffsetInfo.o: ChannelOffsetInfo.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ChannelOffsetInfo.o ChannelOffsetInfo.cpp
 
 ${OBJECTDIR}/TdmsChannel.o: TdmsChannel.cpp
 	${MKDIR} -p ${OBJECTDIR}

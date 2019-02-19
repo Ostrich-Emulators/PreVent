@@ -20,6 +20,8 @@
 #include <TdmsParser.h>
 #include <TdmsListener.h>
 
+#include "BasicSignalSet.h"
+
 class SignalData;
 
 class TdmsReader : public Reader, TdmsListener {
@@ -46,6 +48,13 @@ protected:
 
 private:
 	std::unique_ptr<TdmsParser> parser;
+	BasicSignalSet saved;
+	SignalSet * filler;
+	dr_time lastSaveTime;
+
+	void startSaving( dr_time now );
+  void copySavedInto( std::unique_ptr<SignalSet>& newset );
+	std::map<TdmsChannel *, dr_time> lastTimes;
 
 	static dr_time parsetime( const std::string& timestr );
 	bool writeWaveChunkAndReset( int& count, int& nancount, std::vector<double>& doubles,

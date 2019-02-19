@@ -88,8 +88,8 @@ std::unique_ptr<SignalData>& BasicSignalSet::addVital( const std::string& name, 
     if ( x->name( ) == name ) {
       if ( nullptr != added ) {
         *added = false;
-        return x;
       }
+      return x;
     }
   }
 
@@ -107,8 +107,8 @@ std::unique_ptr<SignalData>& BasicSignalSet::addWave( const std::string& name, b
     if ( x->name( ) == name ) {
       if ( nullptr != added ) {
         *added = false;
-        return x;
       }
+      return x;
     }
   }
 
@@ -178,6 +178,6 @@ void BasicSignalSet::clearOffsets( ) {
   segs.clear( );
 }
 
-void BasicSignalSet::complete(){
+void BasicSignalSet::complete( ) {
   // nothing to do
 }

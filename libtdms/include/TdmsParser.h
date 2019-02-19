@@ -41,6 +41,7 @@ public:
 	std::map<std::string, std::string> getProperties(){return properties;}
 	string propertiesToString() const;
 
+	void close();
 private:
 	unsigned long long readSegment(const bool, bool *atEnd);
 	void readRawData(unsigned long long, const bool);
