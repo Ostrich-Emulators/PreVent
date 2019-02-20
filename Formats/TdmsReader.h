@@ -17,12 +17,24 @@
 #include "Reader.h"
 #include <memory>
 #include <string>
+#include <deque>
 #include <TdmsParser.h>
 #include <TdmsListener.h>
 
 #include "BasicSignalSet.h"
 
 class SignalData;
+
+class WaveRecord {
+public:
+	bool seenfloat;
+	size_t nancount;
+
+	virtual ~WaveRecord();
+	WaveRecord();
+	WaveRecord( const WaveRecord&);
+	WaveRecord& operator=( const WaveRecord& );
+};
 
 class TdmsReader : public Reader, TdmsListener {
 public:
@@ -37,7 +49,7 @@ public:
 	 * @param val
 	 * @return true, if the reader should push this value to its internal data vector
 	 */
-	virtual bool newValue( TdmsChannel * channel, double val ) override;
+	virtual void newValueChunk( TdmsChannel * channel, std::vector<double>& val ) override;
 
 
 protected:
@@ -55,10 +67,12 @@ private:
 	void startSaving( dr_time now );
   void copySavedInto( std::unique_ptr<SignalSet>& newset );
 	std::map<TdmsChannel *, dr_time> lastTimes;
+	std::map<TdmsChannel *, std::deque<double>> leftovers;
+	std::map<TdmsChannel *, WaveRecord> wavesave;
 
 	static dr_time parsetime( const std::string& timestr );
-	bool writeWaveChunkAndReset( int& count, int& nancount, std::vector<double>& doubles,
-			bool& seenFloat, std::unique_ptr<SignalData>& signal, dr_time& time, int timeinc );
+	bool writeWaveChunk( size_t count, size_t nancount, std::vector<double>& doubles,
+			const bool seenFloat, const std::unique_ptr<SignalData>& signal, dr_time time );
 };
 
 #endif /* WFDBREADER_H */

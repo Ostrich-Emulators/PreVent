@@ -163,7 +163,7 @@ ReadResult ZlReader2::fill( std::unique_ptr<SignalSet>& info, const ReadResult& 
       }
     }
     else {
-      ss == x.second->rr;
+      ss = x.second->rr;
     }
   }
   return ss;

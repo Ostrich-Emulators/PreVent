@@ -35,7 +35,6 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/ChannelOffsetInfo.o \
 	${OBJECTDIR}/TdmsChannel.o \
 	${OBJECTDIR}/TdmsGroup.o \
 	${OBJECTDIR}/TdmsLeadIn.o \
@@ -48,8 +47,8 @@ OBJECTFILES= \
 CFLAGS=
 
 # CC Compiler Flags
-CCFLAGS=-g -O0 -D_XOPEN_SOURCE=700
-CXXFLAGS=-g -O0 -D_XOPEN_SOURCE=700
+CCFLAGS=-std=c++17
+CXXFLAGS=-std=c++17
 
 # Fortran Compiler Flags
 FFLAGS=
@@ -68,40 +67,35 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}: ${OBJECTFILE
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
 
-${OBJECTDIR}/ChannelOffsetInfo.o: ChannelOffsetInfo.cpp
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/ChannelOffsetInfo.o ChannelOffsetInfo.cpp
-
 ${OBJECTDIR}/TdmsChannel.o: TdmsChannel.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsChannel.o TdmsChannel.cpp
+	$(COMPILE.cc) -g -Wall -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsChannel.o TdmsChannel.cpp
 
 ${OBJECTDIR}/TdmsGroup.o: TdmsGroup.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsGroup.o TdmsGroup.cpp
+	$(COMPILE.cc) -g -Wall -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsGroup.o TdmsGroup.cpp
 
 ${OBJECTDIR}/TdmsLeadIn.o: TdmsLeadIn.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsLeadIn.o TdmsLeadIn.cpp
+	$(COMPILE.cc) -g -Wall -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsLeadIn.o TdmsLeadIn.cpp
 
 ${OBJECTDIR}/TdmsMetaData.o: TdmsMetaData.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsMetaData.o TdmsMetaData.cpp
+	$(COMPILE.cc) -g -Wall -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsMetaData.o TdmsMetaData.cpp
 
 ${OBJECTDIR}/TdmsObject.o: TdmsObject.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsObject.o TdmsObject.cpp
+	$(COMPILE.cc) -g -Wall -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsObject.o TdmsObject.cpp
 
 ${OBJECTDIR}/TdmsParser.o: TdmsParser.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsParser.o TdmsParser.cpp
+	$(COMPILE.cc) -g -Wall -Iinclude -std=c++14 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/TdmsParser.o TdmsParser.cpp
 
 # Subprojects
 .build-subprojects:

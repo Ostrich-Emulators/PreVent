@@ -21,18 +21,56 @@ TdmsParser::~TdmsParser()
 {
 }
 
-void TdmsParser::close(){
-  file.close();
-  file.clear();
+void TdmsParser::close( ) {
+  file.close( );
+  file.clear( );
+
+  for ( TdmsGroup * c : groups ) {
+    for ( size_t i = 0; i < c->getGroupSize( ); i++ ) {
+      c->getChannel( i )->freeMemory( );
+    }
+    delete c;
+  }
+
+  groups.clear( );
 }
+
+void TdmsParser::init( ) {
+  file.seekg( 0, std::ios::end );
+  d_file_size = file.tellg( );
+  file.seekg( 0, std::ios::beg );
+}
+
+bool TdmsParser::nextSegment( const bool verbose ) {
+  if ( file.tellg( ) < (unsigned int) d_file_size ) {
+    unsigned long long nextSegmentOffset = 0;
+    bool atEnd = false;
+
+    nextSegmentOffset = readSegment( verbose, &atEnd );
+
+    if ( verbose ) {
+      printf( "\nPOS after segment: 0x%X\n", (unsigned int) file.tellg( ) );
+      if ( atEnd )
+        printf( "Should skip to the end of file...File format error?!\n" );
+    }
+
+    if ( nextSegmentOffset >= (unsigned long long) d_file_size ) {
+      if ( verbose ) printf( "\tEnd of file is reached after segment!\n" );
+    }
+
+    // if we're not at the end, we can read more
+    return !atEnd;
+  }
+
+  // didn't read anything, so we're done reading
+  return false;
+}
+
 void TdmsParser::read(const bool verbose)
 {
-	file.seekg(0, std::ios::end);
-	d_file_size = file.tellg();
+  init();
 	if (verbose)
 		printf("File size is: %d bytes (0x%X).\n", (unsigned int)d_file_size, (unsigned int)d_file_size);
-
-	file.seekg(0, std::ios::beg);
 
 	int seg = 0;
 	unsigned long long nextSegmentOffset = 0;
@@ -63,15 +101,19 @@ void TdmsParser::read(const bool verbose)
 	if (verbose)
 		printf("\nNumber of segments: %d\n", seg);
 
-	//file.close();
+	file.close();
 }
 
-void TdmsParser::addListener(TdmsListener * l ){
-  listenees.push_back(l);
+void TdmsParser::addListener( TdmsListener * l ) {
+  listenees.push_back( l );
 }
 
-std::vector<TdmsListener *> TdmsParser::listeners() const {
+std::vector<TdmsListener *> TdmsParser::listeners( ) const {
   return listenees;
+}
+
+bool TdmsParser::hasListeners( ) const {
+  return !listenees.empty( );
 }
 
 unsigned long long TdmsParser::readSegment(const bool verbose, bool *atEnd)

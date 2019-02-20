@@ -4,7 +4,6 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>include/ChannelOffsetInfo.h</itemPath>
       <itemPath>include/TdmsChannel.h</itemPath>
       <itemPath>include/TdmsGroup.h</itemPath>
       <itemPath>include/TdmsLeadIn.h</itemPath>
@@ -21,7 +20,6 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>ChannelOffsetInfo.cpp</itemPath>
       <itemPath>TdmsChannel.cpp</itemPath>
       <itemPath>TdmsGroup.cpp</itemPath>
       <itemPath>TdmsLeadIn.cpp</itemPath>
@@ -51,11 +49,11 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <standard>11</standard>
           <incDir>
             <pElem>include</pElem>
           </incDir>
-          <commandLine>-g -O0 -D_XOPEN_SOURCE=700</commandLine>
+          <commandLine>-std=c++17</commandLine>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
           <output>${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libtdms.${CND_DLIB_EXT}</output>
@@ -95,10 +93,14 @@
                             perm="644"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
       </packaging>
-      <item path="ChannelOffsetInfo.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="TdmsChannel.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="TdmsGroup.cpp" ex="false" tool="1" flavor2="11">
@@ -110,8 +112,6 @@
       <item path="TdmsObject.cpp" ex="false" tool="1" flavor2="11">
       </item>
       <item path="TdmsParser.cpp" ex="false" tool="1" flavor2="11">
-      </item>
-      <item path="include/ChannelOffsetInfo.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/TdmsChannel.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -147,6 +147,7 @@
             <pElem>include</pElem>
           </incDir>
           <commandLine>-O2 -D_XOPEN_SOURCE=700</commandLine>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -192,10 +193,14 @@
                             perm="644"
                             owner="root"
                             group="bin"/>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
         </packFileList>
       </packaging>
-      <item path="ChannelOffsetInfo.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="TdmsChannel.cpp" ex="false" tool="1" flavor2="9">
       </item>
       <item path="TdmsGroup.cpp" ex="false" tool="1" flavor2="9">
@@ -207,8 +212,6 @@
       <item path="TdmsObject.cpp" ex="false" tool="1" flavor2="9">
       </item>
       <item path="TdmsParser.cpp" ex="false" tool="1" flavor2="9">
-      </item>
-      <item path="include/ChannelOffsetInfo.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/TdmsChannel.h" ex="false" tool="3" flavor2="0">
       </item>

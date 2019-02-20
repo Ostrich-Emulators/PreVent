@@ -33,6 +33,7 @@ void TdmsReader::newChannel( TdmsChannel * channel ) {
   //output( ) << "new channel: " << channel->getName( ) << std::endl;
   std::string name = channel->getName( );
   name = name.substr( 2, name.length( ) - 3 );
+
   // output( ) << "reading " << name << std::endl;
   dr_time time = 0;
   const int timeinc = 1024; // philips runs at 1.024s, or 1024 ms
@@ -40,6 +41,10 @@ void TdmsReader::newChannel( TdmsChannel * channel ) {
   auto propmap = channel->getProperties( );
 
   bool iswave = ( propmap.count( "Frequency" ) > 0 && std::stod( propmap.at( "Frequency" ) ) > 1.0 );
+
+  if ( iswave ) {
+    wavesave.insert( std::make_pair( channel, WaveRecord( ) ) );
+  }
 
   // figure out if this is a wave or a vital
   std::unique_ptr<SignalData>& signal = ( iswave
@@ -78,13 +83,108 @@ void TdmsReader::newChannel( TdmsChannel * channel ) {
     signal->setMeta( p.first, p.second );
   }
 
-  std::cout << signal->name( ) << ( iswave ? " wave" : " vital" ) << "; timeinc: " << timeinc << "; freq: " << freq << std::endl;
+  //std::cout << signal->name( ) << ( iswave ? " wave" : " vital" ) << "; timeinc: " << timeinc << "; freq: " << freq << std::endl;
   signal->setChunkIntervalAndSampleRate( timeinc, freq );
-  std::cout << signal->metai( ).at( SignalData::CHUNK_INTERVAL_MS ) << std::endl;
 }
 
-bool TdmsReader::newValue( TdmsChannel * channel, double val ) {
-  return false;
+void TdmsReader::newValueChunk( TdmsChannel * channel, std::vector<double>& vals ) {
+  std::string name = channel->getName( );
+  name = name.substr( 2, name.length( ) - 3 );
+  //output( ) << name << " new values: " << vals.size( ) << std::endl;
+
+  auto propmap = channel->getProperties( );
+  bool iswave = ( propmap.count( "Frequency" ) > 0 && std::stod( propmap.at( "Frequency" ) ) > 1.0 );
+
+  // get our SignalData for this channel
+  std::unique_ptr<SignalData>& signal = ( iswave
+      ? filler->addWave( name )
+      : filler->addVital( name ) );
+  int timeinc = signal->metai( ).at( SignalData::CHUNK_INTERVAL_MS );
+  size_t freq = signal->metai( ).at( SignalData::READINGS_PER_CHUNK );
+
+  if ( iswave ) {
+    // for waves, we need to construct a string of values that is
+    // {Frequency} items big
+
+    // for now, just add whatever we get to our leftovers, and work from there
+    auto& leftover = leftovers[channel];
+    leftover.insert( leftover.end( ), vals.begin( ), vals.end( ) );
+    size_t totalvals = leftover.size( );
+
+    if ( totalvals < freq ) {
+      // easiest case: we don't have enough data to
+      // write a whole DataRow yet so just move on
+      return;
+    }
+
+    // we have enough values to make at least one DataRow
+    // make as many whole DataRows as we can, and save the leftovers
+
+    // we pretty much always get a datatype of float, even though
+    // not all the data IS float, by the way
+
+    double intpart;
+    while ( leftover.size( ) >= freq ) {
+      std::vector<double> doubles;
+      doubles.reserve( freq );
+      for ( size_t i = 0; i < freq; i++ ) {
+        double d = leftover.front( );
+        leftover.pop_front( );
+        bool nan = isnan( d );
+        doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
+
+        if ( nan ) {
+          // if we have a whole DataRow worth of nans, don't write anything
+          wavesave[channel].nancount++;
+        }
+        else if ( !wavesave[channel].seenfloat ) {
+          double fraction = std::modf( d, &intpart );
+          if ( 0 != fraction ) {
+            wavesave[channel].seenfloat = true;
+          }
+        }
+      }
+
+      writeWaveChunk( freq, wavesave[channel].nancount, doubles,
+          wavesave[channel].seenfloat, signal, lastTimes[channel] );
+      lastTimes[channel] += timeinc;
+      wavesave[channel].nancount = 0;
+    }
+
+    //output( ) << channel->getName()<<" leaving " << leftover.size( ) << " elements leftover" << std::endl;
+  }
+  else {
+    // vitals are easy...we don't have to stack values into strings
+    // and we never have leftovers (yet)
+    for ( auto& d : vals ) {
+      if ( !isnan( d ) ) {
+        // check if our number ends in .000000...
+        double intpart = 0;
+        double mantissa = std::modf( d, &intpart );
+        bool isint = ( 0 == mantissa );
+        if ( isint ) {
+          DataRow row( lastTimes[channel], std::to_string( (int) intpart ) );
+          signal->add( row );
+        }
+        else {
+          DataRow row( lastTimes[channel], std::to_string( d ) );
+          signal->add( row );
+        }
+      }
+      lastTimes[channel] += timeinc;
+    }
+  }
+
+
+  //  int count = 0;
+  //  while ( count < vals.size( ) ) {
+  //    if ( 0 == count % 25 ) {
+  //      output( ) << std::endl << "\t";
+  //    }
+  //
+  //    output( ) << vals[count++] << " ";
+  //  }
+  //  output( ) << std::endl;
 }
 
 void TdmsReader::startSaving( dr_time savetime ) {
@@ -134,9 +234,6 @@ int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet
 }
 
 void TdmsReader::finish( ) {
-  for ( auto & chtime : lastTimes ) {
-    chtime.first->freeMemory( );
-  }
   parser->close( );
 }
 
@@ -185,165 +282,37 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
   filler = info.get( );
 
   if ( ReadResult::FIRST_READ == lastfill ) {
-    parser->read( false );
+    parser->read();
   }
 
-  unsigned int groupCount = parser->getGroupCount( );
-  for ( unsigned int i = 0; i < groupCount; i++ ) {
-    TdmsGroup *group = parser->getGroup( i );
-    if ( !group ) {
-      continue;
+  // we're done reading the file, but now we need to fill out the last DataRow
+  // from our leftovers
+  for ( auto&x : leftovers ) {
+    std::string name = x.first->getName( );
+    name = name.substr( 2, name.length( ) - 3 );
+    auto propmap = x.first->getProperties( );
+    bool iswave = ( propmap.count( "Frequency" ) > 0 && std::stod( propmap.at( "Frequency" ) ) > 1.0 );
+
+    // get our SignalData for this channel
+    std::unique_ptr<SignalData>& signal = ( iswave
+        ? filler->addWave( name )
+        : filler->addVital( name ) );
+    size_t freq = signal->metai( ).at( SignalData::READINGS_PER_CHUNK );
+    size_t cnt = x.second.size();
+    for( size_t i=cnt; i< freq; i++ ){
+      x.second.push_back( SignalData::MISSING_VALUE );
     }
 
-    unsigned int channelsCount = group->getGroupSize( );
-    for ( unsigned int j = 0; j < channelsCount; j++ ) {
-      // cycle through all the channels, getting one chunk at a time.
-      // when we're all out of chunks to read, free the channel
-      // and continue on with the others.
-
-      TdmsChannel * ch = group->getChannel( j );
-      if ( ch ) {
-        std::vector<double> data = ch->nextChunk( );
-        if ( !data.empty( ) ) {
-          int freq = 1;
-          std::string freqstr = ch->getProperty( "Frequency" );
-          if ( "" != freqstr ) {
-            double f = std::stod( freqstr );
-            freq = ( f < 1 ? 1 : (int) ( f * 1.024 ) );
-          }
-
-          std::string name = ch->getName( );
-          name = name.substr( 2, name.length( ) - 3 );
-          // output( ) << "reading " << name << std::endl;
-          auto propmap = ch->getProperties( );
-
-          bool iswave = ( propmap.count( "Frequency" ) > 0 && std::stod( propmap.at( "Frequency" ) ) > 1.0 );
-
-          // figure out if this is a wave or a vital
-          std::unique_ptr<SignalData>& signal = ( iswave
-              ? filler->addWave( name )
-              : filler->addVital( name ) );
-
-
-          int timeinc = signal->metai( ).at( SignalData::CHUNK_INTERVAL_MS );
-          unsigned int type = ch->getDataType( );
-          dr_time time = lastTimes[ch];
-
-          if ( type == TdmsChannel::tdsTypeComplexSingleFloat
-              || type == TdmsChannel::tdsTypeComplexDoubleFloat ) {
-            std::cerr << "WARNING: complex data types are not yet supported"
-                << std::endl;
-            //            std::vector<double> imData = ch->getImaginaryDataVector( );
-            //            double iVal1 = imData.front( ), iVal2 = imData.back( );
-            //            std::string fmt = ":\n\t%g";
-            //            fmt.append( ( iVal1 < 0 ) ? "-i*%g ... %g" : "+i*%g ... %g" );
-            //            fmt.append( ( iVal2 < 0 ) ? "-i*%g\n" : "+i*%g\n" );
-            //            printf( fmt.c_str( ), data.front( ), fabs( iVal1 ), data.back( ), fabs( iVal2 ) );
-          }
-          else {
-            if ( signal->wave( ) ) {
-              // for waves, we need to construct a string of values that is
-              // {Frequency} items big
-
-              std::vector<double> doubles;
-
-              // we pretty much always get a datatype of float, even though
-              // not all the data IS float
-              bool seenFloat = false;
-              // if we have a whole datarow worth of nans, don't write anything
-              int nancount = 0;
-              // how many numbers have we seen?
-              int cnt = 0;
-              double intpart;
-              while ( !data.empty( ) ) {
-                for ( auto& d : data ) {
-                  bool nan = isnan( d );
-                  doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
-                  cnt++;
-
-                  if ( nan ) {
-                    nancount++;
-                  }
-                  else {
-                    double fraction = std::modf( d, &intpart );
-                    if ( 0 != fraction ) {
-                      seenFloat = true;
-                    }
-                  }
-
-                  if ( cnt == freq ) {
-                    writeWaveChunkAndReset( cnt, nancount, doubles, seenFloat, signal, time, timeinc );
-                  }
-                }
-
-                data = ch->nextChunk( );
-              }
-
-              if ( 0 != cnt && nancount != cnt ) {
-                // uh oh...we have some un-flushed data (probably an interrupted
-                // read) so normalize it, then add it
-                for (; cnt < freq; cnt++ ) {
-                  doubles.push_back( SignalData::MISSING_VALUE );
-                }
-
-                writeWaveChunkAndReset( cnt, nancount, doubles, seenFloat, signal, time, timeinc );
-              }
-
-            }
-            else {
-              // vitals are much easier...
-              while ( !data.empty( ) ) {
-                for ( auto& d : data ) {
-                  if ( !isnan( d ) ) {
-                    // check if our number ends in .000000...
-                    double intpart = 0;
-                    double mantissa = std::modf( d, &intpart );
-                    bool isint = ( 0 == mantissa );
-                    if ( isint ) {
-                      DataRow row( time, std::to_string( (int) intpart ) );
-                      signal->add( row );
-                    }
-                    else {
-                      DataRow row( time, std::to_string( d ) );
-                      signal->add( row );
-                    }
-                  }
-                  time += timeinc;
-                }
-
-                data = ch->nextChunk( );
-              }
-            }
-          }
-        }
-        //        else if ( stringCount ) {
-        //          std::cerr << "WARNING: string datasets are not yet supported" << std::endl;
-        //          std::vector<std::string> strings = ch->getStringVector( );
-        //          string str1 = strings.front( );
-        //          if ( str1.empty( ) ){
-        //            str1 = "empty string";
-        //          }
-        //          string str2 = strings.back( );
-        //          if ( str2.empty( ) ){
-        //            str2 = "empty string";
-        //          }
-        //          printf( ":\n\t%s ... %s\n", str1.c_str( ), str2.c_str( ) );
-        //        }
-        //        else{
-        //          printf( ".\n" );
-        //        }
-
-        ch->freeMemory( );
-      }
-    }
+    std::vector<double> none;
+    this->newValueChunk( x.first, none );
   }
 
   // doesn't look like Tdms can do incremental reads, so we're at the end
   return ( 0 <= retcode ? ReadResult::END_OF_FILE : ReadResult::ERROR );
 }
 
-bool TdmsReader::writeWaveChunkAndReset( int& count, int& nancount, std::vector<double>& doubles,
-    bool& seenFloat, std::unique_ptr<SignalData>& signal, dr_time& time, int timeinc ) {
+bool TdmsReader::writeWaveChunk( size_t count, size_t nancount, std::vector<double>& doubles,
+    const bool seenFloat, const std::unique_ptr<SignalData>& signal, dr_time time ) {
 
   // make sure we have some data!
   if ( nancount != count ) {
@@ -361,7 +330,7 @@ bool TdmsReader::writeWaveChunkAndReset( int& count, int& nancount, std::vector<
       vals << doubles[0];
     }
 
-    for ( int i = 1; i < count; i++ ) {
+    for ( size_t i = 1; i < count; i++ ) {
       vals << ",";
       if ( SignalData::MISSING_VALUE == doubles[i] ) {
         vals << SignalData::MISSING_VALUESTR;
@@ -376,11 +345,24 @@ bool TdmsReader::writeWaveChunkAndReset( int& count, int& nancount, std::vector<
     signal->add( row );
   }
 
-  doubles.clear( );
-  count = 0;
-  nancount = 0;
-  seenFloat = false;
-  time += timeinc;
-
   return true;
+}
+
+WaveRecord::~WaveRecord( ) {
+}
+
+WaveRecord::WaveRecord( ) : seenfloat( false ), nancount( 0 ) {
+}
+
+WaveRecord::WaveRecord( const WaveRecord& orig )
+: seenfloat( orig.seenfloat ), nancount( orig.nancount ) {
+}
+
+WaveRecord& WaveRecord::operator=(const WaveRecord& orig ) {
+  if ( &orig != this ) {
+    seenfloat = orig.seenfloat;
+    nancount = orig.nancount;
+  }
+
+  return *this;
 }
