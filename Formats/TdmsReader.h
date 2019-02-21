@@ -25,15 +25,20 @@
 
 class SignalData;
 
-class WaveRecord {
+class SignalSaver {
 public:
 	bool seenfloat;
 	size_t nancount;
+	bool waiting;
+	bool iswave;
+	std::string name;
+	dr_time lasttime;
+	std::deque<double> leftovers;
 
-	virtual ~WaveRecord();
-	WaveRecord();
-	WaveRecord( const WaveRecord&);
-	WaveRecord& operator=( const WaveRecord& );
+	virtual ~SignalSaver( );
+	SignalSaver( const std::string& name = "", bool wave = false );
+	SignalSaver( const SignalSaver& );
+	SignalSaver& operator=(const SignalSaver&);
 };
 
 class TdmsReader : public Reader, TdmsListener {
@@ -54,24 +59,16 @@ public:
 
 protected:
 	int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
-	void finish( ) override;
-
 	ReadResult fill( std::unique_ptr<SignalSet>& data, const ReadResult& lastfill ) override;
 
 private:
 	std::unique_ptr<TdmsParser> parser;
-	BasicSignalSet saved;
 	SignalSet * filler;
-	dr_time lastSaveTime;
+	std::map<TdmsChannel *, SignalSaver> signalsavers;
 
-	void startSaving( dr_time now );
-  void copySavedInto( std::unique_ptr<SignalSet>& newset );
-	std::map<TdmsChannel *, dr_time> lastTimes;
-	std::map<TdmsChannel *, std::deque<double>> leftovers;
-	std::map<TdmsChannel *, WaveRecord> wavesave;
-
+	bool isRollover( const dr_time& now, const dr_time& then ) const;
 	static dr_time parsetime( const std::string& timestr );
-	bool writeWaveChunk( size_t count, size_t nancount, std::vector<double>& doubles,
+	bool writeSignalRow( size_t count, size_t nancount, std::vector<double>& doubles,
 			const bool seenFloat, const std::unique_ptr<SignalData>& signal, dr_time time );
 };
 

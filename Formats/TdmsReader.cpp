@@ -19,11 +19,30 @@
 #include <TdmsGroup.h>
 #include <TdmsMetaData.h>
 
-TdmsReader::TdmsReader( ) : Reader( "TDMS" ), filler( nullptr ), lastSaveTime( 0 ) {
+TdmsReader::TdmsReader( ) : Reader( "TDMS" ), filler( nullptr ) {
 }
 
 TdmsReader::~TdmsReader( ) {
 
+}
+
+bool TdmsReader::isRollover( const dr_time& then, const dr_time& now ) const {
+  if ( nonbreaking( ) ) {
+    return false;
+  }
+
+  if ( 0 != then ) {
+    time_t modnow = now / 1000;
+    time_t modthen = then / 1000;
+
+    const int cdoy = ( localizingTime( ) ? localtime( &modnow ) : gmtime( &modnow ) )->tm_yday;
+    const int pdoy = ( localizingTime( ) ? localtime( &modthen ) : gmtime( &modthen ) )->tm_yday;
+    if ( cdoy != pdoy ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void TdmsReader::newGroup( TdmsGroup * grp ) {
@@ -42,8 +61,9 @@ void TdmsReader::newChannel( TdmsChannel * channel ) {
 
   bool iswave = ( propmap.count( "Frequency" ) > 0 && std::stod( propmap.at( "Frequency" ) ) > 1.0 );
 
-  if ( iswave ) {
-    wavesave.insert( std::make_pair( channel, WaveRecord( ) ) );
+  bool isnew = ( 0 == signalsavers.count( channel ) );
+  if ( isnew ) {
+    signalsavers.insert( std::make_pair( channel, SignalSaver( name, iswave ) ) );
   }
 
   // figure out if this is a wave or a vital
@@ -68,7 +88,10 @@ void TdmsReader::newChannel( TdmsChannel * channel ) {
         std::cout << name << ": " << p.first << " => " << p.second << std::endl;
       }
 
-      lastTimes.insert( std::make_pair( channel, time ) );
+      // do not to overwrite our lasttime if we're re-initing after a roll over
+      if ( isnew ) {
+        signalsavers[channel].lasttime = time;
+      }
     }
     else if ( "wf_increment" == p.first ) {
       // ignored--we're forcing 1024ms increments
@@ -88,112 +111,94 @@ void TdmsReader::newChannel( TdmsChannel * channel ) {
 }
 
 void TdmsReader::newValueChunk( TdmsChannel * channel, std::vector<double>& vals ) {
-  std::string name = channel->getName( );
-  name = name.substr( 2, name.length( ) - 3 );
+  SignalSaver& rec = signalsavers.at( channel );
   //output( ) << name << " new values: " << vals.size( ) << std::endl;
 
-  auto propmap = channel->getProperties( );
-  bool iswave = ( propmap.count( "Frequency" ) > 0 && std::stod( propmap.at( "Frequency" ) ) > 1.0 );
-
   // get our SignalData for this channel
-  std::unique_ptr<SignalData>& signal = ( iswave
-      ? filler->addWave( name )
-      : filler->addVital( name ) );
+  std::unique_ptr<SignalData>& signal = ( rec.iswave
+      ? filler->addWave( rec.name )
+      : filler->addVital( rec.name ) );
   int timeinc = signal->metai( ).at( SignalData::CHUNK_INTERVAL_MS );
   size_t freq = signal->metai( ).at( SignalData::READINGS_PER_CHUNK );
 
-  if ( iswave ) {
-    // for waves, we need to construct a string of values that is
-    // {Frequency} items big
+  // for now, just add whatever we get to our leftovers, and work from there
+  rec.leftovers.insert( rec.leftovers.end( ), vals.begin( ), vals.end( ) );
+  size_t totalvals = rec.leftovers.size( );
 
-    // for now, just add whatever we get to our leftovers, and work from there
-    auto& leftover = leftovers[channel];
-    leftover.insert( leftover.end( ), vals.begin( ), vals.end( ) );
-    size_t totalvals = leftover.size( );
+  // we have enough values to make at least one DataRow
+  // make as many whole DataRows as we can, and save the leftovers
 
-    if ( totalvals < freq ) {
-      // easiest case: we don't have enough data to
-      // write a whole DataRow yet so just move on
-      return;
-    }
-
-    // we have enough values to make at least one DataRow
-    // make as many whole DataRows as we can, and save the leftovers
-
-    // we pretty much always get a datatype of float, even though
-    // not all the data IS float, by the way
-
-    double intpart;
-    while ( leftover.size( ) >= freq ) {
-      std::vector<double> doubles;
-      doubles.reserve( freq );
-      for ( size_t i = 0; i < freq; i++ ) {
-        double d = leftover.front( );
-        leftover.pop_front( );
-        bool nan = isnan( d );
-        doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
-
-        if ( nan ) {
-          // if we have a whole DataRow worth of nans, don't write anything
-          wavesave[channel].nancount++;
-        }
-        else if ( !wavesave[channel].seenfloat ) {
-          double fraction = std::modf( d, &intpart );
-          if ( 0 != fraction ) {
-            wavesave[channel].seenfloat = true;
-          }
-        }
-      }
-
-      writeWaveChunk( freq, wavesave[channel].nancount, doubles,
-          wavesave[channel].seenfloat, signal, lastTimes[channel] );
-      lastTimes[channel] += timeinc;
-      wavesave[channel].nancount = 0;
-    }
-
-    //output( ) << channel->getName()<<" leaving " << leftover.size( ) << " elements leftover" << std::endl;
+  // if we're waiting (for other Signals to roll over), everything's a leftover
+  if ( totalvals < freq || rec.waiting ) {
+    // easiest case: we don't have enough data to
+    // write a whole DataRow yet so just move on
+    return;
   }
-  else {
-    // vitals are easy...we don't have to stack values into strings
-    // and we never have leftovers (yet)
-    for ( auto& d : vals ) {
-      if ( !isnan( d ) ) {
-        // check if our number ends in .000000...
-        double intpart = 0;
-        double mantissa = std::modf( d, &intpart );
-        bool isint = ( 0 == mantissa );
-        if ( isint ) {
-          DataRow row( lastTimes[channel], std::to_string( (int) intpart ) );
-          signal->add( row );
-        }
-        else {
-          DataRow row( lastTimes[channel], std::to_string( d ) );
-          signal->add( row );
+
+  // for waves, we need to construct a string of values that is
+  // {Frequency} items big. For vitals, we do the exact same thing,
+  // except that {Frequency} is 1.
+
+  // we pretty much always get a datatype of float, even though
+  // not all the data IS float, by the way
+
+  // if we rolled over to a new day, stop entering data to yesterday
+  double intpart;
+  while ( rec.leftovers.size( ) >= freq ) {
+    std::vector<double> doubles;
+    doubles.reserve( freq );
+    for ( size_t i = 0; i < freq; i++ ) {
+      double d = rec.leftovers.front( );
+      rec.leftovers.pop_front( );
+      bool nan = isnan( d );
+      doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
+
+      if ( nan ) {
+        // if we have a whole DataRow worth of nans, don't write anything
+        rec.nancount++;
+      }
+      else if ( !rec.seenfloat ) {
+        double fraction = std::modf( d, &intpart );
+        if ( 0 != fraction ) {
+          rec.seenfloat = true;
         }
       }
-      lastTimes[channel] += timeinc;
+    }
+
+    writeSignalRow( freq, rec.nancount, doubles, rec.seenfloat, signal, rec.lasttime );
+    rec.nancount = 0;
+    // check for roll-over
+    rec.waiting = ( isRollover( rec.lasttime, rec.lasttime + timeinc ) );
+    rec.lasttime += timeinc;
+    if ( rec.waiting ) {
+      break;
     }
   }
 
+  //output( ) << channel->getName()<<" leaving " << leftover.size( ) << " elements leftover" << std::endl;
 
-  //  int count = 0;
-  //  while ( count < vals.size( ) ) {
-  //    if ( 0 == count % 25 ) {
-  //      output( ) << std::endl << "\t";
-  //    }
+  //  else {
+  //    // vitals are easy...we don't have to stack values into strings
+  //    // and we never have leftovers (yet)
+  //    for ( auto& d : vals ) {
+  //      if ( !isnan( d ) ) {
+  //        // check if our number ends in .000000...
+  //        double intpart = 0;
+  //        double mantissa = std::modf( d, &intpart );
+  //        bool isint = ( 0 == mantissa );
+  //        if ( isint ) {
+  //          DataRow row( lastTimes[channel], std::to_string( (int) intpart ) );
+  //          signal->add( row );
+  //        }
+  //        else {
+  //          DataRow row( lastTimes[channel], std::to_string( d ) );
+  //          signal->add( row );
+  //        }
+  //      }
+  //      lastTimes[channel] += timeinc;
   //
-  //    output( ) << vals[count++] << " ";
-  //  }
-  //  output( ) << std::endl;
-}
-
-void TdmsReader::startSaving( dr_time savetime ) {
-  if ( savetime != lastSaveTime ) {
-    saved.setMetadataFrom( *filler );
-    filler = &saved;
-    filler->clearOffsets( );
-    lastSaveTime = savetime;
-  }
+  //      // FIXME: check for roll overs
+  //    }
 }
 
 dr_time TdmsReader::parsetime( const std::string & tmptimestr ) {
@@ -216,7 +221,6 @@ dr_time TdmsReader::parsetime( const std::string & tmptimestr ) {
 }
 
 int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
-  output( ) << "warning: TDMS reader cannot split dataset by day (...yet)" << std::endl;
   output( ) << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
 
   int rslt = Reader::prepare( recordset, info );
@@ -233,95 +237,67 @@ int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet
   return 0;
 }
 
-void TdmsReader::finish( ) {
-  parser->close( );
-}
-
-void TdmsReader::copySavedInto( std::unique_ptr<SignalSet>& tgt ) {
-  // copy all our saved data into this new tgt signalset
-  tgt->setMetadataFrom( saved );
-  saved.clearMetas( );
-
-  for ( auto& m : saved.vitals( ) ) {
-    const std::unique_ptr<SignalData>& savedsignal = m;
-
-    bool added = false;
-    std::unique_ptr<SignalData>& infodata = tgt->addVital( m->name( ), &added );
-
-    infodata->setMetadataFrom( *savedsignal );
-    int rows = savedsignal->size( );
-    for ( int row = 0; row < rows; row++ ) {
-      const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
-      infodata->add( *datarow );
-    }
-  }
-
-  for ( auto& m : saved.waves( ) ) {
-    const std::unique_ptr<SignalData>& savedsignal = m;
-
-    bool added = false;
-    std::unique_ptr<SignalData>& infodata = tgt->addWave( m->name( ), &added );
-
-    infodata->setMetadataFrom( *savedsignal );
-    int rows = savedsignal->size( );
-    for ( int row = 0; row < rows; row++ ) {
-      const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
-      infodata->add( *datarow );
-    }
-  }
-
-  saved.reset( false );
-}
-
 ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastfill ) {
   int retcode = 0;
-
-  if ( ReadResult::END_OF_DAY == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
-    copySavedInto( info );
-  }
   filler = info.get( );
 
   if ( ReadResult::FIRST_READ == lastfill ) {
-    parser->init();
+    parser->init( );
+  }
+  else if ( ReadResult::END_OF_DAY == lastfill ) {
+    // reinit the new SignalSet from our old Channels
+    for ( auto&x : signalsavers ) {
+      this->newChannel( x.first );
+      x.second.waiting = false;
+    }
   }
 
-  while( parser->nextSegment() ){
+  while ( parser->nextSegment( ) ) {
     //output()<<"\tjust read a segment"<<std::endl;
 
     // all the data saving gets done by the listener, not here
 
-    // FIXME: check for roll-over
+    // if we have some signals, are all are "waiting",
+    // then we need to roll over the file
+
+    // FIXME: what if the file starts at like 11:58pm, and we only get one
+    // signal in the first segment with 3 minutes of data? That is a problem.
+    bool allwaiting = ( signalsavers.size( ) > 0 );
+    for ( auto&x : signalsavers ) {
+      if ( !x.second.waiting ) {
+        allwaiting = false;
+      }
+    }
+
+    if ( allwaiting ) {
+      return ReadResult::END_OF_DAY;
+    }
   }
 
-  
-
-  // we're done reading the file, but now we need to fill out the last DataRow
-  // from our leftovers
-  for ( auto&x : leftovers ) {
-    std::string name = x.first->getName( );
-    name = name.substr( 2, name.length( ) - 3 );
-    auto propmap = x.first->getProperties( );
-    bool iswave = ( propmap.count( "Frequency" ) > 0 && std::stod( propmap.at( "Frequency" ) ) > 1.0 );
-
+  // we're out of segments, so we're done reading the file, but now we need to
+  // fill out the last DataRow from the leftovers
+  for ( auto&x : signalsavers ) {
+    SignalSaver& rec = x.second;
     // get our SignalData for this channel
-    std::unique_ptr<SignalData>& signal = ( iswave
-        ? filler->addWave( name )
-        : filler->addVital( name ) );
+    std::unique_ptr<SignalData>& signal = ( rec.iswave
+        ? filler->addWave( rec.name )
+        : filler->addVital( rec.name ) );
     size_t freq = signal->metai( ).at( SignalData::READINGS_PER_CHUNK );
-    size_t cnt = x.second.size();
-    for( size_t i=cnt; i< freq; i++ ){
-      x.second.push_back( SignalData::MISSING_VALUE );
+    size_t cnt = rec.leftovers.size( );
+    for ( size_t i = cnt; i < freq; i++ ) {
+      rec.leftovers.push_back( SignalData::MISSING_VALUE );
     }
 
     std::vector<double> none;
     this->newValueChunk( x.first, none );
   }
 
-  // doesn't look like Tdms can do incremental reads, so we're at the end
+  parser->close( );
+
   return ( 0 <= retcode ? ReadResult::END_OF_FILE : ReadResult::ERROR );
 }
 
-bool TdmsReader::writeWaveChunk( size_t count, size_t nancount, std::vector<double>& doubles,
+bool TdmsReader::writeSignalRow( size_t count, size_t nancount, std::vector<double>& doubles,
     const bool seenFloat, const std::unique_ptr<SignalData>& signal, dr_time time ) {
 
   // make sure we have some data!
@@ -358,20 +334,29 @@ bool TdmsReader::writeWaveChunk( size_t count, size_t nancount, std::vector<doub
   return true;
 }
 
-WaveRecord::~WaveRecord( ) {
+SignalSaver::~SignalSaver( ) {
 }
 
-WaveRecord::WaveRecord( ) : seenfloat( false ), nancount( 0 ) {
+SignalSaver::SignalSaver( const std::string& label, bool wave )
+: seenfloat( false ), nancount( 0 ), waiting( false ), iswave( wave ),
+name( label ), lasttime( 0 ) {
 }
 
-WaveRecord::WaveRecord( const WaveRecord& orig )
-: seenfloat( orig.seenfloat ), nancount( orig.nancount ) {
+SignalSaver::SignalSaver( const SignalSaver& orig )
+: seenfloat( orig.seenfloat ), nancount( orig.nancount ), waiting( orig.waiting ),
+iswave( orig.iswave ), name( orig.name ), lasttime( orig.lasttime ),
+leftovers( orig.leftovers ) {
 }
 
-WaveRecord& WaveRecord::operator=(const WaveRecord& orig ) {
+SignalSaver& SignalSaver::operator=(const SignalSaver& orig ) {
   if ( &orig != this ) {
     seenfloat = orig.seenfloat;
     nancount = orig.nancount;
+    waiting = orig.waiting;
+    iswave = orig.iswave;
+    name = orig.name;
+    lasttime = orig.lasttime;
+    leftovers = orig.leftovers;
   }
 
   return *this;
