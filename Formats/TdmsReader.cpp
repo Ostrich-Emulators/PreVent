@@ -34,7 +34,7 @@ void TdmsReader::newChannel( TdmsChannel * channel ) {
   std::string name = channel->getName( );
   name = name.substr( 2, name.length( ) - 3 );
 
-  // output( ) << "reading " << name << std::endl;
+  //output( ) << "new channel: " << name << std::endl;
   dr_time time = 0;
   const int timeinc = 1024; // philips runs at 1.024s, or 1024 ms
   int freq = 0; // waves have an integer frequency
@@ -282,8 +282,18 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
   filler = info.get( );
 
   if ( ReadResult::FIRST_READ == lastfill ) {
-    parser->read();
+    parser->init();
   }
+
+  while( parser->nextSegment() ){
+    //output()<<"\tjust read a segment"<<std::endl;
+
+    // all the data saving gets done by the listener, not here
+
+    // FIXME: check for roll-over
+  }
+
+  
 
   // we're done reading the file, but now we need to fill out the last DataRow
   // from our leftovers
