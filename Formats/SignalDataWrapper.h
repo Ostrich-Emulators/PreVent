@@ -77,6 +77,7 @@ public:
   virtual std::vector<std::string> eventtypes( ) override;
   virtual std::vector<dr_time> events( const std::string& eventtype ) override;
 
+  virtual size_t inmemsize( ) const override;
 private:
   SignalData * signal;
   bool iOwnThisPtr;

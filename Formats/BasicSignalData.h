@@ -16,7 +16,6 @@
 
 #include "SignalData.h"
 
-#include <list>
 #include <memory>
 #include <string>
 #include <time.h>
@@ -68,6 +67,8 @@ public:
   virtual std::vector<std::string> eventtypes( ) override;
   virtual std::vector<dr_time> events( const std::string& eventtype ) override;
 
+  virtual size_t inmemsize( ) const override;
+
 private:
   void startPopping( );
 
@@ -84,7 +85,7 @@ private:
   dr_time lastdata;
   size_t datacount;
   size_t livecount; // how big is out data list in memory?
-  std::list<std::unique_ptr<DataRow>> data;
+  std::deque<std::unique_ptr<DataRow>> data;
   std::deque<dr_time> dates;
   std::FILE * file;
   bool popping;

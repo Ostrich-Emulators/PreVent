@@ -22,6 +22,10 @@ SignalDataWrapper::~SignalDataWrapper( ) {
   }
 }
 
+size_t SignalDataWrapper::inmemsize( ) const{
+  return signal->inmemsize();
+}
+
 std::unique_ptr<SignalData> SignalDataWrapper::shallowcopy( bool includedates ) {
   return signal->shallowcopy( includedates );
 }

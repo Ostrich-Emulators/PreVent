@@ -304,11 +304,11 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
 }
 
 void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data ) {
-  hsize_t sz = data->size( );
+  const hsize_t rows = data->size( );
+  const int scale = data->scale( );
+  const int valsperrow = data->readingsPerSample( );
 
-  int valsperrow = data->readingsPerSample( );
-
-  hsize_t dims[] = { sz * valsperrow, 1 };
+  hsize_t dims[] = { rows * valsperrow, 1 };
   H5::DataSpace space( 2, dims );
   H5::DSetCreatPropList props;
   if ( compression( ) > 0 ) {
@@ -329,8 +329,6 @@ void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data 
   writeAttributes( ds, data );
   writeAttribute( ds, "Columns", "scaled value" );
 
-
-  const size_t rows = data->size( );
   const hsize_t maxslabcnt = ( rows * valsperrow > 125000 ? 125000 : rows * valsperrow );
   hsize_t offset[] = { 0, 0 };
   hsize_t count[] = { 0, 1 };
@@ -343,8 +341,6 @@ void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data 
   else {
     sbuffer.reserve( maxslabcnt );
   }
-
-  const int scale = data->scale( );
 
   // We're keeping a buffer to eventually write to the file. However, this
   // buffer is based on a number of rows, *not* some multiple of the data size.

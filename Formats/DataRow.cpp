@@ -117,7 +117,13 @@ std::vector<int> DataRow::ints( const std::string& data, int scale ) {
       vals.push_back( std::stoi( each ) );
     }
     else {
-      vals.push_back( (int) ( std::stof( each ) * scalefactor ) );
+//      try{
+        vals.push_back( (int) ( std::stof( each ) * scalefactor ) );
+//      }
+//      catch( std::invalid_argument x){
+//        std::cout<<data<<std::endl;
+//        std::cout<<"failed on: "<<each<<std::endl;
+//      }
     }
   }
   return vals;

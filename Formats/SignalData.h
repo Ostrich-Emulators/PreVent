@@ -112,6 +112,12 @@ public:
   virtual void recordEvent( const std::string& eventtype, const dr_time& time ) = 0;
   virtual std::vector<std::string> eventtypes( ) = 0;
   virtual std::vector<dr_time> events( const std::string& eventtype ) = 0;
+
+  /**
+   * How many DataRows are in memory (not cached to disk)
+   * @return
+   */
+  virtual size_t inmemsize( ) const = 0;
 };
 
 #endif /* SIGNALDATA_H */
