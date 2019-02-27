@@ -35,12 +35,10 @@ public:
 			const std::unique_ptr<SignalSet>& data ) override;
 	virtual void onConversionCompleted( const std::string& input,
 			const std::vector<std::string>& outputs ) override;
-	virtual void setProperty( ConversionProperty key, const std::string& val ) override;
 
 private:
 	sqlite3 * ptr;
 	static const std::string CREATE;
-	bool quiet;
 
 	std::map<std::string, int> unitids;
 	std::map<std::string, int> patientids;

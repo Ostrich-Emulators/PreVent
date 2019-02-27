@@ -26,8 +26,9 @@
 #include "FileNamer.h"
 #include "H5public.h"
 #include "TimezoneOffsetTimeSignalSet.h"
+#include "Options.h"
 
-const std::string Hdf5Writer::LAYOUT_VERSION = "4.0.1";
+const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.0";
 
 Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
 }
@@ -75,11 +76,21 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 
 void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
     const dr_time& start, const dr_time& end ) {
+  time_t stime = ( Options::asBool( OptionsKey::TIMESTEPS )
+      ? timesteplkp.at( start )
+      : ( start / 1000 ) );
+  time_t etime = ( Options::asBool( OptionsKey::TIMESTEPS )
+      ? timesteplkp.at( end )
+      : ( end / 1000 ) );
 
-  time_t stime = start / 1000;
-  time_t etime = end / 1000;
-  writeAttribute( loc, "Start Time", start );
-  writeAttribute( loc, "End Time", end );
+  if ( Options::asBool( OptionsKey::TIMESTEPS ) ) {
+    writeAttribute( loc, "Start Time", timesteplkp.at( start ) );
+    writeAttribute( loc, "End Time", timesteplkp.at( end ) );
+  }
+  else {
+    writeAttribute( loc, "Start Time", start );
+    writeAttribute( loc, "End Time", end );
+  }
 
   char buf[sizeof "2011-10-08T07:07:09Z"];
   strftime( buf, sizeof buf, "%FT%TZ", gmtime( &stime ) );
@@ -513,10 +524,11 @@ void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<Si
   std::vector<dr_time> alltimes;
   alltimes.reserve( timecounter.size( ) );
 
-  for ( auto it = timecounter.begin( ); it != timecounter.end( ); it++ ) {
-    for ( int i = 0; i < it->second; i++ ) {
-      alltimes.push_back( it->first );
+  for ( auto& it : timecounter ) {
+    for ( int i = 0; i < it.second; i++ ) {
+      alltimes.push_back( it.first );
     }
+    timesteplkp.insert( std::make_pair( it.first, timesteplkp.size( ) ) );
   }
 
   // now we can make our dataset
@@ -585,9 +597,10 @@ std::vector<std::string> Hdf5Writer::closeDataSet( ) {
   H5::Exception::dontPrint( );
   try {
     H5::H5File file( outy, H5F_ACC_TRUNC );
-    writeFileAttributes( file, data->metadata( ), firstTime, lastTime );
 
-    createEventsAndTimes( file, data );
+    createEventsAndTimes( file, data ); // also creates the timesteplkp
+
+    writeFileAttributes( file, data->metadata( ), firstTime, lastTime );
 
     H5::Group grp = file.createGroup( "VitalSigns" );
     output( ) << "Writing " << data->vitals( ).size( ) << " Vitals" << std::endl;
@@ -752,7 +765,18 @@ void Hdf5Writer::writeWaveGroup( H5::Group& group, std::unique_ptr<SignalData>& 
 void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data ) {
   std::deque<dr_time> vec = data->times( );
   // SignalData stores times from latest to earliest, so we need to reverse them
-  std::vector<dr_time> times( vec.rbegin( ), vec.rend( ) );
+  std::vector<dr_time> times;
+  times.reserve( vec.size( ) );
+
+  if ( Options::asBool( OptionsKey::TIMESTEPS ) ) {
+    // convert dr_times to the index of the global times array
+    for ( auto it = vec.rbegin( ); it != vec.rend( ); ++it ) {
+      times.push_back( timesteplkp.at( *it ) );
+    }
+  }
+  else {
+    times.insert( times.end( ), vec.rbegin( ), vec.rend( ) );
+  }
 
   hsize_t dims[] = { times.size( ), 1 };
   H5::DataSpace space( 2, dims );
@@ -769,7 +793,10 @@ void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data
   H5::DataSet ds = group.createDataSet( "time", H5::PredType::STD_I64LE, space, props );
   ds.write( &times[0], H5::PredType::STD_I64LE );
   writeAttribute( ds, "Time Source", "raw" );
-  writeAttribute( ds, "Columns", "timestamp (ms)" );
+  writeAttribute( ds, "Columns", Options::asBool( OptionsKey::TIMESTEPS )
+      ? "index to Global_Times"
+      : "timestamp (ms)" );
+
   writeAttribute( ds, SignalData::TIMEZONE, data->metas( ).at( SignalData::TIMEZONE ) );
   // writeAttribute( ds, SignalData::VALS_PER_DR, data.valuesPerDataRow( ) );
   if ( 0 != data->metas( ).count( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {

@@ -73,7 +73,9 @@ private:
    * @return true, if the data was rescaled
    */
   bool rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data, bool& useIntsNotShorts ) const;
+  void createTimesteps( );
   SignalSet * dataptr;
+  std::map<dr_time, long> timesteplkp;
 };
 
 #endif /* HDF5WRITER_H */

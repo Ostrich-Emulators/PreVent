@@ -19,8 +19,6 @@ class SignalSet;
 #include <string>
 #include <vector>
 
-enum ConversionProperty{ QUIET };
-
 class ConversionListener {
 public:
 
@@ -30,7 +28,6 @@ public:
 	virtual void onFileCompleted( const std::string& filename, const std::unique_ptr<SignalSet>& data ) = 0;
 	virtual void onConversionCompleted( const std::string& input,
 			const std::vector<std::string>& outputs ) = 0;
-	virtual void setProperty( ConversionProperty key, const std::string& val ) = 0;
 };
 
 

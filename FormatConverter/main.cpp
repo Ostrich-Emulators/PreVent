@@ -39,6 +39,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-p or --pattern <naming pattern>"
       << std::endl << "\t-n or --no-break or --one-file"
       << std::endl << "\t-C or --no-cache"
+      << std::endl << "\t-T or --time-step (store timing information as offset from start of file"
       << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
       << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml, stpjson, tdms, medi, zl"
       << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
@@ -79,6 +80,7 @@ struct option longopts[] = {
   { "local", no_argument, NULL, 'l' },
   { "stop-after-one", no_argument, NULL, '1' },
   { "no-cache", no_argument, NULL, 'C' },
+  { "time-step", no_argument, NULL, 'T' },
   { 0, 0, 0, 0 }
 };
 
@@ -97,7 +99,7 @@ int main( int argc, char** argv ) {
   bool stopatone = false;
   int compression = Writer::DEFAULT_COMPRESSION;
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1C", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1CT", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -110,6 +112,10 @@ int main( int argc, char** argv ) {
         break;
       case 'q':
         quiet = true;
+        Options::set( OptionsKey::QUIET, true );
+        break;
+      case 'T':
+        Options::set( OptionsKey::TIMESTEPS, true );
         break;
       case 's':
         sqlitedb = optarg;
@@ -246,8 +252,6 @@ int main( int argc, char** argv ) {
     db.reset( new Db( ) );
     db->init( sqlitedb );
     to->addListener( db );
-
-    db->setProperty( ConversionProperty::QUIET, ( quiet ? "TRUE" : "FALSE" ) );
   }
 
   int returncode = 0;

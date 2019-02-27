@@ -18,7 +18,9 @@
 #include <map>
 
 enum OptionsKey {
-	NOCACHE
+	NOCACHE,
+  TIMESTEPS,
+  QUIET
 };
 
 class Options {
