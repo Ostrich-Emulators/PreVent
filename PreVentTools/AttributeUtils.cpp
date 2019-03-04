@@ -47,10 +47,9 @@ void AttributeUtils::iprintAttributes( H5::H5Object& location ) {
     std::cout << location.getObjName( );
 
     H5::Attribute attr = location.openAttribute( i );
-    H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
     H5::DataType dt = attr.getDataType( );
 
-    std::cout << "|" << attr.getName( ) << ":";
+    std::cout << "|" << attr.getName( ) << "|";
 
     switch ( attr.getDataType( ).getClass( ) ) {
       case H5T_INTEGER:
@@ -80,4 +79,36 @@ void AttributeUtils::iprintAttributes( H5::H5Object& location ) {
     std::cout << std::endl;
   }
 }
+
+void AttributeUtils::setAttribute( H5::H5File& file, const std::string& path, const std::string& attr,
+    const std::string& val ) {
+  H5G_stat_t stats = { };
+  file.getObjinfo( path, stats );
+
+  if ( stats.type == H5G_GROUP ) {
+    H5::Group grp = file.openGroup( path );
+    isetAttribute( grp, attr, val );
+  }
+  else if ( stats.type == H5G_DATASET ) {
+    H5::DataSet ds = file.openDataSet( path );
+    isetAttribute( ds, attr, val );
+  }
+  std::cout << attr << "attribute written to " << path << std::endl;
+}
+
+void AttributeUtils::isetAttribute( H5::H5Object& location, const std::string& attr,
+    const std::string& val ) {
+  if ( location.attrExists( attr ) ) {
+    location.removeAttr( attr );
+  }
+
+  H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
+  H5::StrType st( H5::PredType::C_S1, H5T_VARIABLE );
+  st.setCset( H5T_CSET_UTF8 );
+
+  H5::Attribute attrib = location.createAttribute( attr, st, space );
+  attrib.write( st, val );
+  attrib.close( );
+}
+
 

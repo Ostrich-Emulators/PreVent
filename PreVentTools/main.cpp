@@ -41,7 +41,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-m or --mrn <mrn>\tsets MRN in file"
       << std::endl << "\t-n or --name <patient name>\tsets name in file"
       << std::endl << "\t-o or --output <output file>"
-      << std::endl << "\t-S or --set-attr <key=value>\tsets the given attribute to the value"
+      << std::endl << "\t-S or --set-attr <dataset|key=value>\tsets the given attribute to the value"
       << std::endl << "\t-C or --clobber\toverwrite input file"
       << std::endl << "\t-c or --cat\tconcatenate files from command line, used with --output"
       << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
@@ -197,8 +197,8 @@ int main( int argc, char** argv ) {
     helpAndExit( argv[0], "no file specified" );
   }
 
+  H5::Exception::dontPrint( );
   if ( printattrs ) {
-    H5::Exception::dontPrint( );
     for ( int i = optind; i < argc; i++ ) {
       try {
         H5::H5File file = H5::H5File( argv[i], H5F_ACC_RDONLY );
@@ -293,35 +293,29 @@ int main( int argc, char** argv ) {
     std::cout << "yup...that's a file" << std::endl;
   }
   else { // write some attributes
-    std::unique_ptr<H5::H5File> infile;
-    std::unique_ptr<H5::H5File> outfile;
-    std::string infilename = argv[optind];
+    for ( int i = optind; i < argc; i++ ) {
+      try {
+        H5::H5File file = H5::H5File( argv[i], H5F_ACC_RDWR );
+        for ( auto& x : attrs ) {
+          std::string key = x.first;
+          std::string val = x.second;
 
-    if ( "" == outfilename ) {
-      // infile and outfile are the same
-      if ( clobber ) {
-        outfile.reset( new H5::H5File( infilename, H5F_ACC_RDWR ) );
+          int delim = key.find( "|" );
+          std::string path = key.substr( 0, delim );
+          std::string attr = key.substr( delim + 1 );
+          AttributeUtils::setAttribute( file, path, attr, val );
+        }
       }
-      else {
-        std::cerr << "will not overwrite " << infilename << " (use --clobber)" << std::endl;
-        exit( 1 );
+      catch ( H5::FileIException error ) {
+        std::cerr << error.getDetailMsg( ) << std::endl;
+        return -1;
+      }
+      // catch failure caused by the DataSet operations
+      catch ( H5::DataSetIException error ) {
+        std::cerr << error.getDetailMsg( ) << std::endl;
+        return -2;
       }
     }
-    else {
-      // if file exists,  worry about clobbering it
-      struct stat buffer;
-      if ( stat( outfilename.c_str( ), &buffer ) == 0 && !clobber ) {
-        std::cerr << "will not overwrite " << outfilename << " (use --clobber)" << std::endl;
-        exit( 1 );
-      }
-
-      infile.reset( new H5::H5File( infilename, H5F_ACC_RDONLY ) );
-      outfile.reset( new H5::H5File( outfilename, H5F_ACC_TRUNC ) );
-      cloneFile( infile, outfile );
-    }
-
-    writeAttrs( outfile, attrs );
-    outfile->close( );
   }
 
   return 0;
