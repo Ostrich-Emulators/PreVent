@@ -32,6 +32,7 @@
 #include "FileNamer.h"
 #include "BasicSignalSet.h"
 #include "AnonymizingSignalSet.h"
+#include "AttributeUtils.h"
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
@@ -58,7 +59,7 @@ struct option longopts[] = {
   { "clobber", no_argument, NULL, 'C' },
   { "output", required_argument, NULL, 'o' },
   { "set-attr", required_argument, NULL, 'S' },
-  { "attr", required_argument, NULL, 'A' },
+  { "attrs", no_argument, NULL, 'A' },
   { "start", required_argument, NULL, 's' },
   { "end", required_argument, NULL, 'e' },
   { "for", required_argument, NULL, 'f' },
@@ -196,7 +197,25 @@ int main( int argc, char** argv ) {
     helpAndExit( argv[0], "no file specified" );
   }
 
-  if ( catfiles ) {
+  if ( printattrs ) {
+    H5::Exception::dontPrint( );
+    for ( int i = optind; i < argc; i++ ) {
+      try {
+        H5::H5File file = H5::H5File( argv[i], H5F_ACC_RDONLY );
+        AttributeUtils::printAttributes( file );
+      }
+      catch ( H5::FileIException error ) {
+        std::cerr << error.getDetailMsg( ) << std::endl;
+        return -1;
+      }
+      // catch failure caused by the DataSet operations
+      catch ( H5::DataSetIException error ) {
+        std::cerr << error.getDetailMsg( ) << std::endl;
+        return -2;
+      }
+    }
+  }
+  else if ( catfiles ) {
     std::vector<std::string> filesToCat;
 
     if ( outfilename.empty( ) ) {

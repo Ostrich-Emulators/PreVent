@@ -4,6 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>AttributeUtils.h</itemPath>
       <itemPath>ClippingSignalSet.h</itemPath>
       <itemPath>H5Cat.h</itemPath>
       <itemPath>TimeParser.h</itemPath>
@@ -15,6 +16,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>AttributeUtils.cpp</itemPath>
       <itemPath>ClippingSignalSet.cpp</itemPath>
       <itemPath>H5Cat.cpp</itemPath>
       <itemPath>TimeParser.cpp</itemPath>
@@ -81,6 +83,10 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="AttributeUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="AttributeUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="ClippingSignalSet.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="ClippingSignalSet.h" ex="false" tool="3" flavor2="0">
@@ -153,6 +159,10 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="AttributeUtils.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="AttributeUtils.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="ClippingSignalSet.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="ClippingSignalSet.h" ex="false" tool="3" flavor2="0">
