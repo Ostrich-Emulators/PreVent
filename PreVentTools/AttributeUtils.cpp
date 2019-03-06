@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <deque>
+#include "Hdf5Writer.h"
 
 void AttributeUtils::printAttributes( H5::H5File& file, const std::string& path, bool recursive ) {
 
@@ -15,7 +16,6 @@ void AttributeUtils::printAttributes( H5::H5File& file, const std::string& path,
 
   todo.push_front( "" == path ? "/" : path );
 
-  bool first = true;
   while ( !todo.empty( ) ) {
     std::string itempath = todo.front( );
     todo.pop_front( );
@@ -35,7 +35,11 @@ void AttributeUtils::printAttributes( H5::H5File& file, const std::string& path,
 
       if ( recursive ) {
         for ( hsize_t i = 0; i < grp.getNumObjs( ); i++ ) {
-          todo.push_front( itempath + ( first ? "" : "/" ) + grp.getObjnameByIdx( i ) );
+          if ( itempath.rfind( "/" ) != itempath.length( ) - 1 ) {
+            itempath += "/";
+          }
+
+          todo.push_front( itempath + grp.getObjnameByIdx( i ) );
         }
       }
     }
@@ -43,8 +47,6 @@ void AttributeUtils::printAttributes( H5::H5File& file, const std::string& path,
       H5::DataSet ds = file.openDataSet( itempath );
       iprintAttributes( ds );
     }
-
-    first = false;
   }
 }
 
@@ -100,28 +102,78 @@ void AttributeUtils::setAttribute( H5::H5File& file, const std::string& path, co
 
   if ( stats.type == H5G_GROUP ) {
     H5::Group grp = file.openGroup( path );
-    isetAttribute( grp, attr, val );
+
+    if ( grp.attrExists( attr ) ) {
+      grp.removeAttr( attr );
+    }
+    Hdf5Writer::writeAttribute( grp, attr, val );
   }
   else if ( stats.type == H5G_DATASET ) {
     H5::DataSet ds = file.openDataSet( path );
-    isetAttribute( ds, attr, val );
+    if ( ds.attrExists( attr ) ) {
+      ds.removeAttr( attr );
+    }
+    Hdf5Writer::writeAttribute( ds, attr, val );
   }
   std::cout << attr << " attribute written to " << path << std::endl;
 }
 
-void AttributeUtils::isetAttribute( H5::H5Object& location, const std::string& attr,
-    const std::string& val ) {
-  if ( location.attrExists( attr ) ) {
-    location.removeAttr( attr );
+void AttributeUtils::setAttribute( H5::H5File& file, const std::string& path, const std::string& attr,
+    double val ) {
+  H5G_stat_t stats = { };
+
+  try {
+    file.getObjinfo( path, stats );
+  }
+  catch ( H5::FileIException error ) {
+    std::cerr << "could not open dataset/group: " << path << std::endl;
+    return;
   }
 
-  H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
-  H5::StrType st( H5::PredType::C_S1, H5T_VARIABLE );
-  st.setCset( H5T_CSET_UTF8 );
+  if ( stats.type == H5G_GROUP ) {
+    H5::Group grp = file.openGroup( path );
 
-  H5::Attribute attrib = location.createAttribute( attr, st, space );
-  attrib.write( st, val );
-  attrib.close( );
+    if ( grp.attrExists( attr ) ) {
+      grp.removeAttr( attr );
+    }
+    Hdf5Writer::writeAttribute( grp, attr, val );
+  }
+  else if ( stats.type == H5G_DATASET ) {
+    H5::DataSet ds = file.openDataSet( path );
+    if ( ds.attrExists( attr ) ) {
+      ds.removeAttr( attr );
+    }
+    Hdf5Writer::writeAttribute( ds, attr, val );
+  }
+  std::cout << attr << " attribute written to " << path << std::endl;
 }
 
+void AttributeUtils::setAttribute( H5::H5File& file, const std::string& path, const std::string& attr,
+    int val ) {
+  H5G_stat_t stats = { };
 
+  try {
+    file.getObjinfo( path, stats );
+  }
+  catch ( H5::FileIException error ) {
+    std::cerr << "could not open dataset/group: " << path << std::endl;
+    return;
+  }
+
+  if ( stats.type == H5G_GROUP ) {
+    H5::Group grp = file.openGroup( path );
+
+    if ( grp.attrExists( attr ) ) {
+      grp.removeAttr( attr );
+    }
+    Hdf5Writer::writeAttribute( grp, attr, val );
+  }
+  else if ( stats.type == H5G_DATASET ) {
+    H5::DataSet ds = file.openDataSet( path );
+    if ( ds.attrExists( attr ) ) {
+      ds.removeAttr( attr );
+    }
+    Hdf5Writer::writeAttribute( ds, attr, val );
+  }
+  std::cout << attr << " attribute written to " << path << std::endl;
+}

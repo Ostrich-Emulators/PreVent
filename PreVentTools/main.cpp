@@ -41,7 +41,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-m or --mrn <mrn>\tsets MRN in file"
       << std::endl << "\t-n or --name <patient name>\tsets name in file"
       << std::endl << "\t-o or --output <output file>"
-      << std::endl << "\t-S or --set-attr <key=value>\tsets the given attribute to the value"
+      << std::endl << "\t-S or --set-attr <key[:<i|s|d>]=value>\tsets the given attribute to the value"
       << std::endl << "\t-C or --clobber\toverwrite input file"
       << std::endl << "\t-c or --cat\tconcatenate files from command line, used with --output"
       << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
@@ -299,10 +299,31 @@ int main( int argc, char** argv ) {
   }
   else { // write some attributes
     for ( int i = optind; i < argc; i++ ) {
+      std::string val;
+      std::string attrtype( "s" ); // just in case an exception gets thrown...
       try {
         H5::H5File file = H5::H5File( argv[i], H5F_ACC_RDWR );
         for ( auto& x : attrs ) {
-          AttributeUtils::setAttribute( file, path, x.first, x.second );
+          std::string key = x.first;
+          val = x.second;
+
+          size_t delim = key.find( ":" );
+
+          std::string attr( key );
+          if ( std::string::npos != delim ) {
+            attr = key.substr( 0, delim );
+            attrtype = key.substr( delim + 1 );
+          }
+
+          if ( "s" == attrtype ) {
+            AttributeUtils::setAttribute( file, path, attr, val );
+          }
+          else if ( "i" == attrtype ) {
+            AttributeUtils::setAttribute( file, path, attr, std::stoi( val ) );
+          }
+          else if ( "d" == attrtype ) {
+            AttributeUtils::setAttribute( file, path, attr, std::stod( val ) );
+          }
         }
       }
       catch ( H5::FileIException error ) {
@@ -313,6 +334,10 @@ int main( int argc, char** argv ) {
       catch ( H5::DataSetIException error ) {
         std::cerr << error.getDetailMsg( ) << std::endl;
         return -2;
+      }
+      catch ( std::invalid_argument error ) {
+        std::cerr << "could not convert \"" << val << "\" to appropriate datatype (" << attrtype << ")" << std::endl;
+        return -3;
       }
     }
   }

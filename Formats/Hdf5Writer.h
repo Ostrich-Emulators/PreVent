@@ -33,6 +33,14 @@ public:
   Hdf5Writer( );
   virtual ~Hdf5Writer( );
 
+  static void writeAttribute( H5::H5Location& loc,
+      const std::string& attr, const std::string& val );
+  static void writeAttribute( H5::H5Location& loc,
+      const std::string& attr, int val );
+  static void writeAttribute( H5::H5Location& loc,
+      const std::string& attr, double val );
+  static void writeAttribute( H5::H5Location& loc,
+      const std::string& attr, dr_time val );
 protected:
   std::vector<std::string> closeDataSet( );
   int drain( std::unique_ptr<SignalSet>& );
@@ -42,14 +50,6 @@ private:
 
   void writeFileAttributes( H5::H5File file, std::map<std::string, std::string> datasetattrs,
       const dr_time& firsttime, const dr_time& lasttime );
-  static void writeAttribute( H5::H5Location& loc,
-      const std::string& attr, const std::string& val );
-  static void writeAttribute( H5::H5Location& loc,
-      const std::string& attr, int val );
-  static void writeAttribute( H5::H5Location& loc,
-      const std::string& attr, double val );
-  static void writeAttribute( H5::H5Location& loc,
-      const std::string& attr, dr_time val );
   void writeTimesAndDurationAttributes( H5::H5Location& loc,
       const dr_time& start, const dr_time& end );
   static void writeAttributes( H5::H5Location& ds, const std::unique_ptr<SignalData>& data );
