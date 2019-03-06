@@ -8,6 +8,8 @@
 #include <iomanip>
 #include <ctime>
 
+#include "Reader.h"
+
 dr_time TimeParser::parse( const std::string& timestr ) {
   if ( timestr.empty( ) ) {
     return 0;
@@ -30,12 +32,11 @@ dr_time TimeParser::parse( const std::string& timestr ) {
 
   tm tm = { };
   for ( auto& fmt : formats ) {
-
-    if ( nullptr != strptime( timestr.c_str( ), fmt.c_str( ), &tm ) ) {
-      // now convert our local time to UTC
-      time_t gmt = timegm( &tm );
-      return gmt * 1000; // convert seconds to ms
-    }
+    // not sure what this will do on failure
+    Reader::strptime2( timestr.c_str( ), fmt.c_str( ), &tm );
+    // now convert our local time to UTC
+    time_t gmt = timegm( &tm );
+    return gmt * 1000; // convert seconds to ms
   }
 
   return 0;
