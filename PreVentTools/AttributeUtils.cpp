@@ -51,7 +51,7 @@ void AttributeUtils::printAttributes( H5::H5File& file, const std::string& path,
 }
 
 void AttributeUtils::iprintAttributes( H5::H5Object& location ) {
-  for ( hsize_t i = 0; i < location.getNumAttrs( ); i++ ) {
+  for ( int i = 0; i < location.getNumAttrs( ); i++ ) {
     std::cout << location.getObjName( );
 
     H5::Attribute attr = location.openAttribute( i );
@@ -80,6 +80,9 @@ void AttributeUtils::iprintAttributes( H5::H5Object& location ) {
         attr.read( dt, val );
         std::cout << val;
       }
+        break;
+      default:
+        // do nothing
         break;
     }
 
