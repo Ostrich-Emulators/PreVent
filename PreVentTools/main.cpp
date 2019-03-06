@@ -41,13 +41,14 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-m or --mrn <mrn>\tsets MRN in file"
       << std::endl << "\t-n or --name <patient name>\tsets name in file"
       << std::endl << "\t-o or --output <output file>"
-      << std::endl << "\t-S or --set-attr <dataset|key=value>\tsets the given attribute to the value"
+      << std::endl << "\t-S or --set-attr <key=value>\tsets the given attribute to the value"
       << std::endl << "\t-C or --clobber\toverwrite input file"
       << std::endl << "\t-c or --cat\tconcatenate files from command line, used with --output"
       << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
       << std::endl << "\t-e or --end <time>\tstop output immediately before this UTC time (many time formats supported)"
       << std::endl << "\t-f or --for <s>\toutput this many seconds of data from the start of file (or --start)"
       << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
+      << std::endl << "\t-p or --path\tsets the path for --set-attr and --attrs"
       << std::endl << "\t-A or --attrs\tprints all attributes in the file"
       << std::endl;
   exit( 1 );
@@ -59,12 +60,12 @@ struct option longopts[] = {
   { "clobber", no_argument, NULL, 'C' },
   { "output", required_argument, NULL, 'o' },
   { "set-attr", required_argument, NULL, 'S' },
-  { "attrs", no_argument, NULL, 'A' },
+  { "path", required_argument, NULL, 'p' },
+  { "attrs", optional_argument, NULL, 'A' },
   { "start", required_argument, NULL, 's' },
   { "end", required_argument, NULL, 'e' },
   { "for", required_argument, NULL, 'f' },
   { "anonymize", no_argument, NULL, 'a' },
-  { "anon", no_argument, NULL, 'a' },
   { "anonymous", no_argument, NULL, 'a' },
   { "cat", no_argument, NULL, 'c' }, // all remaining args are files
   { 0, 0, 0, 0 }
@@ -133,6 +134,7 @@ int main( int argc, char** argv ) {
   int for_s = -1;
   bool anon = false;
   bool printattrs = false;
+  std::string path = "/";
 
   while ( ( c = getopt_long( argc, argv, ":m:n:o:CAc:s:e:f:aS:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
@@ -144,6 +146,9 @@ int main( int argc, char** argv ) {
         break;
       case 'o':
         outfilename = optarg;
+        break;
+      case 'p':
+        path = optarg;
         break;
       case 'A':
         printattrs = true;
@@ -202,7 +207,7 @@ int main( int argc, char** argv ) {
     for ( int i = optind; i < argc; i++ ) {
       try {
         H5::H5File file = H5::H5File( argv[i], H5F_ACC_RDONLY );
-        AttributeUtils::printAttributes( file );
+        AttributeUtils::printAttributes( file, path );
       }
       catch ( H5::FileIException error ) {
         std::cerr << error.getDetailMsg( ) << std::endl;
@@ -297,13 +302,7 @@ int main( int argc, char** argv ) {
       try {
         H5::H5File file = H5::H5File( argv[i], H5F_ACC_RDWR );
         for ( auto& x : attrs ) {
-          std::string key = x.first;
-          std::string val = x.second;
-
-          int delim = key.find( "|" );
-          std::string path = key.substr( 0, delim );
-          std::string attr = key.substr( delim + 1 );
-          AttributeUtils::setAttribute( file, path, attr, val );
+          AttributeUtils::setAttribute( file, path, x.first, x.second );
         }
       }
       catch ( H5::FileIException error ) {

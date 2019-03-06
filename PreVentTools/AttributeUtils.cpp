@@ -21,7 +21,13 @@ void AttributeUtils::printAttributes( H5::H5File& file, const std::string& path,
     todo.pop_front( );
 
     H5G_stat_t stats = { };
-    file.getObjinfo( itempath, stats );
+    try {
+      file.getObjinfo( itempath, stats );
+    }
+    catch ( H5::FileIException error ) {
+      std::cerr << "could not open dataset/group: " << itempath << std::endl;
+      return;
+    }
 
     if ( stats.type == H5G_GROUP ) {
       H5::Group grp = file.openGroup( itempath );
@@ -83,7 +89,14 @@ void AttributeUtils::iprintAttributes( H5::H5Object& location ) {
 void AttributeUtils::setAttribute( H5::H5File& file, const std::string& path, const std::string& attr,
     const std::string& val ) {
   H5G_stat_t stats = { };
-  file.getObjinfo( path, stats );
+
+  try {
+    file.getObjinfo( path, stats );
+  }
+  catch ( H5::FileIException error ) {
+    std::cerr << "could not open dataset/group: " << path << std::endl;
+    return;
+  }
 
   if ( stats.type == H5G_GROUP ) {
     H5::Group grp = file.openGroup( path );
@@ -93,7 +106,7 @@ void AttributeUtils::setAttribute( H5::H5File& file, const std::string& path, co
     H5::DataSet ds = file.openDataSet( path );
     isetAttribute( ds, attr, val );
   }
-  std::cout << attr << "attribute written to " << path << std::endl;
+  std::cout << attr << " attribute written to " << path << std::endl;
 }
 
 void AttributeUtils::isetAttribute( H5::H5Object& location, const std::string& attr,
