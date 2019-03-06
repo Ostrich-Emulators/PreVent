@@ -106,16 +106,27 @@ void AttributeUtils::setAttribute( H5::H5File& file, const std::string& path, co
     if ( grp.attrExists( attr ) ) {
       grp.removeAttr( attr );
     }
-    Hdf5Writer::writeAttribute( grp, attr, val );
+    if ( "" == val ) {
+      std::cout << attr << " attribute removed from " << path << std::endl;
+    }
+    else {
+      Hdf5Writer::writeAttribute( grp, attr, val );
+      std::cout << attr << " attribute written to " << path << std::endl;
+    }
   }
   else if ( stats.type == H5G_DATASET ) {
     H5::DataSet ds = file.openDataSet( path );
     if ( ds.attrExists( attr ) ) {
       ds.removeAttr( attr );
     }
-    Hdf5Writer::writeAttribute( ds, attr, val );
+    if ( "" == val ) {
+      std::cout << attr << " attribute removed from " << path << std::endl;
+    }
+    else {
+      Hdf5Writer::writeAttribute( ds, attr, val );
+      std::cout << attr << " attribute written to " << path << std::endl;
+    }
   }
-  std::cout << attr << " attribute written to " << path << std::endl;
 }
 
 void AttributeUtils::setAttribute( H5::H5File& file, const std::string& path, const std::string& attr,

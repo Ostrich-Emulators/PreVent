@@ -38,8 +38,6 @@ void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
       << "Syntax: " << progname << "[options] <input hdf5>"
       << std::endl << "\toptions:"
-      << std::endl << "\t-m or --mrn <mrn>\tsets MRN in file"
-      << std::endl << "\t-n or --name <patient name>\tsets name in file"
       << std::endl << "\t-o or --output <output file>"
       << std::endl << "\t-S or --set-attr <key[:<i|s|d>]=value>\tsets the given attribute to the value"
       << std::endl << "\t-C or --clobber\toverwrite input file"
@@ -55,8 +53,6 @@ void helpAndExit( char * progname, std::string msg = "" ) {
 }
 
 struct option longopts[] = {
-  { "mrn", required_argument, NULL, 'm' },
-  { "name", required_argument, NULL, 'n' },
   { "clobber", no_argument, NULL, 'C' },
   { "output", required_argument, NULL, 'o' },
   { "set-attr", required_argument, NULL, 'S' },
@@ -136,14 +132,8 @@ int main( int argc, char** argv ) {
   bool printattrs = false;
   std::string path = "/";
 
-  while ( ( c = getopt_long( argc, argv, ":m:n:o:CAc:s:e:f:aS:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
-      case 'm':
-        attrs["MRN"] = optarg;
-        break;
-      case 'n':
-        attrs["Patient Name"] = optarg;
-        break;
       case 'o':
         outfilename = optarg;
         break;
@@ -315,7 +305,7 @@ int main( int argc, char** argv ) {
             attrtype = key.substr( delim + 1 );
           }
 
-          if ( "s" == attrtype ) {
+          if ( "s" == attrtype || "" == val ) {
             AttributeUtils::setAttribute( file, path, attr, val );
           }
           else if ( "i" == attrtype ) {
