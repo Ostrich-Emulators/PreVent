@@ -450,7 +450,7 @@ void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
   }
 }
 
-int Hdf5Reader::metaint( const H5::H5Location& loc, const std::string & attrname ) const {
+int Hdf5Reader::metaint( const H5::H5Location& loc, const std::string & attrname ) {
   int val;
   if ( loc.attrExists( attrname ) ) {
 
@@ -461,12 +461,11 @@ int Hdf5Reader::metaint( const H5::H5Location& loc, const std::string & attrname
   return val;
 }
 
-std::string Hdf5Reader::metastr( const H5::H5Location& loc, const std::string & attrname ) const {
-
+std::string Hdf5Reader::metastr( const H5::H5Location& loc, const std::string & attrname ) {
   return metastr( loc.openAttribute( attrname ) );
 }
 
-std::string Hdf5Reader::metastr( const H5::Attribute & attr ) const {
+std::string Hdf5Reader::metastr( const H5::Attribute & attr ) {
   H5::DataType type = attr.getDataType( );
 
   std::string aval;
@@ -490,4 +489,190 @@ std::string Hdf5Reader::metastr( const H5::Attribute & attr ) const {
   }
 
   return aval;
+}
+
+unsigned int Hdf5Reader::layoutVersion( const H5::H5File& file ) {
+  unsigned int rev = 0;
+  if ( file.attrExists( "Layout Version" ) ) {
+    auto attr = file.openAttribute( "Layout Version" );
+    std::string attrval = metastr( attr );
+    std::istringstream stream( attrval );
+    int count = 0;
+    for ( std::string each; std::getline( stream, each, '.' ); ) {
+      count++;
+      try {
+        int val = std::stoi( each );
+        if ( 1 == count ) {
+          rev += 10000 * val;
+        }
+        else if ( 2 == count ) {
+          rev += 100 * val;
+        }
+        else {
+          rev += val;
+        }
+      }
+      catch ( std::invalid_argument x ) {
+        // don't care
+      }
+    }
+  }
+
+  return rev;
+}
+
+std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
+    const std::string& path, dr_time from, dr_time to ) {
+  std::unique_ptr<SignalData> signal;
+  H5::Exception::dontPrint( );
+  try {
+    file = H5::H5File( inputfile, H5F_ACC_RDONLY );
+    H5::Group group = file.openGroup( path );
+    H5::DataSet times = group.openDataSet( "time" );
+    H5::DataSet globaltimes = group.openDataSet( "/Events/Global_Times" );
+
+    bool timeisindex = ( layoutVersion( file ) >= 40100
+        ? "index to Global_Times" == metastr( times, "Columns" )
+        : false );
+    hsize_t indexloc1 = getIndexForTime( ( timeisindex ? globaltimes : times ), from );
+    hsize_t indexloc2 = getIndexForTime( ( timeisindex ? globaltimes : times ), to );
+
+    std::cout << "index locations: " << indexloc1 << " " << indexloc2 << std::endl;
+
+    // now we know where to start and stop, so we can read everything in one go
+    H5::DataSet data = group.openDataSet( "data" );
+    auto values = slabreads( data, indexloc1, indexloc2 );
+    for ( auto x : values ) {
+      std::cout << " " << x;
+    }
+    std::cout << std::endl;
+  }
+  catch ( H5::FileIException error ) {
+    output( ) << error.getDetailMsg( ) << std::endl;
+    file.close( );
+  }
+  // catch failure caused by the DataSet operations
+  catch ( H5::DataSetIException error ) {
+    output( ) << error.getDetailMsg( ) << std::endl;
+    file.close( );
+  }
+
+  return signal;
+}
+
+hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle ) {
+  hsize_t DIMS[2] = { };
+  H5::DataSpace dsspace = haystack.getSpace( );
+  dsspace.getSimpleExtentDims( DIMS );
+
+  const hsize_t ROWS = DIMS[0];
+  //const hsize_t COLS = DIMS[1];
+
+  // we'll do a binary search to get our number (or at least close to it!)
+  hsize_t startpos = 0;
+  hsize_t endpos = ROWS - 1;
+
+  hsize_t dim[] = { 1, 1 };
+  hsize_t count[] = { 1, 1 };
+
+  H5::DataSpace searchspace( 2, dim );
+
+  dr_time checktime;
+  hsize_t checkpos = 0;
+  while ( startpos < endpos ) { // stop looking if we can't find it
+    checkpos = ( startpos + endpos ) / 2;
+
+    hsize_t offset[] = { checkpos, 0 };
+    dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
+    haystack.read( &checktime, haystack.getDataType( ), searchspace, dsspace );
+
+    if ( checktime > needle ) {
+      endpos = checkpos - 1;
+    }
+    else if ( checktime < needle ) {
+      startpos = checkpos + 1;
+    }
+  }
+
+  return checkpos;
+}
+
+/**
+ * Reads the given dataset from start(inclusive) to end (exclusive) as ints
+ * @param data
+ * @param startidx
+ * @param endidx
+ * @return
+ */
+std::vector<int> Hdf5Reader::slabreadi( H5::DataSet& ds, hsize_t startidx, hsize_t endidx ) {
+  std::vector<int> values;
+  hsize_t rowstoget = endidx - startidx;
+  values.reserve( rowstoget );
+
+  hsize_t DIMS[2] = { };
+  H5::DataSpace dsspace = ds.getSpace( );
+  dsspace.getSimpleExtentDims( DIMS );
+
+  const hsize_t ROWS = DIMS[0];
+  const hsize_t COLS = DIMS[1];
+  std::cout << ROWS << "," << COLS << std::endl;
+
+  // we'll get everything in one read
+  hsize_t dim[] = { rowstoget, 1 };
+  hsize_t count[] = { rowstoget, 1 };
+
+  H5::DataSpace searchspace( 2, dim );
+
+  hsize_t offset[] = { startidx, 0 };
+  int dd[rowstoget][1] = { };
+  dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
+  ds.read( &dd, ds.getDataType( ), searchspace, dsspace );
+
+  for ( int i = startidx; i < endidx; i++ ) {
+    std::cout << "row " << i << ":";
+    for ( int j = 0; j < COLS; j++ ) {
+      std::cout << " " << dd[i][j];
+    }
+    std::cout << std::endl;
+  }
+
+  return values;
+}
+
+std::vector<short> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startidx, hsize_t endidx ) {
+  std::vector<short> values;
+  startidx=0;
+  endidx=199;
+  
+  hsize_t rowstoget = endidx - startidx;
+  values.reserve( rowstoget );
+
+  hsize_t DIMS[2] = { };
+  H5::DataSpace dsspace = ds.getSpace( );
+  dsspace.getSimpleExtentDims( DIMS );
+
+  const hsize_t ROWS = DIMS[0];
+  const hsize_t COLS = DIMS[1];
+  std::cout << ROWS << "," << COLS << std::endl;
+
+  // we'll get everything in one read
+  hsize_t dim[] = { rowstoget, 1 };
+  hsize_t count[] = { rowstoget, 1 };
+
+  H5::DataSpace searchspace( 2, dim );
+
+  hsize_t offset[] = { startidx, 0 };
+  short dd[rowstoget][1] = { };
+  dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
+  ds.read( &dd, ds.getDataType( ), searchspace, dsspace );
+
+  for ( size_t i = startidx; i < endidx; i++ ) {
+    std::cout << "row " << i << ":";
+    for ( size_t j = 0; j < COLS; j++ ) {
+      std::cout << " " << dd[i][j];
+    }
+    std::cout << std::endl;
+  }
+
+  return values;
 }

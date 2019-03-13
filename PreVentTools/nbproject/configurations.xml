@@ -44,12 +44,12 @@
       </toolsSet>
       <compileType>
         <ccTool>
-          <standard>11</standard>
           <commandlineTool>h5c++</commandlineTool>
           <incDir>
             <pElem>../Formats</pElem>
           </incDir>
-          <commandLine>-Wno-deprecated -O0 -pg -g</commandLine>
+          <commandLine>-Wno-deprecated -O0 -pg -g -std=c++17</commandLine>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
           <linkerLibItems>
@@ -114,12 +114,12 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
-          <standard>11</standard>
           <commandlineTool>h5c++</commandlineTool>
           <incDir>
             <pElem>../Formats</pElem>
           </incDir>
-          <commandLine>-Wno-deprecated</commandLine>
+          <commandLine>-Wno-deprecated -std=c++17</commandLine>
+          <warningLevel>2</warningLevel>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>

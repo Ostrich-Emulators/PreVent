@@ -31,7 +31,7 @@ havestart( false ), doclip( false ), duration_ms( 0 ), start( 0 ), end( 0 ) {
 }
 
 H5Cat::H5Cat( const H5Cat& orig ) : output( orig.output ), doduration( orig.doduration ), havestart( orig.havestart ),
-doclip( orig.doclip ), start( orig.start ), end( orig.end ), duration_ms( orig.duration_ms ) {
+doclip( orig.doclip ), duration_ms( orig.duration_ms ), start( orig.start ), end( orig.end ) {
 }
 
 H5Cat::~H5Cat( ) {

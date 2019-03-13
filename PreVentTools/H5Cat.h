@@ -40,10 +40,9 @@ private:
   const std::string output;
 
   bool doduration;
-  dr_time duration_ms;
   bool havestart;
-
   bool doclip;
+  dr_time duration_ms;
   dr_time start;
   dr_time end;
 };

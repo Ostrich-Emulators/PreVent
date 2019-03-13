@@ -29,9 +29,12 @@ public:
   int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
   void finish( ) override;
   ReadResult fill( std::unique_ptr<SignalSet>& data,
-       const ReadResult& lastresult = ReadResult::FIRST_READ ) override;
+      const ReadResult& lastresult = ReadResult::FIRST_READ ) override;
 
   virtual bool getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) override;
+
+  virtual std::unique_ptr<SignalData> splice( const std::string& inputfile,
+      const std::string& path, dr_time from, dr_time to ) override;
 
 private:
   Hdf5Reader( const Hdf5Reader& );
@@ -41,9 +44,10 @@ private:
    * @param attr
    * @return 
    */
-  std::string metastr( const H5::Attribute& attr ) const;
-  std::string metastr( const H5::H5Location& loc, const std::string& attrname ) const;
-  int metaint( const H5::H5Location& loc, const std::string& attrname ) const;
+  static std::string metastr( const H5::Attribute& attr );
+  static std::string metastr( const H5::H5Location& loc, const std::string& attrname );
+  static int metaint( const H5::H5Location& loc, const std::string& attrname );
+
   void copymetas( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
   void fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
       const std::vector<dr_time>& times, int valsPerTime, int timeinterval, int scale ) const;
@@ -52,6 +56,35 @@ private:
   void readDataSet( H5::Group& dataAndTimeGroup, const bool& iswave,
       std::unique_ptr<SignalSet>& info ) const;
   std::vector<dr_time> readTimes( H5::DataSet& times ) const;
+
+  /**
+   * Gets a single number representing the major/minor/revision nuumbers for
+   * the given file. The number is calculated as (major * 10000)+(minor * 100)+revision
+   *
+   * @param file
+   * @return 
+   */
+  static unsigned int layoutVersion( const H5::H5File& file );
+
+  /**
+   * Find the index for the given time in the given dataset. If the time does 
+   * not exist in the dataset, return the index where it *would* be if it existed
+   * @param haystack
+   * @param needle
+   * @return 
+   */
+  static hsize_t getIndexForTime( H5::DataSet& haystack, dr_time needle );
+
+  /**
+   * Reads the given dataset from start(inclusive) to end (exclusive) as ints
+   * @param data
+   * @param startidx
+   * @param endidx
+   * @return 
+   */
+  static std::vector<int> slabreadi( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
+  static std::vector<short> slabreads( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
+
 
   H5::H5File file;
 };
