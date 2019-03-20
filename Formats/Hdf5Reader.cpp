@@ -11,6 +11,7 @@
 #include <iostream>
 #include <exception>
 #include <cmath>
+#include "BasicSignalData.h"
 
 const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
   "Start Date/Time", "End Time", "Start Time", SignalData::SCALE, SignalData::MSM,
@@ -523,29 +524,69 @@ unsigned int Hdf5Reader::layoutVersion( const H5::H5File& file ) {
 
 std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
     const std::string& path, dr_time from, dr_time to ) {
-  std::unique_ptr<SignalData> signal;
+
+  size_t typeo = path.find( "VitalSigns" );
+  std::string signalname = path.substr( path.rfind( "/" ) + 1 );
+
+  std::unique_ptr<SignalData> signal( new BasicSignalData( signalname, std::string::npos == typeo ) );
   H5::Exception::dontPrint( );
   try {
     file = H5::H5File( inputfile, H5F_ACC_RDONLY );
     H5::Group group = file.openGroup( path );
     H5::DataSet times = group.openDataSet( "time" );
+    H5::DataSet data = group.openDataSet( "data" );
     H5::DataSet globaltimes = group.openDataSet( "/Events/Global_Times" );
+
+    int readingsperperiod = metaint( data, SignalData::READINGS_PER_CHUNK );
+    int periodtime = metaint( data, SignalData::CHUNK_INTERVAL_MS );
+    signal->setChunkIntervalAndSampleRate( periodtime, readingsperperiod );
+    bool doints = ( H5::PredType::STD_I32LE == data.getDataType( ) );
 
     bool timeisindex = ( layoutVersion( file ) >= 40100
         ? "index to Global_Times" == metastr( times, "Columns" )
         : false );
-    hsize_t indexloc1 = getIndexForTime( ( timeisindex ? globaltimes : times ), from );
-    hsize_t indexloc2 = getIndexForTime( ( timeisindex ? globaltimes : times ), to );
+    std::vector<dr_time> realtimes;
+    bool foundFrom = false;
+    bool foundTo = false;
+    hsize_t fromidx;
+    hsize_t toidx;
 
-    std::cout << "index locations: " << indexloc1 << " " << indexloc2 << std::endl;
+    std::map<dr_time, int> values;
+    if ( timeisindex ) {
+      fromidx = getIndexForTime( globaltimes, from, &foundFrom );
+      toidx = getIndexForTime( globaltimes, to, &foundTo );
 
-    // now we know where to start and stop, so we can read everything in one go
-    H5::DataSet data = group.openDataSet( "data" );
-    auto values = slabreads( data, indexloc1, indexloc2 );
-    for ( auto x : values ) {
-      std::cout << " " << x;
+      // FIXME: now look in times to see which indices we actually want
+      // FIXME: none of this works yet
+      //realtimes = slabreadt( ( timeisindex ? globaltimes : times ), indexloc1, indexloc2 );
     }
-    std::cout << std::endl;
+    else {
+      fromidx = getIndexForTime( times, from, &foundFrom );
+      toidx = getIndexForTime( times, to, &foundTo );
+      auto realtimes2 = slabreadt( times, fromidx, toidx );
+      std::cout << "retrieved realtimes" << std::endl;
+      for ( auto x : realtimes2 ) {
+        std::cout << x << std::endl;
+      }
+      realtimes = realtimes2;
+
+    }
+
+    auto datavals = ( doints
+        ? slabreadi( data, fromidx, toidx )
+        : slabreads( data, fromidx, toidx ) );
+
+    for ( auto x : realtimes ) {
+      std::cout << x << std::endl;
+    }
+
+    for ( size_t i = 0; i < realtimes.size( ); i++ ) {
+      values.insert( std::make_pair( realtimes[i], datavals[i] ) );
+    }
+
+    for ( auto x : values ) {
+      std::cout << x.first << ": " << x.second << std::endl;
+    }
   }
   catch ( H5::FileIException error ) {
     output( ) << error.getDetailMsg( ) << std::endl;
@@ -560,7 +601,7 @@ std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
   return signal;
 }
 
-hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle ) {
+hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, bool * found ) {
   hsize_t DIMS[2] = { };
   H5::DataSpace dsspace = haystack.getSpace( );
   dsspace.getSimpleExtentDims( DIMS );
@@ -594,6 +635,9 @@ hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle ) {
     }
   }
 
+  if ( nullptr != found ) {
+    *found = ( checktime == needle );
+  }
   return checkpos;
 }
 
@@ -613,65 +657,98 @@ std::vector<int> Hdf5Reader::slabreadi( H5::DataSet& ds, hsize_t startidx, hsize
   H5::DataSpace dsspace = ds.getSpace( );
   dsspace.getSimpleExtentDims( DIMS );
 
-  const hsize_t ROWS = DIMS[0];
+  //const hsize_t ROWS = DIMS[0];
   const hsize_t COLS = DIMS[1];
-  std::cout << ROWS << "," << COLS << std::endl;
 
   // we'll get everything in one read
-  hsize_t dim[] = { rowstoget, 1 };
-  hsize_t count[] = { rowstoget, 1 };
+  hsize_t dim[] = { rowstoget, COLS };
+  hsize_t count[] = { rowstoget, COLS };
 
   H5::DataSpace searchspace( 2, dim );
 
   hsize_t offset[] = { startidx, 0 };
-  int dd[rowstoget][1] = { };
-  dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
+  hsize_t stride[] = { 1, COLS };
+
+  int dd[rowstoget][COLS] = { };
+  dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
   ds.read( &dd, ds.getDataType( ), searchspace, dsspace );
 
-  for ( int i = startidx; i < endidx; i++ ) {
-    std::cout << "row " << i << ":";
-    for ( int j = 0; j < COLS; j++ ) {
-      std::cout << " " << dd[i][j];
-    }
-    std::cout << std::endl;
-  }
+  //  for ( hsize_t i = startidx; i < endidx; i++ ) {
+  //    std::cout << "row " << i << ":";
+  //    for ( hsize_t j = 0; j < COLS; j++ ) {
+  //      std::cout << " " << dd[i][j];
+  //    }
+  //    std::cout << std::endl;
+  //  }
 
   return values;
 }
 
-std::vector<short> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startidx, hsize_t endidx ) {
-  std::vector<short> values;
-  startidx=0;
-  endidx=199;
-  
+std::vector<int> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startidx, hsize_t endidx ) {
   hsize_t rowstoget = endidx - startidx;
+
+  std::vector<short> values;
   values.reserve( rowstoget );
 
   hsize_t DIMS[2] = { };
   H5::DataSpace dsspace = ds.getSpace( );
   dsspace.getSimpleExtentDims( DIMS );
 
-  const hsize_t ROWS = DIMS[0];
+  //const hsize_t ROWS = DIMS[0];
   const hsize_t COLS = DIMS[1];
-  std::cout << ROWS << "," << COLS << std::endl;
+  //std::cout << "reading shorts " << ROWS << "," << COLS << std::endl;
 
   // we'll get everything in one read
-  hsize_t dim[] = { rowstoget, 1 };
-  hsize_t count[] = { rowstoget, 1 };
+  hsize_t dim[] = { rowstoget, COLS };
+  hsize_t count[] = { rowstoget, COLS };
 
   H5::DataSpace searchspace( 2, dim );
 
   hsize_t offset[] = { startidx, 0 };
-  short dd[rowstoget][1] = { };
-  dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
-  ds.read( &dd, ds.getDataType( ), searchspace, dsspace );
+  hsize_t stride[] = { 1, COLS };
+  dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
+  ds.read( &values[0], ds.getDataType( ), searchspace, dsspace );
 
-  for ( size_t i = startidx; i < endidx; i++ ) {
-    std::cout << "row " << i << ":";
-    for ( size_t j = 0; j < COLS; j++ ) {
-      std::cout << " " << dd[i][j];
-    }
-    std::cout << std::endl;
+  std::vector<int> ints;
+  ints.reserve( values.size( ) );
+  for ( size_t i = 0; i < values.size( ); i++ ) {
+    ints.push_back( (int) ( values[i] ) );
+  }
+
+  //  for ( hsize_t cnt = startidx; cnt < endidx; cnt++ ) {
+  //    std::cout << "row " << cnt << ":" << values[cnt - startidx] << std::endl;
+  //  }
+
+  return ints;
+}
+
+std::vector<dr_time> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startidx, hsize_t endidx ) {
+  hsize_t rowstoget = endidx - startidx;
+
+  std::vector<dr_time> values;
+  values.reserve( rowstoget );
+
+  hsize_t DIMS[2] = { };
+  H5::DataSpace dsspace = ds.getSpace( );
+  dsspace.getSimpleExtentDims( DIMS );
+
+  //const hsize_t ROWS = DIMS[0];
+  const hsize_t COLS = DIMS[1];
+  //std::cout << "reading shorts " << ROWS << "," << COLS << std::endl;
+
+  // we'll get everything in one read
+  hsize_t dim[] = { rowstoget, COLS };
+  hsize_t count[] = { rowstoget, COLS };
+
+  H5::DataSpace searchspace( 2, dim );
+
+  hsize_t offset[] = { startidx, 0 };
+  hsize_t stride[] = { 1, COLS };
+  dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
+  ds.read( &values[0], ds.getDataType( ), searchspace, dsspace );
+
+  for ( hsize_t cnt = startidx; cnt < endidx; cnt++ ) {
+    std::cout << "row " << cnt << ":" << values[cnt - startidx] << std::endl;
   }
 
   return values;

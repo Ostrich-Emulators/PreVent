@@ -33,6 +33,14 @@ public:
 
   virtual bool getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) override;
 
+  /**
+   * Gets a segment of data based on the from and to times.
+   * @param inputfile
+   * @param path
+   * @param from
+   * @param to
+   * @return
+   */
   virtual std::unique_ptr<SignalData> splice( const std::string& inputfile,
       const std::string& path, dr_time from, dr_time to ) override;
 
@@ -73,7 +81,7 @@ private:
    * @param needle
    * @return 
    */
-  static hsize_t getIndexForTime( H5::DataSet& haystack, dr_time needle );
+  static hsize_t getIndexForTime( H5::DataSet& haystack, dr_time needle, bool * found = nullptr );
 
   /**
    * Reads the given dataset from start(inclusive) to end (exclusive) as ints
@@ -83,7 +91,8 @@ private:
    * @return 
    */
   static std::vector<int> slabreadi( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
-  static std::vector<short> slabreads( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
+  static std::vector<int> slabreads( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
+  static std::vector<dr_time> slabreadt( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
 
 
   H5::H5File file;
