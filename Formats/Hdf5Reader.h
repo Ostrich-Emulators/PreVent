@@ -84,16 +84,29 @@ private:
   static hsize_t getIndexForTime( H5::DataSet& haystack, dr_time needle, bool * found = nullptr );
 
   /**
-   * Reads the given dataset from start(inclusive) to end (exclusive) as ints
+   * Reads (as ints) the given dataset from start (inclusive) to end (exclusive)
    * @param data
-   * @param startidx
-   * @param endidx
+   * @param startidx the first row of data to retrieve
+   * @param endidx the index after the last row to retrieve
    * @return 
    */
   static std::vector<int> slabreadi( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
+  /**
+   * Reads (as shorts) the given dataset from start (inclusive) to end (exclusive)
+   * @param data
+   * @param startidx the first row of data to retrieve
+   * @param endidx the index after the last row to retrieve
+   * @return
+   */
   static std::vector<int> slabreads( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
+    /**
+   * Reads (as longs) the given dataset from start (inclusive) to end (exclusive)
+   * @param data
+   * @param startidx the first row of data to retrieve
+   * @param endidx the index after the last row to retrieve
+   * @return
+   */
   static std::vector<dr_time> slabreadt( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
-
 
   H5::H5File file;
 };

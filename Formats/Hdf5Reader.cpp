@@ -563,7 +563,7 @@ std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
     else {
       fromidx = getIndexForTime( times, from, &foundFrom );
       toidx = getIndexForTime( times, to, &foundTo );
-      auto realtimes2 = slabreadt( times, fromidx, toidx );
+      auto realtimes2( slabreadt( times, fromidx, toidx ) );
       std::cout << "retrieved realtimes" << std::endl;
       for ( auto x : realtimes2 ) {
         std::cout << x << std::endl;
@@ -648,9 +648,9 @@ hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, bool
  * @param endidx
  * @return
  */
-std::vector<int> Hdf5Reader::slabreadi( H5::DataSet& ds, hsize_t startidx, hsize_t endidx ) {
+std::vector<int> Hdf5Reader::slabreadi( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
   std::vector<int> values;
-  hsize_t rowstoget = endidx - startidx;
+  hsize_t rowstoget = endrow - startrow;
   values.reserve( rowstoget );
 
   hsize_t DIMS[2] = { };
@@ -666,7 +666,7 @@ std::vector<int> Hdf5Reader::slabreadi( H5::DataSet& ds, hsize_t startidx, hsize
 
   H5::DataSpace searchspace( 2, dim );
 
-  hsize_t offset[] = { startidx, 0 };
+  hsize_t offset[] = { startrow, 0 };
   hsize_t stride[] = { 1, COLS };
 
   int dd[rowstoget][COLS] = { };
@@ -684,8 +684,8 @@ std::vector<int> Hdf5Reader::slabreadi( H5::DataSet& ds, hsize_t startidx, hsize
   return values;
 }
 
-std::vector<int> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startidx, hsize_t endidx ) {
-  hsize_t rowstoget = endidx - startidx;
+std::vector<int> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
+  hsize_t rowstoget = endrow - startrow;
 
   std::vector<short> values;
   values.reserve( rowstoget );
@@ -704,7 +704,7 @@ std::vector<int> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startidx, hsize
 
   H5::DataSpace searchspace( 2, dim );
 
-  hsize_t offset[] = { startidx, 0 };
+  hsize_t offset[] = { startrow, 0 };
   hsize_t stride[] = { 1, COLS };
   dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
   ds.read( &values[0], ds.getDataType( ), searchspace, dsspace );
@@ -722,8 +722,8 @@ std::vector<int> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startidx, hsize
   return ints;
 }
 
-std::vector<dr_time> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startidx, hsize_t endidx ) {
-  hsize_t rowstoget = endidx - startidx;
+std::vector<dr_time> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
+  hsize_t rowstoget = endrow - startrow;
 
   std::vector<dr_time> values;
   values.reserve( rowstoget );
@@ -742,13 +742,13 @@ std::vector<dr_time> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startidx, h
 
   H5::DataSpace searchspace( 2, dim );
 
-  hsize_t offset[] = { startidx, 0 };
+  hsize_t offset[] = { startrow, 0 };
   hsize_t stride[] = { 1, COLS };
   dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
   ds.read( &values[0], ds.getDataType( ), searchspace, dsspace );
 
-  for ( hsize_t cnt = startidx; cnt < endidx; cnt++ ) {
-    std::cout << "row " << cnt << ":" << values[cnt - startidx] << std::endl;
+  for ( hsize_t cnt = startrow; cnt < endrow; cnt++ ) {
+    std::cout << "row " << cnt << ":" << values[cnt - startrow] << std::endl;
   }
 
   return values;

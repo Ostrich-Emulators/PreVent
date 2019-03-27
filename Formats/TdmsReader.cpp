@@ -252,8 +252,8 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
     }
   }
 
-  while ( parser->nextSegment( ) ) {
-    //output()<<"\tjust read a segment"<<std::endl;
+  while ( parser->nextSegment() ) {
+    // output()<<"\tjust read a segment"<<std::endl;
 
     // all the data saving gets done by the listener, not here
 

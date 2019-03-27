@@ -42,7 +42,7 @@ void TdmsParser::init( ) {
 }
 
 bool TdmsParser::nextSegment( const bool verbose ) {
-  if ( file.tellg( ) < (unsigned int) d_file_size ) {
+  if ( (unsigned long long)file.tellg( ) < (unsigned long long) d_file_size ) {
     unsigned long long nextSegmentOffset = 0;
     bool atEnd = false;
 
