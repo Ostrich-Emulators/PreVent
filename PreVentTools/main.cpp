@@ -23,6 +23,7 @@
 #include <H5Opublic.h>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 
 #include "H5Cat.h"
 #include "dr_time.h"
@@ -33,6 +34,8 @@
 #include "BasicSignalSet.h"
 #include "AnonymizingSignalSet.h"
 #include "AttributeUtils.h"
+#include "SignalUtils.h"
+
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
@@ -342,6 +345,8 @@ int main( int argc, char** argv ) {
       std::unique_ptr<SignalData> signal = rdr->splice( input, path, starttime, endtime );
       int period = signal->chunkInterval( );
       int mspervalue = period / signal->readingsPerSample( );
+      int scale = signal->scale( );
+      double scalefector = std::pow( 10, scale );
 
       while ( !signal->empty( ) ) {
         std::unique_ptr<DataRow> row = signal->pop( );
@@ -349,7 +354,7 @@ int main( int argc, char** argv ) {
 
         dr_time time = row->time;
         for ( auto x : vals ) {
-          std::cout << time << " " << x << std::endl;
+          std::cout << time << " " << SignalUtils::tosmallstring( (double) x, scalefector ) << std::endl;
           time += mspervalue;
         }
       }
