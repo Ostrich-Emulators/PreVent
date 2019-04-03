@@ -79,9 +79,10 @@ private:
    * not exist in the dataset, return the index where it *would* be if it existed
    * @param haystack
    * @param needle
+   * @param foundtime the time that was found at the returned index
    * @return 
    */
-  static hsize_t getIndexForTime( H5::DataSet& haystack, dr_time needle, bool * found = nullptr );
+  static hsize_t getIndexForTime( H5::DataSet& haystack, dr_time needle, dr_time * foundtime = nullptr );
 
   /**
    * Reads (as ints) the given dataset from start (inclusive) to end (exclusive)

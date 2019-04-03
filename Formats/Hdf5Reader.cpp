@@ -550,23 +550,25 @@ std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
         ? "index to Global_Times" == metastr( times, "Columns" )
         : false );
     std::vector<dr_time> realtimes;
-    bool foundFrom = false;
-    bool foundTo = false;
+    dr_time foundFrom = false;
+    dr_time foundTo = false;
     hsize_t fromidx;
     hsize_t toidx;
 
-    std::map<dr_time, int> values;
     if ( timeisindex ) {
       fromidx = getIndexForTime( globaltimes, from, &foundFrom );
       toidx = getIndexForTime( globaltimes, to, &foundTo );
+      realtimes = slabreadt( globaltimes, fromidx, toidx );
 
-      // FIXME: now look in times to see which indices we actually want
-      // FIXME: none of this works yet
-      //realtimes = slabreadt( ( timeisindex ? globaltimes : times ), indexloc1, indexloc2 );
+      // we fall through this block, and now we just want the indexes that
+      // match these values
+      from = fromidx;
+      to = toidx;
     }
-    else {
-      fromidx = getIndexForTime( times, from, &foundFrom );
-      toidx = getIndexForTime( times, to, &foundTo );
+
+    fromidx = getIndexForTime( times, from, &foundFrom );
+    toidx = getIndexForTime( times, to, &foundTo );
+    if ( !timeisindex ) {
       realtimes = slabreadt( times, fromidx, toidx );
     }
 
@@ -611,7 +613,7 @@ std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
   return signal;
 }
 
-hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, bool * found ) {
+hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, dr_time * found ) {
   hsize_t DIMS[2] = { };
   H5::DataSpace dsspace = haystack.getSpace( );
   dsspace.getSimpleExtentDims( DIMS );
@@ -649,7 +651,7 @@ hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, bool
   }
 
   if ( nullptr != found ) {
-    *found = ( checktime == needle );
+    *found = checktime;
   }
   return checkpos;
 }

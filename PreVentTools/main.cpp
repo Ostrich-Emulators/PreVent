@@ -342,6 +342,7 @@ int main( int argc, char** argv ) {
       std::unique_ptr<SignalData> signal = rdr->splice( input, path, starttime, endtime );
       while( !signal->empty() ){
         std::unique_ptr<DataRow> row = signal->pop();
+        std::vector<int> vals = row->ints( signal->scale() );
         std::cout<<"row "<<row->time<<": "<<row->data<<std::endl;
       }
     }
