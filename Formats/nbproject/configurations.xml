@@ -136,7 +136,7 @@
           <incDir>
             <pElem>../libtdms/include</pElem>
           </incDir>
-          <commandLine>-Wno-deprecated `wfdb-config --cflags` -std=c++17</commandLine>
+          <commandLine>-Wno-deprecated `wfdb-config --cflags` -std=c++17 -Og</commandLine>
           <warningLevel>2</warningLevel>
         </ccTool>
         <linkerTool>
