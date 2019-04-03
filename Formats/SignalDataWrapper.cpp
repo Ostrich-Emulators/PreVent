@@ -78,6 +78,10 @@ int SignalDataWrapper::readingsPerSample( ) const {
   return signal->readingsPerSample( );
 }
 
+int SignalDataWrapper::chunkInterval( ) const {
+  return signal->chunkInterval( );
+}
+
 void SignalDataWrapper::setMetadataFrom( const SignalData& model ) {
   signal->setMetadataFrom( model );
 }

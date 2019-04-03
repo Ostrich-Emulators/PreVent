@@ -79,6 +79,10 @@ int SignalData::readingsPerSample( ) const {
   return metai( ).at( READINGS_PER_CHUNK );
 }
 
+int SignalData::chunkInterval( ) const {
+  return metai( ).at( CHUNK_INTERVAL_MS );
+}
+
 void SignalData::setChunkIntervalAndSampleRate( int chunktime_ms, int samplerate ) {
   setMeta( CHUNK_INTERVAL_MS, chunktime_ms );
   setMeta( READINGS_PER_CHUNK, samplerate );

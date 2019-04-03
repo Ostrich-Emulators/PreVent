@@ -338,12 +338,20 @@ int main( int argc, char** argv ) {
     for ( int i = optind; i < argc; i++ ) {
       std::string input = argv[i];
       Format fmt = Formats::guess( input );
-      std::unique_ptr<Reader> rdr = Reader::get(fmt);
+      std::unique_ptr<Reader> rdr = Reader::get( fmt );
       std::unique_ptr<SignalData> signal = rdr->splice( input, path, starttime, endtime );
-      while( !signal->empty() ){
-        std::unique_ptr<DataRow> row = signal->pop();
-        std::vector<int> vals = row->ints( signal->scale() );
-        std::cout<<"row "<<row->time<<": "<<row->data<<std::endl;
+      int period = signal->chunkInterval( );
+      int mspervalue = period / signal->readingsPerSample( );
+
+      while ( !signal->empty( ) ) {
+        std::unique_ptr<DataRow> row = signal->pop( );
+        std::vector<int> vals = row->ints( signal->scale( ) );
+
+        dr_time time = row->time;
+        for ( auto x : vals ) {
+          std::cout << time << " " << x << std::endl;
+          time += mspervalue;
+        }
       }
     }
   }

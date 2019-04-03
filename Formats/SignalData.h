@@ -78,6 +78,7 @@ public:
   virtual const std::string& uom( ) const;
   virtual double hz( ) const;
   virtual int readingsPerSample( ) const;
+  virtual int chunkInterval( ) const;
   virtual void setChunkIntervalAndSampleRate( int chunktime_ms, int samplerate );
   virtual bool empty( ) const;
   virtual void moveDataTo( std::unique_ptr<SignalData>& signal );

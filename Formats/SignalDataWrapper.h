@@ -47,6 +47,7 @@ public:
   virtual dr_time endTime( ) const override;
   virtual const std::string& name( ) const override;
   virtual int readingsPerSample( ) const override;
+  virtual int chunkInterval( ) const override;
   virtual void setChunkIntervalAndSampleRate( int chunk_ms, int sr ) override;
   virtual void setMetadataFrom( const SignalData& model ) override;
 
