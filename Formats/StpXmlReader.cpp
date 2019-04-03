@@ -233,7 +233,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
 
           }
 
-          DataRow row( currvstime, value, "", "", attrs );
+          DataRow row( currvstime, value, attrs );
           sig->add( row );
           if ( !( 0 == recordtime || recordtime == currvstime ) ) {
             sig->recordEvent( "collection discrepancy", recordtime );
@@ -310,7 +310,7 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
             }
           }
 
-          DataRow row( currwavetime, wavepoints, "", "", attrs );
+          DataRow row( currwavetime, wavepoints, attrs );
           sig->add( row );
         }
         else if ( warnJunkData ) {

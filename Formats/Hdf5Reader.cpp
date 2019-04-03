@@ -12,6 +12,7 @@
 #include <exception>
 #include <cmath>
 #include "BasicSignalData.h"
+#include "SignalUtils.h"
 
 const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
   "Start Date/Time", "End Time", "Start Time", SignalData::SCALE, SignalData::MSM,
@@ -242,7 +243,7 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
     }
   }
 
-  int powscale = std::pow( 10, scale );
+  double powscale = std::pow( 10, scale );
   // just read everything all at once...in the future, we probably want to
   // worry about using hyperslabs
   if ( dataset.getDataType( ) == H5::PredType::STD_I16LE ) {
@@ -344,7 +345,7 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
   }
 
   int timecounter = 0;
-  int powscale = std::pow( 10, scale );
+  double powscale = std::pow( 10, scale );
   while ( offset[0] < ROWS ) {
     dataspace.selectHyperslab( H5S_SELECT_SET, count, offset );
     H5::DataSpace memspace( 2, count );
@@ -537,6 +538,9 @@ std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
     H5::DataSet data = group.openDataSet( "data" );
     H5::DataSet globaltimes = group.openDataSet( "/Events/Global_Times" );
 
+    const int scale = metaint( data, SignalData::SCALE );
+    const double scalefactor = std::pow( 10, scale );
+
     int readingsperperiod = metaint( data, SignalData::READINGS_PER_CHUNK );
     int periodtime = metaint( data, SignalData::CHUNK_INTERVAL_MS );
     signal->setChunkIntervalAndSampleRate( periodtime, readingsperperiod );
@@ -563,29 +567,35 @@ std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
     else {
       fromidx = getIndexForTime( times, from, &foundFrom );
       toidx = getIndexForTime( times, to, &foundTo );
-      auto realtimes2( slabreadt( times, fromidx, toidx ) );
-      std::cout << "retrieved realtimes" << std::endl;
-      for ( auto x : realtimes2 ) {
-        std::cout << x << std::endl;
-      }
-      realtimes = realtimes2;
-
+      realtimes = slabreadt( times, fromidx, toidx );
     }
 
+    // remember: wave signals have multiple values per time period
     auto datavals = ( doints
-        ? slabreadi( data, fromidx, toidx )
-        : slabreads( data, fromidx, toidx ) );
-
-    for ( auto x : realtimes ) {
-      std::cout << x << std::endl;
-    }
+        ? slabreadi( data, fromidx * readingsperperiod, toidx * readingsperperiod )
+        : slabreads( data, fromidx * readingsperperiod, toidx * readingsperperiod ) );
 
     for ( size_t i = 0; i < realtimes.size( ); i++ ) {
-      values.insert( std::make_pair( realtimes[i], datavals[i] ) );
-    }
+      dr_time time = realtimes[i];
 
-    for ( auto x : values ) {
-      std::cout << x.first << ": " << x.second << std::endl;
+      if ( 0 == scale ) {
+        // no scaling, so we can treat everything as integers
+        std::string valstr = std::to_string( datavals[i * readingsperperiod] );
+        for ( int j = 1; j < readingsperperiod; j++ ) {
+          valstr.append( "," );
+          valstr.append( std::to_string( datavals[i * readingsperperiod + j] ) );
+        }
+        signal->add( DataRow( time, valstr ) );
+      }
+      else {
+        // worry about the scale factor, so treat everything as a double (and remove trailing 0s
+        std::string valstr = SignalUtils::tosmallstring( (double) datavals[i * readingsperperiod], scalefactor );
+        for ( int j = 1; j < readingsperperiod; j++ ) {
+          valstr.append( "," );
+          valstr.append( SignalUtils::tosmallstring( (double) datavals[i * readingsperperiod + j], scalefactor ) );
+        }
+        signal->add( DataRow( time, valstr ) );
+      }
     }
   }
   catch ( H5::FileIException error ) {
@@ -634,6 +644,9 @@ hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, bool
       startpos = checkpos + 1;
     }
   }
+  if ( startpos == endpos ) {
+    checkpos = endpos;
+  }
 
   if ( nullptr != found ) {
     *found = ( checktime == needle );
@@ -649,9 +662,7 @@ hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, bool
  * @return
  */
 std::vector<int> Hdf5Reader::slabreadi( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
-  std::vector<int> values;
   hsize_t rowstoget = endrow - startrow;
-  values.reserve( rowstoget );
 
   hsize_t DIMS[2] = { };
   H5::DataSpace dsspace = ds.getSpace( );
@@ -681,15 +692,18 @@ std::vector<int> Hdf5Reader::slabreadi( H5::DataSet& ds, hsize_t startrow, hsize
   //    std::cout << std::endl;
   //  }
 
+  std::vector<int> values;
+  values.reserve( rowstoget );
+  for ( hsize_t i = 0; i < rowstoget; i++ ) {
+    values.push_back( dd[i][0] );
+  }
+
   return values;
 }
 
 std::vector<int> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
   hsize_t rowstoget = endrow - startrow;
 
-  std::vector<short> values;
-  values.reserve( rowstoget );
-
   hsize_t DIMS[2] = { };
   H5::DataSpace dsspace = ds.getSpace( );
   dsspace.getSimpleExtentDims( DIMS );
@@ -706,27 +720,25 @@ std::vector<int> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startrow, hsize
 
   hsize_t offset[] = { startrow, 0 };
   hsize_t stride[] = { 1, COLS };
+  short dd[rowstoget][COLS] = { };
   dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
-  ds.read( &values[0], ds.getDataType( ), searchspace, dsspace );
+  ds.read( &dd, ds.getDataType( ), searchspace, dsspace );
 
-  std::vector<int> ints;
-  ints.reserve( values.size( ) );
-  for ( size_t i = 0; i < values.size( ); i++ ) {
-    ints.push_back( (int) ( values[i] ) );
+  std::vector<int> values;
+  values.reserve( rowstoget );
+  for ( hsize_t i = 0; i < rowstoget; i++ ) {
+    values.push_back( (int) dd[i][0] );
   }
 
   //  for ( hsize_t cnt = startidx; cnt < endidx; cnt++ ) {
   //    std::cout << "row " << cnt << ":" << values[cnt - startidx] << std::endl;
   //  }
 
-  return ints;
+  return values;
 }
 
 std::vector<dr_time> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
   hsize_t rowstoget = endrow - startrow;
-
-  std::vector<dr_time> values;
-  values.reserve( rowstoget );
 
   hsize_t DIMS[2] = { };
   H5::DataSpace dsspace = ds.getSpace( );
@@ -744,11 +756,14 @@ std::vector<dr_time> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startrow, h
 
   hsize_t offset[] = { startrow, 0 };
   hsize_t stride[] = { 1, COLS };
+  dr_time times[rowstoget];
   dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
-  ds.read( &values[0], ds.getDataType( ), searchspace, dsspace );
+  ds.read( &times, ds.getDataType( ), searchspace, dsspace );
 
-  for ( hsize_t cnt = startrow; cnt < endrow; cnt++ ) {
-    std::cout << "row " << cnt << ":" << values[cnt - startrow] << std::endl;
+  std::vector<dr_time> values;
+  values.reserve( rowstoget );
+  for ( hsize_t i = 0; i < rowstoget; i++ ) {
+    values.push_back( times[i] );
   }
 
   return values;

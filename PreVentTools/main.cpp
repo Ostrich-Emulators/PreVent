@@ -79,7 +79,7 @@ void cloneFile( std::unique_ptr<H5::H5File>&infile,
         ocpypl_id, H5P_DEFAULT );
   }
 
-  for ( hsize_t i = 0; i < infile->getNumAttrs( ); i++ ) {
+  for ( int i = 0; i < infile->getNumAttrs( ); i++ ) {
     H5::Attribute attr = infile->openAttribute( i );
     H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
     H5::DataType dt = attr.getDataType( );
@@ -340,6 +340,10 @@ int main( int argc, char** argv ) {
       Format fmt = Formats::guess( input );
       std::unique_ptr<Reader> rdr = Reader::get(fmt);
       std::unique_ptr<SignalData> signal = rdr->splice( input, path, starttime, endtime );
+      while( !signal->empty() ){
+        std::unique_ptr<DataRow> row = signal->pop();
+        std::cout<<"row "<<row->time<<": "<<row->data<<std::endl;
+      }
     }
   }
   else {

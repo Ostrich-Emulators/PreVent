@@ -23,10 +23,9 @@
 
 class DataRow {
 public:
-  DataRow( const dr_time& time, const std::string& data,
-        const std::string& high = "", const std::string& low = "",
-        std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
   DataRow( );
+  DataRow( const dr_time& time, const std::string& data,
+        std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
   DataRow( const DataRow& orig );
   DataRow& operator=(const DataRow& orig );
 
@@ -66,8 +65,6 @@ public:
   static int scale( const std::string& val, bool iswave );
 
   std::string data;
-  std::string high;
-  std::string low;
   std::map<std::string, std::string> extras;
   dr_time time;
 };

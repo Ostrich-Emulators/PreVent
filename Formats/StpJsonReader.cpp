@@ -154,14 +154,10 @@ void StpJsonReader::handleOneLine( const std::string& chunk, std::unique_ptr<Sig
       std::string vital;
       std::string uom;
       std::string val;
-      std::string high;
-      std::string low;
 
       std::getline( points, vital, '|' );
       std::getline( points, uom, '|' );
       std::getline( points, val, '|' );
-      std::getline( points, high, '|' );
-      std::getline( points, low, '|' );
 
       bool added;
       std::unique_ptr<SignalData>& dataset = info->addVital( vital, &added );
@@ -174,7 +170,7 @@ void StpJsonReader::handleOneLine( const std::string& chunk, std::unique_ptr<Sig
         dataset->setUom( uom );
         dataset->setChunkIntervalAndSampleRate( 2000, 1 );
       }
-      DataRow row( currentTime, val, high, low );
+      DataRow row( currentTime, val );
       dataset->add( row );
     }
     else if ( WAVE == firstword ) {

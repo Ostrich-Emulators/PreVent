@@ -27,7 +27,7 @@ class DataRow;
 
 class SignalUtils {
 public:
-  virtual ~SignalUtils();
+  virtual ~SignalUtils( );
 
   /**
    * Aligns all the SignalData caches so they start and end at the same timestamps.
@@ -37,7 +37,7 @@ public:
    * end times
    */
   static std::vector<std::unique_ptr<SignalData>> sync(
-          std::vector<std::unique_ptr<SignalData> >&map);
+      std::vector<std::unique_ptr<SignalData> >&map );
   /**
    * Consumes the signal data and creates vector data data points such that the
    * outside vector is the timestep, and the inside vector is each signal's
@@ -47,21 +47,21 @@ public:
    * @return essentially, a 2D vector
    */
   static std::vector<std::vector<std::string>> syncDatas(
-          std::vector<std::unique_ptr<SignalData> >&map);
+      std::vector<std::unique_ptr<SignalData> >&map );
 
   static std::vector<std::unique_ptr<SignalData>> vectorize(
-          std::map<std::string, std::unique_ptr<SignalData>>&data);
+      std::map<std::string, std::unique_ptr<SignalData>>&data );
 
   static std::map<std::string, std::unique_ptr<SignalData>> mapify(
-          std::vector<std::unique_ptr<SignalData>>&data);
-  
+      std::vector<std::unique_ptr<SignalData>>&data );
+
   /**
    * Gets all times in the given SignalSet. This is the superset of all 
    * SignalData's timeseries.
    * @param ss
    * @return 
    */
-  static std::vector<dr_time> alltimes(const SignalSet& ss);
+  static std::vector<dr_time> alltimes( const SignalSet& ss );
 
   /**
    * Creates a vector with index positions for the given signal's data.
@@ -69,8 +69,8 @@ public:
    * @param signal
    * @return a vector the same size as alltimes
    */
-  static std::vector<size_t> index(const std::vector<dr_time>& alltimes,
-          const SignalData& signal);
+  static std::vector<size_t> index( const std::vector<dr_time>& alltimes,
+      const SignalData& signal );
 
   /**
    * Gets the earliest and latest timestamps from the SignalData.
@@ -79,17 +79,27 @@ public:
    * @param latest the latest date in the SignalData
    * @return the earliest date
    */
-  static dr_time firstlast(const std::map<std::string, std::unique_ptr<SignalData>>&map,
-          dr_time * first = nullptr, dr_time * last = nullptr);
-  static dr_time firstlast(const std::vector<std::unique_ptr<SignalData>>&map,
-          dr_time * first = nullptr, dr_time * last = nullptr);
+  static dr_time firstlast( const std::map<std::string, std::unique_ptr<SignalData>>&map,
+      dr_time * first = nullptr, dr_time * last = nullptr );
+  static dr_time firstlast( const std::vector<std::unique_ptr<SignalData>>&map,
+      dr_time * first = nullptr, dr_time * last = nullptr );
+
+
+  /**
+   * Converts the given val to a string, and removes any trailing 0s (to make the
+   * shortest string).
+   * @param val
+   * @param scalefactor scaling multiplier
+   * @return
+   */
+  static std::string tosmallstring( double val, double scalefactor = 1.0 );
 
 private:
-  SignalUtils();
-  SignalUtils(const SignalUtils&);
+  SignalUtils( );
+  SignalUtils( const SignalUtils& );
 
-  static void fillGap(std::unique_ptr<SignalData>& data,
-          std::unique_ptr<DataRow>& row, dr_time& nexttime, const int& timestep);
+  static void fillGap( std::unique_ptr<SignalData>& data,
+      std::unique_ptr<DataRow>& row, dr_time& nexttime, const int& timestep );
   /**
    * Creates a valid "dummy" DataRow for the given signal. (Wave forms need
    * a series of missing values, while vitals only need one.)
@@ -97,7 +107,7 @@ private:
    * @param time
    * @return
    */
-  static DataRow dummyfill(std::unique_ptr<SignalData>& signal, const dr_time& time);
+  static DataRow dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time );
 };
 
 #endif /* SIGNALUTILS_H */

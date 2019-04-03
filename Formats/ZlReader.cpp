@@ -170,14 +170,10 @@ void ZlReader::handleOneLine( const std::string& chunk, std::unique_ptr<SignalSe
       std::string vital;
       std::string uom;
       std::string val;
-      std::string high;
-      std::string low;
 
       std::getline( points, vital, '|' );
       std::getline( points, uom, '|' );
       std::getline( points, val, '|' );
-      std::getline( points, high, '|' );
-      std::getline( points, low, '|' );
 
       bool added;
       std::unique_ptr<SignalData>& dataset = info->addVital( vital, &added );
@@ -190,7 +186,7 @@ void ZlReader::handleOneLine( const std::string& chunk, std::unique_ptr<SignalSe
         dataset->setUom( uom );
         dataset->setChunkIntervalAndSampleRate( 2000, 1 );
       }
-      dataset->add( DataRow( currentTime, val, high, low ) );
+      dataset->add( DataRow( currentTime, val) );
     }
     else if ( WAVE == firstword ) {
       state = zlReaderState::ZIN_WAVE;

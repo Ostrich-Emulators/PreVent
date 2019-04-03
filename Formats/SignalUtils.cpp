@@ -249,7 +249,7 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
   }
 
   dr_time fillstart = nexttime;
-  for ( ; nexttime < row->time - timestep; nexttime += timestep ) {
+  for (; nexttime < row->time - timestep; nexttime += timestep ) {
     DataRow row( dummyfill( signal, nexttime ) );
     signal->add( row );
   }
@@ -323,6 +323,27 @@ std::vector<size_t> SignalUtils::index( const std::vector<dr_time>& alltimes,
   }
 
   return indexes;
+}
+
+std::string SignalUtils::tosmallstring( double val, double scalefactor ) {
+  if( SignalData::MISSING_VALUE==(short)val){
+    return SignalData::MISSING_VALUESTR;
+  }
+  else if ( 1.0 == scalefactor ) {
+    return std::to_string( (int) val );
+  }
+
+  std::string valstr = std::to_string( val / scalefactor );
+  auto lastNotZeroPosition = valstr.find_last_not_of( '0' );
+  if ( lastNotZeroPosition != std::string::npos && lastNotZeroPosition + 1 < valstr.size( ) ) {
+    //We leave 123 from 123.0000 or 123.3 from 123.300
+    if ( valstr.at( lastNotZeroPosition ) == '.' ) {
+      --lastNotZeroPosition;
+    }
+    valstr.erase( lastNotZeroPosition + 1, std::string::npos );
+  }
+  return valstr;
+
 }
 
 

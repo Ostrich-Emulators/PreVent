@@ -20,23 +20,20 @@
 #include <iostream>
 #include <limits>
 
-DataRow::DataRow( const dr_time& t, const std::string& d, const std::string& hi,
-      const std::string& lo, std::map<std::string, std::string> exts ) : data( d ),
-      high( hi ), low( lo ), extras( exts ), time( t ) {
+DataRow::DataRow( const dr_time& t, const std::string& d,
+    std::map<std::string, std::string> exts ) : data( d ), extras( exts ), time( t ) {
 }
 
-DataRow::DataRow( ) : data( "" ), high( "" ), low( "" ), time( 0 ) {
+DataRow::DataRow( ) : data( "" ), time( 0 ) {
 }
 
 DataRow::DataRow( const DataRow& orig )
-: data( orig.data ), high( orig.high ), low( orig.low ), extras( orig.extras ), 
+: data( orig.data ), extras( orig.extras ),
 time( orig.time ) {
 }
 
 DataRow& DataRow::operator=(const DataRow& orig ) {
   if ( &orig != this ) {
-    this->high = orig.high;
-    this->low = orig.low;
     this->data = orig.data;
     this->time = orig.time;
     this->extras = orig.extras;
@@ -50,8 +47,6 @@ DataRow::~DataRow( ) {
 
 void DataRow::clear( ) {
   time = 0;
-  high = "";
-  low = "";
   data = "";
   extras.clear( );
 }
@@ -104,7 +99,7 @@ std::vector<short> DataRow::shorts( int scale ) const {
 
 std::vector<int> DataRow::ints( const std::string& data, int scale ) {
 
-  const int scalefactor = std::pow( 10, scale );
+  const double scalefactor = std::pow( 10, scale );
 
   std::stringstream stream( data );
   std::vector<int> vals;
@@ -117,13 +112,13 @@ std::vector<int> DataRow::ints( const std::string& data, int scale ) {
       vals.push_back( std::stoi( each ) );
     }
     else {
-//      try{
-        vals.push_back( (int) ( std::stof( each ) * scalefactor ) );
-//      }
-//      catch( std::invalid_argument x){
-//        std::cout<<data<<std::endl;
-//        std::cout<<"failed on: "<<each<<std::endl;
-//      }
+      //      try{
+      vals.push_back( (int) ( std::stof( each ) * scalefactor ) );
+      //      }
+      //      catch( std::invalid_argument x){
+      //        std::cout<<data<<std::endl;
+      //        std::cout<<"failed on: "<<each<<std::endl;
+      //      }
     }
   }
   return vals;
