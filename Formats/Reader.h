@@ -79,8 +79,18 @@ public:
    */
   virtual bool getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map );
 
-  virtual std::unique_ptr<SignalData> splice( const std::string& inputfile, const std::string& path,
-      dr_time from, dr_time to );
+	/**
+	 * Reads any data available in the given file between the given dates for the
+	 * given signal, and writes it to the given SignalData. This function will
+	 * set any properties in the SignalData to match the data.
+	 * @param inputfile
+	 * @param path
+	 * @param from
+	 * @param to
+	 * @return
+	 */
+  virtual void splice( const std::string& inputfile, const std::string& path,
+      dr_time from, dr_time to, std::unique_ptr<SignalData>& signalToFill );
 
 protected:
   Reader( const Reader& );

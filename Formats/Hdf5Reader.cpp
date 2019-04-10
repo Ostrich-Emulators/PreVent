@@ -11,7 +11,6 @@
 #include <iostream>
 #include <exception>
 #include <cmath>
-#include "BasicSignalData.h"
 #include "SignalUtils.h"
 
 const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
@@ -523,13 +522,12 @@ unsigned int Hdf5Reader::layoutVersion( const H5::H5File& file ) {
   return rev;
 }
 
-std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
-    const std::string& path, dr_time from, dr_time to ) {
+void Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
+    dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
 
   size_t typeo = path.find( "VitalSigns" );
-  std::string signalname = path.substr( path.rfind( "/" ) + 1 );
 
-  std::unique_ptr<SignalData> signal( new BasicSignalData( signalname, std::string::npos == typeo ) );
+  signal->setWave( std::string::npos == typeo );
   H5::Exception::dontPrint( );
   try {
     file = H5::H5File( inputfile, H5F_ACC_RDONLY );
@@ -544,6 +542,7 @@ std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
     int readingsperperiod = metaint( data, SignalData::READINGS_PER_CHUNK );
     int periodtime = metaint( data, SignalData::CHUNK_INTERVAL_MS );
     signal->setChunkIntervalAndSampleRate( periodtime, readingsperperiod );
+    signal->scale( scale );
     bool doints = ( H5::PredType::STD_I32LE == data.getDataType( ) );
 
     bool timeisindex = ( layoutVersion( file ) >= 40100
@@ -572,29 +571,61 @@ std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
       realtimes = slabreadt( times, fromidx, toidx );
     }
 
+    // if we have a lot of data to read, we need to split it up into
+    // manageable chunks or we'll run out of memory.
     // remember: wave signals have multiple values per time period
-    auto datavals = ( doints
-        ? slabreadi( data, fromidx * readingsperperiod, toidx * readingsperperiod )
-        : slabreads( data, fromidx * readingsperperiod, toidx * readingsperperiod ) );
+    const hsize_t MAXSLABSIZE = 512 * 1024;
+    hsize_t slabstartidx = fromidx * readingsperperiod;
+    const hsize_t slabstopidx = toidx * readingsperperiod;
+    hsize_t currentstopidx = ( slabstopidx - slabstartidx > MAXSLABSIZE
+        ? slabstartidx + MAXSLABSIZE
+        : slabstopidx );
 
+    hsize_t dataidx = 0;
+    std::vector<int> datavals;
     for ( size_t i = 0; i < realtimes.size( ); i++ ) {
       dr_time time = realtimes[i];
 
+      // if we can't process a whole sample, get more data to process
+      if ( dataidx + readingsperperiod > datavals.size( ) ) {
+        //        std::cout << "start/stop/cur idx: " << slabstartidx << "/" << slabstopidx
+        //            << "/" << currentstopidx << std::endl;
+
+        auto newvals = ( doints
+            ? slabreadi( data, slabstartidx, currentstopidx )
+            : slabreads( data, slabstartidx, currentstopidx ) );
+
+        // get rid of the stuff we've already processed
+        datavals.erase( datavals.begin( ), datavals.begin( ) + dataidx );
+
+        // add the new stuff
+        datavals.insert( datavals.end( ), newvals.begin( ), newvals.end( ) );
+
+        // start counting from the beginning again
+        dataidx = 0;
+
+        // now get ready for the next time we have to do this
+        slabstartidx = currentstopidx;
+        currentstopidx = ( slabstopidx - currentstopidx > MAXSLABSIZE
+            ? currentstopidx + MAXSLABSIZE
+            : slabstopidx );
+      }
+
       if ( 0 == scale ) {
         // no scaling, so we can treat everything as integers
-        std::string valstr = std::to_string( datavals[i * readingsperperiod] );
+        std::string valstr = std::to_string( datavals[dataidx++] );
         for ( int j = 1; j < readingsperperiod; j++ ) {
           valstr.append( "," );
-          valstr.append( std::to_string( datavals[i * readingsperperiod + j] ) );
+          valstr.append( std::to_string( datavals[dataidx++] ) );
         }
         signal->add( DataRow( time, valstr ) );
       }
       else {
         // worry about the scale factor, so treat everything as a double (and remove trailing 0s
-        std::string valstr = SignalUtils::tosmallstring( (double) datavals[i * readingsperperiod], scalefactor );
+        std::string valstr = SignalUtils::tosmallstring( (double) datavals[dataidx++], scalefactor );
         for ( int j = 1; j < readingsperperiod; j++ ) {
           valstr.append( "," );
-          valstr.append( SignalUtils::tosmallstring( (double) datavals[i * readingsperperiod + j], scalefactor ) );
+          valstr.append( SignalUtils::tosmallstring( (double) datavals[dataidx++], scalefactor ) );
         }
         signal->add( DataRow( time, valstr ) );
       }
@@ -609,8 +640,6 @@ std::unique_ptr<SignalData> Hdf5Reader::splice( const std::string& inputfile,
     output( ) << error.getDetailMsg( ) << std::endl;
     file.close( );
   }
-
-  return signal;
 }
 
 hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, dr_time * found ) {

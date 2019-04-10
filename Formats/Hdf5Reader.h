@@ -41,8 +41,8 @@ public:
    * @param to
    * @return
    */
-  virtual std::unique_ptr<SignalData> splice( const std::string& inputfile,
-      const std::string& path, dr_time from, dr_time to ) override;
+  virtual void splice( const std::string& inputfile, const std::string& path,
+			dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) override;
 
 private:
   Hdf5Reader( const Hdf5Reader& );
