@@ -112,8 +112,9 @@ std::vector<int> DataRow::ints( const std::string& data, int scale ) {
       vals.push_back( std::stoi( each ) );
     }
     else {
+      double dbl = std::stod( each );
       //      try{
-      vals.push_back( (int) ( std::stof( each ) * scalefactor ) );
+      vals.push_back( (int) ( dbl * scalefactor ) );
       //      }
       //      catch( std::invalid_argument x){
       //        std::cout<<data<<std::endl;
