@@ -18,6 +18,7 @@
 #include <iostream>
 #include <getopt.h>
 #include <sys/stat.h>
+#include <fstream>
 
 #include <H5Cpp.h>
 #include <H5Opublic.h>
@@ -35,7 +36,6 @@
 #include "AnonymizingSignalSet.h"
 #include "AttributeUtils.h"
 #include "SignalUtils.h"
-
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
@@ -348,15 +348,24 @@ int main( int argc, char** argv ) {
       int scale = signal->scale( );
       double scalefector = std::pow( 10, scale );
 
+
+      std::ostream& outstream = ( outfilename.empty( )
+          ? std::cout
+          : *( new std::ofstream( outfilename ) ) );
+
       while ( !signal->empty( ) ) {
         std::unique_ptr<DataRow> row = signal->pop( );
         std::vector<int> vals = row->ints( signal->scale( ) );
 
         dr_time time = row->time;
         for ( auto x : vals ) {
-          std::cout << time << " " << SignalUtils::tosmallstring( (double) x, scalefector ) << std::endl;
+          outstream << time << " " << SignalUtils::tosmallstring( (double) x, scalefector ) << std::endl;
           time += mspervalue;
         }
+      }
+
+      if( !outfilename.empty()){
+        delete &outstream;
       }
     }
   }
