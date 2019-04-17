@@ -52,6 +52,8 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-p or --path\tsets the path for --set-attr and --attrs"
       << std::endl << "\t-d or --print\tprints data from the path given with --path"
       << std::endl << "\t-A or --attrs\tprints all attributes in the file"
+      << std::endl << "\t-V or --vitals\tprints a list of vital signs in this file"
+      << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
       << std::endl;
   exit( 1 );
 }
@@ -68,6 +70,8 @@ struct option longopts[] = {
   { "anonymize", no_argument, NULL, 'a' },
   { "anonymous", no_argument, NULL, 'a' },
   { "print", no_argument, NULL, 'd' },
+  { "waves", no_argument, NULL, 'W' },
+  { "vitals", no_argument, NULL, 'V' },
   { "cat", no_argument, NULL, 'c' }, // all remaining args are files
   { 0, 0, 0, 0 }
 };
@@ -137,8 +141,10 @@ int main( int argc, char** argv ) {
   bool printattrs = false;
   std::string path = "/";
   bool print = false;
+  bool listwaves = false;
+  bool listvitals = false;
 
-  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WV", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'o':
         outfilename = optarg;
@@ -151,6 +157,12 @@ int main( int argc, char** argv ) {
         break;
       case 'A':
         printattrs = true;
+        break;
+      case 'W':
+        listwaves = true;
+        break;
+      case 'V':
+        listvitals = true;
         break;
       case 'S':
       {
@@ -293,7 +305,7 @@ int main( int argc, char** argv ) {
     }
   }
   else if ( !attrs.empty( ) ) {
-    // write some attributes to screen
+    // set attribute values
     for ( int i = optind; i < argc; i++ ) {
       std::string val;
       std::string attrtype( "s" );
@@ -350,24 +362,29 @@ int main( int argc, char** argv ) {
       std::unique_ptr<Reader> rdr = Reader::get( fmt );
       rdr->splice( input, path, starttime, endtime, signal );
 
-//      int period = signal->chunkInterval( );
-//      int mspervalue = period / signal->readingsPerSample( );
-//      int scale = signal->scale( );
-//      double scalefector = std::pow( 10, scale );
-//
-//      while ( !signal->empty( ) ) {
-//        std::unique_ptr<DataRow> row = signal->pop( );
-//        std::vector<int> vals = row->ints( signal->scale( ) );
-//
-//        dr_time time = row->time;
-//        for ( auto x : vals ) {
-//          outstream << time << " " << SignalUtils::tosmallstring( (double) x, scalefector ) << std::endl;
-//          time += mspervalue;
-//        }
-//      }
-
-      if( !outfilename.empty()){
+      if ( !outfilename.empty( ) ) {
         delete &outstream;
+      }
+    }
+  }
+  else if ( listvitals || listwaves ) {
+
+    std::vector<std::string> tolist;
+    if ( listvitals ) {
+      tolist.push_back( "/VitalSigns" );
+    }
+    if ( listwaves ) {
+      tolist.push_back( "/Waveforms" );
+    }
+
+    for ( int j = optind; j < argc; j++ ) {
+      H5::H5File file = H5::H5File( argv[j], H5F_ACC_RDONLY );
+      for ( auto groupname : tolist ) {
+        H5::Group grp = file.openGroup( groupname );
+        for ( hsize_t i = 0; i < grp.getNumObjs( ); i++ ) {
+          std::string name = grp.getObjnameByIdx( i );
+          std::cout << groupname << "\t" << name << std::endl;
+        }
       }
     }
   }
