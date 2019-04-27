@@ -1,0 +1,15 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-18.04"
+  config.vm.hostname = "prevent"
+  config.vm.provision :shell, path: "bootstrap.sh"
+
+  config.vm.provider :virtualbox do |vb|
+    vb.name = "PreVent Development"
+    vb.gui = true
+    vb.customize [
+      "modifyvm", :id,
+      "--cpuexecutioncap", "75",
+      "--memory", "8192",
+    ]
+  end  
+end
