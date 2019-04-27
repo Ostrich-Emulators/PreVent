@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
+wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | apt-key add -
+
+add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"
+
 apt-get update
+#apt-get upgrade --assume-yes
 apt-get --assume-yes install \
 	libhdf5-dev \
 	gcc g++\
@@ -11,9 +16,25 @@ apt-get --assume-yes install \
 	pkg-config \
 	git \
 	xfce4 \
-	default-jdk \
-	libsqlite3-dev
+	libsqlite3-dev \
+	virtualbox-guest-dkms \
+	virtualbox-guest-utils \
+	virtualbox-guest-x11 \
+	lightdm \
+	lightdm-gtk-greeter \
+	xfce4-whiskermenu-plugin \
+	firefox \
+	code \
 	
+
+	
+sed -i -e 's/console/anybody/' /etc/X11/Xwrapper.config
+
+VBoxClient --clipboard
+VBoxClient --draganddrop
+VBoxClient --display
+VBoxClient --checkhostversion
+
 
 wget -q https://www.physionet.org/physiotools/wfdb.tar.gz -O /tmp/wfdb.tgz
 
@@ -35,6 +56,3 @@ git clone https://github.com/Ostrich-Emulators/PreVent.git
 cd PreVent/FormatConverter
 make
 EOF
-
-# todo: netbeans
-
