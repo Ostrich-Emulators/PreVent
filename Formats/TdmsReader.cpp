@@ -19,7 +19,7 @@
 #include <TdmsGroup.h>
 #include <TdmsMetaData.h>
 
-TdmsReader::TdmsReader( ) : Reader( "TDMS" ), filler( nullptr ) {
+TdmsReader::TdmsReader( ) : Reader( "TDMS" ), filler( nullptr ), firstrun( true ) {
 }
 
 TdmsReader::~TdmsReader( ) {
@@ -59,7 +59,11 @@ void TdmsReader::newChannel( TdmsChannel * channel ) {
   int freq = 0; // waves have an integer frequency
   auto propmap = channel->getProperties( );
 
-  bool iswave = ( propmap.count( "Frequency" ) > 0 && std::stod( propmap.at( "Frequency" ) ) > 1.0 );
+  if( 0 == propmap.count( "Frequency") ){
+    return;
+  }
+
+  bool iswave = ( std::stod( propmap.at( "Frequency" ) ) > 1.0 );
 
   bool isnew = ( 0 == signalsavers.count( channel ) );
   if ( isnew ) {
@@ -111,6 +115,10 @@ void TdmsReader::newChannel( TdmsChannel * channel ) {
 }
 
 void TdmsReader::newValueChunk( TdmsChannel * channel, std::vector<double>& vals ) {
+  if ( firstrun ) {
+    return;
+  }
+
   SignalSaver& rec = signalsavers.at( channel );
   //output( ) << name << " new values: " << vals.size( ) << std::endl;
 
@@ -234,6 +242,7 @@ int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet
   }
 
   parser->addListener( this );
+  firstrun = true;
   return 0;
 }
 
@@ -252,7 +261,17 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
     }
   }
 
-  while ( parser->nextSegment() ) {
+  if ( firstrun ) {
+    // the first time through, we need to get all the signals from the file
+    // (but not it's data yet), so parse the whole file, then reset the parser
+    while ( parser->nextSegment( ) ) {
+      //nothing to do here, because listener functions are doing everything
+    }
+    parser->init( );
+    firstrun = false;
+  }
+
+  while ( parser->nextSegment( ) ) {
     // output()<<"\tjust read a segment"<<std::endl;
 
     // all the data saving gets done by the listener, not here

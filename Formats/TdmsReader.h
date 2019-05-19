@@ -65,6 +65,7 @@ private:
 	std::unique_ptr<TdmsParser> parser;
 	SignalSet * filler;
 	std::map<TdmsChannel *, SignalSaver> signalsavers;
+	bool firstrun;
 
 	bool isRollover( const dr_time& now, const dr_time& then ) const;
 	static dr_time parsetime( const std::string& timestr );
