@@ -72,6 +72,8 @@ public:
 
   static std::string getDateSuffix(const dr_time& date, const std::string& sep = "-",
           long offset_ms = 0);
+  
+  std::string YYYYMMDD(struct tm *time);
 
 private:
   FileNamer(const std::string& pat);

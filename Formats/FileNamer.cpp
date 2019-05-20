@@ -10,6 +10,19 @@
 #include <sys/stat.h>
 #include <experimental/filesystem>
 #include <iostream>
+#include <ctime>
+#include <sstream>
+#include <time.h>
+#include <stdio.h>
+
+//this should fetch current working directory regardless of platform
+#ifdef WINDOWS
+  #include <direct.h>
+  #define GetCurrentDir _getcwd
+#else
+  #include <unistd.h>
+  #define GetCurrentDir getcwd
+#endif
 
 const std::string FileNamer::DEFAULT_PATTERN = "%d%i-p%p-%s.%t";
 const std::string FileNamer::FILENAME_PATTERN = "%i.%t";
@@ -47,7 +60,13 @@ void FileNamer::inputfilename( const std::string& inny ) {
   inputfile = inny;
   //std::cout<<"curent path: "<<fs::current_path()<<" | or : "<<fs::current_path().generic_string()<<std::endl;
   // FIXME: cygwin blows this up
-  conversions["%C"] = ""; //fs::current_path( ).generic_string( ) + dirsep;
+  //conversions["%C"] = ""; //fs::current_path( ).generic_string( ) + dirsep;
+  
+  //Last modification date
+  struct stat t_stat;
+  stat(inputfile.c_str(), &t_stat); //reads metadata of input file
+  struct tm * timeinfo = localtime(&t_stat.st_mtime); //stores last modification time in pointer
+  conversions["%m"] = YYYYMMDD(timeinfo);
 
   const size_t sfxpos = inny.rfind( "." );
   std::string input = inny;
@@ -87,6 +106,20 @@ std::string FileNamer::filename( const std::unique_ptr<SignalSet>& data ) {
   // we need to have data for all the conversion keys in here
 
   conversions["%s"] = getDateSuffix( data->earliest( ), "", offset );
+  conversions["%e"] = getDateSuffix( data->latest( ), "", offset );
+
+  //Current Date
+  time_t tim;
+  time(&tim);
+  struct tm *curr_time=localtime(&tim);
+  conversions["%D"] = YYYYMMDD(curr_time);
+
+  //Current working directory 
+  char cCurrentPath[FILENAME_MAX];
+  if(!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath))){
+    perror("Error accesing current directory");
+  }
+  conversions["%C"] = std::string(cCurrentPath) + dirsep;
 
   lastname = pattern;
   const std::string replacements[] = {
@@ -96,16 +129,27 @@ std::string FileNamer::filename( const std::unique_ptr<SignalSet>& data ) {
     "%s",
     "%t",
     "%o",
-    "%C"
+    "%C",
+    "%D",
+    "%e",
+    "%x",
+    "%m",
+    "%S"
   };
-
+  size_t pos = lastname.find ("%S");
+  while(pos != std::string::npos) //initially sorts through file for all standard form flags and expands them
+    {
+      std::cout << "replacing %S with %i-p%p-%s.%t" << std::endl;
+      lastname.replace( pos, 2, "%i-p%p-%s.%t" );
+      pos = lastname.find("%S", pos + 1);
+    }
   for ( auto x : replacements ) {
-    size_t pos = lastname.find( x );
-
-    // FIXME: what if a key is in the pattern more than once?
-    if ( std::string::npos != pos ) {
+    pos = lastname.find( x );
+    while(pos != std::string::npos)
+    {
       std::cout << "replacing " << x << " with " << conversions[x] << std::endl;
       lastname.replace( pos, 2, conversions[x] );
+      pos = lastname.find(x, pos + 1);
     }
   }
 
@@ -165,4 +209,14 @@ std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& se
   ret += std::to_string( dater->tm_mday );
 
   return ret;
+}
+
+std::string FileNamer::YYYYMMDD(struct tm * time){//It was easier to just make my own method
+  std::stringstream ss; //continuing with manual date entry because of cygwin
+  ss <<(1900 + time->tm_year); 
+  if(time->tm_mon+1<10) ss<<0;
+  ss<<time->tm_mon +1;
+  if(time->tm_mday<10) ss<<0;
+  ss<<time->tm_mday;
+  return ss.str();
 }
