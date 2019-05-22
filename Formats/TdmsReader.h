@@ -48,6 +48,7 @@ public:
 
 	virtual void newGroup( TdmsGroup * grp ) override;
 	virtual void newChannel( TdmsChannel * channel ) override;
+  virtual void newChannelProperties( TdmsChannel * channel ) override;
 	/**
 	 * notify listeners of new value.
 	 * @param channel

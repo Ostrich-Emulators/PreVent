@@ -49,26 +49,33 @@ void TdmsReader::newGroup( TdmsGroup * grp ) {
 }
 
 void TdmsReader::newChannel( TdmsChannel * channel ) {
+}
+
+void TdmsReader::newChannelProperties( TdmsChannel * channel ) {
+  if ( !firstrun ) {
+    return;
+  }
+
   //output( ) << "new channel: " << channel->getName( ) << std::endl;
   std::string name = channel->getName( );
   name = name.substr( 2, name.length( ) - 3 );
 
-  //output( ) << "new channel: " << name << std::endl;
   dr_time time = 0;
   const int timeinc = 1024; // philips runs at 1.024s, or 1024 ms
   int freq = 0; // waves have an integer frequency
   auto propmap = channel->getProperties( );
 
-  if( 0 == propmap.count( "Frequency") ){
+  // if the propmap doesn't contain a Frequency, then we can't use it
+  // also: if we've already seen this channel and made a Signal from it,
+  // we can move on
+  if ( 0 == propmap.count( "Frequency" ) || 0 < signalsavers.count( channel ) ) {
     return;
   }
 
   bool iswave = ( std::stod( propmap.at( "Frequency" ) ) > 1.0 );
 
-  bool isnew = ( 0 == signalsavers.count( channel ) );
-  if ( isnew ) {
-    signalsavers.insert( std::make_pair( channel, SignalSaver( name, iswave ) ) );
-  }
+  output( ) << "channel: " << name << " props: " << propmap.size( ) << std::endl;
+  signalsavers.insert( std::make_pair( channel, SignalSaver( name, iswave ) ) );
 
   // figure out if this is a wave or a vital
   std::unique_ptr<SignalData>& signal = ( iswave
@@ -93,9 +100,7 @@ void TdmsReader::newChannel( TdmsChannel * channel ) {
       }
 
       // do not to overwrite our lasttime if we're re-initing after a roll over
-      if ( isnew ) {
-        signalsavers[channel].lasttime = time;
-      }
+      signalsavers[channel].lasttime = time;
     }
     else if ( "wf_increment" == p.first ) {
       // ignored--we're forcing 1024ms increments
@@ -119,8 +124,9 @@ void TdmsReader::newValueChunk( TdmsChannel * channel, std::vector<double>& vals
     return;
   }
 
+  //output( ) << channel->getName( ) << " new values: " << vals.size( ) << std::endl;
   SignalSaver& rec = signalsavers.at( channel );
-  //output( ) << name << " new values: " << vals.size( ) << std::endl;
+
 
   // get our SignalData for this channel
   std::unique_ptr<SignalData>& signal = ( rec.iswave

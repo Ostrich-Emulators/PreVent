@@ -46,6 +46,10 @@ void TdmsChannel::addProperties(std::map<std::string, std::string> props)
 {
 	for (map<string, string>::const_iterator it = props.begin(); it != props.end(); ++it)
 		properties.insert(std::pair<string, string>(it->first, it->second));
+
+  for( auto& x: d_parser->listeners() ){
+    x->newChannelProperties( this );
+  }
 }
 
 void TdmsChannel::freeMemory()

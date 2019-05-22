@@ -25,21 +25,31 @@ class TdmsChannel;
 
 class TdmsListener {
 public:
-	virtual void newGroup( TdmsGroup * grp ) = 0;
-	virtual void newChannel( TdmsChannel * channel ) = 0;
-	/**
-	 * notify listeners of new value.
-	 * @param channel
-	 * @param val
-	 * @return true, if the reader should push this value to its internal data vector
-	 */
-	virtual void newValueChunk( TdmsChannel * channel, std::vector<double>& val ) = 0;
+  virtual void newGroup( TdmsGroup * grp ) = 0;
 
-	virtual void newValueChunk( TdmsChannel * channel, std::vector<std::string>& val ) {
-	};
+  virtual void newChannel( TdmsChannel * channel ) = 0;
 
-	virtual void newImaginaryValueChunk( TdmsChannel * channel, std::vector<double>& val ) {
-	};
+  /**
+   * Sometimes, you get a new channel without properties, and the properties come later,
+   * so notify the listeners when a channel has properties set
+   * @param channel
+   */
+  virtual void newChannelProperties( TdmsChannel * channel ) {
+  };
+
+  /**
+   * notify listeners of new value.
+   * @param channel
+   * @param val
+   * @return true, if the reader should push this value to its internal data vector
+   */
+  virtual void newValueChunk( TdmsChannel * channel, std::vector<double>& val ) = 0;
+
+  virtual void newValueChunk( TdmsChannel * channel, std::vector<std::string>& val ) {
+  };
+
+  virtual void newImaginaryValueChunk( TdmsChannel * channel, std::vector<double>& val ) {
+  };
 };
 
 #endif /* TDMSLISTENER_H */
