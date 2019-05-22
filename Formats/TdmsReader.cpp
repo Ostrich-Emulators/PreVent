@@ -74,7 +74,7 @@ void TdmsReader::newChannelProperties( TdmsChannel * channel ) {
 
   bool iswave = ( std::stod( propmap.at( "Frequency" ) ) > 1.0 );
 
-  output( ) << "channel: " << name << " props: " << propmap.size( ) << std::endl;
+  //output( ) << "channel: " << name << " props: " << propmap.size( ) << std::endl;
   signalsavers.insert( std::make_pair( channel, SignalSaver( name, iswave ) ) );
 
   // figure out if this is a wave or a vital

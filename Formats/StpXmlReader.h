@@ -59,6 +59,8 @@ private:
   bool isphilips;
   bool isix;
   bool warnedix;
+  bool skipwave;
+  bool skipvital;
 
   int state;
   std::string label;

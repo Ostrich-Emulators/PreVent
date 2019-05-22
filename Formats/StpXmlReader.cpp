@@ -50,8 +50,8 @@ bool warnedix;
 StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ), prevtime( 0 ),
 currvstime( 0 ), lastvstime( 0 ), currwavetime( 0 ), lastwavetime( 0 ),
 recordtime( 0 ), currsegidx( 0 ), warnMissingName( true ), warnJunkData( true ),
-v8( false ), isphilips( false ), isix( false ), warnedix( false ),
-state( INDETERMINATE ) {
+v8( false ), isphilips( false ), isix( false ), warnedix( false ), skipwave( false ),
+skipvital( false ), state( INDETERMINATE ) {
 }
 
 StpXmlReader::StpXmlReader( const StpXmlReader& orig ) : XmlReaderBase( orig ) {
@@ -73,12 +73,20 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
   }
   else if ( "VitalSigns" == element ) {
     setstate( INVITAL );
+    bool oktime = true;
+    dr_time savetime = currvstime;
     lastvstime = currvstime;
     if ( 0 != attributes.count( "CollectionTimeUTC" ) ) {
-      currvstime = time( attributes["CollectionTimeUTC"] );
+      currvstime = time( attributes["CollectionTimeUTC"], true, &oktime );
     }
     else {
-      currvstime = time( attributes[0 == attributes.count( "CollectionTime" ) ? "Time" : "CollectionTime"], true );
+      currvstime = time( attributes[0 == attributes.count( "CollectionTime" ) ? "Time" : "CollectionTime"], true, &oktime );
+    }
+
+    skipvital = !oktime;
+    if ( skipvital ) {
+      currvstime = savetime;
+      return;
     }
 
     if ( 0 == filler->offsets( ).count( currsegidx ) ) {
@@ -93,12 +101,20 @@ void StpXmlReader::start( const std::string& element, std::map<std::string, std:
   }
   else if ( "Waveforms" == element ) {
     setstate( INWAVE );
-    lastwavetime = currwavetime;
+    dr_time savetime = currwavetime;
+    lastwavetime = savetime;
+    bool oktime = true;
     if ( 0 != attributes.count( "CollectionTimeUTC" ) ) {
-      currwavetime = time( attributes["CollectionTimeUTC"] );
+      currwavetime = time( attributes["CollectionTimeUTC"], false, &oktime );
     }
     else {
-      currwavetime = time( attributes[0 == attributes.count( "CollectionTime" ) ? "Time" : "CollectionTime"], true );
+      currwavetime = time( attributes[0 == attributes.count( "CollectionTime" ) ? "Time" : "CollectionTime"], true, &oktime );
+    }
+
+    skipwave = !oktime;
+    if ( skipwave ) {
+      currwavetime = savetime;
+      return;
     }
 
     if ( 0 == filler->offsets( ).count( currsegidx ) ) {
@@ -193,6 +209,9 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
     setstate( INDETERMINATE );
   }
   else if ( INVITAL == state ) {
+    if( skipvital ){
+      return;
+    }
     if ( "Par" == element || "Parameter" == element ) {
       label = text;
     }
@@ -217,7 +236,6 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
           if ( added ) {
             if ( isphilips ) {
               sig->setChunkIntervalAndSampleRate( isix ? 1024 : 1000, 1 );
-
             }
             else {
               sig->setChunkIntervalAndSampleRate( 2000, 1 );
@@ -251,6 +269,10 @@ void StpXmlReader::end( const std::string& element, const std::string& text ) {
     }
   }
   else if ( INWAVE == state ) {
+    if( skipwave ){
+      return;
+    }
+    
     if ( "WaveformData" == element ) {
       if ( label.empty( ) ) {
         if ( warnMissingName ) {

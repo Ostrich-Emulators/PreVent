@@ -28,6 +28,7 @@
 #include <sstream>
 #include <map>
 #include <memory>
+#include <limits>
 
 bool XmlReaderBase::accumulateText = false;
 std::string XmlReaderBase::working;
@@ -221,7 +222,19 @@ bool XmlReaderBase::isRollover( const dr_time& then, const dr_time& now ) const 
   return false;
 }
 
-dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal ) const {
+dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal, bool * ok ) const {
+  if ( "" == timer ) {
+    // uh oh...no time, so just return a nonsense number (the biggest we can)
+    if ( nullptr != ok ) {
+      *ok = false;
+    }
+    return std::numeric_limits<dr_time>::max( );
+  }
+
+  if ( nullptr != ok ) {
+    *ok = true;
+  }
+
   if ( std::string::npos == timer.find( " " )
       && std::string::npos == timer.find( "T" ) ) {
     // no space and no T---we must have a unix timestamp
@@ -236,7 +249,7 @@ dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal ) const {
       : "%Y-%m-%dT%H:%M:%S" ); // CPC time string
 
   tm mytime = { 0, };
-  
+
   strptime2( timer, format, &mytime );
   //output( ) << mytime.tm_hour << ":" << mytime.tm_min << ":" << mytime.tm_sec << std::endl;
 
