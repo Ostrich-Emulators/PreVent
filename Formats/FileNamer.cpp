@@ -55,7 +55,6 @@ FileNamer& FileNamer::operator=(const FileNamer& orig ) {
 FileNamer FileNamer::parse( const std::string& pattern ) {
   std::string expand = pattern;
   size_t pos = expand.find ("%S");
-   std::cout << "RUNNING PARSE!!!!!!!!!" << std::endl;
   while(pos != std::string::npos) //initially sorts through file for all standard form flags and expands them
     {
       std::cout << "replacing %S with %i-p%p-%s.%t" << std::endl;
