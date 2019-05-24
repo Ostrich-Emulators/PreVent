@@ -53,13 +53,22 @@ FileNamer& FileNamer::operator=(const FileNamer& orig ) {
 }
 
 FileNamer FileNamer::parse( const std::string& pattern ) {
-  return FileNamer( pattern );
+  std::string expand = pattern;
+  size_t pos = expand.find ("%S");
+   std::cout << "RUNNING PARSE!!!!!!!!!" << std::endl;
+  while(pos != std::string::npos) //initially sorts through file for all standard form flags and expands them
+    {
+      std::cout << "replacing %S with %i-p%p-%s.%t" << std::endl;
+      expand.replace( pos, 2, "%i-p%p-%s.%t" );
+      pos = expand.find("%S", pos + 1);
+    }
+  return FileNamer( expand );
 }
 
 void FileNamer::inputfilename( const std::string& inny ) {
   inputfile = inny;
   //std::cout<<"curent path: "<<fs::current_path()<<" | or : "<<fs::current_path().generic_string()<<std::endl;
-  // FIXME: cygwin blows this up
+  // OLD CODE:
   //conversions["%C"] = ""; //fs::current_path( ).generic_string( ) + dirsep;
   
   //Last modification date
@@ -136,15 +145,9 @@ std::string FileNamer::filename( const std::unique_ptr<SignalSet>& data ) {
     "%m",
     "%S"
   };
-  size_t pos = lastname.find ("%S");
-  while(pos != std::string::npos) //initially sorts through file for all standard form flags and expands them
-    {
-      std::cout << "replacing %S with %i-p%p-%s.%t" << std::endl;
-      lastname.replace( pos, 2, "%i-p%p-%s.%t" );
-      pos = lastname.find("%S", pos + 1);
-    }
+  
   for ( auto x : replacements ) {
-    pos = lastname.find( x );
+    size_t pos = lastname.find( x );
     while(pos != std::string::npos)
     {
       std::cout << "replacing " << x << " with " << conversions[x] << std::endl;
