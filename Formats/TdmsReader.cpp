@@ -183,9 +183,9 @@ void TdmsReader::newValueChunk( TdmsChannel * channel, std::vector<double>& vals
     writeSignalRow( freq, rec.nancount, doubles, rec.seenfloat, signal, rec.lasttime );
     rec.nancount = 0;
 
-    if ( ( rec.lasttime + timeinc ) >= 1536120000000 ) {
-      output( ) << rec.name << " should roll over" << std::endl;
-    }
+//    if ( ( rec.lasttime + timeinc ) >= 1536120000000 ) {
+//      output( ) << rec.name << " should roll over" << std::endl;
+//    }
 
     // check for roll-over
     rec.waiting = ( isRollover( rec.lasttime, rec.lasttime + timeinc ) );
@@ -272,9 +272,7 @@ void TdmsReader::handleLateStarters( ) {
   // if we have a signal that starts after a rollover will have occurred,
   // set that signal to waiting
   for ( auto& ss : signalsavers ) {
-    if ( isRollover( ss.second.lasttime, earliest ) ) {
-      ss.second.waiting = true;
-    }
+    ss.second.waiting = ( isRollover( ss.second.lasttime, earliest ) );
   }
 }
 
@@ -288,8 +286,7 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
   else if ( ReadResult::END_OF_DAY == lastfill ) {
     // reinit the new SignalSet from our old Channels
     for ( auto&x : signalsavers ) {
-      this->newChannel( x.first );
-      x.second.waiting = false;
+      this->newChannelProperties( x.first );
     }
     handleLateStarters( );
   }
