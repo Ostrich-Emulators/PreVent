@@ -38,6 +38,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/AttributeUtils.o \
 	${OBJECTDIR}/ClippingSignalSet.o \
 	${OBJECTDIR}/H5Cat.o \
+	${OBJECTDIR}/OutputSignalData.o \
 	${OBJECTDIR}/TimeParser.o \
 	${OBJECTDIR}/main.o
 
@@ -88,6 +89,11 @@ ${OBJECTDIR}/H5Cat.o: H5Cat.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -Wall -I../Formats `pkg-config --cflags zlib`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/H5Cat.o H5Cat.cpp
+
+${OBJECTDIR}/OutputSignalData.o: OutputSignalData.cpp
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -Wall -I../Formats `pkg-config --cflags zlib`   -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/OutputSignalData.o OutputSignalData.cpp
 
 ${OBJECTDIR}/TimeParser.o: TimeParser.cpp
 	${MKDIR} -p ${OBJECTDIR}
