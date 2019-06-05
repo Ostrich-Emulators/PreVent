@@ -72,6 +72,13 @@ private:
 	static dr_time parsetime( const std::string& timestr );
 	bool writeSignalRow( size_t count, size_t nancount, std::vector<double>& doubles,
 			const bool seenFloat, const std::unique_ptr<SignalData>& signal, dr_time time );
+
+  /**
+   * If a signal starts after a rollover will have occurred, then it'll never
+   * get to the "waiting" stage before the rollover. This makes the rollover
+   * calculations fail
+   */
+  void handleLateStarters();
 };
 
 #endif /* WFDBREADER_H */

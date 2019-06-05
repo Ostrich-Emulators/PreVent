@@ -49,6 +49,7 @@ void TdmsReader::newGroup( TdmsGroup * grp ) {
 }
 
 void TdmsReader::newChannel( TdmsChannel * channel ) {
+  output( ) << "new channel: " << channel->getName( ) << std::endl;
 }
 
 void TdmsReader::newChannelProperties( TdmsChannel * channel ) {
@@ -74,7 +75,7 @@ void TdmsReader::newChannelProperties( TdmsChannel * channel ) {
 
   bool iswave = ( std::stod( propmap.at( "Frequency" ) ) > 1.0 );
 
-  //output( ) << "channel: " << name << " props: " << propmap.size( ) << std::endl;
+  output( ) << "  channel: " << name << " props: " << propmap.size( ) << std::endl;
   signalsavers.insert( std::make_pair( channel, SignalSaver( name, iswave ) ) );
 
   // figure out if this is a wave or a vital
@@ -88,7 +89,7 @@ void TdmsReader::newChannelProperties( TdmsChannel * channel ) {
   }
 
   for ( auto& p : propmap ) {
-    // output( ) << p.first << " => " << p.second << std::endl;
+    output( ) << "\t" << p.first << " => " << p.second << std::endl;
 
     if ( "Unit_String" == p.first ) {
       signal->setUom( p.second );
@@ -181,10 +182,16 @@ void TdmsReader::newValueChunk( TdmsChannel * channel, std::vector<double>& vals
 
     writeSignalRow( freq, rec.nancount, doubles, rec.seenfloat, signal, rec.lasttime );
     rec.nancount = 0;
+
+    if ( ( rec.lasttime + timeinc ) >= 1536120000000 ) {
+      output( ) << rec.name << " should roll over" << std::endl;
+    }
+
     // check for roll-over
     rec.waiting = ( isRollover( rec.lasttime, rec.lasttime + timeinc ) );
     rec.lasttime += timeinc;
     if ( rec.waiting ) {
+      output( ) << "\t" << rec.name << " is now waiting (last time: " << rec.lasttime << ")" << std::endl;
       break;
     }
   }
@@ -252,6 +259,25 @@ int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet
   return 0;
 }
 
+void TdmsReader::handleLateStarters( ) {
+  // figure out the earliest time
+
+  dr_time earliest = std::numeric_limits<dr_time>::max( );
+  for ( auto& ss : signalsavers ) {
+    if ( ss.second.lasttime < earliest ) {
+      earliest = ss.second.lasttime;
+    }
+  }
+
+  // if we have a signal that starts after a rollover will have occurred,
+  // set that signal to waiting
+  for ( auto& ss : signalsavers ) {
+    if ( isRollover( ss.second.lasttime, earliest ) ) {
+      ss.second.waiting = true;
+    }
+  }
+}
+
 ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastfill ) {
   int retcode = 0;
   filler = info.get( );
@@ -265,6 +291,7 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
       this->newChannel( x.first );
       x.second.waiting = false;
     }
+    handleLateStarters( );
   }
 
   if ( firstrun ) {
@@ -273,6 +300,7 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
     while ( parser->nextSegment( ) ) {
       //nothing to do here, because listener functions are doing everything
     }
+    handleLateStarters( );
     parser->init( );
     firstrun = false;
   }
