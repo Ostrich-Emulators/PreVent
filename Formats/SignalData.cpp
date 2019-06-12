@@ -75,7 +75,7 @@ void SignalData::scale( int x ) {
   setMeta( SCALE, x );
 }
 
-int SignalData::readingsPerSample( ) const {
+int SignalData::readingsPerChunk( ) const {
   return metai( ).at( READINGS_PER_CHUNK );
 }
 

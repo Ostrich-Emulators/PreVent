@@ -74,8 +74,8 @@ void SignalDataWrapper::setChunkIntervalAndSampleRate( int chunk_ms, int sr ) {
   signal->setChunkIntervalAndSampleRate( chunk_ms, sr );
 }
 
-int SignalDataWrapper::readingsPerSample( ) const {
-  return signal->readingsPerSample( );
+int SignalDataWrapper::readingsPerChunk( ) const {
+  return signal->readingsPerChunk( );
 }
 
 int SignalDataWrapper::chunkInterval( ) const {

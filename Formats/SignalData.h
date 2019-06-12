@@ -77,7 +77,7 @@ public:
   virtual void setUom( const std::string& u );
   virtual const std::string& uom( ) const;
   virtual double hz( ) const;
-  virtual int readingsPerSample( ) const;
+  virtual int readingsPerChunk( ) const;
   virtual int chunkInterval( ) const;
   virtual void setChunkIntervalAndSampleRate( int chunktime_ms, int samplerate );
   virtual bool empty( ) const;

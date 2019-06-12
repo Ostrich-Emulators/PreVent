@@ -70,7 +70,7 @@ private:
 
 	bool isRollover( const dr_time& now, const dr_time& then ) const;
 	static dr_time parsetime( const std::string& timestr );
-	bool writeSignalRow( size_t count, size_t nancount, std::vector<double>& doubles,
+	bool writeSignalRow( std::vector<double>& doubles,
 			const bool seenFloat, const std::unique_ptr<SignalData>& signal, dr_time time );
 
   /**

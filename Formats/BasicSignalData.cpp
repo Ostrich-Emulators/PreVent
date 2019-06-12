@@ -31,7 +31,7 @@ datacount( 0 ), livecount( 0 ), file( nullptr ), popping( false ), iswave( waved
 highval( -std::numeric_limits<double>::max( ) ),
 lowval( std::numeric_limits<double>::max( ) ), nocache( Options::asBool( OptionsKey::NOCACHE ) ) {
   scale( 0 );
-  setChunkIntervalAndSampleRate( 7, 1 );
+  setChunkIntervalAndSampleRate( 7, 1 ); // 7 is just an easy value to troubleshoot (it's not 2000 or 1024)
   setUom( "Uncalib" );
 
   setMeta( SignalData::MSM, SignalData::MISSING_VALUE );

@@ -317,7 +317,7 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
 void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data ) {
   const hsize_t rows = data->size( );
   const int scale = data->scale( );
-  const int valsperrow = data->readingsPerSample( );
+  const int valsperrow = data->readingsPerChunk( );
 
   hsize_t dims[] = { rows * valsperrow, 1 };
   H5::DataSpace space( 2, dims );

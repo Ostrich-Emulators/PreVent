@@ -53,10 +53,6 @@ void TdmsReader::newChannel( TdmsChannel * channel ) {
 }
 
 void TdmsReader::newChannelProperties( TdmsChannel * channel ) {
-  if ( !firstrun ) {
-    return;
-  }
-
   //output( ) << "new channel: " << channel->getName( ) << std::endl;
   std::string name = channel->getName( );
   name = name.substr( 2, name.length( ) - 3 );
@@ -69,19 +65,26 @@ void TdmsReader::newChannelProperties( TdmsChannel * channel ) {
   // if the propmap doesn't contain a Frequency, then we can't use it
   // also: if we've already seen this channel and made a Signal from it,
   // we can move on
-  if ( 0 == propmap.count( "Frequency" ) || 0 < signalsavers.count( channel ) ) {
+  if ( 0 == propmap.count( "Frequency" ) ) {
     return;
   }
 
   bool iswave = ( std::stod( propmap.at( "Frequency" ) ) > 1.0 );
 
-  output( ) << "  channel: " << name << " props: " << propmap.size( ) << std::endl;
-  signalsavers.insert( std::make_pair( channel, SignalSaver( name, iswave ) ) );
+  if ( firstrun && 0 == signalsavers.count( channel ) ) {
+    // add a saver if we haven't seen this channel before (and it's the first run!)
+    signalsavers.insert( std::make_pair( channel, SignalSaver( name, iswave ) ) );
+  }
 
   // figure out if this is a wave or a vital
+  bool added = false;
   std::unique_ptr<SignalData>& signal = ( iswave
-      ? filler->addWave( name )
-      : filler->addVital( name ) );
+      ? filler->addWave( name, &added )
+      : filler->addVital( name, &added ) );
+
+  if ( firstrun ) {
+    output( ) << "  channel: " << name << " props: " << propmap.size( ) << std::endl;
+  }
 
   string unit = channel->getUnit( );
   if ( !unit.empty( ) ) {
@@ -89,19 +92,23 @@ void TdmsReader::newChannelProperties( TdmsChannel * channel ) {
   }
 
   for ( auto& p : propmap ) {
-    output( ) << "\t" << p.first << " => " << p.second << std::endl;
+    if ( firstrun ) {
+      output( ) << "\t" << p.first << " => " << p.second << std::endl;
+    }
 
     if ( "Unit_String" == p.first ) {
       signal->setUom( p.second );
     }
     else if ( "wf_starttime" == p.first ) {
       time = parsetime( p.second );
-      if ( time < 0 ) {
+      if ( time <= 0 ) {
         std::cout << name << ": " << p.first << " => " << p.second << std::endl;
       }
 
       // do not to overwrite our lasttime if we're re-initing after a roll over
-      signalsavers[channel].lasttime = time;
+      if ( firstrun ) {
+        signalsavers[channel].lasttime = time;
+      }
     }
     else if ( "wf_increment" == p.first ) {
       // ignored--we're forcing 1024ms increments
@@ -128,13 +135,19 @@ void TdmsReader::newValueChunk( TdmsChannel * channel, std::vector<double>& vals
   //output( ) << channel->getName( ) << " new values: " << vals.size( ) << std::endl;
   SignalSaver& rec = signalsavers.at( channel );
 
-
   // get our SignalData for this channel
   std::unique_ptr<SignalData>& signal = ( rec.iswave
       ? filler->addWave( rec.name )
       : filler->addVital( rec.name ) );
-  int timeinc = signal->metai( ).at( SignalData::CHUNK_INTERVAL_MS );
-  size_t freq = signal->metai( ).at( SignalData::READINGS_PER_CHUNK );
+  int timeinc = signal->chunkInterval( );
+  size_t freq = signal->readingsPerChunk( );
+
+//  if ( !signal->wave( ) ) {
+//    output( ) << signal->name( ) << " " << vals.size( )
+//        << " new values to add to " << rec.leftovers.size( )
+//        << " leftovers; lasttime: " << rec.lasttime
+//        << " " << timeinc << std::endl;
+//  }
 
   // for now, just add whatever we get to our leftovers, and work from there
   rec.leftovers.insert( rec.leftovers.end( ), vals.begin( ), vals.end( ) );
@@ -169,7 +182,8 @@ void TdmsReader::newValueChunk( TdmsChannel * channel, std::vector<double>& vals
       doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
 
       if ( nan ) {
-        // if we have a whole DataRow worth of nans, don't write anything
+        // keep nan count because if we have a whole DataRow
+        // worth of nans we don't want write anything
         rec.nancount++;
       }
       else if ( !rec.seenfloat ) {
@@ -180,23 +194,29 @@ void TdmsReader::newValueChunk( TdmsChannel * channel, std::vector<double>& vals
       }
     }
 
-    writeSignalRow( freq, rec.nancount, doubles, rec.seenfloat, signal, rec.lasttime );
+    if ( doubles.size( ) != rec.nancount ) {
+      writeSignalRow( doubles, rec.seenfloat, signal, rec.lasttime );
+    }
     rec.nancount = 0;
 
-//    if ( ( rec.lasttime + timeinc ) >= 1536120000000 ) {
-//      output( ) << rec.name << " should roll over" << std::endl;
-//    }
+    //    if ( ( rec.lasttime + timeinc ) >= 1536120000000 ) {
+    //      output( ) << rec.name << " should roll over" << std::endl;
+    //    }
 
     // check for roll-over
     rec.waiting = ( isRollover( rec.lasttime, rec.lasttime + timeinc ) );
     rec.lasttime += timeinc;
+
     if ( rec.waiting ) {
       output( ) << "\t" << rec.name << " is now waiting (last time: " << rec.lasttime << ")" << std::endl;
       break;
     }
   }
 
-  //output( ) << channel->getName()<<" leaving " << leftover.size( ) << " elements leftover" << std::endl;
+//  if ( !signal->wave( ) ) {
+//    output( ) << signal->name( ) << " leaving " << rec.leftovers.size( )
+//        << " elements leftover (lasttime: " << rec.lasttime << ")" << std::endl;
+//  }
 
   //  else {
   //    // vitals are easy...we don't have to stack values into strings
@@ -347,39 +367,36 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
   return ( 0 <= retcode ? ReadResult::END_OF_FILE : ReadResult::ERROR );
 }
 
-bool TdmsReader::writeSignalRow( size_t count, size_t nancount, std::vector<double>& doubles,
-    const bool seenFloat, const std::unique_ptr<SignalData>& signal, dr_time time ) {
+bool TdmsReader::writeSignalRow( std::vector<double>& doubles, const bool seenFloat,
+    const std::unique_ptr<SignalData>& signal, dr_time time ) {
 
-  // make sure we have some data!
-  if ( nancount != count ) {
-    std::stringstream vals;
-    if ( seenFloat ) {
-      // tdms file seems to use 3 decimal places for everything
-      // so make sure we don't have extra 0s running around
-      vals << std::setprecision( 3 ) << std::fixed;
-    }
+  std::stringstream vals;
+  if ( seenFloat ) {
+    // tdms file seems to use 3 decimal places for everything
+    // so make sure we don't have extra 0s running around
+    vals << std::setprecision( 3 ) << std::fixed;
+  }
 
-    if ( SignalData::MISSING_VALUE == doubles[0] ) {
+  if ( SignalData::MISSING_VALUE == doubles[0] ) {
+    vals << SignalData::MISSING_VALUESTR;
+  }
+  else {
+    vals << doubles[0];
+  }
+
+  for ( size_t i = 1; i < doubles.size( ); i++ ) {
+    vals << ",";
+    if ( SignalData::MISSING_VALUE == doubles[i] ) {
       vals << SignalData::MISSING_VALUESTR;
     }
     else {
-      vals << doubles[0];
+      vals << doubles[i];
     }
-
-    for ( size_t i = 1; i < count; i++ ) {
-      vals << ",";
-      if ( SignalData::MISSING_VALUE == doubles[i] ) {
-        vals << SignalData::MISSING_VALUESTR;
-      }
-      else {
-        vals << doubles[i];
-      }
-    }
-
-    //output( ) << vals.str( ) << std::endl;
-    DataRow row( time, vals.str( ) );
-    signal->add( row );
   }
+
+  //output( ) << vals.str( ) << std::endl;
+  DataRow row( time, vals.str( ) );
+  signal->add( row );
 
   return true;
 }

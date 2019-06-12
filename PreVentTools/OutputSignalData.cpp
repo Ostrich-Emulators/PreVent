@@ -13,7 +13,7 @@ OutputSignalData::~OutputSignalData( ) {
 
 void OutputSignalData::add( const DataRow& row ) {
   int period = BasicSignalData::chunkInterval( );
-  int mspervalue = period / BasicSignalData::readingsPerSample( );
+  int mspervalue = period / BasicSignalData::readingsPerChunk( );
   int scale = BasicSignalData::scale( );
   double scalefactor = std::pow( 10, scale );
 
