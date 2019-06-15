@@ -54,6 +54,8 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-A or --attrs\tprints all attributes in the file"
       << std::endl << "\t-V or --vitals\tprints a list of vital signs in this file"
       << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
+      << std::endl << "\t-k or --calc <statistic>\tcalculates listed statistic"
+      << std::endl << "\t-w or --window <s>\tdefines seconds from end considered by --calc"
       << std::endl;
   exit( 1 );
 }
@@ -72,7 +74,9 @@ struct option longopts[] = {
   { "print", no_argument, NULL, 'd' },
   { "waves", no_argument, NULL, 'W' },
   { "vitals", no_argument, NULL, 'V' },
-  { "cat", no_argument, NULL, 'c' }, // all remaining args are files
+  { "cat", no_argument, NULL, 'c' },
+  { "calc", required_argument, NULL, 'k' },
+  { "window", required_argument, NULL, 'w' }, // all remaining args are files
   { 0, 0, 0, 0 }
 };
 
@@ -143,6 +147,9 @@ int main( int argc, char** argv ) {
   bool print = false;
   bool listwaves = false;
   bool listvitals = false;
+  bool calc = false;
+  int window = 0;
+  std::string operation = "";
 
   while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WV", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
@@ -163,6 +170,13 @@ int main( int argc, char** argv ) {
         break;
       case 'V':
         listvitals = true;
+        break;
+      case 'k':
+        calc = true;
+        operation = optarg;
+        break;
+      case 'w':
+        window = atoi(optarg);
         break;
       case 'S':
       {
@@ -387,6 +401,71 @@ int main( int argc, char** argv ) {
         }
       }
     }
+  } else if ( calc ) {
+    
+    H5::H5File file = H5::H5File( argv[optind], H5F_ACC_RDONLY );
+    H5::Group grp = file.openGroup( path );
+    //TODO: Determine if there is missing data in group and add warning
+    //READ DATA
+    H5::DataSet dataset = grp.openDataSet( "data" );
+    H5::DataSpace filespace = dataset.getSpace();
+    hsize_t dims[2];
+    filespace.getSimpleExtentDims(dims);
+    int data_out[(int)dims[0]][(int)dims[1]] = {0}; //Makes buffer the size of the DataSet
+    dataset.read(data_out, H5::PredType::NATIVE_INT);
+    std::vector<int> output;
+    for(auto &rows: data_out){ 
+      for(auto &x: rows){
+        if(x!=0){
+          output.push_back(x);
+        }
+      }
+    }
+    dataset.close();
+
+    //READ TIMES
+    H5::DataSet ds = grp.openDataSet( "time" );
+    H5::DataSpace dataspace = ds.getSpace( );
+    hsize_t DIMS[2] = { };
+    dataspace.getSimpleExtentDims( DIMS );
+    const hsize_t ROWS = DIMS[0];
+    const hsize_t COLS = DIMS[1];
+    const hsize_t sizer = ROWS * COLS;
+    long read[sizer] = { };
+    ds.read( read, ds.getDataType( ) );
+    std::vector<dr_time> times;
+    times.reserve( sizer );
+    for ( hsize_t i = 0; i < sizer; i++ ) {
+      long l = read[i];
+      times.push_back( l );
+    }
+    ds.close( );
+
+    std::vector<int>::reverse_iterator rit_data = output.rbegin();
+    std::vector<dr_time>::reverse_iterator rit_times = times.rbegin();
+
+    double total = 0;
+    int count = 0;
+    double end_time = *rit_times - (window * 1000);
+
+    //TODO: Add bounds checking on times
+    //TODO: Output message if insufficient times for full window
+    //TODO: Add different calculations based on operation variable 
+    
+    while (*rit_times >= end_time) {
+
+      total += *rit_data;
+
+      count++;
+      rit_data++;
+      rit_times++;
+
+    } 
+
+    std::cout<<operation<<" from: "<<path<<" for the last "<<window<<" seconds is: "<<total/count<<std::endl;    
+    
+
+  
   }
   else {
     // something to acknowledge the program did something
