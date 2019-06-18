@@ -451,6 +451,10 @@ int main( int argc, char** argv ) {
       std::vector<dr_time>::reverse_iterator rit_times = times.rbegin();
       
       double end_time = *rit_times - (window * 1000);
+      double begin_time = *times.begin();
+      if(end_time < begin_time){
+        helpAndExit( argv[0], "Window exceeds file start time" );
+      }
       std::vector<int> buffer;
       while (*rit_times >= end_time) {
 
@@ -479,8 +483,7 @@ int main( int argc, char** argv ) {
         for(auto y: output){
           total += ((y-average) * (y-average));
         }
-
-        stat = total / count;
+        stat = total / (count-1);
         if(operation == "std"){
           stat = std::sqrt(stat);
         }
