@@ -429,58 +429,57 @@ int main( int argc, char** argv ) {
     }
     dataset.close();
 
-    //READ TIMES
-    H5::DataSet ds = grp.openDataSet( "time" );
-    H5::DataSpace dataspace = ds.getSpace( );
-    hsize_t DIMS[2] = { };
-    dataspace.getSimpleExtentDims( DIMS );
-    const hsize_t ROWS = DIMS[0];
-    const hsize_t COLS = DIMS[1];
-    const hsize_t sizer = ROWS * COLS;
-    long read[sizer] = { };
-    ds.read( read, ds.getDataType( ) );
-    std::vector<dr_time> times;
-    times.reserve( sizer );
-    for ( hsize_t i = 0; i < sizer; i++ ) {
-      long l = read[i];
-      times.push_back( l );
-    }
-    ds.close( );
-
-    std::vector<int>::reverse_iterator rit_data = output.rbegin();
-    std::vector<dr_time>::reverse_iterator rit_times = times.rbegin();
-
-    double stat = 0;
-    double end_time = *rit_times - (window * 1000);
-
-    //TODO: Add bounds checking on times
-    //TODO: Output message if insufficient times for full window
-    //TODO: Add different calculations based on operation variable 
-    if (operation == "avg" || operation == "std" || operation == "var"){
-      double total = 0;
-      int count = 0;
+    if(window !=0){
+      //READ TIMES
+      H5::DataSet ds = grp.openDataSet( "time" );
+      H5::DataSpace dataspace = ds.getSpace( );
+      hsize_t DIMS[2] = { };
+      dataspace.getSimpleExtentDims( DIMS );
+      const hsize_t ROWS = DIMS[0];
+      const hsize_t COLS = DIMS[1];
+      const hsize_t sizer = ROWS * COLS;
+      long read[sizer] = { };
+      ds.read( read, ds.getDataType( ) );
+      std::vector<dr_time> times;
+      times.reserve( sizer );
+      for ( hsize_t i = 0; i < sizer; i++ ) {
+        long l = read[i];
+        times.push_back( l );
+      }
+      ds.close( );
+      std::vector<int>::reverse_iterator rit_data = output.rbegin();
+      std::vector<dr_time>::reverse_iterator rit_times = times.rbegin();
+      
+      double end_time = *rit_times - (window * 1000);
+      std::vector<int> buffer;
       while (*rit_times >= end_time) {
 
-        total += *rit_data;
-
-        count++;
+        buffer.push_back(*rit_data);
         rit_data++;
         rit_times++;
 
       }
+      output=buffer;
+    }
+   
+    double stat = 0;
+    
+    //TODO: Add bounds checking on times
+    //TODO: Output message if insufficient times for full window
+    if (operation == "avg" || operation == "std" || operation == "var"){
+      double total = 0;
+      int count = 0;
+      for(auto x: output){
+        total+=x;
+        count++;
+      }
       double average = total/count;
       if(operation == "std" || operation == "var"){
-        rit_data = output.rbegin();
-        rit_times = times.rbegin();
         total = 0;
-        while (*rit_times >= end_time) {
-
-          total += (*rit_data - average) * (*rit_data-average); //Sum of deviations
-
-          rit_data++;
-          rit_times++;
-
+        for(auto y: output){
+          total += ((y-average) * (y-average));
         }
+
         stat = total / count;
         if(operation == "std"){
           stat = std::sqrt(stat);
@@ -489,29 +488,20 @@ int main( int argc, char** argv ) {
         stat = average;
       }
     } else if (operation == "range" || operation == "med"){
-      rit_data = output.rbegin();
-      rit_times = times.rbegin();
-      std::vector<int> data;
-      while (*rit_times >= end_time) {
-
-        data.push_back(*rit_data);
-        
-        rit_data++;
-        rit_times++;
-
-      }
-      sort(data.begin(),data.end());
-      size_t size = data.size();
+      
+      sort(output.begin(),output.end());
+      size_t size = output.size();
       if (operation == "med"){
         if(size % 2 ==0){
-          stat = (data[size/2 -1] +data[size/2])/2;
+          stat = (output[size/2 -1] + output[size/2])/2;
         } else {
-          stat = data[size/2];
+          stat = output[size/2];
         }
       } else {
-        stat = data.back()-data.front();
+        stat = output.back()-output.front();
       }
     } else {
+
       std::cout<<"Operation not recognized"<<std::endl;
 
     }
