@@ -54,7 +54,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-A or --attrs\tprints all attributes in the file"
       << std::endl << "\t-V or --vitals\tprints a list of vital signs in this file"
       << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
-      << std::endl << "\t-k or --calc <statistic>\tcalculates listed statistic"
+      << std::endl << "\t-k or --calc <statistic>\tcalculates listed statistic ['avg','std','var', 'med', 'range']"
       << std::endl << "\t-w or --window <s>\tdefines seconds from end considered by --calc"
       << std::endl;
   exit( 1 );
@@ -151,6 +151,8 @@ int main( int argc, char** argv ) {
   int window = 0;
   std::string operation = "";
 
+  std::string operations[5] = {"avg", "std", "var","med", "range"};
+
   while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WV", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'o':
@@ -174,6 +176,9 @@ int main( int argc, char** argv ) {
       case 'k':
         calc = true;
         operation = optarg;
+        if(std::find(std::begin(operations),std::end(operations),operation) == std::end(operations)){
+          helpAndExit( argv[0], "not a valid operation" );
+        }
         break;
       case 'w':
         window = atoi(optarg);
@@ -401,7 +406,8 @@ int main( int argc, char** argv ) {
         }
       }
     }
-  } else if ( calc ) {
+  }
+  else if ( calc ) {
     
     H5::H5File file = H5::H5File( argv[optind], H5F_ACC_RDONLY );
     H5::Group grp = file.openGroup( path );
@@ -444,25 +450,74 @@ int main( int argc, char** argv ) {
     std::vector<int>::reverse_iterator rit_data = output.rbegin();
     std::vector<dr_time>::reverse_iterator rit_times = times.rbegin();
 
-    double total = 0;
-    int count = 0;
+    double stat = 0;
     double end_time = *rit_times - (window * 1000);
 
     //TODO: Add bounds checking on times
     //TODO: Output message if insufficient times for full window
     //TODO: Add different calculations based on operation variable 
-    
-    while (*rit_times >= end_time) {
+    if (operation == "avg" || operation == "std" || operation == "var"){
+      double total = 0;
+      int count = 0;
+      while (*rit_times >= end_time) {
 
-      total += *rit_data;
+        total += *rit_data;
 
-      count++;
-      rit_data++;
-      rit_times++;
+        count++;
+        rit_data++;
+        rit_times++;
 
-    } 
+      }
+      double average = total/count;
+      if(operation == "std" || operation == "var"){
+        rit_data = output.rbegin();
+        rit_times = times.rbegin();
+        total = 0;
+        while (*rit_times >= end_time) {
 
-    std::cout<<operation<<" from: "<<path<<" for the last "<<window<<" seconds is: "<<total/count<<std::endl;    
+          total += (*rit_data - average) * (*rit_data-average); //Sum of deviations
+
+          rit_data++;
+          rit_times++;
+
+        }
+        stat = total / count;
+        if(operation == "std"){
+          stat = std::sqrt(stat);
+        }
+      } else {
+        stat = average;
+      }
+    } else if (operation == "range" || operation == "med"){
+      rit_data = output.rbegin();
+      rit_times = times.rbegin();
+      std::vector<int> data;
+      while (*rit_times >= end_time) {
+
+        data.push_back(*rit_data);
+        
+        rit_data++;
+        rit_times++;
+
+      }
+      sort(data.begin(),data.end());
+      size_t size = data.size();
+      if (operation == "med"){
+        if(size % 2 ==0){
+          stat = (data[size/2 -1] +data[size/2])/2;
+        } else {
+          stat = data[size/2];
+        }
+      } else {
+        stat = data.back()-data.front();
+      }
+    } else {
+      std::cout<<"Operation not recognized"<<std::endl;
+
+    }
+     
+
+    std::cout<<operation<<" from: "<<path<<" for the last "<<window<<" seconds is: "<<stat<<std::endl;    
     
 
   
