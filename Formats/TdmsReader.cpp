@@ -49,7 +49,7 @@ void TdmsReader::newGroup( TdmsGroup * grp ) {
 }
 
 void TdmsReader::newChannel( TdmsChannel * channel ) {
-  output( ) << "new channel: " << channel->getName( ) << std::endl;
+  //output( ) << "new channel: " << channel->getName( ) << std::endl;
 }
 
 void TdmsReader::newChannelProperties( TdmsChannel * channel ) {
@@ -82,19 +82,19 @@ void TdmsReader::newChannelProperties( TdmsChannel * channel ) {
       ? filler->addWave( name, &added )
       : filler->addVital( name, &added ) );
 
-  if ( firstrun ) {
-    output( ) << "  channel: " << name << " props: " << propmap.size( ) << std::endl;
-  }
+//  if ( firstrun ) {
+//    output( ) << "  channel: " << name << " props: " << propmap.size( ) << std::endl;
+//  }
 
   string unit = channel->getUnit( );
   if ( !unit.empty( ) ) {
     signal->setUom( unit );
   }
-
+  
   for ( auto& p : propmap ) {
-    if ( firstrun ) {
-      output( ) << "\t" << p.first << " => " << p.second << std::endl;
-    }
+//    if ( firstrun ) {
+//      output( ) << "\t" << p.first << " => " << p.second << std::endl;
+//    }
 
     if ( "Unit_String" == p.first ) {
       signal->setUom( p.second );
@@ -208,7 +208,7 @@ void TdmsReader::newValueChunk( TdmsChannel * channel, std::vector<double>& vals
     rec.lasttime += timeinc;
 
     if ( rec.waiting ) {
-      output( ) << "\t" << rec.name << " is now waiting (last time: " << rec.lasttime << ")" << std::endl;
+//      output( ) << "\t" << rec.name << " is now waiting (last time: " << rec.lasttime << ")" << std::endl;
       break;
     }
   }
