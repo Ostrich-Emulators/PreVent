@@ -2,3 +2,8 @@
 /FormatConverter/dist/
 /PreVentTools/build/
 /PreVentTools/dist/
+CMakeCache.txt
+CMakeFiles
+*.so
+cmake_install.cmake
+

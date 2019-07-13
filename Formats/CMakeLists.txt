@@ -1,4 +1,20 @@
+# this doesn't seem to work like it should...
+# the hdf5c++ wrapper has some incompatibility with cmake, I think
 #set(CMAKE_CXX_COMPILER ${HDF5_CXX_COMPILER_EXECUTABLE})
+
+# add the command to generate the source code
+execute_process (
+	OUTPUT_VARIABLE GIT_HASH
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+  COMMAND git describe --abbrev=8 --dirty --always --tags
+
+)
+MESSAGE( STATUS "the git hash: ${GIT_HASH}" )
+
+configure_file (
+  "build.h.in"
+  "generated/build.h"
+)
 
 add_library(formats SHARED AnonymizingSignalSet.cpp
 Base64.cpp
@@ -32,7 +48,9 @@ Writer.cpp
 XmlReaderBase.cpp
 ZlReader2.cpp
 ZlReader.cpp
+build.h
 )
 
 include_directories(${HDF5_INCLUDE_DIRS})
 include_directories(${WFDB_INCLUDES})
+include_directories(generated)

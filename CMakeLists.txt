@@ -23,6 +23,7 @@ pkg_check_modules (MATIO REQUIRED matio)
 
 include_directories(libtdms/include)
 include_directories(Formats)
+include_directories(Formats/generated)
 
 add_subdirectory(TDMSpp)
 add_subdirectory(Formats)

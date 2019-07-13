@@ -12,7 +12,6 @@ execute_process (
     COMMAND wfdb-config "--cflags"
     OUTPUT_VARIABLE WFDB_INCLUDES
 		OUTPUT_STRIP_TRAILING_WHITESPACE
-
 )
 
 target_link_libraries(formatconverter tdmspp-osem)
