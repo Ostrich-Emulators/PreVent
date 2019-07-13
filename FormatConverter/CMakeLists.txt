@@ -17,17 +17,14 @@ execute_process (
 
 target_link_libraries(formatconverter tdmspp-osem)
 target_link_libraries(formatconverter formats)
+target_link_libraries(formatconverter stdc++fs)
 target_link_libraries(formatconverter ${SQLITE_LIBRARIES})
 target_link_libraries(formatconverter ${EXPAT_LIBRARIES})
 target_link_libraries(formatconverter ${MATIO_LIBRARIES})
 target_link_libraries(formatconverter ${HDF5_LIBRARIES})
 target_link_libraries(formatconverter ${WFDB_LIBRARIES})
-target_link_libraries(formatconverter stdc++fs)
 
 include_directories(${SQLITE_INCLUDE_DIRS})
-#include_directories(${EXPAT_INCLUDE_DIRS})
-#include_directories(${MATIO_INCLUDE_DIRS})
-#include_directories(${HDF5_INCLUDE_DIRS})
 
 # need this because MATIO says it links to -lhdf5, but
 # the HDF5 package uses a full path to find the library
