@@ -46,7 +46,7 @@ Format Formats::getValue( const std::string& fmt ) {
     return CPCXML;
   }
   if ( "tdms" == fmt || "medi" == fmt ) {
-    return TDMS;
+    return MEDI;
   }
 
   return UNRECOGNIZED;
@@ -78,7 +78,7 @@ Format Formats::guess( const std::string& filename ) {
       return Format::STPJSON;
     }
     else if ( "tdms" == suffix || "medi" == suffix ) {
-      return Format::TDMS;
+      return Format::MEDI;
     }
   }
   return Format::UNRECOGNIZED;

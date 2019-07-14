@@ -44,7 +44,7 @@ std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
       return std::unique_ptr<Reader>( new CpcXmlReader( ) );
     case STPJSON:
       return std::unique_ptr<Reader>( new StpJsonReader( ) );
-    case TDMS:
+    case MEDI:
       return std::unique_ptr<Reader>( new TdmsReader( ) );
     default:
       throw "reader not yet implemented";

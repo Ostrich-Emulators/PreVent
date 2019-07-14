@@ -195,7 +195,7 @@ int main( int argc, char** argv ) {
       case STPJSON:
         fromstr = "stpjson";
         break;
-      case TDMS:
+      case MEDI:
         fromstr = "tdms";
         break;
       case CSV:

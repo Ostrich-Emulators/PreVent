@@ -54,3 +54,19 @@ build.h
 include_directories(${HDF5_INCLUDE_DIRS})
 include_directories(${WFDB_INCLUDES})
 include_directories(generated)
+
+target_link_libraries(formats 
+	tdmspp-osem
+	stdc++fs
+	${EXPAT_LIBRARIES}
+	${MATIO_LIBRARIES}
+	${HDF5_LIBRARIES}
+	${WFDB_LIBRARIES}
+	# need these last two to find the libraries
+	"-L${TDMS_INSTALL_LOCATION}/lib"
+	# need this because MATIO says it links to -lhdf5, but
+	# the HDF5 package uses a full path to find the library
+	"-L/usr/lib/x86_64-linux-gnu/hdf5/serial/lib"
+)
+
+install (TARGETS formats DESTINATION lib)
