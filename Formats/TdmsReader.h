@@ -73,7 +73,7 @@ private:
 	bool writeSignalRow( std::vector<double>& doubles,
 			const bool seenFloat, const std::unique_ptr<SignalData>& signal, dr_time time );
 
-	void createSignalFromProperties( TDMS::object *, bool first );
+	void initSignal( TDMS::object *, bool first );
 
   /**
    * If a signal starts after a rollover will have occurred, then it'll never
