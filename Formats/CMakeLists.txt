@@ -48,7 +48,7 @@ Writer.cpp
 XmlReaderBase.cpp
 ZlReader2.cpp
 ZlReader.cpp
-build.h
+generated/build.h
 )
 
 include_directories(${HDF5_INCLUDE_DIRS})
@@ -62,11 +62,54 @@ target_link_libraries(formats
 	${MATIO_LIBRARIES}
 	${HDF5_LIBRARIES}
 	${WFDB_LIBRARIES}
-	# need these last two to find the libraries
-	"-L${TDMS_INSTALL_LOCATION}/lib"
 	# need this because MATIO says it links to -lhdf5, but
 	# the HDF5 package uses a full path to find the library
 	"-L/usr/lib/x86_64-linux-gnu/hdf5/serial/lib"
 )
 
+target_include_directories(formats
+    PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+
 install (TARGETS formats DESTINATION lib)
+install (FILES AnonymizingSignalSet.h
+Base64.h
+BasicSignalData.h
+BasicSignalSet.h
+build.h
+config.h
+ConversionListener.h
+CpcXmlReader.h
+CsvWriter.h
+DataRow.h
+dr_time.h
+FileNamer.h
+Formats.h
+Hdf5Reader.h
+Hdf5Writer.h
+MatWriter.h
+NullReader.h
+OffsetTimeSignalSet.h
+Options.h
+Reader.h
+SignalData.h
+SignalDataIterator.h
+SignalDataWrapper.h
+SignalSet.h
+SignalSetWrapper.h
+SignalUtils.h
+StpJsonReader.h
+StpXmlReader.h
+StreamChunkReader.h
+TdmsReader.h
+TimezoneOffsetTimeSignalSet.h
+WfdbReader.h
+WfdbWriter.h
+Writer.h
+XmlReaderBase.h
+ZlReader2.h
+ZlReader.h
+DESTINATION include )

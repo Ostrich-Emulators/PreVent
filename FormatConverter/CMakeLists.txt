@@ -18,8 +18,16 @@ target_link_libraries(formatconverter
 	${WFDB_LIBRARIES}
 )
 
-include_directories(${SQLITE_INCLUDE_DIRS})
+target_compile_options(formatconverter PRIVATE -Wall -O0)
 
+target_include_directories(formatconverter
+    PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+		PRIVATE
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}../Formats>
+)
 # need this because MATIO says it links to -lhdf5, but
 # the HDF5 package uses a full path to find the library
 set(CMAKE_EXE_LINKER_FLAGS "-L/usr/lib/x86_64-linux-gnu/hdf5/serial/lib -L${TDMS_INSTALL_LOCATION}/lib")
