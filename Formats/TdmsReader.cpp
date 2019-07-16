@@ -47,7 +47,7 @@ void TdmsReader::data( const std::string& channelname, const unsigned char* data
     memcpy( &vals[0], datablock, datatype.length * num_vals );
   }
 
-  //output( ) << channel->getName( ) << " new values: " << vals.size( ) << std::endl;
+  output( ) << channelname << " new values: " << vals.size( ) << std::endl;
   SignalSaver& rec = signalsavers.at( channelname );
 
   // get our SignalData for this channel
@@ -57,12 +57,12 @@ void TdmsReader::data( const std::string& channelname, const unsigned char* data
   int timeinc = signal->chunkInterval( );
   size_t freq = signal->readingsPerChunk( );
 
-//  if ( !signal->wave( ) ) {
-//    output( ) << signal->name( ) << " " << vals.size( )
-//        << " new values to add to " << rec.leftovers.size( )
-//        << " leftovers; lasttime: " << rec.lasttime
-//        << " " << timeinc << std::endl;
-//  }
+  //  if ( !signal->wave( ) ) {
+  //    output( ) << signal->name( ) << " " << vals.size( )
+  //        << " new values to add to " << rec.leftovers.size( )
+  //        << " leftovers; lasttime: " << rec.lasttime
+  //        << " " << timeinc << std::endl;
+  //  }
 
   // for now, just add whatever we get to our leftovers, and work from there
   rec.leftovers.insert( rec.leftovers.end( ), vals.begin( ), vals.end( ) );
@@ -175,7 +175,8 @@ void TdmsReader::handleLateStarters( ) {
 }
 
 void TdmsReader::initSignal( TDMS::object * channel, bool firstrun ) {
-  if ( channel->get_path( ).size( ) < 3 ) {
+  const std::string starter( "/Intellivue'/'" );
+  if ( channel->get_path( ).size( ) < starter.size( ) ) {
     return;
   }
 
@@ -183,7 +184,7 @@ void TdmsReader::initSignal( TDMS::object * channel, bool firstrun ) {
 
   //output( ) << "new channel: " << channel->getName( ) << std::endl;
   std::string name = channel->get_path( );
-  name = name.substr( 2, name.length( ) - 3 );
+  name = name.substr( starter.size( ) + 1, name.size( ) - starter.size( ) - 2 );
 
   dr_time time = 0;
   const int timeinc = 1024; // philips runs at 1.024s, or 1024 ms
