@@ -7,8 +7,20 @@ execute_process (
 	OUTPUT_VARIABLE GIT_HASH
 	OUTPUT_STRIP_TRAILING_WHITESPACE
   COMMAND git describe --abbrev=8 --dirty --always --tags
-
 )
+
+execute_process (
+    COMMAND wfdb-config "--libs"
+    OUTPUT_VARIABLE WFDB_LIBRARIES
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process (
+    COMMAND wfdb-config "--cflags"
+    OUTPUT_VARIABLE WFDB_INCLUDES
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 MESSAGE( STATUS "the git hash: ${GIT_HASH}" )
 
 configure_file (
@@ -51,9 +63,14 @@ ZlReader.cpp
 generated/build.h
 )
 
-include_directories(${HDF5_INCLUDE_DIRS})
-include_directories(${WFDB_INCLUDES})
-include_directories(generated)
+target_include_directories(formats
+    PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+		PRIVATE
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS} ${MATIO_INCLUDES} ${WFDB_INCLUDES}>
+)
 
 target_link_libraries(formats 
 	tdmspp-osem
@@ -67,19 +84,12 @@ target_link_libraries(formats
 	"-L/usr/lib/x86_64-linux-gnu/hdf5/serial/lib"
 )
 
-target_include_directories(formats
-    PUBLIC
-        $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-)
-
-
 install (TARGETS formats DESTINATION lib)
 install (FILES AnonymizingSignalSet.h
 Base64.h
 BasicSignalData.h
 BasicSignalSet.h
-build.h
+generated/build.h
 config.h
 ConversionListener.h
 CpcXmlReader.h

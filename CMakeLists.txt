@@ -18,10 +18,6 @@ pkg_check_modules (EXPAT REQUIRED expat>=2)
 pkg_check_modules (SQLITE REQUIRED sqlite3)
 pkg_check_modules (MATIO REQUIRED matio)
 
-
 add_subdirectory(TDMSpp)
 add_subdirectory(Formats)
 add_subdirectory(FormatConverter)
-
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -O0")
-#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wall")
