@@ -44,10 +44,16 @@ void TdmsReader::data( const std::string& channelname, const unsigned char* data
   std::vector<double> vals;
   if ( nullptr != datablock ) {
     vals.reserve( num_vals );
-    memcpy( &vals[0], datablock, datatype.length * num_vals );
+
+    for ( size_t i = 0; i < num_vals; i++ ) {
+      double out;
+      memcpy( &out, datablock + ( i * datatype.length ), datatype.length );
+      vals.push_back(out);
+    }
+//    memcpy( &vals[0], datablock, datatype.length * num_vals );
   }
 
-  output( ) << channelname << " new values: " << vals.size( ) << std::endl;
+  //output( ) << channelname << " new values: " << num_vals << "/" << vals.size( ) << std::endl;
   SignalSaver& rec = signalsavers.at( channelname );
 
   // get our SignalData for this channel
@@ -146,7 +152,7 @@ dr_time TdmsReader::parsetime( const std::string & tmptimestr ) {
 
 int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
   output( ) << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
-
+  //TDMS::log::debug.debug_mode = true;
   int rslt = Reader::prepare( recordset, info );
   if ( 0 != rslt ) {
     return rslt;
@@ -282,13 +288,10 @@ ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
   }
 
   while ( last_segment_read < tdmsfile->segments( ) ) {
-    output( ) << "reading a segment" << std::endl;
     tdmsfile->loadSegment( last_segment_read, this );
-    output( ) << "\tjust read a segment" << std::endl;
-
     // all the data saving gets done by the listener, not here
 
-    // if we have some signals, are all are "waiting",
+    // if we have some signals, and all are "waiting",
     // then we need to roll over the file
 
     // FIXME: what if the file starts at like 11:58pm, and we only get one
