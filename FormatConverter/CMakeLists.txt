@@ -15,7 +15,7 @@ target_include_directories(formatconverter
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 		PRIVATE
         $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}../Formats>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../Formats ${CMAKE_CURRENT_SOURCE_DIR}/../Formats/generated>
 )
 
 install (PROGRAMS formatconverter DESTINATION bin)
