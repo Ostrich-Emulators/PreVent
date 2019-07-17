@@ -186,8 +186,7 @@ void TdmsReader::initSignal( TDMS::object * channel, bool firstrun ) {
     return;
   }
 
-  output( ) << "new channel: " << channel->get_path( ) << std::endl;
-
+  //output( ) << "new channel: " << channel->get_path( ) << std::endl;
   //output( ) << "new channel: " << channel->getName( ) << std::endl;
   std::string name = channel->get_path( );
   name = name.substr( starter.size( ) + 1, name.size( ) - starter.size( ) - 2 );
@@ -217,14 +216,14 @@ void TdmsReader::initSignal( TDMS::object * channel, bool firstrun ) {
       ? filler->addWave( name, &added )
       : filler->addVital( name, &added ) );
 
-  if ( firstrun ) {
-    output( ) << "  channel: " << name << " props: " << propmap.size( ) << std::endl;
-  }
+//  if ( firstrun ) {
+//    output( ) << "  channel: " << name << " props: " << propmap.size( ) << std::endl;
+//  }
 
   for ( auto& p : propmap ) {
-    if ( firstrun ) {
-      output( ) << "\t" << p.first << " => " << p.second << std::endl;
-    }
+//    if ( firstrun ) {
+//      output( ) << "\t" << p.first << " => " << p.second << std::endl;
+//    }
 
     if ( "Unit_String" == p.first ) {
       signal->setUom( p.second->asString( ) );
@@ -265,7 +264,7 @@ void TdmsReader::initSignal( TDMS::object * channel, bool firstrun ) {
       char buffer[80];
       sprintf( buffer, "%d.%02d.%d %02d:%02d:%02d,%f",
           pt->tm_mday, pt->tm_mon + 1, 1900 + pt->tm_year, pt->tm_hour, pt->tm_min, pt->tm_sec, 0.0 );
-      std::cout << "  " << p.first << " (timestamp): " << buffer << std::endl;
+      //std::cout << "  " << p.first << " (timestamp): " << buffer << std::endl;
       signal->setMeta( p.first, std::string( buffer ) );
     }
   }
