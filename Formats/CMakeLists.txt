@@ -63,8 +63,7 @@ ZlReader.cpp
 generated/build.h
 )
 
-target_compile_options(formats PRIVATE -Wall -O0 -g)
-
+target_compile_options(formats PRIVATE -Wall)
 
 target_include_directories(formats
     PUBLIC
