@@ -23,6 +23,6 @@ pkg_check_modules (EXPAT REQUIRED expat>=2)
 pkg_check_modules (SQLITE REQUIRED sqlite3)
 pkg_check_modules (MATIO REQUIRED matio)
 
-#add_subdirectory(TDMSpp)
 add_subdirectory(Formats)
+add_subdirectory(PreVentTools)
 add_subdirectory(FormatConverter)

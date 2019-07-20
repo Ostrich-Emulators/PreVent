@@ -69,7 +69,7 @@ target_include_directories(formats
     PUBLIC
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-		PRIVATE
+    PRIVATE
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS} ${MATIO_INCLUDES} ${WFDB_INCLUDES}>
 )
