@@ -125,7 +125,7 @@ void TdmsReader::data( const std::string& channelname, const unsigned char* data
     rec.lasttime += timeinc;
 
     if ( rec.waiting ) {
-      output( ) << "\t" << rec.name << " is now waiting (last time: " << rec.lasttime << ")" << std::endl;
+      // output( ) << "\t" << rec.name << " is now waiting (last time: " << rec.lasttime << ")" << std::endl;
       break;
     }
   }
