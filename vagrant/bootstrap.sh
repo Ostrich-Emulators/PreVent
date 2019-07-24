@@ -25,6 +25,7 @@ apt-get --assume-yes install \
 	xfce4-whiskermenu-plugin \
 	firefox \
 	code \
+	cmake \
 	
 
 	
@@ -52,7 +53,15 @@ make install
 popd
 
 su - vagrant <<EOF
-git clone https://github.com/Ostrich-Emulators/PreVent.git
-cd PreVent/FormatConverter
+git clone https://github.com/Ostrich-Emulators/TDMSpp.git
+cd TDMSpp
+
+cmake CMakeLists.txt
+make 
+make install
+
+git clone -b cmake https://github.com/Ostrich-Emulators/PreVent.git
+cd PreVent
+cmake CMakeLists.txt
 make
 EOF
