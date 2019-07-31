@@ -92,11 +92,11 @@ int main( int argc, char** argv ) {
   std::string tostr;
   std::string sqlitedb;
   std::string pattern = FileNamer::DEFAULT_PATTERN;
+  FormatConverter::Options::set( FormatConverter::OptionsKey::QUIET, false );
   FormatConverter::Options::set( FormatConverter::OptionsKey::ANONYMIZE, false );
   FormatConverter::Options::set( FormatConverter::OptionsKey::INDEXED_TIME, false );
-  bool quiet = false;
-  bool nobreak = false;
-  bool dolocaltime = false;
+  FormatConverter::Options::set( FormatConverter::OptionsKey::LOCALIZED_TIME, false );
+  FormatConverter::Options::set( FormatConverter::OptionsKey::NO_BREAK, false );
   bool stopatone = false;
   int compression = Writer::DEFAULT_COMPRESSION;
 
@@ -112,11 +112,10 @@ int main( int argc, char** argv ) {
         compression = std::atoi( optarg );
         break;
       case 'q':
-        quiet = true;
-        FormatConverter::Options::set( FormatConverter::OptionsKey::QUIET, true );
+        FormatConverter::Options::set( FormatConverter::OptionsKey::QUIET );
         break;
       case 'T':
-        FormatConverter::Options::set( FormatConverter::OptionsKey::INDEXED_TIME, true );
+        FormatConverter::Options::set( FormatConverter::OptionsKey::INDEXED_TIME );
         break;
       case 's':
         sqlitedb = optarg;
@@ -125,17 +124,17 @@ int main( int argc, char** argv ) {
         pattern = optarg;
         break;
       case 'l':
-        dolocaltime = true;
+        FormatConverter::Options::set( FormatConverter::OptionsKey::LOCALIZED_TIME );
         break;
       case 'C':
-        FormatConverter::Options::set( FormatConverter::OptionsKey::NOCACHE, true );
+        FormatConverter::Options::set( FormatConverter::OptionsKey::NOCACHE );
         break;
       case 'a':
-        FormatConverter::Options::set( FormatConverter::OptionsKey::ANONYMIZE, true );
-        FormatConverter::Options::set( FormatConverter::OptionsKey::INDEXED_TIME, true );
+        FormatConverter::Options::set( FormatConverter::OptionsKey::ANONYMIZE );
+        FormatConverter::Options::set( FormatConverter::OptionsKey::INDEXED_TIME );
         // NOTE: no break here
       case 'n':
-        nobreak = true;
+        FormatConverter::Options::set( FormatConverter::OptionsKey::NO_BREAK );
         if ( FileNamer::DEFAULT_PATTERN == pattern ) {
           pattern = FileNamer::FILENAME_PATTERN;
         }
@@ -154,7 +153,7 @@ int main( int argc, char** argv ) {
     }
   }
 
-  if ( !quiet ) {
+  if ( !FormatConverter::Options::asBool( FormatConverter::OptionsKey::QUIET ) ) {
     std::cout << argv[0] << " version " << FC_VERS_MAJOR
         << "." << FC_VERS_MINOR << "." << FC_VERS_MICRO
         << "; build " << GIT_BUILD << std::endl;
@@ -171,42 +170,42 @@ int main( int argc, char** argv ) {
   }
 
   if ( "" == fromstr ) {
-    Format f = Formats::guess( argv[optind] );
+    auto f = FormatConverter::Formats::guess( argv[optind] );
     switch ( f ) {
-      case HDF5:
+      case FormatConverter::HDF5:
         fromstr = "hdf5";
         break;
-      case WFDB:
+      case FormatConverter::WFDB:
         fromstr = "wfdb";
         break;
-      case MAT5:
+      case FormatConverter::MAT5:
         fromstr = "mat5";
         break;
-      case MAT4:
+      case FormatConverter::MAT4:
         fromstr = "mat4";
         break;
-      case MAT73:
+      case FormatConverter::MAT73:
         fromstr = "mat73";
         break;
-      case STPXML:
+      case FormatConverter::STPXML:
         fromstr = "stpxml";
         break;
-      case DSZL:
+      case FormatConverter::DSZL:
         fromstr = "zl";
         break;
-      case STPJSON:
+      case FormatConverter::STPJSON:
         fromstr = "stpjson";
         break;
-      case MEDI:
+      case FormatConverter::MEDI:
         fromstr = "tdms";
         break;
-      case CSV:
+      case FormatConverter::CSV:
         fromstr = "csv";
         break;
-      case CPCXML:
+      case FormatConverter::CPCXML:
         fromstr = "cpcxml";
         break;
-      case UNRECOGNIZED:
+      case FormatConverter::UNRECOGNIZED:
         fromstr = "";
         break;
     }
@@ -220,12 +219,12 @@ int main( int argc, char** argv ) {
   }
 
   // get a reader
-  Format fromfmt = Formats::getValue( fromstr );
-  Format tofmt = Formats::getValue( tostr );
-  if ( Format::UNRECOGNIZED == fromfmt ) {
+  auto fromfmt = FormatConverter::Formats::getValue( fromstr );
+  auto tofmt = FormatConverter::Formats::getValue( tostr );
+  if ( FormatConverter::Format::UNRECOGNIZED == fromfmt ) {
     helpAndExit( argv[0], "--from format not recognized" );
   }
-  if ( Format::UNRECOGNIZED == tofmt ) {
+  if ( FormatConverter::Format::UNRECOGNIZED == tofmt ) {
     helpAndExit( argv[0], "--to format not recognized" );
   }
 
@@ -234,16 +233,16 @@ int main( int argc, char** argv ) {
   try {
     from = Reader::get( fromfmt );
     to = Writer::get( tofmt );
-    to->quiet( quiet );
+    to->quiet( FormatConverter::Options::asBool( FormatConverter::OptionsKey::QUIET ) );
     to->compression( compression );
     to->stopAfterFirstFile( stopatone );
     FileNamer namer = FileNamer::parse( pattern );
     namer.tofmt( to->ext( ) );
     to->filenamer( namer );
 
-    from->setQuiet( quiet );
-    from->setNonbreaking( nobreak );
-    from->localizeTime( dolocaltime );
+    from->setQuiet( FormatConverter::Options::asBool( FormatConverter::OptionsKey::QUIET ) );
+    from->setNonbreaking( FormatConverter::Options::asBool( FormatConverter::OptionsKey::NO_BREAK ) );
+    from->localizeTime( FormatConverter::Options::asBool( FormatConverter::OptionsKey::LOCALIZED_TIME ) );
   }
   catch ( std::string x ) {
     std::cerr << x << std::endl;
@@ -267,7 +266,7 @@ int main( int argc, char** argv ) {
     }
 
     std::unique_ptr<SignalSet>data( new BasicSignalSet( ) );
-    if ( dolocaltime ) {
+    if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::LOCALIZED_TIME ) ) {
       data.reset( new TimezoneOffsetTimeSignalSet( data.release( ) ) );
     }
     if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::ANONYMIZE ) ) {

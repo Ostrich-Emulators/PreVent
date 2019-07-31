@@ -30,21 +30,21 @@ std::string Reader::name( ) const {
   return rdrname;
 }
 
-std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
+std::unique_ptr<Reader> Reader::get( const FormatConverter::Format& fmt ) {
   switch ( fmt ) {
-    case WFDB:
+    case FormatConverter::WFDB:
       return std::unique_ptr<Reader>( new WfdbReader( ) );
-    case DSZL:
+    case FormatConverter::DSZL:
       return std::unique_ptr<Reader>( new ZlReader2( ) );
-    case STPXML:
+    case FormatConverter::STPXML:
       return std::unique_ptr<Reader>( new StpXmlReader( ) );
-    case HDF5:
+    case FormatConverter::HDF5:
       return std::unique_ptr<Reader>( new Hdf5Reader( ) );
-    case CPCXML:
+    case FormatConverter::CPCXML:
       return std::unique_ptr<Reader>( new CpcXmlReader( ) );
-    case STPJSON:
+    case FormatConverter::STPJSON:
       return std::unique_ptr<Reader>( new StpJsonReader( ) );
-    case MEDI:
+    case FormatConverter::MEDI:
       return std::unique_ptr<Reader>( new TdmsReader( ) );
     default:
       throw "reader not yet implemented";

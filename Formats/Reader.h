@@ -29,7 +29,7 @@ public:
   Reader( const std::string& name );
   virtual ~Reader( );
 
-  static std::unique_ptr<Reader> get( const Format& fmt );
+  static std::unique_ptr<Reader> get( const FormatConverter::Format& fmt );
 
   /**
    * Prepares for reading a new input file/stream.

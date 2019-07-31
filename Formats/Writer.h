@@ -19,7 +19,7 @@ class Writer {
 public:
   virtual ~Writer( );
   static const int DEFAULT_COMPRESSION;
-  static std::unique_ptr<Writer> get( const Format& fmt );
+  static std::unique_ptr<Writer> get( const FormatConverter::Format& fmt );
 
   void compression( int lev );
   int compression( ) const;

@@ -34,21 +34,21 @@ gmt_offset( w.gmt_offset ), timezone( w.timezone ) {
 Writer::~Writer( ) {
 }
 
-std::unique_ptr<Writer> Writer::get( const Format& fmt ) {
+std::unique_ptr<Writer> Writer::get( const FormatConverter::Format& fmt ) {
   switch ( fmt ) {
-    case HDF5:
+    case FormatConverter::HDF5:
       return std::unique_ptr<Writer>( new Hdf5Writer( ) );
-    case WFDB:
+    case FormatConverter::WFDB:
       return std::unique_ptr<Writer>( new WfdbWriter( ) );
       //case DSZL:
       //return std::unique_ptr<Writer>( new ZlWriter( ) );
-    case MAT73:
+    case FormatConverter::MAT73:
       return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV7 ) );
-    case MAT5:
+    case FormatConverter::MAT5:
       return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV5 ) );
-    case MAT4:
+    case FormatConverter::MAT4:
       return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV4 ) );
-    case CSV:
+    case FormatConverter::CSV:
       return std::unique_ptr<Writer>( new CsvWriter( ) );
 
     default:

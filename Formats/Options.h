@@ -23,7 +23,9 @@ namespace FormatConverter {
     NOCACHE,
     INDEXED_TIME,
     QUIET,
-    ANONYMIZE
+    ANONYMIZE,
+    LOCALIZED_TIME,
+    NO_BREAK
   };
 
   class Options {
@@ -32,7 +34,7 @@ namespace FormatConverter {
 
 
     static void set( OptionsKey key, const std::string& val );
-    static void set( OptionsKey key, bool val );
+    static void set( OptionsKey key, bool val = true );
     static std::string get( OptionsKey key );
     static bool asBool( OptionsKey key );
 

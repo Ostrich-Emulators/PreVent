@@ -50,8 +50,8 @@ void H5Cat::setClipping( const dr_time& starttime, const dr_time& endtime ) {
 }
 
 bool H5Cat::filesorter( const std::string& a, const std::string& b ) {
-  std::unique_ptr<Reader> areader( Reader::get( Formats::guess( a ) ) );
-  std::unique_ptr<Reader> breader( Reader::get( Formats::guess( b ) ) );
+  std::unique_ptr<Reader> areader( Reader::get( FormatConverter::Formats::guess( a ) ) );
+  std::unique_ptr<Reader> breader( Reader::get( FormatConverter::Formats::guess( b ) ) );
 
   std::map<std::string, std::string> amap;
   std::map<std::string, std::string> bmap;
@@ -81,7 +81,7 @@ void H5Cat::cat( std::vector<std::string>& filesToCat ) {
     // order the files so we can figure out our start time
     std::sort( filesToCat.begin( ), filesToCat.end( ), filesorter );
 
-    std::unique_ptr<Reader> areader( Reader::get( Formats::guess( filesToCat[0] ) ) );
+    std::unique_ptr<Reader> areader( Reader::get( FormatConverter::Formats::guess( filesToCat[0] ) ) );
     std::map<std::string, std::string> amap;
     areader->getAttributes( filesToCat[0], amap );
     start = ( 0 == amap.count( SignalData::STARTTIME )
