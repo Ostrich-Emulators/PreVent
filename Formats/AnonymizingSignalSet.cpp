@@ -94,7 +94,7 @@ void AnonymizingSignalSet::complete( ) {
       : storeagefile.substr( 0, pos + 1 ) ) + DEFAULT_FILENAME_PATTERN );
   myNamer.inputfilename( namer.inputfilename( ) );
   storeagefile = myNamer.filename( uniquer );
-  uniquer.release( ); // don't delete this!
+  uniquer.release( ); // don't delete /this/!
 
   std::ofstream myfile( storeagefile );
   if ( myfile.is_open( ) ) {

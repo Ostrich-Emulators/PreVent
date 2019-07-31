@@ -17,28 +17,31 @@
 #include <string>
 #include <map>
 
-enum OptionsKey {
-	NOCACHE,
-  TIMESTEPS,
-  QUIET
-};
+namespace FormatConverter {
 
-class Options {
-public:
-	virtual ~Options( );
+  enum OptionsKey {
+    NOCACHE,
+    INDEXED_TIME,
+    QUIET,
+    ANONYMIZE
+  };
+
+  class Options {
+  public:
+    virtual ~Options( );
 
 
-	static void set( OptionsKey key, const std::string& val );
-	static void set( OptionsKey key, bool val );
-	static std::string get( OptionsKey key );
-	static bool asBool( OptionsKey key );
+    static void set( OptionsKey key, const std::string& val );
+    static void set( OptionsKey key, bool val );
+    static std::string get( OptionsKey key );
+    static bool asBool( OptionsKey key );
 
-private:
-	Options( );
+  private:
+    Options( );
 
-	static std::map<OptionsKey, std::string> map;
+    static std::map<OptionsKey, std::string> map;
 
-};
-
+  };
+}
 #endif /* OPTIONS_H */
 

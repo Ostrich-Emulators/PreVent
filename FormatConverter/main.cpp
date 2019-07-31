@@ -92,7 +92,8 @@ int main( int argc, char** argv ) {
   std::string tostr;
   std::string sqlitedb;
   std::string pattern = FileNamer::DEFAULT_PATTERN;
-  bool anonymize = false;
+  FormatConverter::Options::set( FormatConverter::OptionsKey::ANONYMIZE, false );
+  FormatConverter::Options::set( FormatConverter::OptionsKey::INDEXED_TIME, false );
   bool quiet = false;
   bool nobreak = false;
   bool dolocaltime = false;
@@ -112,10 +113,10 @@ int main( int argc, char** argv ) {
         break;
       case 'q':
         quiet = true;
-        Options::set( OptionsKey::QUIET, true );
+        FormatConverter::Options::set( FormatConverter::OptionsKey::QUIET, true );
         break;
       case 'T':
-        Options::set( OptionsKey::TIMESTEPS, true );
+        FormatConverter::Options::set( FormatConverter::OptionsKey::INDEXED_TIME, true );
         break;
       case 's':
         sqlitedb = optarg;
@@ -123,15 +124,16 @@ int main( int argc, char** argv ) {
       case 'p':
         pattern = optarg;
         break;
-      case 'a':
-        anonymize = true;
-        break;
       case 'l':
         dolocaltime = true;
         break;
       case 'C':
-        Options::set( OptionsKey::NOCACHE, true );
+        FormatConverter::Options::set( FormatConverter::OptionsKey::NOCACHE, true );
         break;
+      case 'a':
+        FormatConverter::Options::set( FormatConverter::OptionsKey::ANONYMIZE, true );
+        FormatConverter::Options::set( FormatConverter::OptionsKey::INDEXED_TIME, true );
+        // NOTE: no break here
       case 'n':
         nobreak = true;
         if ( FileNamer::DEFAULT_PATTERN == pattern ) {
@@ -268,7 +270,8 @@ int main( int argc, char** argv ) {
     if ( dolocaltime ) {
       data.reset( new TimezoneOffsetTimeSignalSet( data.release( ) ) );
     }
-    if ( anonymize ) {
+    if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::ANONYMIZE ) ) {
+      std::cout << "--anon implies --no-break and --time-step" << std::endl;
       data.reset( new AnonymizingSignalSet( data.release( ), to->filenamer( ) ) );
     }
 

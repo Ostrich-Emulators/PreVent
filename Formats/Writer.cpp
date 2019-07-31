@@ -167,7 +167,6 @@ std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
 }
 
 void Writer::addListener( std::shared_ptr<ConversionListener> l ) {
-
   listeners.push_back( l );
 }
 

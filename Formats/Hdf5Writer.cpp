@@ -76,14 +76,14 @@ void Hdf5Writer::writeAttribute( H5::H5Location& loc,
 
 void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
     const dr_time& start, const dr_time& end ) {
-  time_t stime = ( Options::asBool( OptionsKey::TIMESTEPS )
+  time_t stime = ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
       ? timesteplkp.at( start )
       : ( start / 1000 ) );
-  time_t etime = ( Options::asBool( OptionsKey::TIMESTEPS )
+  time_t etime = ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
       ? timesteplkp.at( end )
       : ( end / 1000 ) );
 
-  if ( Options::asBool( OptionsKey::TIMESTEPS ) ) {
+  if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
     writeAttribute( loc, "Start Time", timesteplkp.at( start ) );
     writeAttribute( loc, "End Time", timesteplkp.at( end ) );
   }
@@ -768,7 +768,7 @@ void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data
   std::vector<dr_time> times;
   times.reserve( vec.size( ) );
 
-  if ( Options::asBool( OptionsKey::TIMESTEPS ) ) {
+  if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
     // convert dr_times to the index of the global times array
     for ( auto it = vec.rbegin( ); it != vec.rend( ); ++it ) {
       times.push_back( timesteplkp.at( *it ) );
@@ -793,7 +793,7 @@ void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data
   H5::DataSet ds = group.createDataSet( "time", H5::PredType::STD_I64LE, space, props );
   ds.write( &times[0], H5::PredType::STD_I64LE );
   writeAttribute( ds, "Time Source", "raw" );
-  writeAttribute( ds, "Columns", Options::asBool( OptionsKey::TIMESTEPS )
+  writeAttribute( ds, "Columns", FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
       ? "index to Global_Times"
       : "timestamp (ms)" );
 
