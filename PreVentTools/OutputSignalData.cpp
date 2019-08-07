@@ -11,7 +11,7 @@ output( out ) {
 OutputSignalData::~OutputSignalData( ) {
 }
 
-void OutputSignalData::add( const DataRow& row ) {
+void OutputSignalData::add( const FormatConverter::DataRow& row ) {
   int period = BasicSignalData::chunkInterval( );
   int mspervalue = period / BasicSignalData::readingsPerChunk( );
   int scale = BasicSignalData::scale( );

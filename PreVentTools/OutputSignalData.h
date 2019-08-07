@@ -26,7 +26,7 @@ public:
 	OutputSignalData( std::ostream& out );
 	virtual ~OutputSignalData( );
 
-	virtual void add( const DataRow& row ) override;
+	virtual void add( const FormatConverter::DataRow& row ) override;
 
 private:
 	std::ostream& output;

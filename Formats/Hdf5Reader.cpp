@@ -268,7 +268,7 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
       }
 
       // FIXME: we better hope valsPerTime is always 1!
-      DataRow drow( times[row / valsPerTime], valstr );
+      FormatConverter::DataRow drow( times[row / valsPerTime], valstr );
       if ( COLS > 1 ) {
         for ( size_t c = 1; c < COLS; c++ ) {
           drow.extras[attrmap[c]] = std::to_string( read[row][c] );
@@ -301,7 +301,7 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
       }
 
       // FIXME: we better hope valsPerTime is always 1!
-      DataRow drow( times[row / valsPerTime], valstr );
+      FormatConverter::DataRow drow( times[row / valsPerTime], valstr );
       if ( COLS > 1 ) {
         for ( size_t c = 1; c < COLS; c++ ) {
           drow.extras[attrmap[c]] = std::to_string( read[row][c] );
@@ -399,7 +399,7 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
 
       valcnt++;
       if ( valsPerTime == valcnt ) {
-        DataRow drow( times[timecounter++], values );
+        FormatConverter::DataRow drow( times[timecounter++], values );
         signal->add( drow );
         values.clear( );
         valcnt = 0;
@@ -618,7 +618,7 @@ void Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
           valstr.append( "," );
           valstr.append( std::to_string( datavals[dataidx++] ) );
         }
-        signal->add( DataRow( time, valstr ) );
+        signal->add( FormatConverter::DataRow( time, valstr ) );
       }
       else {
         // worry about the scale factor, so treat everything as a double (and remove trailing 0s
@@ -627,7 +627,7 @@ void Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
           valstr.append( "," );
           valstr.append( SignalUtils::tosmallstring( (double) datavals[dataidx++], scalefactor ) );
         }
-        signal->add( DataRow( time, valstr ) );
+        signal->add( FormatConverter::DataRow( time, valstr ) );
       }
     }
   }

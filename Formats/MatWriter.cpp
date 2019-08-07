@@ -20,6 +20,8 @@
 #include "SignalUtils.h"
 #include "FileNamer.h"
 
+using FormatConverter::DataRow;
+
 MatWriter::MatWriter( MatVersion ver ) : Writer( "mat" ), version( ver ) {
 }
 

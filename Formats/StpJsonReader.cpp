@@ -170,7 +170,7 @@ void StpJsonReader::handleOneLine( const std::string& chunk, std::unique_ptr<Sig
         dataset->setUom( uom );
         dataset->setChunkIntervalAndSampleRate( 2000, 1 );
       }
-      DataRow row( currentTime, val );
+      FormatConverter::DataRow row( currentTime, val );
       dataset->add( row );
     }
     else if ( WAVE == firstword ) {
@@ -192,7 +192,7 @@ void StpJsonReader::handleOneLine( const std::string& chunk, std::unique_ptr<Sig
         dataset->setUom( uom );
       }
 
-      DataRow row( currentTime, val );
+      FormatConverter::DataRow row( currentTime, val );
       dataset->add( row );
     }
     else if ( TIME == firstword ) {

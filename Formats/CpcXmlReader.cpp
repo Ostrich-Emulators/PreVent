@@ -24,6 +24,9 @@
 #include <sstream>
 #include <map>
 
+using FormatConverter::BYTE;
+using FormatConverter::base64_decode;
+
 const std::set<std::string> CpcXmlReader::ignorables
 {
   "formatID", "sessionID", "blockSQN", "blockLength",
@@ -104,7 +107,7 @@ void CpcXmlReader::end( const std::string& element, const std::string& text ) {
     }
 
     std::unique_ptr<SignalData>& signal = filler->addWave( label, &added );
-    signal->add( DataRow( currtime, vals ) );
+    signal->add( FormatConverter::DataRow( currtime, vals ) );
     if ( added ) {
       signal->setChunkIntervalAndSampleRate( 2000, valsperdr );
       signal->setMeta( "Gain", gain );
@@ -136,7 +139,7 @@ void CpcXmlReader::end( const std::string& element, const std::string& text ) {
     else {
       bool added = false;
       std::unique_ptr<SignalData>& signal = filler->addVital( label, &added );
-      signal->add( DataRow( currtime, text ) );
+      signal->add( FormatConverter::DataRow( currtime, text ) );
 
       if ( added ) {
         signal->setChunkIntervalAndSampleRate( 2000, 1 );

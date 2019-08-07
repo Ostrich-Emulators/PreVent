@@ -141,7 +141,7 @@ void WfdbWriter::syncAndWrite( double freq, std::vector<std::unique_ptr<SignalDa
 
       WFDB_Sample samples[cols][ifrq] = { 0 };
       for ( int col = 0; col < cols; col++ ) {
-        std::vector<int> slices = DataRow::ints( rowcols[col] );
+        std::vector<int> slices = FormatConverter::DataRow::ints( rowcols[col] );
         size_t numslices = slices.size( );
         for ( size_t slice = 0; slice < numslices; slice++ ) {
           samples[col][slice] = slices[slice];

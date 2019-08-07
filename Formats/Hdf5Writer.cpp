@@ -249,7 +249,7 @@ void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data
   // once we're out of all the loops, we need to write any residual data.
   size_t rowcount = 0;
   for ( size_t row = 0; row < rows; row++ ) {
-    std::unique_ptr<DataRow> datarow = data->pop( );
+    std::unique_ptr<FormatConverter::DataRow> datarow = data->pop( );
     if ( useInts ) {
       ibuffer.push_back( datarow->ints( scale )[0] );
     }
@@ -359,7 +359,7 @@ void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data 
   // once we're out of all the loops, we need to write any residual data.
 
   for ( size_t row = 0; row < rows; row++ ) {
-    std::unique_ptr<DataRow> datarow = data->pop( );
+    std::unique_ptr<FormatConverter::DataRow> datarow = data->pop( );
     if ( useInts ) {
       std::vector<int> ints = datarow->ints( scale );
       ibuffer.insert( ibuffer.end( ), ints.begin( ), ints.end( ) );

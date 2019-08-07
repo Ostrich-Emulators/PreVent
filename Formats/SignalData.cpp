@@ -22,6 +22,8 @@
 #include <limits>
 #include <queue>
 
+using FormatConverter::DataRow;
+
 const std::string SignalData::SCALE = "Scale";
 const std::string SignalData::UOM = "Unit of Measure";
 const std::string SignalData::MSM = "Missing Value Marker";

@@ -150,7 +150,7 @@ void XmlReaderBase::copySavedInto( std::unique_ptr<SignalSet>& tgt ) {
     infodata->setMetadataFrom( *savedsignal );
     int rows = savedsignal->size( );
     for ( int row = 0; row < rows; row++ ) {
-      const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
+      const std::unique_ptr<FormatConverter::DataRow>& datarow = savedsignal->pop( );
       infodata->add( *datarow );
     }
   }
@@ -164,7 +164,7 @@ void XmlReaderBase::copySavedInto( std::unique_ptr<SignalSet>& tgt ) {
     infodata->setMetadataFrom( *savedsignal );
     int rows = savedsignal->size( );
     for ( int row = 0; row < rows; row++ ) {
-      const std::unique_ptr<DataRow>& datarow = savedsignal->pop( );
+      const std::unique_ptr<FormatConverter::DataRow>& datarow = savedsignal->pop( );
       infodata->add( *datarow );
     }
   }

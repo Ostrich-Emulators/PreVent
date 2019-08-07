@@ -24,7 +24,9 @@
 #include <vector>
 #include "dr_time.h"
 
-class DataRow;
+namespace FormatConverter {
+  class DataRow;
+}
 
 class SignalData {
 public:
@@ -47,7 +49,7 @@ public:
   virtual ~SignalData( );
 
   virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) = 0;
-  virtual void add( const DataRow& row ) = 0;
+  virtual void add( const FormatConverter::DataRow& row ) = 0;
   virtual size_t size( ) const = 0;
   virtual dr_time startTime( ) const = 0;
   virtual dr_time endTime( ) const = 0;
@@ -60,7 +62,7 @@ public:
    */
   virtual const std::deque<dr_time> times( ) const = 0;
 
-  virtual std::unique_ptr<DataRow> pop( ) = 0;
+  virtual std::unique_ptr<FormatConverter::DataRow> pop( ) = 0;
   virtual void setWave( bool wave = false ) = 0;
   virtual bool wave( ) const = 0;
   /**

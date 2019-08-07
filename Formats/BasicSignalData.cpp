@@ -23,6 +23,8 @@
 #include <limits>
 #include <queue>
 
+using FormatConverter::DataRow;
+
 const int BasicSignalData::CACHE_LIMIT = 30000;
 
 BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
@@ -80,7 +82,7 @@ dr_time BasicSignalData::endTime( ) const {
   return lastdata;
 }
 
-std::unique_ptr<DataRow> BasicSignalData::pop( ) {
+std::unique_ptr<FormatConverter::DataRow> BasicSignalData::pop( ) {
   if ( !popping ) {
     startPopping( );
   }

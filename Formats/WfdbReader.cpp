@@ -101,7 +101,7 @@ ReadResult WfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
   WFDB_Frequency freqhz = getifreq( );
   int timecount = 0; // how many times have we seen the same time? (we should see it freqhz times, no?)
   dr_time lasttime = -1;
-  DataRow currents[sigcount];
+  FormatConverter::DataRow currents[sigcount];
   bool iswave = ( freqhz > 1 );
 
   while ( retcode > 0 ) {

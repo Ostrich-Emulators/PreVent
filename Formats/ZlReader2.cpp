@@ -130,11 +130,11 @@ ReadResult ZlReader2::fill( std::unique_ptr<SignalSet>& info, const ReadResult& 
           std::string data = j2[2];
 
           if ( added ) {
-            int readings = (int) DataRow::ints( data ).size( );
+            int readings = (int) FormatConverter::DataRow::ints( data ).size( );
             signal->setChunkIntervalAndSampleRate( 250, readings );
           }
           if ( waveIsOk( data ) ) {
-            signal->add( DataRow( modtime( std::stol( timestr ) ), data ) );
+            signal->add( FormatConverter::DataRow( modtime( std::stol( timestr ) ), data ) );
           }
         }
       }
@@ -153,11 +153,11 @@ ReadResult ZlReader2::fill( std::unique_ptr<SignalSet>& info, const ReadResult& 
           std::string timestr = j2[0];
           std::string data = j2[2];
           if ( added ) {
-            int readings = (int) DataRow::ints( data ).size( );
+            int readings = (int) FormatConverter::DataRow::ints( data ).size( );
             signal->setChunkIntervalAndSampleRate( 250, readings );
           }
           if ( waveIsOk( data ) ) {
-            signal->add( DataRow( modtime( std::stol( timestr ) ), data ) );
+            signal->add( FormatConverter::DataRow( modtime( std::stol( timestr ) ), data ) );
           }
         }
       }

@@ -333,7 +333,7 @@ bool TdmsReader::writeSignalRow( std::vector<double>& doubles, const bool seenFl
   }
 
   //output( ) << vals.str( ) << std::endl;
-  DataRow row( time, vals.str( ) );
+  FormatConverter::DataRow row( time, vals.str( ) );
   signal->add( row );
 
   return true;
