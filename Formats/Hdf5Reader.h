@@ -62,8 +62,8 @@ private:
   void fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
       const std::vector<dr_time>& tmes, int valsPerTime, int scale ) const;
   void readDataSet( H5::Group& dataAndTimeGroup, const bool& iswave,
-      std::unique_ptr<SignalSet>& info ) const;
-  std::vector<dr_time> readTimes( H5::DataSet& times ) const;
+      std::unique_ptr<SignalSet>& info );
+  std::vector<dr_time> readTimes( H5::DataSet& times );
 
   /**
    * Gets a single number representing the major/minor/revision nuumbers for

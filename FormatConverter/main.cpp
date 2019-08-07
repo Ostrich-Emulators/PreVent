@@ -23,8 +23,12 @@
 #include "TimezoneOffsetTimeSignalSet.h"
 #include "AnonymizingSignalSet.h"
 #include "Options.h"
+#include "TimeParser.h"
 
 #include "build.h"
+using FormatConverter::TimeParser;
+using FormatConverter::TimeModifier;
+using FormatConverter::Options;
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
@@ -36,6 +40,8 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-q or --quiet"
       << std::endl << "\t-1 or --stop-after-one"
       << std::endl << "\t-l or --localtime"
+      << std::endl << "\t-Z or --offset <time string (MM/DD/YYYY) or seconds since 01/01/1970>"
+      << std::endl << "\t-S or --opening-date <time string (MM/DD/YYYY) or seconds since 01/01/1970>"
       << std::endl << "\t-p or --pattern <naming pattern>"
       << std::endl << "\t-n or --no-break or --one-file"
       << std::endl << "\t-C or --no-cache"
@@ -59,6 +65,8 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t  %t - the --to option's extension (e.g., hdf5, csv)"
       << std::endl << "\t  all dates are output in YYYYMMDD format"
       << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file (or pattern)"
+      << std::endl << "\tthe --offset option will shift dates by the desired amount"
+      << std::endl << "\tthe --opening-date option will shift dates so that the first time in the output is the given date"
       << std::endl << "\tif file is -, stdin is read for input"
       << std::endl << std::endl;
   exit( 1 );
@@ -78,6 +86,8 @@ struct option longopts[] = {
   { "pattern", required_argument, NULL, 'p' },
   { "localtime", no_argument, NULL, 'l' },
   { "local", no_argument, NULL, 'l' },
+  { "offset", required_argument, NULL, 'Z' },
+  { "opening-date", required_argument, NULL, 'S' },
   { "stop-after-one", no_argument, NULL, '1' },
   { "no-cache", no_argument, NULL, 'C' },
   { "time-step", no_argument, NULL, 'T' },
@@ -92,6 +102,8 @@ int main( int argc, char** argv ) {
   std::string tostr;
   std::string sqlitedb;
   std::string pattern = FileNamer::DEFAULT_PATTERN;
+  std::string offsetstr;
+  bool offsetIsDesiredDate = false;
   FormatConverter::Options::set( FormatConverter::OptionsKey::QUIET, false );
   FormatConverter::Options::set( FormatConverter::OptionsKey::ANONYMIZE, false );
   FormatConverter::Options::set( FormatConverter::OptionsKey::INDEXED_TIME, false );
@@ -100,7 +112,7 @@ int main( int argc, char** argv ) {
   bool stopatone = false;
   int compression = Writer::DEFAULT_COMPRESSION;
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1CT", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1CTZ:S:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -123,6 +135,14 @@ int main( int argc, char** argv ) {
       case 'p':
         pattern = optarg;
         break;
+      case 'Z':
+        offsetstr = optarg;
+        offsetIsDesiredDate = false;
+        break;
+      case 'S':
+        offsetstr = optarg;
+        offsetIsDesiredDate = true;
+        break;
       case 'l':
         FormatConverter::Options::set( FormatConverter::OptionsKey::LOCALIZED_TIME );
         break;
@@ -131,8 +151,12 @@ int main( int argc, char** argv ) {
         break;
       case 'a':
         FormatConverter::Options::set( FormatConverter::OptionsKey::ANONYMIZE );
-        FormatConverter::Options::set( FormatConverter::OptionsKey::INDEXED_TIME );
-        // NOTE: no break here
+        if ( offsetstr.empty( ) ) {
+          // if no offset has (yet) been specified, anonymous files start at 01/01/1970
+          offsetstr = "0";
+          offsetIsDesiredDate = true;
+        }
+        break;
       case 'n':
         FormatConverter::Options::set( FormatConverter::OptionsKey::NO_BREAK );
         if ( FileNamer::DEFAULT_PATTERN == pattern ) {
@@ -228,6 +252,12 @@ int main( int argc, char** argv ) {
     helpAndExit( argv[0], "--to format not recognized" );
   }
 
+  // FIXME: if we're localizing time, then offsetstr should be assumed to be localtime
+  dr_time offset = TimeParser::parse( offsetstr );
+  TimeModifier timemod = ( offsetIsDesiredDate
+      ? TimeModifier::time( offset )
+      : TimeModifier::offset( offset ) );
+
   std::unique_ptr<Reader> from;
   std::unique_ptr<Writer> to;
   try {
@@ -240,9 +270,10 @@ int main( int argc, char** argv ) {
     namer.tofmt( to->ext( ) );
     to->filenamer( namer );
 
-    from->setQuiet( FormatConverter::Options::asBool( FormatConverter::OptionsKey::QUIET ) );
-    from->setNonbreaking( FormatConverter::Options::asBool( FormatConverter::OptionsKey::NO_BREAK ) );
-    from->localizeTime( FormatConverter::Options::asBool( FormatConverter::OptionsKey::LOCALIZED_TIME ) );
+    from->setQuiet( Options::asBool( FormatConverter::OptionsKey::QUIET ) );
+    from->setNonbreaking( Options::asBool( FormatConverter::OptionsKey::NO_BREAK ) );
+    from->localizeTime( Options::asBool( FormatConverter::OptionsKey::LOCALIZED_TIME ) );
+    from->timeModifier( timemod );
   }
   catch ( std::string x ) {
     std::cerr << x << std::endl;
@@ -266,12 +297,12 @@ int main( int argc, char** argv ) {
     }
 
     std::unique_ptr<SignalSet>data( new BasicSignalSet( ) );
-    if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::LOCALIZED_TIME ) ) {
+    if ( Options::asBool( FormatConverter::OptionsKey::LOCALIZED_TIME ) ) {
       data.reset( new TimezoneOffsetTimeSignalSet( data.release( ) ) );
     }
-    if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::ANONYMIZE ) ) {
-      std::cout << "--anon implies --no-break and --time-step" << std::endl;
-      data.reset( new AnonymizingSignalSet( data.release( ), to->filenamer( ) ) );
+    if ( Options::asBool( FormatConverter::OptionsKey::ANONYMIZE ) ) {
+      // FIXME: this TimeModifier doesn't work as expected here (it's probably a copy)
+      data.reset( new AnonymizingSignalSet( data.release( ), to->filenamer( ), timemod ) );
     }
 
     std::string input( argv[i] );

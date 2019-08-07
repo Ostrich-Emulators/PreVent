@@ -37,6 +37,8 @@
 #include "AttributeUtils.h"
 #include "OutputSignalData.h"
 
+using FormatConverter::TimeParser;
+
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
       << "Syntax: " << progname << "[options] <input hdf5>"

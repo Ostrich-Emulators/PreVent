@@ -48,9 +48,9 @@ void TdmsReader::data( const std::string& channelname, const unsigned char* data
     for ( size_t i = 0; i < num_vals; i++ ) {
       double out;
       memcpy( &out, datablock + ( i * datatype.length ), datatype.length );
-      vals.push_back(out);
+      vals.push_back( out );
     }
-//    memcpy( &vals[0], datablock, datatype.length * num_vals );
+    //    memcpy( &vals[0], datablock, datatype.length * num_vals );
   }
 
   //output( ) << channelname << " new values: " << num_vals << "/" << vals.size( ) << std::endl;
@@ -131,25 +131,6 @@ void TdmsReader::data( const std::string& channelname, const unsigned char* data
   }
 }
 
-dr_time TdmsReader::parsetime( const std::string & tmptimestr ) {
-  // sample: 14.12.2017 17:49:24,0.000000
-
-  // first: remove the comma and everything after it
-  size_t x = tmptimestr.rfind( ',' );
-  std::string timestr = tmptimestr.substr( 0, x );
-
-  // there appears to be a bug in the time parser that requires a leading 0
-  // for days < 10, so check this situation
-  if ( '.' == timestr[1] ) {
-    timestr = "0" + timestr;
-  }
-
-  tm brokenTime;
-  strptime2( timestr, "%d.%m.%Y %H:%M:%S", &brokenTime );
-  time_t sinceEpoch = timegm( &brokenTime );
-  return sinceEpoch * 1000;
-}
-
 int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
   output( ) << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
   //TDMS::log::debug.debug_mode = true;
@@ -216,24 +197,20 @@ void TdmsReader::initSignal( TDMS::object * channel, bool firstrun ) {
       ? filler->addWave( name, &added )
       : filler->addVital( name, &added ) );
 
-//  if ( firstrun ) {
-//    output( ) << "  channel: " << name << " props: " << propmap.size( ) << std::endl;
-//  }
+  //  if ( firstrun ) {
+  //    output( ) << "  channel: " << name << " props: " << propmap.size( ) << std::endl;
+  //  }
 
   for ( auto& p : propmap ) {
-//    if ( firstrun ) {
-//      output( ) << "\t" << p.first << " => " << p.second << std::endl;
-//    }
+    //    if ( firstrun ) {
+    //      output( ) << "\t" << p.first << " => " << p.second << std::endl;
+    //    }
 
     if ( "Unit_String" == p.first ) {
       signal->setUom( p.second->asString( ) );
     }
     else if ( "wf_starttime" == p.first ) {
-      time = p.second->asUTCTimestamp( )* 1000;
-      if ( time <= 0 ) {
-        std::cout << name << ": " << p.first << " => " << p.second << std::endl;
-      }
-
+      time = modtime( p.second->asUTCTimestamp( )* 1000 );
       // do not to overwrite our lasttime if we're re-initing after a roll over
       if ( firstrun ) {
         signalsavers.at( channel->get_path( ) ).lasttime = time;
@@ -258,7 +235,7 @@ void TdmsReader::initSignal( TDMS::object * channel, bool firstrun ) {
       signal->setMeta( p.first, p.second->asDouble( ) );
     }
     else if ( valtype.name == "tdsTypeTimeStamp" ) {
-      time_t timer = p.second->asUTCTimestamp( );
+      time_t timer = modtime( p.second->asUTCTimestamp( ) );
       tm * pt = gmtime( &timer );
 
       char buffer[80];

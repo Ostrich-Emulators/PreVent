@@ -26,6 +26,8 @@
 
 #include <algorithm>    // std::sort
 
+using FormatConverter::FileNamer;
+
 H5Cat::H5Cat( const std::string& outfile ) : output( outfile ), doduration( false ),
 havestart( false ), doclip( false ), duration_ms( 0 ), start( 0 ), end( 0 ) {
 }

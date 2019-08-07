@@ -186,7 +186,7 @@ void ZlReader::handleOneLine( const std::string& chunk, std::unique_ptr<SignalSe
         dataset->setUom( uom );
         dataset->setChunkIntervalAndSampleRate( 2000, 1 );
       }
-      dataset->add( DataRow( currentTime, val) );
+      dataset->add( DataRow( currentTime, val ) );
     }
     else if ( WAVE == firstword ) {
       state = zlReaderState::ZIN_WAVE;
@@ -211,7 +211,7 @@ void ZlReader::handleOneLine( const std::string& chunk, std::unique_ptr<SignalSe
     }
     else if ( TIME == firstword ) {
       state = zlReaderState::ZIN_TIME;
-      currentTime = std::stoi( chunk.substr( pos + 1 ) )* 1000;
+      currentTime = modtime( std::stoi( chunk.substr( pos + 1 ) )* 1000 );
     }
     else if ( state == zlReaderState::ZIN_HEADER ) {
       const int epos = chunk.find( '=' );

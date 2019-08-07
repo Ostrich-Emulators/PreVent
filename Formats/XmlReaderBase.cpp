@@ -222,13 +222,13 @@ bool XmlReaderBase::isRollover( const dr_time& then, const dr_time& now ) const 
   return false;
 }
 
-dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal, bool * ok ) const {
+dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal, bool * ok ) {
   if ( "" == timer ) {
     // uh oh...no time, so just return a nonsense number (the biggest we can)
     if ( nullptr != ok ) {
       *ok = false;
     }
-    return std::numeric_limits<dr_time>::max( );
+    return modtime( std::numeric_limits<dr_time>::max( ) );
   }
 
   if ( nullptr != ok ) {
@@ -240,7 +240,7 @@ dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal, bool * o
     // no space and no T---we must have a unix timestamp
     // and we believe Stp saves unix timestamps in UTC always
     // (regardless of valIsLocal)
-    return std::stol( timer ) * 1000;
+    return modtime( std::stol( timer ) * 1000 );
   }
 
   // we have a local time that we need to convert
@@ -263,5 +263,5 @@ dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal, bool * o
     //output( ) << mytime.tm_hour << ":" << mytime.tm_min << ":" << mytime.tm_sec << std::endl;
   }
 
-  return mktime( &mytime )* 1000; // convert seconds to ms
+  return modtime( mktime( &mytime )* 1000 ); // convert seconds to ms, adds offset
 }

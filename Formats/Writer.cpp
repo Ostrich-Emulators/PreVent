@@ -14,6 +14,8 @@
 #include "FileNamer.h"
 #include "OffsetTimeSignalSet.h"
 
+using FormatConverter::FileNamer;
+
 const int Writer::DEFAULT_COMPRESSION = 6;
 
 Writer::Writer( const std::string& ext ) : compress( DEFAULT_COMPRESSION ),

@@ -17,23 +17,24 @@
 #include "dr_time.h"
 #include <string>
 
-class TimeParser {
-public:
+namespace FormatConverter {
 
-  virtual ~TimeParser( ) {
-  }
+	class TimeParser {
+	public:
 
-  static dr_time parse( const std::string& timestr );
+		virtual ~TimeParser( ) {
+		}
 
-
-private:
-
-  TimeParser( );
-
-  TimeParser( const TimeParser& ) {
-  }
-};
+		static dr_time parse( const std::string& timestr );
 
 
+	private:
+
+		TimeParser( );
+
+		TimeParser( const TimeParser& ) {
+		}
+	};
+}
 #endif /* TIMEPARSER_H */
 

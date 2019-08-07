@@ -134,7 +134,7 @@ ReadResult ZlReader2::fill( std::unique_ptr<SignalSet>& info, const ReadResult& 
             signal->setChunkIntervalAndSampleRate( 250, readings );
           }
           if ( waveIsOk( data ) ) {
-            signal->add( DataRow( std::stol( timestr ), data ) );
+            signal->add( DataRow( modtime( std::stol( timestr ) ), data ) );
           }
         }
       }
@@ -157,7 +157,7 @@ ReadResult ZlReader2::fill( std::unique_ptr<SignalSet>& info, const ReadResult& 
             signal->setChunkIntervalAndSampleRate( 250, readings );
           }
           if ( waveIsOk( data ) ) {
-            signal->add( DataRow( std::stol( timestr ), data ) );
+            signal->add( DataRow( modtime( std::stol( timestr ) ), data ) );
           }
         }
       }

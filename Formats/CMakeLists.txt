@@ -60,6 +60,8 @@ Writer.cpp
 XmlReaderBase.cpp
 ZlReader2.cpp
 ZlReader.cpp
+TimeModifier.cpp
+TimeParser.cpp
 generated/build.h
 )
 

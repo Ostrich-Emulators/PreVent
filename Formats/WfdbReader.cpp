@@ -55,7 +55,7 @@ dr_time WfdbReader::convert( const char * timestr ) {
   }
 
   // mktime includes timezone, and we want UTC
-  return timegm( &timeDate )* 1000;
+  return modtime( timegm( &timeDate )* 1000 );
 }
 
 int WfdbReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
@@ -74,8 +74,8 @@ int WfdbReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet
 
     for ( int i = 0; i < sigcount; i++ ) {
       std::unique_ptr<SignalData>& dataset = ( iswave
-              ? info->addWave( siginfo[i].desc )
-              : info->addVital( siginfo[i].desc ) );
+          ? info->addWave( siginfo[i].desc )
+          : info->addVital( siginfo[i].desc ) );
 
       dataset->setChunkIntervalAndSampleRate( 1000, freqhz );
 
@@ -119,8 +119,8 @@ ReadResult WfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
         lasttime = timet;
 
         std::unique_ptr<SignalData>& dataset = ( iswave
-                ? info->addWave( siginfo[j].desc )
-                : info->addVital( siginfo[j].desc ) );
+            ? info->addWave( siginfo[j].desc )
+            : info->addVital( siginfo[j].desc ) );
 
         if ( !currents[j].data.empty( ) ) {
           // don't add a row on the very first loop through
@@ -145,8 +145,8 @@ ReadResult WfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
   // now add our last data point
   for ( int j = 0; j < sigcount; j++ ) {
     std::unique_ptr<SignalData>& dataset = ( iswave
-            ? info->addWave( siginfo[j].desc )
-            : info->addVital( siginfo[j].desc ) );
+        ? info->addWave( siginfo[j].desc )
+        : info->addVital( siginfo[j].desc ) );
 
     currents[j].time = lasttime;
     dataset->add( currents[j] );

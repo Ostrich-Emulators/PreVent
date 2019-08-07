@@ -50,6 +50,7 @@ int WfdbWriter::initDataSet( ) {
 
 std::vector<std::string> WfdbWriter::closeDataSet( ) {
   int x = chdir( currdir.c_str( ) );
+  x += 0; // just to avoid compiler warning
   wfdbquit( );
   return files;
 }
@@ -102,7 +103,7 @@ int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&dat
     i++;
   }
 
-  if ( osigfopen( sigs, sigmap.size( ) ) < sigmap.size( ) ) {
+  if ( osigfopen( sigs, sigmap.size( ) ) < (int) sigmap.size( ) ) {
     return -1;
   }
 

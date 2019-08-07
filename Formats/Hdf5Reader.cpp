@@ -161,7 +161,7 @@ ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
   return ReadResult::END_OF_FILE;
 }
 
-std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) const {
+std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) {
   //std::cout << group.getObjName( ) << " " << name << std::endl;
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
@@ -177,7 +177,7 @@ std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) const {
   times.reserve( sizer );
   for ( hsize_t i = 0; i < sizer; i++ ) {
     long l = read[i];
-    times.push_back( l );
+    times.push_back( modtime( l ) );
   }
   //std::cout << "times vector size is: " << times.size( ) << std::endl;
   //std::cout << "first/last vals: " << times[0] << " " << times[times.size( ) - 1] << std::endl;
@@ -185,7 +185,7 @@ std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) const {
 }
 
 void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
-    const bool& iswave, std::unique_ptr<SignalSet>& info ) const {
+    const bool& iswave, std::unique_ptr<SignalSet>& info ) {
   std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
 
   std::unique_ptr<SignalData>& signal = ( iswave
