@@ -1,0 +1,5 @@
+#ifndef GIT_BUILD 
+#define GIT_BUILD "@GIT_HASH@"
+#endif
+
+

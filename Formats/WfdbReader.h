@@ -26,7 +26,7 @@ public:
 
 	virtual ~WfdbReader( );
 
-	static dr_time convert( const char * timestr );
+	dr_time convert( const char * timestr );
 
 protected:
 	int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;

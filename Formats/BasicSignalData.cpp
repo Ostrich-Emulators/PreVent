@@ -23,13 +23,16 @@
 #include <limits>
 #include <queue>
 
+using FormatConverter::DataRow;
+
 const int BasicSignalData::CACHE_LIMIT = 30000;
 
 BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
 : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
 datacount( 0 ), livecount( 0 ), file( nullptr ), popping( false ), iswave( wavedata ),
 highval( -std::numeric_limits<double>::max( ) ),
-lowval( std::numeric_limits<double>::max( ) ), nocache( Options::asBool( OptionsKey::NOCACHE ) ) {
+lowval( std::numeric_limits<double>::max( ) ),
+nocache( FormatConverter::Options::asBool( FormatConverter::OptionsKey::NOCACHE ) ) {
   scale( 0 );
   setChunkIntervalAndSampleRate( 7, 1 ); // 7 is just an easy value to troubleshoot (it's not 2000 or 1024)
   setUom( "Uncalib" );
@@ -79,7 +82,7 @@ dr_time BasicSignalData::endTime( ) const {
   return lastdata;
 }
 
-std::unique_ptr<DataRow> BasicSignalData::pop( ) {
+std::unique_ptr<FormatConverter::DataRow> BasicSignalData::pop( ) {
   if ( !popping ) {
     startPopping( );
   }
@@ -153,8 +156,8 @@ void BasicSignalData::cache( ) {
   livecount = 0;
 }
 
-size_t BasicSignalData::inmemsize( ) const{
-  return data.size();
+size_t BasicSignalData::inmemsize( ) const {
+  return data.size( );
 }
 
 void BasicSignalData::add( const DataRow& row ) {

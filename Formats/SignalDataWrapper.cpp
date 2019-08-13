@@ -8,6 +8,8 @@
 #include "SignalDataWrapper.h"
 #include <iostream>
 
+using FormatConverter::DataRow;
+
 SignalDataWrapper::SignalDataWrapper( const std::unique_ptr<SignalData>& data )
 : signal( data.get( ) ), iOwnThisPtr( false ) {
 }

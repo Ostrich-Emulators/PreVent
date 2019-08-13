@@ -161,7 +161,7 @@ ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult&
   return ReadResult::END_OF_FILE;
 }
 
-std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) const {
+std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) {
   //std::cout << group.getObjName( ) << " " << name << std::endl;
   H5::DataSpace dataspace = dataset.getSpace( );
   hsize_t DIMS[2] = { };
@@ -177,7 +177,7 @@ std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) const {
   times.reserve( sizer );
   for ( hsize_t i = 0; i < sizer; i++ ) {
     long l = read[i];
-    times.push_back( l );
+    times.push_back( modtime( l ) );
   }
   //std::cout << "times vector size is: " << times.size( ) << std::endl;
   //std::cout << "first/last vals: " << times[0] << " " << times[times.size( ) - 1] << std::endl;
@@ -185,7 +185,7 @@ std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) const {
 }
 
 void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
-    const bool& iswave, std::unique_ptr<SignalSet>& info ) const {
+    const bool& iswave, std::unique_ptr<SignalSet>& info ) {
   std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
 
   std::unique_ptr<SignalData>& signal = ( iswave
@@ -268,7 +268,7 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
       }
 
       // FIXME: we better hope valsPerTime is always 1!
-      DataRow drow( times[row / valsPerTime], valstr );
+      FormatConverter::DataRow drow( times[row / valsPerTime], valstr );
       if ( COLS > 1 ) {
         for ( size_t c = 1; c < COLS; c++ ) {
           drow.extras[attrmap[c]] = std::to_string( read[row][c] );
@@ -301,7 +301,7 @@ void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& da
       }
 
       // FIXME: we better hope valsPerTime is always 1!
-      DataRow drow( times[row / valsPerTime], valstr );
+      FormatConverter::DataRow drow( times[row / valsPerTime], valstr );
       if ( COLS > 1 ) {
         for ( size_t c = 1; c < COLS; c++ ) {
           drow.extras[attrmap[c]] = std::to_string( read[row][c] );
@@ -399,7 +399,7 @@ void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dat
 
       valcnt++;
       if ( valsPerTime == valcnt ) {
-        DataRow drow( times[timecounter++], values );
+        FormatConverter::DataRow drow( times[timecounter++], values );
         signal->add( drow );
         values.clear( );
         valcnt = 0;
@@ -618,7 +618,7 @@ void Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
           valstr.append( "," );
           valstr.append( std::to_string( datavals[dataidx++] ) );
         }
-        signal->add( DataRow( time, valstr ) );
+        signal->add( FormatConverter::DataRow( time, valstr ) );
       }
       else {
         // worry about the scale factor, so treat everything as a double (and remove trailing 0s
@@ -627,7 +627,7 @@ void Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
           valstr.append( "," );
           valstr.append( SignalUtils::tosmallstring( (double) datavals[dataidx++], scalefactor ) );
         }
-        signal->add( DataRow( time, valstr ) );
+        signal->add( FormatConverter::DataRow( time, valstr ) );
       }
     }
   }

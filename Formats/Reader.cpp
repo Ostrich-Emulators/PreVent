@@ -15,12 +15,15 @@
 #include <locale>         // std::locale, std::time_get, std::use_facet
 #include <iomanip>
 
+using FormatConverter::TimeModifier;
+using FormatConverter::Format;
+
 Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ),
-quiet( false ), onefile( false ), local_time( false ) {
+quiet( false ), onefile( false ), local_time( false ), timemod( TimeModifier::passthru( ) ) {
 }
 
 Reader::Reader( const Reader& r ) : rdrname( "x" ), quiet( r.quiet ),
-onefile( r.onefile ), local_time( r.local_time ) {
+onefile( r.onefile ), local_time( r.local_time ), timemod( r.timemod ) {
 }
 
 Reader::~Reader( ) {
@@ -32,19 +35,19 @@ std::string Reader::name( ) const {
 
 std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
   switch ( fmt ) {
-    case WFDB:
+    case FormatConverter::WFDB:
       return std::unique_ptr<Reader>( new WfdbReader( ) );
-    case DSZL:
+    case FormatConverter::DSZL:
       return std::unique_ptr<Reader>( new ZlReader2( ) );
-    case STPXML:
+    case FormatConverter::STPXML:
       return std::unique_ptr<Reader>( new StpXmlReader( ) );
-    case HDF5:
+    case FormatConverter::HDF5:
       return std::unique_ptr<Reader>( new Hdf5Reader( ) );
-    case CPCXML:
+    case FormatConverter::CPCXML:
       return std::unique_ptr<Reader>( new CpcXmlReader( ) );
-    case STPJSON:
+    case FormatConverter::STPJSON:
       return std::unique_ptr<Reader>( new StpJsonReader( ) );
-    case TDMS:
+    case FormatConverter::MEDI:
       return std::unique_ptr<Reader>( new TdmsReader( ) );
     default:
       throw "reader not yet implemented";
@@ -98,8 +101,24 @@ void Reader::splice( const std::string& inputfile, const std::string& path,
   std::cerr << "this reader does not support splicing" << std::endl;
 }
 
-void Reader::strptime2( const std::string& input, const std::string& format,
+bool Reader::strptime2( const std::string& input, const std::string& format,
     std::tm * tm ) {
   std::istringstream iss( input );
   iss >> std::get_time( tm, format.c_str( ) );
+  if ( iss.fail( ) ) {
+    return false;
+  }
+  return true;
+}
+
+void Reader::timeModifier( const TimeModifier& mod ) {
+  timemod = mod;
+}
+
+const TimeModifier& Reader::timeModifier() const {
+  return timemod;
+}
+
+dr_time Reader::modtime( const dr_time& time ) {
+  return timemod.convert( time );
 }

@@ -23,7 +23,9 @@
 
 class SignalSet;
 class SignalData;
-class DataRow;
+namespace FormatConverter {
+  class DataRow;
+}
 
 class SignalUtils {
 public:
@@ -99,7 +101,7 @@ private:
   SignalUtils( const SignalUtils& );
 
   static void fillGap( std::unique_ptr<SignalData>& data,
-      std::unique_ptr<DataRow>& row, dr_time& nexttime, const int& timestep );
+      std::unique_ptr<FormatConverter::DataRow>& row, dr_time& nexttime, const int& timestep );
   /**
    * Creates a valid "dummy" DataRow for the given signal. (Wave forms need
    * a series of missing values, while vitals only need one.)
@@ -107,7 +109,7 @@ private:
    * @param time
    * @return
    */
-  static DataRow dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time );
+  static FormatConverter::DataRow dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time );
 };
 
 #endif /* SIGNALUTILS_H */

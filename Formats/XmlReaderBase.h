@@ -61,7 +61,7 @@ protected:
    * @param valIsLocal is the string given in val localtime or already in UTC?
    * @return UTC time
    */
-  dr_time time( const std::string& val, bool valIsLocal = false, bool * ok = nullptr ) const;
+  dr_time time( const std::string& val, bool valIsLocal = false, bool * ok = nullptr );
   bool isRollover( const dr_time& now, const dr_time& then ) const;
   void startSaving( dr_time now );
   void setResult( ReadResult rslt );

@@ -50,6 +50,7 @@ int WfdbWriter::initDataSet( ) {
 
 std::vector<std::string> WfdbWriter::closeDataSet( ) {
   int x = chdir( currdir.c_str( ) );
+  x += 0; // just to avoid compiler warning
   wfdbquit( );
   return files;
 }
@@ -102,7 +103,7 @@ int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&dat
     i++;
   }
 
-  if ( osigfopen( sigs, sigmap.size( ) ) < sigmap.size( ) ) {
+  if ( osigfopen( sigs, sigmap.size( ) ) < (int) sigmap.size( ) ) {
     return -1;
   }
 
@@ -140,7 +141,7 @@ void WfdbWriter::syncAndWrite( double freq, std::vector<std::unique_ptr<SignalDa
 
       WFDB_Sample samples[cols][ifrq] = { 0 };
       for ( int col = 0; col < cols; col++ ) {
-        std::vector<int> slices = DataRow::ints( rowcols[col] );
+        std::vector<int> slices = FormatConverter::DataRow::ints( rowcols[col] );
         size_t numslices = slices.size( );
         for ( size_t slice = 0; slice < numslices; slice++ ) {
           samples[col][slice] = slices[slice];

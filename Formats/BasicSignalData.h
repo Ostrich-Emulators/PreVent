@@ -25,7 +25,9 @@
 #include <vector>
 #include "dr_time.h"
 
-class DataRow;
+namespace FormatConverter {
+  class DataRow;
+}
 
 class BasicSignalData : public SignalData {
 public:
@@ -33,13 +35,13 @@ public:
   virtual ~BasicSignalData( );
 
   virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) override;
-  virtual void add( const DataRow& row ) override;
+  virtual void add( const FormatConverter::DataRow& row ) override;
   virtual size_t size( ) const override;
   virtual dr_time startTime( ) const override;
   virtual dr_time endTime( ) const override;
   virtual const std::string& name( ) const override;
 
-  virtual std::unique_ptr<DataRow> pop( ) override;
+  virtual std::unique_ptr<FormatConverter::DataRow> pop( ) override;
   virtual void setWave( bool wave = false ) override;
   virtual bool wave( ) const override;
 
@@ -85,7 +87,7 @@ private:
   dr_time lastdata;
   size_t datacount;
   size_t livecount; // how big is out data list in memory?
-  std::deque<std::unique_ptr<DataRow>> data;
+  std::deque<std::unique_ptr<FormatConverter::DataRow>> data;
   std::deque<dr_time> dates;
   std::FILE * file;
   bool popping;

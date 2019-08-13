@@ -15,7 +15,7 @@ public:
   parent( set ) {
   }
 
-  void add( const DataRow& row ) {
+  void add( const FormatConverter::DataRow& row ) {
     if ( parent.timeok( row.time ) ) {
       SignalDataWrapper::add( row );
     }

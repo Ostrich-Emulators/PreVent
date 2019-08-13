@@ -121,11 +121,11 @@ std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::vector<std::u
       if ( m->empty( ) ) {
         std::cout << m->name( ) << " BUG! ran out of data before anyone else" << std::endl;
 
-        DataRow dummy = dummyfill( m, 0 );
+        FormatConverter::DataRow dummy = dummyfill( m, 0 );
         rowcols.push_back( dummy.data );
       }
       else {
-        const std::unique_ptr<DataRow>& row = m->pop( );
+        const std::unique_ptr<FormatConverter::DataRow>& row = m->pop( );
         // std::cout << " row: " << row->time << " " << row->data << std::endl;
         rowcols.push_back( row->data );
       }
@@ -172,7 +172,7 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
   //        << s->endTime( ) << "\t" << s->size( ) << std::endl;
   //  }
 
-  std::unique_ptr<DataRow> currenttimes[data.size( )];
+  std::unique_ptr<FormatConverter::DataRow> currenttimes[data.size( )];
   for ( size_t i = 0; i < data.size( ); i++ ) {
     ret.push_back( data[i]->shallowcopy( ) );
 
@@ -202,13 +202,13 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
         }
         else if ( currenttimes[i]->time > earliest ) {
           // don't have a datapoint for this time, so make a dummy one
-          DataRow row( dummyfill( data[i], earliest ) );
+          FormatConverter::DataRow row( dummyfill( data[i], earliest ) );
           ret[i]->add( row );
         }
       }
       else {
         // ran out of times fo this signal, so make dummy data for this time
-        DataRow row( dummyfill( data[i], earliest ) );
+        FormatConverter::DataRow row( dummyfill( data[i], earliest ) );
         ret[i]->add( row );
       }
     }
@@ -229,7 +229,7 @@ std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
   return ret;
 }
 
-void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<DataRow>& row,
+void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<FormatConverter::DataRow>& row,
     dr_time& nexttime, const int& timestep ) {
   if ( row->time == nexttime ) {
     return;
@@ -250,7 +250,7 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
 
   dr_time fillstart = nexttime;
   for (; nexttime < row->time - timestep; nexttime += timestep ) {
-    DataRow row( dummyfill( signal, nexttime ) );
+    FormatConverter::DataRow row( dummyfill( signal, nexttime ) );
     signal->add( row );
   }
 
@@ -259,7 +259,6 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
         << " to " << nexttime << std::endl;
   }
 
-
   if ( 2 == timestep && row->time == nexttime + 1 ) {
     std::cout << signal->name( ) << " correcting time drift after filling data "
         << row->time << " to " << ( row->time - 1 ) << std::endl;
@@ -267,12 +266,12 @@ void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<
   }
   else {
     std::cout << signal->name( ) << " added filler row at " << nexttime << std::endl;
-    DataRow row( dummyfill( signal, nexttime ) );
+    FormatConverter::DataRow row( dummyfill( signal, nexttime ) );
     signal->add( row );
   }
 }
 
-DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time ) {
+FormatConverter::DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time ) {
   std::string dummy = SignalData::MISSING_VALUESTR;
 
   if ( signal->wave( ) ) {
@@ -280,7 +279,7 @@ DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const dr_ti
       dummy.append( "," ).append( SignalData::MISSING_VALUESTR );
     }
   }
-  return DataRow( time, dummy );
+  return FormatConverter::DataRow( time, dummy );
 }
 
 std::vector<dr_time> SignalUtils::alltimes( const SignalSet& ss ) {

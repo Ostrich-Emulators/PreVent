@@ -37,7 +37,7 @@ public:
 
   virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) override;
   virtual void moveDataTo( std::unique_ptr<SignalData>& signal ) override;
-  virtual void add( const DataRow& row ) override;
+  virtual void add( const FormatConverter::DataRow& row ) override;
   virtual void setUom( const std::string& u ) override;
   virtual const std::string& uom( ) const override;
   virtual int scale( ) const override;
@@ -54,7 +54,7 @@ public:
   virtual double highwater( ) const override;
   virtual double lowwater( ) const override;
 
-  virtual std::unique_ptr<DataRow> pop( ) override;
+  virtual std::unique_ptr<FormatConverter::DataRow> pop( ) override;
   virtual bool empty( ) const override;
   virtual void setWave( bool wave = false ) override;
   virtual bool wave( ) const override;

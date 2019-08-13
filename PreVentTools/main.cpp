@@ -37,6 +37,8 @@
 #include "AttributeUtils.h"
 #include "OutputSignalData.h"
 
+using FormatConverter::TimeParser;
+
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
       << "Syntax: " << progname << "[options] <input hdf5>"
@@ -280,10 +282,10 @@ int main( int argc, char** argv ) {
 
     for ( int i = optind; i < argc; i++ ) {
       std::string input = argv[i];
-      std::unique_ptr<Reader> from = Reader::get( Formats::guess( input ) );
+      std::unique_ptr<Reader> from = Reader::get( FormatConverter::Formats::guess( input ) );
       from->setNonbreaking( true );
 
-      std::unique_ptr<Writer> to = Writer::get( Formats::guess( input ) );
+      std::unique_ptr<Writer> to = Writer::get( FormatConverter::Formats::guess( input ) );
       namer.tofmt( to->ext( ) );
       namer.inputfilename( input );
       to->filenamer( namer );
@@ -358,7 +360,7 @@ int main( int argc, char** argv ) {
           : *( new std::ofstream( outfilename ) ) );
       std::unique_ptr<SignalData> signal( new OutputSignalData( outstream ) );
 
-      Format fmt = Formats::guess( input );
+      auto fmt = FormatConverter::Formats::guess( input );
       std::unique_ptr<Reader> rdr = Reader::get( fmt );
       rdr->splice( input, path, starttime, endtime, signal );
 

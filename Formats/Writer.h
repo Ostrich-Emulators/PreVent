@@ -12,22 +12,24 @@
 #include "ConversionListener.h"
 
 class Reader;
-class FileNamer;
 class SignalSet;
+namespace FormatConverter{
+	class FileNamer;
+}
 
 class Writer {
 public:
   virtual ~Writer( );
   static const int DEFAULT_COMPRESSION;
-  static std::unique_ptr<Writer> get( const Format& fmt );
+  static std::unique_ptr<Writer> get( const FormatConverter::Format& fmt );
 
   void compression( int lev );
   int compression( ) const;
   void addListener( std::shared_ptr<ConversionListener> listener );
   void quiet( bool = true );
   void stopAfterFirstFile( bool onlyone= true );
-  void filenamer( const FileNamer& namer );
-  FileNamer& filenamer( ) const;
+  void filenamer( const FormatConverter::FileNamer& namer );
+  FormatConverter::FileNamer& filenamer( ) const;
   const std::string& ext( ) const;
 
   virtual std::vector<std::string> write( std::unique_ptr<Reader>& from,
@@ -73,7 +75,7 @@ private:
   bool testrun;
   std::stringstream ss;
   const std::string extension; // filename extension
-  std::unique_ptr<FileNamer> namer;
+  std::unique_ptr<FormatConverter::FileNamer> namer;
   int gmt_offset;
   std::string timezone;
 };

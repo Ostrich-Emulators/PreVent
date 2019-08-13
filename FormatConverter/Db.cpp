@@ -239,7 +239,7 @@ void Db::addOffsets( int fileid, const std::unique_ptr<SignalSet>& sig ) {
 }
 
 void Db::onFileCompleted( const std::string& filename, const std::unique_ptr<SignalSet>& data ) {
-  bool quiet = Options::asBool( OptionsKey::QUIET );
+  bool quiet = FormatConverter::Options::asBool( FormatConverter::OptionsKey::QUIET );
   if ( !quiet ) {
     std::cout << "updating database...";
   }

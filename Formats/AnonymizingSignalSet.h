@@ -17,27 +17,27 @@
 #include "SignalSetWrapper.h"
 #include "SignalDataWrapper.h"
 #include "FileNamer.h"
+#include "TimeModifier.h"
 
 #include <map>
+
+using FormatConverter::FileNamer;
+using FormatConverter::TimeModifier;
 
 class AnonymizingSignalSet : public SignalSetWrapper {
 public:
   static const std::string DEFAULT_FILENAME_PATTERN;
   AnonymizingSignalSet( FileNamer& filenamer );
-  AnonymizingSignalSet( const std::unique_ptr<SignalSet>& w, FileNamer& filenamer );
-  AnonymizingSignalSet( SignalSet * w, FileNamer& filenamer );
+  AnonymizingSignalSet( const std::unique_ptr<SignalSet>& w, FileNamer& filenamer, const TimeModifier& );
+  AnonymizingSignalSet( SignalSet * w, FileNamer& filenamer, const TimeModifier& );
   ~AnonymizingSignalSet( );
 
-  virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
-  virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) override;
-
   virtual void setMeta( const std::string& key, const std::string& val ) override;
-
   virtual void complete( ) override;
 
 private:
   FileNamer& namer;
-  dr_time firsttime;
+	const TimeModifier& timemod;
   std::map<std::string, std::string> saveddata;
 };
 
