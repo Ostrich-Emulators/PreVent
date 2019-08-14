@@ -58,10 +58,16 @@ cd TDMSpp
 
 cmake CMakeLists.txt
 make 
-make install
+sudo make install
 
 git clone -b cmake https://github.com/Ostrich-Emulators/PreVent.git
 cd PreVent
 cmake CMakeLists.txt
 make
+sudo make install
 EOF
+
+cp /vagrant/file_conversion_check.sh /usr/local/bin
+crontab -l > /tmp/crontab.root
+echo "* * * * * /usr/local/bin/file_conversion_check.sh" >> /tmp/crontab.root 
+cat /tmp/crontab.root | crontab -
