@@ -36,6 +36,7 @@
 #include "AnonymizingSignalSet.h"
 #include "AttributeUtils.h"
 #include "OutputSignalData.h"
+#include "Calc.h"
 
 using FormatConverter::TimeParser;
 
@@ -56,6 +57,8 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-A or --attrs\tprints all attributes in the file"
       << std::endl << "\t-V or --vitals\tprints a list of vital signs in this file"
       << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
+      << std::endl << "\t-k or --calc <statistic>\tcalculates listed statistic ['avg','std','var', 'med', 'range']"
+      << std::endl << "\t-w or --window <s>\tdefines seconds from end considered by --calc"
       << std::endl;
   exit( 1 );
 }
@@ -74,7 +77,9 @@ struct option longopts[] = {
   { "print", no_argument, NULL, 'd' },
   { "waves", no_argument, NULL, 'W' },
   { "vitals", no_argument, NULL, 'V' },
-  { "cat", no_argument, NULL, 'c' }, // all remaining args are files
+  { "cat", no_argument, NULL, 'c' },
+  { "calc", required_argument, NULL, 'k' },
+  { "window", required_argument, NULL, 'w' }, // all remaining args are files
   { 0, 0, 0, 0 }
 };
 
@@ -145,6 +150,11 @@ int main( int argc, char** argv ) {
   bool print = false;
   bool listwaves = false;
   bool listvitals = false;
+  bool calc = false;
+  int window = 0;
+  std::string operation = "";
+
+  std::string operations[5] = {"avg", "std", "var","med", "range"};
 
   while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WV", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
@@ -165,6 +175,16 @@ int main( int argc, char** argv ) {
         break;
       case 'V':
         listvitals = true;
+        break;
+      case 'k':
+        calc = true;
+        operation = optarg;
+        if(std::find(std::begin(operations),std::end(operations),operation) == std::end(operations)){
+          helpAndExit( argv[0], "not a valid operation" );
+        }
+        break;
+      case 'w':
+        window = atoi(optarg);
         break;
       case 'S':
       {
@@ -389,6 +409,12 @@ int main( int argc, char** argv ) {
         }
       }
     }
+  }
+  else if ( calc ) {
+
+    std::string filename = argv[optind];
+    Calculate(filename, operation, window, path);
+    
   }
   else {
     // something to acknowledge the program did something
