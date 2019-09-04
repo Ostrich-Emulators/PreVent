@@ -32,6 +32,8 @@
 #define SET_BINARY_MODE(file)
 #endif
 
+using FormatConverter::StreamChunkReader;
+
 const std::string ZlReader::HEADER = "HEADER";
 const std::string ZlReader::VITAL = "VITAL";
 const std::string ZlReader::WAVE = "WAVE";

@@ -21,25 +21,24 @@
 
 #include <map>
 
-using FormatConverter::FileNamer;
-using FormatConverter::TimeModifier;
+namespace FormatConverter {
 
-class AnonymizingSignalSet : public SignalSetWrapper {
-public:
-  static const std::string DEFAULT_FILENAME_PATTERN;
-  AnonymizingSignalSet( FileNamer& filenamer );
-  AnonymizingSignalSet( const std::unique_ptr<SignalSet>& w, FileNamer& filenamer, const TimeModifier& );
-  AnonymizingSignalSet( SignalSet * w, FileNamer& filenamer, const TimeModifier& );
-  ~AnonymizingSignalSet( );
+  class AnonymizingSignalSet : public SignalSetWrapper {
+  public:
+    static const std::string DEFAULT_FILENAME_PATTERN;
+    AnonymizingSignalSet(FileNamer& filenamer);
+    AnonymizingSignalSet(const std::unique_ptr<SignalSet>& w, FileNamer& filenamer, const TimeModifier&);
+    AnonymizingSignalSet(SignalSet * w, FileNamer& filenamer, const TimeModifier&);
+    ~AnonymizingSignalSet();
 
-  virtual void setMeta( const std::string& key, const std::string& val ) override;
-  virtual void complete( ) override;
+    virtual void setMeta(const std::string& key, const std::string& val) override;
+    virtual void complete() override;
 
-private:
-  FileNamer& namer;
-	const TimeModifier& timemod;
-  std::map<std::string, std::string> saveddata;
-};
-
+  private:
+    FileNamer& namer;
+    const TimeModifier& timemod;
+    std::map<std::string, std::string> saveddata;
+  };
+}
 #endif /* ANONYMIZINGSIGNALSET_H */
 

@@ -35,6 +35,7 @@
 #define SET_BINARY_MODE(file)
 #endif
 
+using FormatConverter::StreamChunkReader;
 namespace fs = std::experimental::filesystem::v1;
 
 ZlReader2::ZlReader2( ) : Reader( "Zl" ), firstread( true ) {

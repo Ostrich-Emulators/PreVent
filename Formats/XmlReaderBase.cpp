@@ -30,6 +30,8 @@
 #include <memory>
 #include <limits>
 
+using FormatConverter::StreamChunkReader;
+
 bool XmlReaderBase::accumulateText = false;
 std::string XmlReaderBase::working;
 const int XmlReaderBase::READCHUNK = 1024 * 1024;

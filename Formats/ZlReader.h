@@ -23,7 +23,9 @@
 #include <zlib.h>
 
 class SignalData;
-class StreamChunkReader;
+namespace FormatConverter {
+  class StreamChunkReader;
+}
 
 enum zlReaderState {
   ZIN_HEADER, ZIN_VITAL, ZIN_WAVE, ZIN_TIME
@@ -49,7 +51,7 @@ private:
   std::string leftoverText;
   dr_time currentTime;
   zlReaderState state;
-  std::unique_ptr<StreamChunkReader> stream;
+  std::unique_ptr<FormatConverter::StreamChunkReader> stream;
 
   void handleInputChunk( std::string& chunk, std::unique_ptr<SignalSet>& info );
   void handleOneLine( const std::string& chunk, std::unique_ptr<SignalSet>& info );

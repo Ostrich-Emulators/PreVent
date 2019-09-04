@@ -31,6 +31,8 @@
 #define SET_BINARY_MODE(file)
 #endif
 
+using FormatConverter::StreamChunkReader;
+
 const std::string StpJsonReader::HEADER = "HEADER";
 const std::string StpJsonReader::VITAL = "VITAL";
 const std::string StpJsonReader::WAVE = "WAVE";
