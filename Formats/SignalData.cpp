@@ -22,70 +22,71 @@
 #include <limits>
 #include <queue>
 
-using FormatConverter::DataRow;
+namespace FormatConverter {
 
-const std::string SignalData::SCALE = "Scale";
-const std::string SignalData::UOM = "Unit of Measure";
-const std::string SignalData::MSM = "Missing Value Marker";
-const std::string SignalData::TIMEZONE = "Timezone";
-const std::string SignalData::BUILD_NUM = "Build Number";
-const std::string SignalData::STARTTIME = "Start Time";
+  const std::string SignalData::SCALE = "Scale";
+  const std::string SignalData::UOM = "Unit of Measure";
+  const std::string SignalData::MSM = "Missing Value Marker";
+  const std::string SignalData::TIMEZONE = "Timezone";
+  const std::string SignalData::BUILD_NUM = "Build Number";
+  const std::string SignalData::STARTTIME = "Start Time";
 
-const std::string SignalData::CHUNK_INTERVAL_MS = "Sample Period (ms)";
-const std::string SignalData::READINGS_PER_CHUNK = "Readings Per Sample";
+  const std::string SignalData::CHUNK_INTERVAL_MS = "Sample Period (ms)";
+  const std::string SignalData::READINGS_PER_CHUNK = "Readings Per Sample";
 
-const std::string SignalData::LABEL = "Data Label";
-const short SignalData::MISSING_VALUE = -32768;
-const std::string SignalData::MISSING_VALUESTR = std::to_string( SignalData::MISSING_VALUE );
+  const std::string SignalData::LABEL = "Data Label";
+  const short SignalData::MISSING_VALUE = -32768;
+  const std::string SignalData::MISSING_VALUESTR = std::to_string( SignalData::MISSING_VALUE );
 
-SignalData::SignalData( ) {
-}
-
-SignalData::~SignalData( ) {
-}
-
-void SignalData::moveDataTo( std::unique_ptr<SignalData>& dest ) {
-  size_t count = size( );
-  for ( size_t i = 0; i < count; i++ ) {
-    std::unique_ptr<DataRow> dr = pop( );
-    dest->add( *dr );
+  SignalData::SignalData( ) {
   }
-}
 
-double SignalData::hz( ) const {
-  double ratio = 1000.0 / (double) metai( ).at( SignalData::CHUNK_INTERVAL_MS );
-  return ratio * (double) metai( ).at( SignalData::READINGS_PER_CHUNK );
-}
+  SignalData::~SignalData( ) {
+  }
 
-bool SignalData::empty( ) const {
-  return ( 0 == size( ) );
-}
+  void SignalData::moveDataTo( std::unique_ptr<SignalData>& dest ) {
+    size_t count = size( );
+    for ( size_t i = 0; i < count; i++ ) {
+      std::unique_ptr<DataRow> dr = pop( );
+      dest->add( *dr );
+    }
+  }
 
-void SignalData::setUom( const std::string& u ) {
-  setMeta( UOM, u );
-}
+  double SignalData::hz( ) const {
+    double ratio = 1000.0 / (double) metai( ).at( SignalData::CHUNK_INTERVAL_MS );
+    return ratio * (double) metai( ).at( SignalData::READINGS_PER_CHUNK );
+  }
 
-const std::string& SignalData::uom( ) const {
-  return metas( ).at( UOM );
-}
+  bool SignalData::empty( ) const {
+    return ( 0 == size( ) );
+  }
 
-int SignalData::scale( ) const {
-  return metai( ).at( SCALE );
-}
+  void SignalData::setUom( const std::string& u ) {
+    setMeta( UOM, u );
+  }
 
-void SignalData::scale( int x ) {
-  setMeta( SCALE, x );
-}
+  const std::string& SignalData::uom( ) const {
+    return metas( ).at( UOM );
+  }
 
-int SignalData::readingsPerChunk( ) const {
-  return metai( ).at( READINGS_PER_CHUNK );
-}
+  int SignalData::scale( ) const {
+    return metai( ).at( SCALE );
+  }
 
-int SignalData::chunkInterval( ) const {
-  return metai( ).at( CHUNK_INTERVAL_MS );
-}
+  void SignalData::scale( int x ) {
+    setMeta( SCALE, x );
+  }
 
-void SignalData::setChunkIntervalAndSampleRate( int chunktime_ms, int samplerate ) {
-  setMeta( CHUNK_INTERVAL_MS, chunktime_ms );
-  setMeta( READINGS_PER_CHUNK, samplerate );
+  int SignalData::readingsPerChunk( ) const {
+    return metai( ).at( READINGS_PER_CHUNK );
+  }
+
+  int SignalData::chunkInterval( ) const {
+    return metai( ).at( CHUNK_INTERVAL_MS );
+  }
+
+  void SignalData::setChunkIntervalAndSampleRate( int chunktime_ms, int samplerate ) {
+    setMeta( CHUNK_INTERVAL_MS, chunktime_ms );
+    setMeta( READINGS_PER_CHUNK, samplerate );
+  }
 }

@@ -11,8 +11,11 @@
 #include <limits>
 #include <iostream>
 
-SignalSet::SignalSet( ) {
-}
+namespace FormatConverter {
 
-SignalSet::~SignalSet( ) {
+  SignalSet::SignalSet( ) {
+  }
+
+  SignalSet::~SignalSet( ) {
+  }
 }

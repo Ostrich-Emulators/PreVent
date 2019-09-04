@@ -27,13 +27,7 @@
 
 #include "build.h"
 
-using FormatConverter::Formats;
-using FormatConverter::TimeParser;
-using FormatConverter::TimeModifier;
-using FormatConverter::Options;
-using FormatConverter::OptionsKey;
-using FormatConverter::FileNamer;
-using FormatConverter::AnonymizingSignalSet;
+using namespace FormatConverter;
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl

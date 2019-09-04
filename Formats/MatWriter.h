@@ -22,43 +22,43 @@
 #include <matio.h>
 #include <memory>
 
-class SignalData;
-class SignalSet;
+namespace FormatConverter {
+  class SignalData;
+  class SignalSet;
 
-enum MatVersion {
-  MV4, MV5, MV7
-};
+  enum MatVersion {
+    MV4, MV5, MV7
+  };
 
-class MatWriter : public Writer {
-public:
-  MatWriter( MatVersion version = MV5 );
-  virtual ~MatWriter( );
+  class MatWriter : public Writer {
+  public:
+    MatWriter(MatVersion version = MV5);
+    virtual ~MatWriter();
 
-protected:
-  int initDataSet();
-  std::vector<std::string> closeDataSet();
-  int drain( std::unique_ptr<SignalSet>& );
+  protected:
+    int initDataSet();
+    std::vector<std::string> closeDataSet();
+    int drain(std::unique_ptr<SignalSet>&);
 
-private:
-  MatWriter( const MatWriter& orig );
+  private:
+    MatWriter(const MatWriter& orig);
 
-  /**
-   * Consumes the given data and writes to the file
-   * @param data
-   * @return
-   */
-  int writeVitals( std::vector<std::unique_ptr<SignalData>>& data );
-  int writeWaves( double freq, std::vector<std::unique_ptr<SignalData>>& data );
+    /**
+     * Consumes the given data and writes to the file
+     * @param data
+     * @return
+     */
+    int writeVitals(std::vector<std::unique_ptr<SignalData>>&data);
+    int writeWaves(double freq, std::vector<std::unique_ptr<SignalData>>&data);
 
-  int writeStrings( const std::string& label, std::vector<std::string>& strings );
+    int writeStrings(const std::string& label, std::vector<std::string>& strings);
 
-  std::string tempfileloc;
-  mat_t * matfile;
-  SignalSet * dataptr;
-  matio_compression compress;
-  MatVersion version;
-};
-
+    std::string tempfileloc;
+    mat_t * matfile;
+    SignalSet * dataptr;
+    matio_compression compress;
+    MatVersion version;
+  };
+}
 
 #endif /* MATWRITER_H */
-

@@ -8,166 +8,167 @@
 #include "SignalDataWrapper.h"
 #include <iostream>
 
-using FormatConverter::DataRow;
+namespace FormatConverter {
 
-SignalDataWrapper::SignalDataWrapper( const std::unique_ptr<SignalData>& data )
-: signal( data.get( ) ), iOwnThisPtr( false ) {
-}
-
-SignalDataWrapper::SignalDataWrapper( SignalData * data )
-: signal( data ), iOwnThisPtr( true ) {
-}
-
-SignalDataWrapper::~SignalDataWrapper( ) {
-  if ( iOwnThisPtr ) {
-    delete signal;
+  SignalDataWrapper::SignalDataWrapper( const std::unique_ptr<SignalData>& data )
+  : signal( data.get( ) ), iOwnThisPtr( false ) {
   }
-}
 
-size_t SignalDataWrapper::inmemsize( ) const{
-  return signal->inmemsize();
-}
+  SignalDataWrapper::SignalDataWrapper( SignalData * data )
+  : signal( data ), iOwnThisPtr( true ) {
+  }
 
-std::unique_ptr<SignalData> SignalDataWrapper::shallowcopy( bool includedates ) {
-  return signal->shallowcopy( includedates );
-}
+  SignalDataWrapper::~SignalDataWrapper( ) {
+    if ( iOwnThisPtr ) {
+      delete signal;
+    }
+  }
 
-void SignalDataWrapper::moveDataTo( std::unique_ptr<SignalData>& signal ) {
-  signal->moveDataTo( signal );
-}
+  size_t SignalDataWrapper::inmemsize( ) const {
+    return signal->inmemsize( );
+  }
 
-void SignalDataWrapper::add( const DataRow& row ) {
-  signal->add( row );
-}
+  std::unique_ptr<SignalData> SignalDataWrapper::shallowcopy( bool includedates ) {
+    return signal->shallowcopy( includedates );
+  }
 
-void SignalDataWrapper::setUom( const std::string& u ) {
-  signal->setUom( u );
-}
+  void SignalDataWrapper::moveDataTo( std::unique_ptr<SignalData>& signal ) {
+    signal->moveDataTo( signal );
+  }
 
-const std::string& SignalDataWrapper::uom( ) const {
-  return signal->uom( );
-}
+  void SignalDataWrapper::add( const DataRow& row ) {
+    signal->add( row );
+  }
 
-int SignalDataWrapper::scale( ) const {
-  return signal->scale( );
-}
+  void SignalDataWrapper::setUom( const std::string& u ) {
+    signal->setUom( u );
+  }
 
-size_t SignalDataWrapper::size( ) const {
-  return signal->size( );
-}
+  const std::string& SignalDataWrapper::uom( ) const {
+    return signal->uom( );
+  }
 
-double SignalDataWrapper::hz( ) const {
-  return signal->hz( );
-}
+  int SignalDataWrapper::scale( ) const {
+    return signal->scale( );
+  }
 
-dr_time SignalDataWrapper::startTime( ) const {
-  return signal->startTime( );
-}
+  size_t SignalDataWrapper::size( ) const {
+    return signal->size( );
+  }
 
-dr_time SignalDataWrapper::endTime( ) const {
-  return signal->endTime( );
-}
+  double SignalDataWrapper::hz( ) const {
+    return signal->hz( );
+  }
 
-const std::string& SignalDataWrapper::name( ) const {
-  return signal->name( );
-}
+  dr_time SignalDataWrapper::startTime( ) const {
+    return signal->startTime( );
+  }
 
-void SignalDataWrapper::setChunkIntervalAndSampleRate( int chunk_ms, int sr ) {
-  signal->setChunkIntervalAndSampleRate( chunk_ms, sr );
-}
+  dr_time SignalDataWrapper::endTime( ) const {
+    return signal->endTime( );
+  }
 
-int SignalDataWrapper::readingsPerChunk( ) const {
-  return signal->readingsPerChunk( );
-}
+  const std::string& SignalDataWrapper::name( ) const {
+    return signal->name( );
+  }
 
-int SignalDataWrapper::chunkInterval( ) const {
-  return signal->chunkInterval( );
-}
+  void SignalDataWrapper::setChunkIntervalAndSampleRate( int chunk_ms, int sr ) {
+    signal->setChunkIntervalAndSampleRate( chunk_ms, sr );
+  }
 
-void SignalDataWrapper::setMetadataFrom( const SignalData& model ) {
-  signal->setMetadataFrom( model );
-}
+  int SignalDataWrapper::readingsPerChunk( ) const {
+    return signal->readingsPerChunk( );
+  }
 
-std::unique_ptr<DataRow> SignalDataWrapper::pop( ) {
-  return signal->pop( );
-}
+  int SignalDataWrapper::chunkInterval( ) const {
+    return signal->chunkInterval( );
+  }
 
-bool SignalDataWrapper::empty( ) const {
-  return signal->empty( );
-}
+  void SignalDataWrapper::setMetadataFrom( const SignalData& model ) {
+    signal->setMetadataFrom( model );
+  }
 
-void SignalDataWrapper::setWave( bool wave ) {
-  signal->setWave( wave );
-}
+  std::unique_ptr<DataRow> SignalDataWrapper::pop( ) {
+    return signal->pop( );
+  }
 
-bool SignalDataWrapper::wave( ) const {
-  return signal->wave( );
-}
+  bool SignalDataWrapper::empty( ) const {
+    return signal->empty( );
+  }
 
-void SignalDataWrapper::setMeta( const std::string& key, const std::string& val ) {
-  signal->setMeta( key, val );
-}
+  void SignalDataWrapper::setWave( bool wave ) {
+    signal->setWave( wave );
+  }
 
-void SignalDataWrapper::setMeta( const std::string& key, int val ) {
-  signal->setMeta( key, val );
-}
+  bool SignalDataWrapper::wave( ) const {
+    return signal->wave( );
+  }
 
-void SignalDataWrapper::setMeta( const std::string& key, double val ) {
-  signal->setMeta( key, val );
-}
+  void SignalDataWrapper::setMeta( const std::string& key, const std::string& val ) {
+    signal->setMeta( key, val );
+  }
 
-void SignalDataWrapper::erases( const std::string& key ) {
-  signal->erases( key );
-}
+  void SignalDataWrapper::setMeta( const std::string& key, int val ) {
+    signal->setMeta( key, val );
+  }
 
-void SignalDataWrapper::erasei( const std::string& key ) {
-  signal->erasei( key );
-}
+  void SignalDataWrapper::setMeta( const std::string& key, double val ) {
+    signal->setMeta( key, val );
+  }
 
-void SignalDataWrapper::erased( const std::string& key ) {
-  signal->erased( key );
-}
+  void SignalDataWrapper::erases( const std::string& key ) {
+    signal->erases( key );
+  }
 
-const std::map<std::string, std::string>& SignalDataWrapper::metas( ) const {
-  return signal->metas( );
-}
+  void SignalDataWrapper::erasei( const std::string& key ) {
+    signal->erasei( key );
+  }
 
-const std::map<std::string, int>& SignalDataWrapper::metai( ) const {
-  return signal->metai( );
-}
+  void SignalDataWrapper::erased( const std::string& key ) {
+    signal->erased( key );
+  }
 
-const std::map<std::string, double>& SignalDataWrapper::metad( ) const {
-  return signal->metad( );
-}
+  const std::map<std::string, std::string>& SignalDataWrapper::metas( ) const {
+    return signal->metas( );
+  }
 
-const std::deque<dr_time> SignalDataWrapper::times( ) const {
-  return signal->times( );
-}
+  const std::map<std::string, int>& SignalDataWrapper::metai( ) const {
+    return signal->metai( );
+  }
 
-std::vector<std::string> SignalDataWrapper::extras( ) const {
-  return signal->extras( );
-}
+  const std::map<std::string, double>& SignalDataWrapper::metad( ) const {
+    return signal->metad( );
+  }
 
-void SignalDataWrapper::extras( const std::string& ext ) {
-  signal->extras( ext );
-}
+  const std::deque<dr_time> SignalDataWrapper::times( ) const {
+    return signal->times( );
+  }
 
-double SignalDataWrapper::highwater( ) const {
-  return signal->highwater( );
-}
+  std::vector<std::string> SignalDataWrapper::extras( ) const {
+    return signal->extras( );
+  }
 
-double SignalDataWrapper::lowwater( ) const {
-  return signal->lowwater( );
-}
+  void SignalDataWrapper::extras( const std::string& ext ) {
+    signal->extras( ext );
+  }
 
-void SignalDataWrapper::recordEvent( const std::string& eventtype, const dr_time& time ) {
-  signal->recordEvent( eventtype, time );
-}
+  double SignalDataWrapper::highwater( ) const {
+    return signal->highwater( );
+  }
 
-std::vector<std::string> SignalDataWrapper::eventtypes( ) {
-  return signal->eventtypes( );
-}
+  double SignalDataWrapper::lowwater( ) const {
+    return signal->lowwater( );
+  }
 
-std::vector<dr_time> SignalDataWrapper::events( const std::string& type ) {
-  return signal->events( type );
+  void SignalDataWrapper::recordEvent( const std::string& eventtype, const dr_time& time ) {
+    signal->recordEvent( eventtype, time );
+  }
+
+  std::vector<std::string> SignalDataWrapper::eventtypes( ) {
+    return signal->eventtypes( );
+  }
+
+  std::vector<dr_time> SignalDataWrapper::events( const std::string& type ) {
+    return signal->events( type );
+  }
 }

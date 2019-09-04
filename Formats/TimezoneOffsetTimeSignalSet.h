@@ -10,26 +10,27 @@
 #define TIMEZONEOFFSETSIGNALSET_H
 
 #include "OffsetTimeSignalSet.h"
+namespace FormatConverter {
 
-/**
- * A class to dynamically set timezone information and offset
- */
+  /**
+   * A class to dynamically set timezone information and offset
+   */
 
-class TimezoneOffsetTimeSignalSet : public OffsetTimeSignalSet {
-public:
-  static const std::string COLLECTION_TIMEZONE;
-  TimezoneOffsetTimeSignalSet();
-  TimezoneOffsetTimeSignalSet( const std::unique_ptr<SignalSet>& w);
-  TimezoneOffsetTimeSignalSet( SignalSet * w );
-  ~TimezoneOffsetTimeSignalSet( );
+  class TimezoneOffsetTimeSignalSet : public OffsetTimeSignalSet {
+  public:
+    static const std::string COLLECTION_TIMEZONE;
+    TimezoneOffsetTimeSignalSet();
+    TimezoneOffsetTimeSignalSet(const std::unique_ptr<SignalSet>& w);
+    TimezoneOffsetTimeSignalSet(SignalSet * w);
+    ~TimezoneOffsetTimeSignalSet();
 
-  virtual void reset( bool signalDataOnly = false ) override;
-  virtual void complete() override;
+    virtual void reset(bool signalDataOnly = false) override;
+    virtual void complete() override;
 
-private:
-  std::string tz_name;
-  bool tz_calculated;
-};
-
+  private:
+    std::string tz_name;
+    bool tz_calculated;
+  };
+}
 #endif /* TIMEZONEOFFSETSIGNALSET_H */
 

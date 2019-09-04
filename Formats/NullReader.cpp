@@ -9,17 +9,19 @@
 #include "DataRow.h"
 #include "SignalData.h"
 
-NullReader::NullReader( const std::string& name ) : Reader( name ) {
+namespace FormatConverter {
+  NullReader::NullReader( const std::string& name ) : Reader( name ) {
 
-}
+  }
 
-NullReader::~NullReader( ) {
-}
+  NullReader::~NullReader( ) {
+  }
 
-int NullReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& info ) {
-  return 0;
-}
+  int NullReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& info ) {
+    return 0;
+  }
 
-ReadResult NullReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
-  return ReadResult::END_OF_FILE;
+  ReadResult NullReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
+    return ReadResult::END_OF_FILE;
+  }
 }

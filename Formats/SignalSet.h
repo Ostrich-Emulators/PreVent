@@ -22,56 +22,57 @@
 #include <map>
 #include <functional>
 
-class SignalData;
-//class PartionedSignalData;
+namespace FormatConverter {
 
-enum TimeCounter {
-  VITAL, WAVE, EITHER
-};
+  class SignalData;
+  
+  enum TimeCounter {
+    VITAL, WAVE, EITHER
+  };
 
-class SignalSet {
-public:
-  SignalSet( );
-  virtual ~SignalSet( );
-  virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) = 0;
-  virtual std::vector<std::unique_ptr<SignalData>>&waves( ) = 0;
+  class SignalSet {
+  public:
+    SignalSet();
+    virtual ~SignalSet();
+    virtual std::vector<std::unique_ptr<SignalData>>&vitals() = 0;
+    virtual std::vector<std::unique_ptr<SignalData>>&waves() = 0;
 
-  virtual const std::vector<std::unique_ptr<SignalData>>&vitals( ) const = 0;
-  virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const = 0;
+    virtual const std::vector<std::unique_ptr<SignalData>>&vitals() const = 0;
+    virtual const std::vector<std::unique_ptr<SignalData>>&waves() const = 0;
 
-  virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const = 0;
+    virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals() const = 0;
 
-  virtual const std::map<std::string, std::string>& metadata( ) const = 0;
+    virtual const std::map<std::string, std::string>& metadata() const = 0;
 
-  /**
-   * Adds a new vital sign if it has not already been added. If it already
-   * exists, the old dataset is returned
-   * @param name
-   * @param if not NULL, will be set to true if this is the first time this function
-   *  has been called for this vital
-   * @return
-   */
-  virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) = 0;
-  /**
-   * Adds a new waveform if it has not already been added. If it already
-   * exists, the old dataset is returned
-   * @param name
-   * @param if not NULL, will be set to true if this is the first time this function
-   *  has been called for this vital
-   * @return
-   */
-  virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) = 0;
-  virtual void setMeta( const std::string& key, const std::string& val ) = 0;
-  virtual void reset( bool signalDataOnly = true ) = 0;
-  virtual void clearMetas( ) = 0;
-  virtual dr_time earliest( const TimeCounter& tc = EITHER ) const = 0;
-  virtual dr_time latest( const TimeCounter& tc = EITHER ) const = 0;
-  virtual void setMetadataFrom( const SignalSet& target ) = 0;
-  virtual const std::map<long, dr_time>& offsets( ) const = 0;
-  virtual void addOffset( long seg, dr_time time ) = 0;
-  virtual void clearOffsets( ) = 0;
-  virtual void complete() = 0;
-};
-
+    /**
+     * Adds a new vital sign if it has not already been added. If it already
+     * exists, the old dataset is returned
+     * @param name
+     * @param if not NULL, will be set to true if this is the first time this function
+     *  has been called for this vital
+     * @return
+     */
+    virtual std::unique_ptr<SignalData>& addVital(const std::string& name, bool * added = nullptr) = 0;
+    /**
+     * Adds a new waveform if it has not already been added. If it already
+     * exists, the old dataset is returned
+     * @param name
+     * @param if not NULL, will be set to true if this is the first time this function
+     *  has been called for this vital
+     * @return
+     */
+    virtual std::unique_ptr<SignalData>& addWave(const std::string& name, bool * added = nullptr) = 0;
+    virtual void setMeta(const std::string& key, const std::string& val) = 0;
+    virtual void reset(bool signalDataOnly = true) = 0;
+    virtual void clearMetas() = 0;
+    virtual dr_time earliest(const TimeCounter& tc = EITHER) const = 0;
+    virtual dr_time latest(const TimeCounter& tc = EITHER) const = 0;
+    virtual void setMetadataFrom(const SignalSet& target) = 0;
+    virtual const std::map<long, dr_time>& offsets() const = 0;
+    virtual void addOffset(long seg, dr_time time) = 0;
+    virtual void clearOffsets() = 0;
+    virtual void complete() = 0;
+  };
+}
 #endif /* SIGNALSET_H */
 

@@ -21,44 +21,43 @@
 #include <istream>
 #include <zlib.h>
 
-class SignalData;
 namespace FormatConverter {
+  class SignalData;
   class StreamChunkReader;
-}
-
-/**
- * A reader for the HSDI signal files that UVA is producing
- */
-class ZlReader2 : public Reader {
-public:
-  ZlReader2();
-  ZlReader2(const std::string& name);
-  virtual ~ZlReader2();
-
-  static bool waveIsOk(const std::string& wavedata);
-protected:
-  ReadResult fill(std::unique_ptr<SignalSet>&, const ReadResult& lastfill) override;
-  int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
-  void finish() override;
-
-private:
-  ZlReader2(const ZlReader2& orig);
-
-  bool firstread;
-  dr_time currentTime;
-  std::map<std::string, std::unique_ptr<FormatConverter::StreamChunkReader>> signalToReaderLkp;
-  std::map<std::string, std::string> leftovers;
 
   /**
-   * Returns the current text from the input file, in nice JSON-ready chunks.
-   * Each chunk will be some number of 3-index-big arrays of strings
-   * (time (ms), sequence #, data points)
-   * @param signalname
-   * @param text
-   * @return
+   * A reader for the HSDI signal files that UVA is producing
    */
-  std::string normalizeText(const std::string& signalname, std::string text);
-};
+  class ZlReader2 : public Reader {
+  public:
+    ZlReader2();
+    ZlReader2(const std::string& name);
+    virtual ~ZlReader2();
 
+    static bool waveIsOk(const std::string& wavedata);
+  protected:
+    ReadResult fill(std::unique_ptr<SignalSet>&, const ReadResult& lastfill) override;
+    int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
+    void finish() override;
+
+  private:
+    ZlReader2(const ZlReader2& orig);
+
+    bool firstread;
+    dr_time currentTime;
+    std::map<std::string, std::unique_ptr<FormatConverter::StreamChunkReader>> signalToReaderLkp;
+    std::map<std::string, std::string> leftovers;
+
+    /**
+     * Returns the current text from the input file, in nice JSON-ready chunks.
+     * Each chunk will be some number of 3-index-big arrays of strings
+     * (time (ms), sequence #, data points)
+     * @param signalname
+     * @param text
+     * @return
+     */
+    std::string normalizeText(const std::string& signalname, std::string text);
+  };
+}
 #endif /* ZlReader2_H */
 

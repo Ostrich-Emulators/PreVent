@@ -7,90 +7,93 @@
 #include "SignalSetWrapper.h"
 #include <iostream>
 
-SignalSetWrapper::SignalSetWrapper( const std::unique_ptr<SignalSet>& model )
-: set( model.get( ) ), iOwnThisPointer( false ) {
-}
+namespace FormatConverter {
 
-SignalSetWrapper::SignalSetWrapper( SignalSet * model ) : set( model ), iOwnThisPointer( true ) {
-}
-
-SignalSetWrapper::~SignalSetWrapper( ) {
-  if ( iOwnThisPointer ) {
-    delete set;
+  SignalSetWrapper::SignalSetWrapper( const std::unique_ptr<SignalSet>& model )
+  : set( model.get( ) ), iOwnThisPointer( false ) {
   }
-}
 
-void SignalSetWrapper::setMeta( const std::string& key, const std::string& val ) {
-  set->setMeta( key, val );
-}
+  SignalSetWrapper::SignalSetWrapper( SignalSet * model ) : set( model ), iOwnThisPointer( true ) {
+  }
 
-const std::map<std::string, std::string>& SignalSetWrapper::metadata( ) const {
-  return set->metadata( );
-}
+  SignalSetWrapper::~SignalSetWrapper( ) {
+    if ( iOwnThisPointer ) {
+      delete set;
+    }
+  }
 
-std::unique_ptr<SignalData>& SignalSetWrapper::addVital( const std::string& name,
-        bool * added ) {
-  return set->addVital( name, added );
-}
+  void SignalSetWrapper::setMeta( const std::string& key, const std::string& val ) {
+    set->setMeta( key, val );
+  }
 
-std::unique_ptr<SignalData>& SignalSetWrapper::addWave( const std::string& name,
-        bool * added ) {
-  return set->addWave( name, added );
-}
+  const std::map<std::string, std::string>& SignalSetWrapper::metadata( ) const {
+    return set->metadata( );
+  }
 
-std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::vitals( ) {
-  return set->vitals( );
-}
+  std::unique_ptr<SignalData>& SignalSetWrapper::addVital( const std::string& name,
+          bool * added ) {
+    return set->addVital( name, added );
+  }
 
-std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::waves( ) {
-  return set->waves( );
-}
+  std::unique_ptr<SignalData>& SignalSetWrapper::addWave( const std::string& name,
+          bool * added ) {
+    return set->addWave( name, added );
+  }
 
-const std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::vitals( ) const {
-  return set->vitals( );
-}
+  std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::vitals( ) {
+    return set->vitals( );
+  }
 
-const std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::waves( ) const {
-  return set->waves( );
-}
+  std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::waves( ) {
+    return set->waves( );
+  }
 
-void SignalSetWrapper::reset( bool signalDataOnly ) {
-  return set->reset( signalDataOnly );
-}
+  const std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::vitals( ) const {
+    return set->vitals( );
+  }
 
-dr_time SignalSetWrapper::earliest( const TimeCounter& tc ) const {
-  return set->earliest( tc );
-}
+  const std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::waves( ) const {
+    return set->waves( );
+  }
 
-dr_time SignalSetWrapper::latest( const TimeCounter& tc ) const {
-  return set->latest( tc );
-}
+  void SignalSetWrapper::reset( bool signalDataOnly ) {
+    return set->reset( signalDataOnly );
+  }
 
-const std::map<long, dr_time>& SignalSetWrapper::offsets( ) const {
-  return set->offsets( );
+  dr_time SignalSetWrapper::earliest( const TimeCounter& tc ) const {
+    return set->earliest( tc );
+  }
 
-}
+  dr_time SignalSetWrapper::latest( const TimeCounter& tc ) const {
+    return set->latest( tc );
+  }
 
-void SignalSetWrapper::addOffset( long seg, dr_time time ) {
-  set->addOffset( seg, time );
-}
+  const std::map<long, dr_time>& SignalSetWrapper::offsets( ) const {
+    return set->offsets( );
 
-void SignalSetWrapper::clearOffsets( ) {
-  set->clearOffsets( );
-}
+  }
 
-std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> SignalSetWrapper::allsignals( ) const {
-  return set->allsignals( );
-}
+  void SignalSetWrapper::addOffset( long seg, dr_time time ) {
+    set->addOffset( seg, time );
+  }
 
-void SignalSetWrapper::clearMetas( ) {
-  set->clearMetas( );
-}
+  void SignalSetWrapper::clearOffsets( ) {
+    set->clearOffsets( );
+  }
 
-void SignalSetWrapper::setMetadataFrom( const SignalSet& target ) {
-  set->setMetadataFrom( target );
-}
+  std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> SignalSetWrapper::allsignals( ) const {
+    return set->allsignals( );
+  }
 
-void SignalSetWrapper::complete(){
-  set->complete();
+  void SignalSetWrapper::clearMetas( ) {
+    set->clearMetas( );
+  }
+
+  void SignalSetWrapper::setMetadataFrom( const SignalSet& target ) {
+    set->setMetadataFrom( target );
+  }
+
+  void SignalSetWrapper::complete( ) {
+    set->complete( );
+  }
 }

@@ -22,22 +22,22 @@
 #include <ctime>
 #include "Writer.h"
 
-class SignalData;
+namespace FormatConverter {
 
-class CsvWriter : public Writer {
-public:
-  CsvWriter( );
-  virtual ~CsvWriter( );
+  class CsvWriter : public Writer {
+  public:
+    CsvWriter();
+    virtual ~CsvWriter();
 
-  static const int MISSING_VALUE;
+    static const int MISSING_VALUE;
 
-protected:
-  std::vector<std::string> closeDataSet();
-  int drain( std::unique_ptr<SignalSet>& );
+  protected:
+    std::vector<std::string> closeDataSet();
+    int drain(std::unique_ptr<SignalSet>&);
 
-private:
-  CsvWriter( const CsvWriter& orig );
-};
-
+  private:
+    CsvWriter(const CsvWriter& orig);
+  };
+}
 #endif /* CSVWRITER_H */
 

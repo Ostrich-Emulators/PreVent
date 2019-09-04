@@ -15,110 +15,110 @@
 #include <locale>         // std::locale, std::time_get, std::use_facet
 #include <iomanip>
 
-using FormatConverter::TimeModifier;
-using FormatConverter::Format;
+namespace FormatConverter {
 
-Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ),
-quiet( false ), onefile( false ), local_time( false ), timemod( TimeModifier::passthru( ) ) {
-}
-
-Reader::Reader( const Reader& r ) : rdrname( "x" ), quiet( r.quiet ),
-onefile( r.onefile ), local_time( r.local_time ), timemod( r.timemod ) {
-}
-
-Reader::~Reader( ) {
-}
-
-std::string Reader::name( ) const {
-  return rdrname;
-}
-
-std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
-  switch ( fmt ) {
-    case FormatConverter::WFDB:
-      return std::unique_ptr<Reader>( new WfdbReader( ) );
-    case FormatConverter::DSZL:
-      return std::unique_ptr<Reader>( new ZlReader2( ) );
-    case FormatConverter::STPXML:
-      return std::unique_ptr<Reader>( new StpXmlReader( ) );
-    case FormatConverter::HDF5:
-      return std::unique_ptr<Reader>( new Hdf5Reader( ) );
-    case FormatConverter::CPCXML:
-      return std::unique_ptr<Reader>( new CpcXmlReader( ) );
-    case FormatConverter::STPJSON:
-      return std::unique_ptr<Reader>( new StpJsonReader( ) );
-    case FormatConverter::MEDI:
-      return std::unique_ptr<Reader>( new TdmsReader( ) );
-    default:
-      throw "reader not yet implemented";
+  Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ),
+  quiet( false ), onefile( false ), local_time( false ), timemod( TimeModifier::passthru( ) ) {
   }
-}
 
-int Reader::prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) {
-  std::string timezone = ( 0 == info->metadata( ).count( SignalData::TIMEZONE )
-      ? "UTC"
-      : info->metadata( ).at( SignalData::TIMEZONE ) );
-  info->reset( false );
-  info->setMeta( SignalData::TIMEZONE, timezone );
-  info->setMeta( "Source Reader", name( ) );
-  return 0;
-}
+  Reader::Reader( const Reader& r ) : rdrname( "x" ), quiet( r.quiet ),
+  onefile( r.onefile ), local_time( r.local_time ), timemod( r.timemod ) {
+  }
 
-void Reader::finish( ) {
-  ss.clear( );
-}
+  Reader::~Reader( ) {
+  }
 
-void Reader::setQuiet( bool q ) {
-  quiet = q;
-}
+  std::string Reader::name( ) const {
+    return rdrname;
+  }
 
-void Reader::setNonbreaking( bool nb ) {
-  onefile = nb;
-}
+  std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
+    switch ( fmt ) {
+      case FormatConverter::WFDB:
+        return std::unique_ptr<Reader>( new WfdbReader( ) );
+      case FormatConverter::DSZL:
+        return std::unique_ptr<Reader>( new ZlReader2( ) );
+      case FormatConverter::STPXML:
+        return std::unique_ptr<Reader>( new StpXmlReader( ) );
+      case FormatConverter::HDF5:
+        return std::unique_ptr<Reader>( new Hdf5Reader( ) );
+      case FormatConverter::CPCXML:
+        return std::unique_ptr<Reader>( new CpcXmlReader( ) );
+      case FormatConverter::STPJSON:
+        return std::unique_ptr<Reader>( new StpJsonReader( ) );
+      case FormatConverter::MEDI:
+        return std::unique_ptr<Reader>( new TdmsReader( ) );
+      default:
+        throw "reader not yet implemented";
+    }
+  }
 
-bool Reader::nonbreaking( ) const {
-  return onefile;
-}
+  int Reader::prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) {
+    std::string timezone = ( 0 == info->metadata( ).count( SignalData::TIMEZONE )
+            ? "UTC"
+            : info->metadata( ).at( SignalData::TIMEZONE ) );
+    info->reset( false );
+    info->setMeta( SignalData::TIMEZONE, timezone );
+    info->setMeta( "Source Reader", name( ) );
+    return 0;
+  }
 
-void Reader::localizeTime( bool local ) {
-  local_time = local;
-}
+  void Reader::finish( ) {
+    ss.clear( );
+  }
 
-bool Reader::localizingTime( ) const {
-  return local_time;
-}
+  void Reader::setQuiet( bool q ) {
+    quiet = q;
+  }
 
-std::ostream& Reader::output( ) const {
-  return ( quiet ? ( std::ostream& ) ss : std::cout );
-}
+  void Reader::setNonbreaking( bool nb ) {
+    onefile = nb;
+  }
 
-bool Reader::getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) {
-  return false;
-}
+  bool Reader::nonbreaking( ) const {
+    return onefile;
+  }
 
-void Reader::splice( const std::string& inputfile, const std::string& path,
-    dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
-  std::cerr << "this reader does not support splicing" << std::endl;
-}
+  void Reader::localizeTime( bool local ) {
+    local_time = local;
+  }
 
-bool Reader::strptime2( const std::string& input, const std::string& format,
-    std::tm * tm ) {
-  std::istringstream iss( input );
-  iss >> std::get_time( tm, format.c_str( ) );
-  if ( iss.fail( ) ) {
+  bool Reader::localizingTime( ) const {
+    return local_time;
+  }
+
+  std::ostream& Reader::output( ) const {
+    return ( quiet ? ( std::ostream& ) ss : std::cout );
+  }
+
+  bool Reader::getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) {
     return false;
   }
-  return true;
-}
 
-void Reader::timeModifier( const TimeModifier& mod ) {
-  timemod = mod;
-}
+  void Reader::splice( const std::string& inputfile, const std::string& path,
+          dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
+    std::cerr << "this reader does not support splicing" << std::endl;
+  }
 
-const TimeModifier& Reader::timeModifier() const {
-  return timemod;
-}
+  bool Reader::strptime2( const std::string& input, const std::string& format,
+          std::tm * tm ) {
+    std::istringstream iss( input );
+    iss >> std::get_time( tm, format.c_str( ) );
+    if ( iss.fail( ) ) {
+      return false;
+    }
+    return true;
+  }
 
-dr_time Reader::modtime( const dr_time& time ) {
-  return timemod.convert( time );
+  void Reader::timeModifier( const TimeModifier& mod ) {
+    timemod = mod;
+  }
+
+  const TimeModifier& Reader::timeModifier( ) const {
+    return timemod;
+  }
+
+  dr_time Reader::modtime( const dr_time& time ) {
+    return timemod.convert( time );
+  }
 }

@@ -15,27 +15,28 @@
 #define OFFSETSIGNALSET_H
 
 #include "SignalSetWrapper.h"
+namespace FormatConverter {
 
-class OffsetTimeSignalSet : public SignalSetWrapper {
-public:
-  static const std::string COLLECTION_OFFSET;
+  class OffsetTimeSignalSet : public SignalSetWrapper {
+  public:
+    static const std::string COLLECTION_OFFSET;
 
-  OffsetTimeSignalSet( long offset_ms = 0 );
-  OffsetTimeSignalSet( const std::unique_ptr<SignalSet>& w, long offset_ms = 0 );
-  OffsetTimeSignalSet( SignalSet * w, long offset_ms = 0 );
-  ~OffsetTimeSignalSet( );
+    OffsetTimeSignalSet(long offset_ms = 0);
+    OffsetTimeSignalSet(const std::unique_ptr<SignalSet>& w, long offset_ms = 0);
+    OffsetTimeSignalSet(SignalSet * w, long offset_ms = 0);
+    ~OffsetTimeSignalSet();
 
-  virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
-  virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) override;
-  virtual void reset( bool signalDataOnly = false ) override;
-  virtual void complete() override;
+    virtual std::unique_ptr<SignalData>& addVital(const std::string& name, bool * added = nullptr) override;
+    virtual std::unique_ptr<SignalData>& addWave(const std::string& name, bool * added = nullptr) override;
+    virtual void reset(bool signalDataOnly = false) override;
+    virtual void complete() override;
 
-protected:
-  void offset( long offset_ms );
+  protected:
+    void offset(long offset_ms);
 
-private:
-  long offset_ms;
-};
-
+  private:
+    long offset_ms;
+  };
+}
 #endif /* OFFSETSIGNALSET_H */
 

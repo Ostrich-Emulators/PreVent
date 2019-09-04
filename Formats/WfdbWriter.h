@@ -20,31 +20,31 @@
 #include <memory>
 #include <wfdb/wfdb.h>
 
-class SignalData;
+namespace FormatConverter {
+  class SignalData;
 
-class WfdbWriter : public Writer {
-public:
-  WfdbWriter( );
-  virtual ~WfdbWriter( );
+  class WfdbWriter : public Writer {
+  public:
+    WfdbWriter();
+    virtual ~WfdbWriter();
 
-protected:
-  int initDataSet();
-  std::vector<std::string> closeDataSet( );
-  int drain( std::unique_ptr<SignalSet>& );
+  protected:
+    int initDataSet();
+    std::vector<std::string> closeDataSet();
+    int drain(std::unique_ptr<SignalSet>&);
 
-private:
-  WfdbWriter( const WfdbWriter& orig );
+  private:
+    WfdbWriter(const WfdbWriter& orig);
 
-  int write( double freq, std::vector<std::unique_ptr<SignalData>>&data,
-      const std::string& filestart );
-  void syncAndWrite( double freq, std::vector<std::unique_ptr<SignalData>>&data );
+    int write(double freq, std::vector<std::unique_ptr<SignalData>>&data,
+            const std::string& filestart);
+    void syncAndWrite(double freq, std::vector<std::unique_ptr<SignalData>>&data);
 
-  std::string fileloc;
-  std::string currdir;
-  std::vector<std::string> files;
-  std::map<std::string, WFDB_Siginfo> sigmap;
-};
-
-
+    std::string fileloc;
+    std::string currdir;
+    std::vector<std::string> files;
+    std::map<std::string, WFDB_Siginfo> sigmap;
+  };
+}
 #endif /* WFDBWRITER_H */
 

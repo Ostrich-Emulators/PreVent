@@ -19,26 +19,26 @@
 #include <wfdb/wfdb.h>
 
 #include "dr_time.h"
+namespace FormatConverter {
 
-class WfdbReader : public Reader {
-public:
-	WfdbReader( );
+  class WfdbReader : public Reader {
+  public:
+    WfdbReader();
 
-	virtual ~WfdbReader( );
+    virtual ~WfdbReader();
 
-	dr_time convert( const char * timestr );
+    dr_time convert(const char * timestr);
 
-protected:
-	int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
-	void finish( ) override;
+  protected:
+    int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
+    void finish() override;
 
-	ReadResult fill( std::unique_ptr<SignalSet>& data, const ReadResult& lastfill ) override;
+    ReadResult fill(std::unique_ptr<SignalSet>& data, const ReadResult& lastfill) override;
 
-private:
-	int sigcount;
-	WFDB_Siginfo * siginfo;
-
-};
-
+  private:
+    int sigcount;
+    WFDB_Siginfo * siginfo;
+  };
+}
 #endif /* WFDBREADER_H */
 
