@@ -3,6 +3,7 @@ ClippingSignalSet.cpp
 H5Cat.cpp
 main.cpp
 OutputSignalData.cpp
+Calc.cpp
 )
 
 target_link_libraries(preventtools formats)
