@@ -18,19 +18,21 @@
 #include <iostream>
 #include <string>
 
-/**
- * A SignalData that just prints to the ostream whatever data is added to it t
- */
-class OutputSignalData : public BasicSignalData {
-public:
-	OutputSignalData( std::ostream& out );
-	virtual ~OutputSignalData( );
+namespace FormatConverter {
 
-	virtual void add( const FormatConverter::DataRow& row ) override;
+  /**
+   * A SignalData that just prints to the ostream whatever data is added to it t
+   */
+  class OutputSignalData : public BasicSignalData {
+  public:
+    OutputSignalData(std::ostream& out);
+    virtual ~OutputSignalData();
 
-private:
-	std::ostream& output;
-};
+    virtual void add(const FormatConverter::DataRow& row) override;
+
+  private:
+    std::ostream& output;
+  };
+}
 
 #endif /* OUTPUTSIGNALDATA_H */
-

@@ -15,39 +15,40 @@
 #define CLIPPINGSIGNALSET_H
 
 #include "SignalSetWrapper.h"
+namespace FormatConverter {
 
-class ClippingSignalSet : public SignalSetWrapper {
-public:
-  ClippingSignalSet( dr_time * starttime = nullptr, dr_time * endtime = nullptr );
-  ClippingSignalSet( const std::unique_ptr<SignalSet>& w, dr_time * starttime = nullptr, dr_time * endtime = nullptr );
-  ClippingSignalSet( SignalSet * w, dr_time * starttime = nullptr, dr_time * endtime = nullptr );
-  ~ClippingSignalSet( );
+  class ClippingSignalSet : public SignalSetWrapper {
+  public:
+    ClippingSignalSet(dr_time * starttime = nullptr, dr_time * endtime = nullptr);
+    ClippingSignalSet(const std::unique_ptr<SignalSet>& w, dr_time * starttime = nullptr, dr_time * endtime = nullptr);
+    ClippingSignalSet(SignalSet * w, dr_time * starttime = nullptr, dr_time * endtime = nullptr);
+    ~ClippingSignalSet();
 
-  /**
-   * Gets a ClippingSignalSet that only allows data points for the given duration (starting with the first data point)
-   * @param for_ms the number of ms to allow
-   * @return the set
-   */
-  static std::unique_ptr<ClippingSignalSet> duration( const dr_time& for_ms, dr_time * starttime = nullptr );
+    /**
+     * Gets a ClippingSignalSet that only allows data points for the given duration (starting with the first data point)
+     * @param for_ms the number of ms to allow
+     * @return the set
+     */
+    static std::unique_ptr<ClippingSignalSet> duration(const dr_time& for_ms, dr_time * starttime = nullptr);
 
-  virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
-  virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) override;
+    virtual std::unique_ptr<SignalData>& addVital(const std::string& name, bool * added = nullptr) override;
+    virtual std::unique_ptr<SignalData>& addWave(const std::string& name, bool * added = nullptr) override;
 
-  bool timeok( const dr_time& time );
+    bool timeok(const dr_time& time);
 
-private:
-  void init( dr_time * starttime, dr_time * endtime );
-  void initForDuration( const dr_time& duration_ms );
+  private:
+    void init(dr_time * starttime, dr_time * endtime);
+    void initForDuration(const dr_time& duration_ms);
 
-  dr_time start;
-  dr_time end;
-  bool checkstart;
-  bool checkend;
+    dr_time start;
+    dr_time end;
+    bool checkstart;
+    bool checkend;
 
-  dr_time duration_ms;
-  bool havefirsttime;
-  bool checkduration;
-};
-
+    dr_time duration_ms;
+    bool havefirsttime;
+    bool checkduration;
+  };
+}
 #endif /* CLIPPINGSIGNALSET_H */
 

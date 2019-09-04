@@ -38,7 +38,7 @@
 #include "OutputSignalData.h"
 #include "Calc.h"
 
-using FormatConverter::TimeParser;
+using namespace FormatConverter;
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl

@@ -14,6 +14,7 @@
 #ifndef Calc_H
 #define Calc_H
 
-void Calculate(std::string filename, std::string operation, int window, std::string path);
-
+namespace FormatConverter {
+  void Calculate(std::string filename, std::string operation, int window, std::string path);
+}
 #endif

@@ -15,21 +15,22 @@
 #define ATTRIBUTEUTILS_H
 
 #include <H5Cpp.h>
+namespace FormatConverter {
 
-class AttributeUtils {
-public:
-	virtual ~AttributeUtils();
-	
-	static void printAttributes( H5::H5File& file, const std::string& path = "", bool recursive = true );
-	static void setAttribute( H5::H5File& file, const std::string& path, const std::string& attr,	const std::string& val );
-	static void setAttribute( H5::H5File& file, const std::string& path, const std::string& attr, int val );
-	static void setAttribute( H5::H5File& file, const std::string& path, const std::string& attr,	double val );
+  class AttributeUtils {
+  public:
+    virtual ~AttributeUtils();
 
-private:
-	AttributeUtils();
-	static void iprintAttributes( H5::H5Object& location );
-};
+    static void printAttributes(H5::H5File& file, const std::string& path = "", bool recursive = true);
+    static void setAttribute(H5::H5File& file, const std::string& path, const std::string& attr, const std::string& val);
+    static void setAttribute(H5::H5File& file, const std::string& path, const std::string& attr, int val);
+    static void setAttribute(H5::H5File& file, const std::string& path, const std::string& attr, double val);
 
+  private:
+    AttributeUtils();
+    static void iprintAttributes(H5::H5Object& location);
+  };
+}
 
 #endif /* ATTRIBUTEUTILS_H */
 
