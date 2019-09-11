@@ -25,7 +25,7 @@
 #include "Options.h"
 #include "TimeParser.h"
 
-#include "build.h"
+#include "config.h"
 
 using namespace FormatConverter;
 

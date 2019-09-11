@@ -2,6 +2,9 @@
 # the hdf5c++ wrapper has some incompatibility with cmake, I think
 #set(CMAKE_CXX_COMPILER ${HDF5_CXX_COMPILER_EXECUTABLE})
 
+set(LIBVERSION 4.1.3)
+project(formatconverter VERSION ${LIBVERSION} LANGUAGES CXX)
+
 # add the command to generate the source code
 execute_process (
 	OUTPUT_VARIABLE GIT_HASH
@@ -24,8 +27,8 @@ execute_process (
 MESSAGE( STATUS "the git hash: ${GIT_HASH}" )
 
 configure_file (
-  "build.h.in"
-  "generated/build.h"
+  "config.h.in"
+  "generated/config.h"
 )
 
 add_library(formats SHARED AnonymizingSignalSet.cpp
@@ -62,17 +65,20 @@ ZlReader2.cpp
 ZlReader.cpp
 TimeModifier.cpp
 TimeParser.cpp
-generated/build.h
+generated/config.h
 )
+
+set(include_dest include/formatconverter-${LIBVERSION})
+set(lib_dest lib/formatconverter-${LIBVERSION})
 
 target_compile_options(formats PRIVATE -Wall)
 
 target_include_directories(formats
     PUBLIC
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:${include_dest}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     PRIVATE
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:${include_dest}>
         $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS} ${MATIO_INCLUDES} ${WFDB_INCLUDES}>
 )
 
@@ -88,13 +94,12 @@ target_link_libraries(formats
 	"-L/usr/lib/x86_64-linux-gnu/hdf5/serial/lib"
 )
 
-install (TARGETS formats DESTINATION lib)
+install (TARGETS formats DESTINATION ${lib_dest})
 install (FILES AnonymizingSignalSet.h
 Base64.h
 BasicSignalData.h
 BasicSignalSet.h
-generated/build.h
-config.h
+generated/config.h
 ConversionListener.h
 CpcXmlReader.h
 CsvWriter.h
@@ -126,4 +131,4 @@ Writer.h
 XmlReaderBase.h
 ZlReader2.h
 ZlReader.h
-DESTINATION include )
+DESTINATION ${include_dest} )

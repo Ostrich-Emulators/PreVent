@@ -10,7 +10,7 @@
 
 #include <limits>
 #include <iostream>
-#include "build.h"
+#include "config.h"
 
 namespace FormatConverter {
 

@@ -7,3 +7,4 @@ install_manifest.txt
 nbproject
 *.dll*
 *.exe
+/Formats/generated/
