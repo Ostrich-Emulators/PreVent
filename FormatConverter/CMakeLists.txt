@@ -1,13 +1,11 @@
 add_executable(formatconverter main.cpp Db.cpp)
 
-target_compile_options(formatconverter PRIVATE -Wall -O0 -g)
+target_compile_options(formatconverter PRIVATE -Wall)
 
 target_link_libraries(formatconverter
 	formats
 	${SQLITE_LIBRARIES}
 )
-
-target_compile_options(formatconverter PRIVATE -Wall -O0)
 
 target_include_directories(formatconverter
     PUBLIC
@@ -18,5 +16,5 @@ target_include_directories(formatconverter
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../Formats ${CMAKE_CURRENT_SOURCE_DIR}/../Formats/generated>
 )
 
-install (PROGRAMS formatconverter DESTINATION bin)
+install (TARGETS formatconverter DESTINATION bin)
 

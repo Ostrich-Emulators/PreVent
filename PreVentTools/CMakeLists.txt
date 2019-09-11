@@ -19,5 +19,5 @@ target_include_directories(preventtools
         $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS}>
 )
 
-install (PROGRAMS preventtools DESTINATION bin)
+install (TARGETS preventtools DESTINATION bin)
 
