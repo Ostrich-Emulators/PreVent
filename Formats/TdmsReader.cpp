@@ -260,9 +260,7 @@ namespace FormatConverter {
       initSignal( o, firstrun );
     }
 
-    if ( !firstrun ) {
-      handleLateStarters( );
-    }
+    handleLateStarters( );
 
     while ( last_segment_read < tdmsfile->segments( ) ) {
       tdmsfile->loadSegment( last_segment_read, this );
