@@ -525,7 +525,6 @@ namespace FormatConverter {
 
   void Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
           dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
-
     size_t typeo = path.find( "VitalSigns" );
 
     signal->setWave( std::string::npos == typeo );
@@ -644,6 +643,7 @@ namespace FormatConverter {
   }
 
   hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, dr_time * found ) {
+
     hsize_t DIMS[2] = {};
     H5::DataSpace dsspace = haystack.getSpace( );
     dsspace.getSimpleExtentDims( DIMS );
@@ -670,7 +670,13 @@ namespace FormatConverter {
       haystack.read( &checktime, haystack.getDataType( ), searchspace, dsspace );
 
       if ( checktime > needle ) {
-        endpos = checkpos - 1;
+        if ( checkpos > 0 ) {
+          endpos = checkpos - 1;
+        }
+        else {
+          endpos = 0;
+          checktime = 0;
+        }
       }
       else if ( checktime < needle ) {
         startpos = checkpos + 1;
