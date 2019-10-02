@@ -54,7 +54,9 @@ namespace FormatConverter {
       //    memcpy( &vals[0], datablock, datatype.length * num_vals );
     }
 
-    //output( ) << channelname << " new values: " << num_vals << "/" << vals.size( ) << std::endl;
+    //if ( std::string::npos != channelname.find( "HR" ) ) {
+    //  output( ) << channelname << " new values: " << num_vals << "/" << vals.size( ) << std::endl;
+    //}
     SignalSaver& rec = signalsavers.at( channelname );
 
     // get our SignalData for this channel
@@ -92,7 +94,6 @@ namespace FormatConverter {
     // we pretty much always get a datatype of float, even though
     // not all the data IS float, by the way
 
-    // if we rolled over to a new day, stop entering data to yesterday
     double intpart;
     while ( rec.leftovers.size( ) >= freq ) {
       std::vector<double> doubles;
@@ -104,9 +105,7 @@ namespace FormatConverter {
         doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
 
         if ( nan ) {
-          // keep nan count because if we have a whole DataRow
-          // worth of nans we don't want write anything
-          rec.nancount++;
+          // TDMS files write out missing values to keep all the times contiguous
         }
         else if ( !rec.seenfloat ) {
           double fraction = std::modf( d, &intpart );
@@ -116,10 +115,7 @@ namespace FormatConverter {
         }
       }
 
-      if ( doubles.size( ) != rec.nancount ) {
-        writeSignalRow( doubles, rec.seenfloat, signal, rec.lasttime );
-      }
-      rec.nancount = 0;
+      writeSignalRow( doubles, rec.seenfloat, signal, rec.lasttime );
 
       // check for roll-over
       rec.waiting = ( isRollover( rec.lasttime, rec.lasttime + timeinc ) );
@@ -342,12 +338,12 @@ namespace FormatConverter {
   }
 
   SignalSaver::SignalSaver( const std::string& label, bool wave )
-  : seenfloat( false ), nancount( 0 ), waiting( false ), iswave( wave ),
+  : seenfloat( false ), waiting( false ), iswave( wave ),
   name( label ), lasttime( 0 ) {
   }
 
   SignalSaver::SignalSaver( const SignalSaver& orig )
-  : seenfloat( orig.seenfloat ), nancount( orig.nancount ), waiting( orig.waiting ),
+  : seenfloat( orig.seenfloat ), waiting( orig.waiting ),
   iswave( orig.iswave ), name( orig.name ), lasttime( orig.lasttime ),
   leftovers( orig.leftovers ) {
   }
@@ -355,7 +351,6 @@ namespace FormatConverter {
   SignalSaver& SignalSaver::operator=(const SignalSaver& orig ) {
     if ( &orig != this ) {
       seenfloat = orig.seenfloat;
-      nancount = orig.nancount;
       waiting = orig.waiting;
       iswave = orig.iswave;
       name = orig.name;

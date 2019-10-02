@@ -28,7 +28,6 @@ namespace FormatConverter {
   class SignalSaver {
   public:
     bool seenfloat;
-    size_t nancount;
     bool waiting;
     bool iswave;
     std::string name;
