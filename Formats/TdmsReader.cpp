@@ -130,13 +130,13 @@ namespace FormatConverter {
 
   int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
     output( ) << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
-    //TDMS::log::debug.debug_mode = true;
+    TDMS::log::debug.debug_mode = true;
     int rslt = Reader::prepare( recordset, info );
     if ( 0 != rslt ) {
       return rslt;
     }
 
-    tdmsfile.reset( new TDMS::file( recordset ) );
+    tdmsfile.reset( new TDMS::tdmsfile( recordset ) );
     last_segment_read = 0;
     return 0;
   }
@@ -158,7 +158,7 @@ namespace FormatConverter {
     }
   }
 
-  void TdmsReader::initSignal( TDMS::object * channel, bool firstrun ) {
+  void TdmsReader::initSignal( const std::unique_ptr<TDMS::channel>& channel, bool firstrun ) {
     const std::string starter( "/Intellivue'/'" );
     if ( channel->get_path( ).size( ) < starter.size( ) ) {
       return;
@@ -252,14 +252,16 @@ namespace FormatConverter {
     filler = info.get( );
     bool firstrun = ( ReadResult::FIRST_READ == lastfill );
 
-    for ( TDMS::object* o : *tdmsfile ) {
+    for ( const auto& o : *tdmsfile ) {
       initSignal( o, firstrun );
     }
 
     handleLateStarters( );
 
     while ( last_segment_read < tdmsfile->segments( ) ) {
-      tdmsfile->loadSegment( last_segment_read, this );
+      std::unique_ptr<TDMS::listener> ear(this);
+      tdmsfile->loadSegment( last_segment_read, ear );
+      ear.release();
       // all the data saving gets done by the listener, not here
 
       // if we have some signals, and all are "waiting",
