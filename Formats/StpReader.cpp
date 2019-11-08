@@ -1,0 +1,249 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/* 
+ * File:   CacheFileHdf5Writer.cpp
+ * Author: ryan
+ * 
+ * Created on August 26, 2016, 12:55 PM
+ * 
+ * Almost all the zlib code was taken from http://www.zlib.net/zlib_how.html
+ */
+
+#include "StpReader.h"
+#include "SignalData.h"
+#include "DataRow.h"
+#include "Hdf5Writer.h"
+#include "StreamChunkReader.h"
+
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <sstream>
+#include <sys/stat.h>
+#include <experimental/filesystem>
+#include "config.h"
+#include "CircularBuffer.h"
+
+#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
+#include <fcntl.h>
+#include <io.h>
+#define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
+#else
+#define SET_BINARY_MODE(file)
+#endif
+
+namespace FormatConverter{
+
+  StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ) {
+  }
+
+  StpReader::StpReader( const std::string& name ) : Reader( name ), firstread( true ), work( 1024 * 1024 ) {
+  }
+
+  StpReader::StpReader( const StpReader& orig ) : Reader( orig ), firstread( orig.firstread ), work( orig.work.capacity( ) ) {
+  }
+
+  StpReader::~StpReader( ) {
+  }
+
+  void StpReader::finish( ) {
+    if ( filestream ) {
+      delete filestream;
+    }
+  }
+
+  int StpReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) {
+    int rslt = Reader::prepare( filename, data );
+    if ( rslt != 0 ) {
+      return rslt;
+    }
+
+    // STP files are a concatenation of zlib-compressed segments, so we need to
+    // know when we're *really* done reading. Otherwise, the decoder will say
+    // it's at the end of the file once the first segment is fully read
+    struct stat filestat;
+    if ( stat( filename.c_str( ), &filestat ) == -1 ) {
+      perror( "stat failed" );
+      return -1;
+    }
+
+    filestream = new zstr::ifstream( filename, std::ios::binary );
+    decodebuffer.reserve( 1024 * 16 );
+    return 0;
+  }
+
+  ReadResult StpReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
+
+    filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
+    std::streamsize cnt = filestream->gcount( );
+    while ( 0 != cnt ) {
+      // put everything on our buffer, and we'll read only full segments from there
+      for ( int i = 0; i < cnt; i++ ) {
+        work.push( decodebuffer[i] );
+      }
+
+      ReadResult rslt = processOneChunk( info );
+      while ( ReadResult::NORMAL == rslt ) {
+        rslt = processOneChunk( info );
+      }
+
+      if ( ReadResult::NORMAL != rslt ) {
+        // something happened so rewind our to our mark
+        work.rewindToMark( );
+
+        // ...but maybe we just have an incomplete segment
+        // so reading more data will fix our problem
+        if ( ReadResult::READER_DEPENDENT != rslt ) {
+          // or not, so let the caller know
+          return rslt;
+        }
+      }
+
+      filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
+      cnt = filestream->gcount( );
+    }
+
+    return ReadResult::END_OF_FILE;
+  }
+
+  ReadResult StpReader::processOneChunk( std::unique_ptr<SignalSet>& info ) {
+    // NOTE: we don't know if our working data has a full segment in it,
+    // so mark where we started reading, in case we need to rewind
+    work.mark( );
+
+    // make sure we're looking at a header block
+    output( ) << "processing one chunk" << std::endl;
+    if ( !( work.read( ) == 0x7E && work.read( 6 ) == 0x7E ) ) {
+      // we're not looking at a header block, so something's wrong
+      return ReadResult::ERROR;
+    }
+
+    try {
+      work.skip( 18 );
+      dr_time timer = readTime( );
+      if ( isRollover( currentTime, timer ) ) {
+        return ReadResult::END_OF_DAY;
+      }
+      currentTime = timer;
+
+      work.skip( 2 );
+      info->setMeta( "Patient Name", readString( 32 ) );
+      work.skip( 2 );
+      // offset is number of bytes from byte 64, but we want to track bytes
+      // since we started reading (set our mark)
+      size_t waveoffset = readInt16( ) + 64;
+      work.skip( 4 ); // don't know what these mean
+      work.skip( 2 ); // don't know what these mean, either
+
+      if ( 0x013A == readInt16( ) ) {
+        readHrBlock( info );
+        if ( 0x013A != readInt16( ) ) {
+          // we expected a "closing" 0x013A, so something is wrong
+          return ReadResult::ERROR;
+        }
+      }
+
+      while ( work.readSinceMark( ) < waveoffset - 6 ) {
+        auto data = work.popvec( 66 );
+        int blocktype = readInt8( );
+        int blockfmt = readInt8( );
+        output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << blocktype << " " << blockfmt << std::endl;
+      }
+      work.skip( 6 );
+      output( ) << "first wave id: " << readInt8( ) << "; vals:" << readInt8( ) << std::endl;
+
+      return ReadResult::NORMAL;
+    }
+    catch ( const std::runtime_error & err ) {
+      work.rewindToMark( );
+      // hopefully, we just need a little more data to read a full segment
+      return ReadResult::READER_DEPENDENT;
+    }
+  }
+
+  int StpReader::readInt16( ) {
+    unsigned char b1 = work.pop( );
+    unsigned char b2 = work.pop( );
+    return ( b1 << 8 | b2 );
+  }
+
+  int StpReader::readInt8( ) {
+    return work.pop( );
+  }
+
+  std::string StpReader::readString( size_t length ) {
+    std::vector<char> chars;
+    chars.reserve( length );
+    auto data = work.popvec( length );
+    for ( size_t i = 0; i < data.size( ); i++ ) {
+      chars.push_back( (char) data[i] );
+    }
+    return std::string( chars.begin( ), chars.end( ) );
+  }
+
+  dr_time StpReader::readTime( ) {
+    // time is in little-endian format
+    auto shorts = work.popvec( 4 );
+    time_t time = ( ( shorts[1] << 24 ) | ( shorts[0] << 16 ) | ( shorts[3] << 8 ) | shorts[2] );
+    return time * 1000;
+  }
+
+  bool StpReader::waveIsOk( const std::string& wavedata ) {
+    // if all the values are -32768 or -32753, this isn't a valid reading
+    std::stringstream stream( wavedata );
+    for ( std::string each; std::getline( stream, each, ',' ); ) {
+      if ( !( "-32768" == each || "-32753" == each ) ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void StpReader::readHrBlock( std::unique_ptr<SignalSet>& info ) {
+    work.skip( 2 );
+    std::map<std::string, int> hrmap = {
+      {"HR", readInt16( ) },
+      {"PVC", readInt16( ) },
+    };
+
+    for ( auto& en : hrmap ) {
+      if ( en.second != 0x8000 ) {
+        auto& hrsig = info->addVital( en.first );
+        hrsig->add( DataRow( currentTime, std::to_string( en.second ) ) );
+      }
+    }
+
+    work.skip( 4 );
+    std::map<std::string, int> stmap = {
+      {"ST-I", readInt8( ) },
+      {"ST-II", readInt8( ) },
+      {"ST-III", readInt8( ) },
+      {"ST-V", readInt8( ) },
+    };
+    for ( auto& en : stmap ) {
+      if ( en.second != 0x80 ) {
+        auto& sig = info->addVital( en.first );
+        sig->add( DataRow( currentTime, std::to_string( en.second ) ) );
+      }
+    }
+
+    work.skip( 5 );
+    std::map<std::string, int> avmap = {
+      {"AV1-R", readInt8( ) },
+      {"AV1-L", readInt8( ) },
+      {"AV1-F", readInt8( ) },
+    };
+    for ( auto& en : avmap ) {
+      if ( en.second != 0x80 ) {
+        auto& sig = info->addVital( en.first );
+        sig->add( DataRow( currentTime, std::to_string( en.second ) ) );
+      }
+    }
+
+    work.skip( 40 );
+  }
+}

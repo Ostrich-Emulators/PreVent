@@ -22,7 +22,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <sys/stat.h>
 #include <experimental/filesystem>
 #include "config.h"
 #include "json.hpp"

@@ -8,6 +8,7 @@
 #include "StpJsonReader.h"
 #include "CpcXmlReader.h"
 #include "TdmsReader.h"
+#include "StpReader.h"
 
 #include <iostream>       // std::cout, std::ios
 #include <sstream>        // std::istringstream
@@ -38,6 +39,8 @@ namespace FormatConverter {
         return std::unique_ptr<Reader>( new WfdbReader( ) );
       case FormatConverter::DSZL:
         return std::unique_ptr<Reader>( new ZlReader2( ) );
+      case FormatConverter::STP:
+        return std::unique_ptr<Reader>( new StpReader( ) );
       case FormatConverter::STPXML:
         return std::unique_ptr<Reader>( new StpXmlReader( ) );
       case FormatConverter::HDF5:
@@ -94,6 +97,27 @@ namespace FormatConverter {
   bool Reader::getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) {
     return false;
   }
+
+
+  bool Reader::isRollover( const dr_time& then, const dr_time& now ) const {
+    if ( nonbreaking( ) ) {
+      return false;
+    }
+
+    if ( 0 != then ) {
+      time_t modnow = now / 1000;
+      time_t modthen = then / 1000;
+
+      const int cdoy = ( localizingTime( ) ? localtime( &modnow ) : gmtime( &modnow ) )->tm_yday;
+      const int pdoy = ( localizingTime( ) ? localtime( &modthen ) : gmtime( &modthen ) )->tm_yday;
+      if ( cdoy != pdoy ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
 
   void Reader::splice( const std::string& inputfile, const std::string& path,
           dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {

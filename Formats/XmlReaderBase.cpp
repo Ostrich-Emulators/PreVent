@@ -205,25 +205,6 @@ namespace FormatConverter {
     return ReadResult::END_OF_FILE;
   }
 
-  bool XmlReaderBase::isRollover( const dr_time& then, const dr_time& now ) const {
-    if ( nonbreaking( ) ) {
-      return false;
-    }
-
-    if ( 0 != then ) {
-      time_t modnow = now / 1000;
-      time_t modthen = then / 1000;
-
-      const int cdoy = ( localizingTime( ) ? localtime( &modnow ) : gmtime( &modnow ) )->tm_yday;
-      const int pdoy = ( localizingTime( ) ? localtime( &modthen ) : gmtime( &modthen ) )->tm_yday;
-      if ( cdoy != pdoy ) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   dr_time XmlReaderBase::time( const std::string& timer, bool valIsLocal, bool * ok ) {
     if ( "" == timer ) {
       // uh oh...no time, so just return a nonsense number (the biggest we can)

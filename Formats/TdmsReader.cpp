@@ -22,25 +22,6 @@ namespace FormatConverter {
 
   }
 
-  bool TdmsReader::isRollover( const dr_time& then, const dr_time& now ) const {
-    if ( nonbreaking( ) ) {
-      return false;
-    }
-
-    if ( 0 != then ) {
-      time_t modnow = now / 1000;
-      time_t modthen = then / 1000;
-
-      const int cdoy = ( localizingTime( ) ? localtime( &modnow ) : gmtime( &modnow ) )->tm_yday;
-      const int pdoy = ( localizingTime( ) ? localtime( &modthen ) : gmtime( &modthen ) )->tm_yday;
-      if ( cdoy != pdoy ) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   void TdmsReader::data( const std::string& channelname, const unsigned char* datablock, TDMS::data_type_t datatype, size_t num_vals ) {
     std::vector<double> vals;
     if ( nullptr != datablock ) {

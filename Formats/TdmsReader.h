@@ -68,7 +68,6 @@ namespace FormatConverter {
 		std::map<std::string, SignalSaver> signalsavers;
 		size_t last_segment_read;
 
-		bool isRollover( const dr_time& now, const dr_time& then ) const;
 		bool writeSignalRow( std::vector<double>& doubles,
 				const bool seenFloat, const std::unique_ptr<SignalData>& signal, dr_time time );
 

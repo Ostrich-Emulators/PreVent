@@ -5,8 +5,9 @@
  */
 
 #include "Formats.h"
-
+#include <algorithm>
 #include <string>
+
 namespace FormatConverter{
 
   Formats::~Formats( ) {
@@ -24,6 +25,9 @@ namespace FormatConverter{
     }
     if ( "hdf5" == fmt ) {
       return HDF5;
+    }
+    if ( "stp" == fmt ) {
+      return STP;
     }
     if ( "stpxml" == fmt ) {
       return STPXML;
@@ -57,6 +61,8 @@ namespace FormatConverter{
     int idx = filename.find_last_of( '.' );
     if ( idx > 0 ) {
       std::string suffix = filename.substr( idx + 1 );
+      std::transform( suffix.begin( ), suffix.end( ), suffix.begin( ), ::tolower );
+
       if ( "mat" == suffix ) {
         return Format::MAT5;
       }
@@ -71,6 +77,9 @@ namespace FormatConverter{
       }
       else if ( "hea" == suffix ) {
         return Format::WFDB;
+      }
+      else if ( "stp" == suffix ) {
+        return Format::STP;
       }
       else if ( "csv" == suffix ) {
         return Format::CSV;
