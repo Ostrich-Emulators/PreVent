@@ -82,7 +82,7 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::VENT = BlockConfig::vital( "Vent Rate", "BrMin" );
   const StpReader::BlockConfig StpReader::IN_HLD = BlockConfig::div10( "IN_HLD", "Sec", 2, false );
   const StpReader::BlockConfig StpReader::PRS_SUP = BlockConfig::vital( "PRS-SUP", "cmH2O" );
-  const StpReader::BlockConfig StpReader::INSP_TM = BlockConfig::div10( "INSP-TM", "Sec", 2, false ); // FIXME: this is actually div 100!
+  const StpReader::BlockConfig StpReader::INSP_TM = BlockConfig::div100( "INSP-TM", "Sec", 2, false );
   const StpReader::BlockConfig StpReader::INSP_PC = BlockConfig::vital( "INSP-PC", "%" );
   const StpReader::BlockConfig StpReader::I_E = BlockConfig::div10( "I:E", "", 2, false );
   const StpReader::BlockConfig StpReader::SET_PCP = BlockConfig::vital( "SET-PCP", "cmH2O" );
@@ -483,7 +483,7 @@ namespace FormatConverter{
             }
 
             if ( cfg.divBy10 ) {
-              sig->add( DataRow( currentTime, div10s( val ) ) );
+              sig->add( DataRow( currentTime, div10s( val, cfg.divBy10 ) ) );
             }
             else {
               sig->add( DataRow( currentTime, std::to_string( val ) ) );
@@ -509,7 +509,7 @@ namespace FormatConverter{
             }
 
             if ( cfg.divBy10 ) {
-              sig->add( DataRow( currentTime, div10s( val ) ) );
+              sig->add( DataRow( currentTime, div10s( val, cfg.divBy10 ) ) );
             }
             else {
               sig->add( DataRow( currentTime, std::to_string( val ) ) );
@@ -532,13 +532,17 @@ namespace FormatConverter{
     work.skip( blocksize - read );
   }
 
-  std::string StpReader::div10s( int val ) {
+  std::string StpReader::div10s( int val, unsigned int multiple ) {
     if ( 0 == val ) {
       return "0";
     }
-    else if ( 0 == val % 10 ) {
+
+    int denoms[] = { 1, 10, 100, 1000, 10000 };
+    int denominator = denoms[multiple];
+
+    if ( 0 == val % denominator ) {
       // if our number ends in 0, lop it off and return
-      return std::to_string( val / 10 );
+      return std::to_string( val / denominator );
     }
 
     // else we're in the soup...
@@ -556,7 +560,7 @@ namespace FormatConverter{
     }
 
     std::stringstream ss;
-    ss << std::dec << std::setprecision( prec ) << val / 10.0;
+    ss << std::dec << std::setprecision( prec ) << val / (double) denominator;
     std::string s;
     ss>>s;
     return s;

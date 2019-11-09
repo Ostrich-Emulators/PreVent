@@ -47,7 +47,7 @@ namespace FormatConverter {
 		public:
 			const bool isskip;
 			const std::string label;
-			const bool divBy10;
+			const unsigned int divBy10;
 			const size_t readcount;
 			const bool unsign;
 			const std::string uom;
@@ -58,12 +58,17 @@ namespace FormatConverter {
 
 			static BlockConfig vital( const std::string& lbl, const std::string& uom,
 					size_t read = 2, bool unsign = true ) {
-				return BlockConfig( lbl, read, false, unsign, uom );
+				return BlockConfig( lbl, read, 0, unsign, uom );
 			}
 
 			static BlockConfig div10( const std::string& lbl, const std::string& uom,
 					size_t read = 2, bool unsign = true ) {
-				return BlockConfig( lbl, read, true, unsign, uom );
+				return BlockConfig( lbl, read, 1, unsign, uom );
+			}
+
+			static BlockConfig div100( const std::string& lbl, const std::string& uom,
+					size_t read = 2, bool unsign = true ) {
+				return BlockConfig( lbl, read, 2, unsign, uom );
 			}
 
 		private:
@@ -73,7 +78,7 @@ namespace FormatConverter {
 			uom( "Uncalib" ) {
 			}
 
-			BlockConfig( const std::string& lbl, size_t read = 2, bool div = false, bool unsign = true, const std::string& uom = "" )
+			BlockConfig( const std::string& lbl, size_t read = 2, unsigned int div = 0, bool unsign = true, const std::string& uom = "" )
 			: isskip( false ), label( lbl ), divBy10( div ), readcount( read ), unsign( unsign ),
 			uom( uom ) {
 			}
@@ -193,7 +198,7 @@ namespace FormatConverter {
 		unsigned int readUInt16( );
 
 		void readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize = 68 );
-		static std::string div10s( int val );
+		static std::string div10s( int val, unsigned int multiple = 1 );
 
 		void unhandledBlockType( unsigned int type, unsigned int fmt ) const;
 
