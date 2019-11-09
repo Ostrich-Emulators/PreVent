@@ -483,7 +483,7 @@ namespace FormatConverter{
           int val;
           if ( 1 == cfg.readcount ) {
             val = readInt8( );
-            okval = ( val != 0x80 );
+            okval = ( val > -128 ); // can't use hex values here, because our ints are signed
           }
           else {
             val = readInt16( );
