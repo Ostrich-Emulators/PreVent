@@ -103,8 +103,7 @@ namespace FormatConverter {
 		int readInt8( );
 		unsigned int readUInt8( );
 
-		void readHrBlock( std::unique_ptr<SignalSet>& info );
-		void readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals );
+		void readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize = 68 );
 		static std::string div10s( int val );
 
 		bool firstread;

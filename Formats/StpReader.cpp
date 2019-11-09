@@ -167,7 +167,8 @@ namespace FormatConverter{
       work.skip( 2 ); // don't know what these mean, either
 
       if ( 0x013A == readInt16( ) ) {
-        readHrBlock( info );
+        readDataBlock( info,{ SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF }, 62 );
+
         if ( 0x013A != readInt16( ) ) {
           // we expected a "closing" 0x013A, so something is wrong
           return ReadResult::ERROR;
@@ -259,7 +260,7 @@ namespace FormatConverter{
     return false;
   }
 
-  void StpReader::readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals ) {
+  void StpReader::readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize ) {
     size_t read = 0;
     for ( const auto& cfg : vitals ) {
       read += cfg.readcount;
@@ -296,60 +297,10 @@ namespace FormatConverter{
       }
     }
 
-    work.skip( 68 - read );
+    work.skip( blocksize - read );
   }
 
-  void StpReader::readHrBlock( std::unique_ptr<SignalSet>& info ) {
-    work.skip( 2 );
-    std::map<std::string, int> hrmap = {
-      {"HR", readInt16( ) },
-      {"PVC", readInt16( ) },
-    };
-
-    for ( auto& en : hrmap ) {
-      //      output( ) << en.first << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-      //          << en.second << std::endl;
-      if ( en.second != 0x8000 ) {
-        auto& hrsig = info->addVital( en.first );
-        hrsig->add( DataRow( currentTime, std::to_string( en.second ) ) );
-      }
-    }
-
-    work.skip( 4 );
-    std::map<std::string, int> stmap = {
-      {"ST-I", readInt8( ) },
-      {"ST-II", readInt8( ) },
-      {"ST-III", readInt8( ) },
-      {"ST-V", readInt8( ) },
-    };
-    for ( auto& en : stmap ) {
-      //      output( ) << en.first << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-      //          << en.second << " " << std::dec << en.second << std::endl;
-      if ( en.second != 0x80 ) {
-        auto& sig = info->addVital( en.first );
-        sig->add( DataRow( currentTime, div10s( en.second ) ) );
-      }
-    }
-
-    work.skip( 5 );
-    std::map<std::string, short> avmap = {
-      {"ST-AVR", readInt8( ) },
-      {"ST-AVL", readInt8( ) },
-      {"ST-AVF", readInt8( ) },
-    };
-    for ( auto& en : avmap ) {
-      //      output( ) << en.first << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-      //          << en.second << " " << std::dec << en.second << std::endl;
-      if ( en.second != 0x80 ) {
-        auto& sig = info->addVital( en.first );
-        sig->add( DataRow( currentTime, div10s( en.second ) ) );
-      }
-    }
-
-    work.skip( 40 );
-  }
-
-  static std::string StpReader::div10s( int val ) {
+  std::string StpReader::div10s( int val ) {
     if ( 0 == val ) {
       return "0";
     }
