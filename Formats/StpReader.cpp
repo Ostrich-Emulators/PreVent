@@ -45,13 +45,13 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::SKIP6 = BlockConfig::skip( 6 );
   const StpReader::BlockConfig StpReader::HR = BlockConfig::vital( "HR", "Bpm" );
   const StpReader::BlockConfig StpReader::PVC = BlockConfig::vital( "PVC", "Bpm" );
-  const StpReader::BlockConfig StpReader::STI = BlockConfig::vital( "ST-I", "mm", 1, true );
-  const StpReader::BlockConfig StpReader::STII = BlockConfig::vital( "ST-II", "mm", 1, true );
-  const StpReader::BlockConfig StpReader::STIII = BlockConfig::vital( "ST-III", "mm", 1, true );
-  const StpReader::BlockConfig StpReader::STAVR = BlockConfig::vital( "ST-AVR", "mm", 1, true );
-  const StpReader::BlockConfig StpReader::STAVL = BlockConfig::vital( "ST-AVL", "mm", 1, true );
-  const StpReader::BlockConfig StpReader::STAVF = BlockConfig::vital( "ST-AVF", "mm", 1, true );
-  const StpReader::BlockConfig StpReader::STV = BlockConfig::vital( "ST-V", "mm", 1, true );
+  const StpReader::BlockConfig StpReader::STI = BlockConfig::vital( "ST-I", "mm", 1, true, false );
+  const StpReader::BlockConfig StpReader::STII = BlockConfig::vital( "ST-II", "mm", 1, true, false );
+  const StpReader::BlockConfig StpReader::STIII = BlockConfig::vital( "ST-III", "mm", 1, true, false );
+  const StpReader::BlockConfig StpReader::STAVR = BlockConfig::vital( "ST-AVR", "mm", 1, true, false );
+  const StpReader::BlockConfig StpReader::STAVL = BlockConfig::vital( "ST-AVL", "mm", 1, true, false );
+  const StpReader::BlockConfig StpReader::STAVF = BlockConfig::vital( "ST-AVF", "mm", 1, true, false );
+  const StpReader::BlockConfig StpReader::STV = BlockConfig::vital( "ST-V", "mm", 1, true, false );
   const StpReader::BlockConfig StpReader::BT = BlockConfig::vital( "BT", 2, true );
   const StpReader::BlockConfig StpReader::IT = BlockConfig::vital( "IT", 2, true );
   const StpReader::BlockConfig StpReader::RESP = BlockConfig::vital( "RESP", "BrMin" );
@@ -133,6 +133,16 @@ namespace FormatConverter{
       while ( ReadResult::NORMAL == rslt ) {
         rslt = processOneChunk( info );
       }
+
+
+      for ( const auto& v : info->vitals( ) ) {
+        while ( !v->empty( ) ) {
+          auto dr = v->pop( );
+          output( ) << v->name( ) << " " << dr->data << std::endl;
+        }
+      }
+      info->reset();
+
 
       if ( ReadResult::NORMAL != rslt ) {
         // something happened so rewind our to our mark
@@ -288,11 +298,11 @@ namespace FormatConverter{
       read += cfg.readcount;
       if ( cfg.isskip ) {
         output( ) << "skipping";
-        for ( size_t i = 0; i < cfg.readcount; i++ ) {
-          output( ) << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << (int) work.pop( );
-        }
-        output( ) << std::endl;
-        //work.skip( cfg.readcount );
+        //        for ( size_t i = 0; i < cfg.readcount; i++ ) {
+        //          output( ) << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << (int) work.pop( );
+        //        }
+        //        output( ) << std::endl;
+        work.skip( cfg.readcount );
       }
       else {
         bool okval = false;
@@ -331,7 +341,7 @@ namespace FormatConverter{
           }
           else {
             val = readInt16( );
-            okval = ( val > 0x800F );
+            okval = ( val > -32767 );
           }
 
           if ( okval ) {
