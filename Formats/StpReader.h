@@ -49,22 +49,33 @@ namespace FormatConverter {
 			const std::string label;
 			const bool divBy10;
 			const size_t readcount;
+			const bool unsign;
+			const std::string uom;
 
 			static BlockConfig skip( size_t count = 1 ) {
 				return BlockConfig( count );
 			}
 
-			static BlockConfig vital( const std::string& lbl, size_t read = 2, bool div = false ) {
-				return BlockConfig( lbl, read, div );
+			static BlockConfig vital( const std::string& lbl, size_t read = 2, bool div = false,
+					bool unsign = true, const std::string& uom = "" ) {
+				return BlockConfig( lbl, read, div, unsign, uom );
 			}
+
+			static BlockConfig vital( const std::string& lbl, const std::string& uom,
+					size_t read = 2, bool div = false, bool unsign = true ) {
+				return BlockConfig( lbl, read, div, unsign, uom );
+			}
+
 		private:
 
 			BlockConfig( int read = 1 )
-			: isskip( true ), label( "SKIP" ), divBy10( false ), readcount( read ) {
+			: isskip( true ), label( "SKIP" ), divBy10( false ), readcount( read ), unsign( false ),
+			uom( "Uncalib" ) {
 			}
 
-			BlockConfig( const std::string& lbl, size_t read = 2, bool div = false )
-			: isskip( false ), label( lbl ), divBy10( div ), readcount( read ) {
+			BlockConfig( const std::string& lbl, size_t read = 2, bool div = false, bool unsign = true, const std::string& uom = "" )
+			: isskip( false ), label( lbl ), divBy10( div ), readcount( read ), unsign( unsign ),
+			uom( uom ) {
 			}
 		};
 
@@ -95,6 +106,22 @@ namespace FormatConverter {
 		static const BlockConfig AR1_D;
 		static const BlockConfig AR1_R;
 
+		static const BlockConfig SPO2_P;
+		static const BlockConfig SPO2_R;
+		static const BlockConfig VENT;
+		static const BlockConfig IN_HLD;
+		static const BlockConfig PRS_SUP;
+		static const BlockConfig INSP_TM;
+		static const BlockConfig INSP_PC;
+		static const BlockConfig I_E;
+		static const BlockConfig SET_PCP;
+		static const BlockConfig SET_IE;
+		static const BlockConfig APRV_LO_T;
+		static const BlockConfig APRV_HI_T;
+		static const BlockConfig RESIS;
+		static const BlockConfig MEAS_PEEP;
+		static const BlockConfig INSP_TV;
+
 		StpReader( const StpReader& orig );
 		ReadResult processOneChunk( std::unique_ptr<SignalSet>& );
 		dr_time readTime( );
@@ -102,6 +129,7 @@ namespace FormatConverter {
 		int readInt16( );
 		int readInt8( );
 		unsigned int readUInt8( );
+		unsigned int readUInt16( );
 
 		void readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize = 68 );
 		static std::string div10s( int val );

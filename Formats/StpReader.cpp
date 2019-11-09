@@ -43,27 +43,43 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::SKIP4 = BlockConfig::skip( 4 );
   const StpReader::BlockConfig StpReader::SKIP5 = BlockConfig::skip( 5 );
   const StpReader::BlockConfig StpReader::SKIP6 = BlockConfig::skip( 6 );
-  const StpReader::BlockConfig StpReader::HR = BlockConfig::vital( "HR" );
-  const StpReader::BlockConfig StpReader::PVC = BlockConfig::vital( "PVC" );
-  const StpReader::BlockConfig StpReader::STI = BlockConfig::vital( "ST-I", 1, true );
-  const StpReader::BlockConfig StpReader::STII = BlockConfig::vital( "ST-II", 1, true );
-  const StpReader::BlockConfig StpReader::STIII = BlockConfig::vital( "ST-III", 1, true );
-  const StpReader::BlockConfig StpReader::STAVR = BlockConfig::vital( "ST-AVR", 1, true );
-  const StpReader::BlockConfig StpReader::STAVL = BlockConfig::vital( "ST-AVL", 1, true );
-  const StpReader::BlockConfig StpReader::STAVF = BlockConfig::vital( "ST-AVF", 1, true );
-  const StpReader::BlockConfig StpReader::STV = BlockConfig::vital( "ST-V", 1, true );
+  const StpReader::BlockConfig StpReader::HR = BlockConfig::vital( "HR", "Bpm" );
+  const StpReader::BlockConfig StpReader::PVC = BlockConfig::vital( "PVC", "Bpm" );
+  const StpReader::BlockConfig StpReader::STI = BlockConfig::vital( "ST-I", "mm", 1, true );
+  const StpReader::BlockConfig StpReader::STII = BlockConfig::vital( "ST-II", "mm", 1, true );
+  const StpReader::BlockConfig StpReader::STIII = BlockConfig::vital( "ST-III", "mm", 1, true );
+  const StpReader::BlockConfig StpReader::STAVR = BlockConfig::vital( "ST-AVR", "mm", 1, true );
+  const StpReader::BlockConfig StpReader::STAVL = BlockConfig::vital( "ST-AVL", "mm", 1, true );
+  const StpReader::BlockConfig StpReader::STAVF = BlockConfig::vital( "ST-AVF", "mm", 1, true );
+  const StpReader::BlockConfig StpReader::STV = BlockConfig::vital( "ST-V", "mm", 1, true );
   const StpReader::BlockConfig StpReader::BT = BlockConfig::vital( "BT", 2, true );
   const StpReader::BlockConfig StpReader::IT = BlockConfig::vital( "IT", 2, true );
-  const StpReader::BlockConfig StpReader::RESP = BlockConfig::vital( "RESP" );
-  const StpReader::BlockConfig StpReader::APNEA = BlockConfig::vital( "APNEA" );
-  const StpReader::BlockConfig StpReader::NBP_M = BlockConfig::vital( "NBP-M" );
-  const StpReader::BlockConfig StpReader::NBP_S = BlockConfig::vital( "NBP-S" );
-  const StpReader::BlockConfig StpReader::NBP_D = BlockConfig::vital( "NBP-D" );
-  const StpReader::BlockConfig StpReader::CUFF = BlockConfig::vital( "CUFF" );
-  const StpReader::BlockConfig StpReader::AR1_M = BlockConfig::vital( "AR1-M" );
-  const StpReader::BlockConfig StpReader::AR1_S = BlockConfig::vital( "AR1-S" );
-  const StpReader::BlockConfig StpReader::AR1_D = BlockConfig::vital( "AR1-D" );
-  const StpReader::BlockConfig StpReader::AR1_R = BlockConfig::vital( "AR1-R" );
+  const StpReader::BlockConfig StpReader::RESP = BlockConfig::vital( "RESP", "BrMin" );
+  const StpReader::BlockConfig StpReader::APNEA = BlockConfig::vital( "APNEA", "mmHg" );
+  const StpReader::BlockConfig StpReader::NBP_M = BlockConfig::vital( "NBP-M", "mmHg" );
+  const StpReader::BlockConfig StpReader::NBP_S = BlockConfig::vital( "NBP-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::NBP_D = BlockConfig::vital( "NBP-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::CUFF = BlockConfig::vital( "CUFF", "mmHg", 2, false, false );
+  const StpReader::BlockConfig StpReader::AR1_M = BlockConfig::vital( "AR1-M", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR1_S = BlockConfig::vital( "AR1-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR1_D = BlockConfig::vital( "AR1-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR1_R = BlockConfig::vital( "AR1-R", "mmHg" );
+
+  const StpReader::BlockConfig StpReader::SPO2_P = BlockConfig::vital( "SPO2-%", "%" );
+  const StpReader::BlockConfig StpReader::SPO2_R = BlockConfig::vital( "SPO2-R", "Bpm" );
+  const StpReader::BlockConfig StpReader::VENT = BlockConfig::vital( "Vent Rate", "BrMin" );
+  const StpReader::BlockConfig StpReader::IN_HLD = BlockConfig::vital( "IN_HLD", "Sec" );
+  const StpReader::BlockConfig StpReader::PRS_SUP = BlockConfig::vital( "PRS-SUP", "cmH2O" );
+  const StpReader::BlockConfig StpReader::INSP_TM = BlockConfig::vital( "INSP-TM", "Sec" );
+  const StpReader::BlockConfig StpReader::INSP_PC = BlockConfig::vital( "INSP-PC", "%" );
+  const StpReader::BlockConfig StpReader::I_E = BlockConfig::vital( "I:E" );
+  const StpReader::BlockConfig StpReader::SET_PCP = BlockConfig::vital( "SET-PCP", "cmH2O" );
+  const StpReader::BlockConfig StpReader::SET_IE = BlockConfig::vital( "SET-IE" );
+  const StpReader::BlockConfig StpReader::APRV_LO_T = BlockConfig::vital( "APRV-LO-T", "Sec" );
+  const StpReader::BlockConfig StpReader::APRV_HI_T = BlockConfig::vital( "APRV-HI-T", "Sec" );
+  const StpReader::BlockConfig StpReader::RESIS = BlockConfig::vital( "RESIS", "cmH2O/L/Sec" );
+  const StpReader::BlockConfig StpReader::MEAS_PEEP = BlockConfig::vital( "MEAS-PEEP", "cmH2O" );
+  const StpReader::BlockConfig StpReader::INSP_TV = BlockConfig::vital( "INSP-TV" );
 
   StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ) {
   }
@@ -162,14 +178,14 @@ namespace FormatConverter{
       work.skip( 2 );
       // offset is number of bytes from byte 64, but we want to track bytes
       // since we started reading (set our mark)
-      size_t waveoffset = readInt16( ) + 64;
+      size_t waveoffset = readUInt16( ) + 64;
       work.skip( 4 ); // don't know what these mean
       work.skip( 2 ); // don't know what these mean, either
 
-      if ( 0x013A == readInt16( ) ) {
+      if ( 0x013A == readUInt16( ) ) {
         readDataBlock( info,{ SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF }, 62 );
 
-        if ( 0x013A != readInt16( ) ) {
+        if ( 0x013A != readUInt16( ) ) {
           // we expected a "closing" 0x013A, so something is wrong
           return ReadResult::ERROR;
         }
@@ -218,9 +234,15 @@ namespace FormatConverter{
     }
   }
 
-  int StpReader::readInt16( ) {
+  unsigned int StpReader::readUInt16( ) {
     unsigned char b1 = work.pop( );
     unsigned char b2 = work.pop( );
+    return ( b1 << 8 | b2 );
+  }
+
+  int StpReader::readInt16( ) {
+    char b1 = work.pop( );
+    char b2 = work.pop( );
     return ( b1 << 8 | b2 );
   }
 
@@ -274,24 +296,57 @@ namespace FormatConverter{
       }
       else {
         bool okval = false;
-        int val;
-        if ( 1 == cfg.readcount ) {
-          val = readInt8( );
-          okval = ( val != 0x80 );
-        }
-        else {
-          val = readInt16( );
-          okval = ( val != 0x8000 );
-        }
-
-        if ( okval ) {
-          auto& sig = info->addVital( cfg.label );
-
-          if ( cfg.divBy10 ) {
-            sig->add( DataRow( currentTime, div10s( val ) ) );
+        bool added = false;
+        if ( cfg.unsign ) {
+          unsigned int val;
+          if ( 1 == cfg.readcount ) {
+            val = readUInt8( );
+            okval = ( val != 0x80 );
           }
           else {
-            sig->add( DataRow( currentTime, std::to_string( val ) ) );
+            val = readUInt16( );
+            okval = ( val != 0x8000 );
+          }
+
+          if ( okval ) {
+            auto& sig = info->addVital( cfg.label, &added );
+            if ( added ) {
+              sig->setChunkIntervalAndSampleRate( 2000, 1 );
+              sig->setUom( cfg.uom );
+            }
+
+            if ( cfg.divBy10 ) {
+              sig->add( DataRow( currentTime, div10s( val ) ) );
+            }
+            else {
+              sig->add( DataRow( currentTime, std::to_string( val ) ) );
+            }
+          }
+        }
+        else {
+          int val;
+          if ( 1 == cfg.readcount ) {
+            val = readInt8( );
+            okval = ( val != 0x80 );
+          }
+          else {
+            val = readInt16( );
+            okval = ( val > 0x800F );
+          }
+
+          if ( okval ) {
+            auto& sig = info->addVital( cfg.label, &added );
+            if ( added ) {
+              sig->setChunkIntervalAndSampleRate( 2000, 1 );
+              sig->setUom( cfg.uom );
+            }
+
+            if ( cfg.divBy10 ) {
+              sig->add( DataRow( currentTime, div10s( val ) ) );
+            }
+            else {
+              sig->add( DataRow( currentTime, std::to_string( val ) ) );
+            }
           }
         }
       }
