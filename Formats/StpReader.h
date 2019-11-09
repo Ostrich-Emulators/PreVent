@@ -139,6 +139,9 @@ namespace FormatConverter {
 		static const BlockConfig COMP;
 
 		static const BlockConfig HF_FLW;
+		static const BlockConfig B_FLW;
+		static const BlockConfig FLW_TRIG;
+		static const BlockConfig FLW_R;
 		static const BlockConfig HF_R;
 		static const BlockConfig HF_PRS;
 		static const BlockConfig TMP_1;

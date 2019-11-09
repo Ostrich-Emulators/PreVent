@@ -80,13 +80,13 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::SPO2_P = BlockConfig::vital( "SPO2-%", "%" );
   const StpReader::BlockConfig StpReader::SPO2_R = BlockConfig::vital( "SPO2-R", "Bpm" );
   const StpReader::BlockConfig StpReader::VENT = BlockConfig::vital( "Vent Rate", "BrMin" );
-  const StpReader::BlockConfig StpReader::IN_HLD = BlockConfig::vital( "IN_HLD", "Sec" );
+  const StpReader::BlockConfig StpReader::IN_HLD = BlockConfig::div10( "IN_HLD", "Sec", 2, false );
   const StpReader::BlockConfig StpReader::PRS_SUP = BlockConfig::vital( "PRS-SUP", "cmH2O" );
-  const StpReader::BlockConfig StpReader::INSP_TM = BlockConfig::vital( "INSP-TM", "Sec" );
+  const StpReader::BlockConfig StpReader::INSP_TM = BlockConfig::div10( "INSP-TM", "Sec", 2, false ); // FIXME: this is actually div 100!
   const StpReader::BlockConfig StpReader::INSP_PC = BlockConfig::vital( "INSP-PC", "%" );
-  const StpReader::BlockConfig StpReader::I_E = BlockConfig::vital( "I:E", "" );
+  const StpReader::BlockConfig StpReader::I_E = BlockConfig::div10( "I:E", "", 2, false );
   const StpReader::BlockConfig StpReader::SET_PCP = BlockConfig::vital( "SET-PCP", "cmH2O" );
-  const StpReader::BlockConfig StpReader::SET_IE = BlockConfig::vital( "SET-IE", "" );
+  const StpReader::BlockConfig StpReader::SET_IE = BlockConfig::div10( "SET-IE", "", 2, false );
   const StpReader::BlockConfig StpReader::APRV_LO_T = BlockConfig::div10( "APRV-LO-T", "Sec", 2, false );
   const StpReader::BlockConfig StpReader::APRV_HI_T = BlockConfig::div10( "APRV-HI-T", "Sec", 2, false );
   const StpReader::BlockConfig StpReader::APRV_LO = BlockConfig::vital( "APRV-LO", "cmH20", 2, false );
@@ -100,6 +100,9 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::SPONT_MV = BlockConfig::vital( "SPONT-MV", "L/Min", 2, false );
   const StpReader::BlockConfig StpReader::SPONT_R = BlockConfig::vital( "SPONT-R", "BrMin", 2, false );
   const StpReader::BlockConfig StpReader::SET_TV = BlockConfig::vital( "SET-TV", "ml", 2, false );
+  const StpReader::BlockConfig StpReader::B_FLW = BlockConfig::vital( "B-FLW", "L/Min", 2, false );
+  const StpReader::BlockConfig StpReader::FLW_R = BlockConfig::vital( "FLW-R", "cmH20", 2, false );
+  const StpReader::BlockConfig StpReader::FLW_TRIG = BlockConfig::vital( "FLW-TRIG", "L/Min", 2, false );
   const StpReader::BlockConfig StpReader::HF_FLW = BlockConfig::vital( "HF-FLW", "L/Min", 2, false );
   const StpReader::BlockConfig StpReader::HF_R = BlockConfig::vital( "HF-R", "Sec", 2, false );
   const StpReader::BlockConfig StpReader::HF_PRS = BlockConfig::vital( "HF-PRS", "cmH2O", 2, false );
@@ -354,16 +357,16 @@ namespace FormatConverter{
           case 0x2A:
             switch ( blockfmt ) {
               case 0xDB:
-                readDataBlock( info,{ SKIP6, VENT } );
+                readDataBlock( info,{ SKIP6, VENT, FLW_R, SKIP4, IN_HLD, SKIP2, PRS_SUP, INSP_TM, INSP_PC, I_E } );
                 break;
               case 0xDC:
-                readDataBlock( info,{ SKIP6, HF_FLW, HF_R, HF_PRS, SPONT_MV, SKIP2, SET_TV, SET_PCP, SET_IE } );
+                readDataBlock( info,{ SKIP6, HF_FLW, HF_R, HF_PRS, SPONT_MV, SKIP2, SET_TV, SET_PCP, SET_IE, B_FLW, FLW_TRIG } );
                 break;
               case 0x5C:
                 readDataBlock( info,{ SKIP6, APRV_LO, APRV_HI, APRV_LO_T, SKIP2, APRV_HI_T, COMP, RESIS, MEAS_PEEP, INTR_PEEP, SPONT_R } );
                 break;
               case 0x5D:
-                readDataBlock( info,{ } );
+                readDataBlock( info,{ SKIP6, INSP_TV } );
                 break;
               default:
                 readDataBlock( info,{ } );
