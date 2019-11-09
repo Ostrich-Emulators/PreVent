@@ -48,6 +48,9 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::STI = BlockConfig::vital( "ST-I", 1, true );
   const StpReader::BlockConfig StpReader::STII = BlockConfig::vital( "ST-II", 1, true );
   const StpReader::BlockConfig StpReader::STIII = BlockConfig::vital( "ST-III", 1, true );
+  const StpReader::BlockConfig StpReader::STAVR = BlockConfig::vital( "ST-AVR", 1, true );
+  const StpReader::BlockConfig StpReader::STAVL = BlockConfig::vital( "ST-AVL", 1, true );
+  const StpReader::BlockConfig StpReader::STAVF = BlockConfig::vital( "ST-AVF", 1, true );
   const StpReader::BlockConfig StpReader::STV = BlockConfig::vital( "ST-V", 1, true );
   const StpReader::BlockConfig StpReader::BT = BlockConfig::vital( "BT", 2, true );
   const StpReader::BlockConfig StpReader::IT = BlockConfig::vital( "IT", 2, true );
@@ -57,6 +60,10 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::NBP_S = BlockConfig::vital( "NBP-S" );
   const StpReader::BlockConfig StpReader::NBP_D = BlockConfig::vital( "NBP-D" );
   const StpReader::BlockConfig StpReader::CUFF = BlockConfig::vital( "CUFF" );
+  const StpReader::BlockConfig StpReader::AR1_M = BlockConfig::vital( "AR1-M" );
+  const StpReader::BlockConfig StpReader::AR1_S = BlockConfig::vital( "AR1-S" );
+  const StpReader::BlockConfig StpReader::AR1_D = BlockConfig::vital( "AR1-D" );
+  const StpReader::BlockConfig StpReader::AR1_R = BlockConfig::vital( "AR1-R" );
 
   StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ) {
   }
@@ -168,13 +175,16 @@ namespace FormatConverter{
       }
 
       while ( work.readSinceMark( ) < waveoffset - 6 ) {
-        auto data = work.popvec( 66 );
+        work.skip( 66 );
         int blocktype = readInt8( );
         int blockfmt = readInt8( );
         work.rewind( 68 ); // go back to the start of this block
-        output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << blocktype << " " << blockfmt << std::endl;
+        output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
+            << blocktype << " " << blockfmt << " starting at " << std::dec << work.readSinceMark( ) << std::endl;
         //int combined = ( blocktype << 8 | blockfmt );
         switch ( blocktype ) {
+          case 0x02:
+            readDataBlock( info,{ SKIP6, AR1_M, AR1_S, AR1_D, SKIP2, AR1_R } );
           case 0x08:
             readDataBlock( info,{ SKIP6, RESP, APNEA } );
             break;
@@ -182,14 +192,23 @@ namespace FormatConverter{
             readDataBlock( info,{ SKIP6, BT, IT } );
             break;
           case 0x0A:
-            readDataBlock( info,{ SKIP5, NBP_M, SKIP, NBP_S, NBP_D, SKIP2, CUFF } );
+            readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
+            break;
+          case 0x0B:
+            readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
+            break;
+          case 0x0D:
+            readDataBlock( info,{ } );
             break;
         }
       }
       work.skip( 6 );
-      output( ) << "first wave id: " << readInt8( ) << "; vals:" << readInt8( ) << std::endl;
+      output( ) << "first wave id: " << std::setfill( '0' ) << std::setw( 2 )
+          << std::hex << readInt8( ) << "; vals:" << std::setfill( '0' ) << std::setw( 2 )
+          << readInt8( ) << std::endl;
 
-      return ReadResult::NORMAL;
+      return ReadResult::END_OF_PATIENT;
+      //return ReadResult::NORMAL;
     }
     catch ( const std::runtime_error & err ) {
       work.rewindToMark( );
@@ -205,6 +224,10 @@ namespace FormatConverter{
   }
 
   int StpReader::readInt8( ) {
+    return (char) work.pop( );
+  }
+
+  unsigned int StpReader::readUInt8( ) {
     return work.pop( );
   }
 
@@ -241,7 +264,12 @@ namespace FormatConverter{
     for ( const auto& cfg : vitals ) {
       read += cfg.readcount;
       if ( cfg.isskip ) {
-        work.skip( cfg.readcount );
+        output( ) << "skipping";
+        for ( size_t i = 0; i < cfg.readcount; i++ ) {
+          output( ) << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << (int) work.pop( );
+        }
+        output( ) << std::endl;
+        //work.skip( cfg.readcount );
       }
       else {
         bool okval = false;
@@ -257,39 +285,18 @@ namespace FormatConverter{
 
         if ( okval ) {
           auto& sig = info->addVital( cfg.label );
-          sig->add( DataRow( currentTime, std::to_string( val ) ) );
+
+          if ( cfg.divBy10 ) {
+            sig->add( DataRow( currentTime, div10s( val ) ) );
+          }
+          else {
+            sig->add( DataRow( currentTime, std::to_string( val ) ) );
+          }
         }
       }
     }
 
     work.skip( 68 - read );
-  }
-
-  void StpReader::readRestApneaBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& signals ) {
-    //    work.skip( 6 );
-    //
-    //    std::map<std::string, int> sigmap;
-    //    for ( auto signal : signals ) {
-    //      sigmap.insert( std::make_pair( signal, readInt16( ) ) );
-    //    }
-    //
-    //    for ( auto& en : sigmap ) {
-    //      if ( en.second != 0x8000 ) {
-    //        auto& hrsig = info->addVital( en.first );
-    //        hrsig->add( DataRow( currentTime, std::to_string( en.second ) ) );
-    //      }
-    //    }
-    //
-    //    work.skip( 58 );
-  }
-
-  void StpReader::readNbpBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals ) {
-    //    work.skip( 6 );
-    //    std::map<std::string, int> sigmap;
-    //    for ( auto signal : signals ) {
-    //      sigmap.insert( std::make_pair( signal, readInt16( ) ) );
-    //    }
-
   }
 
   void StpReader::readHrBlock( std::unique_ptr<SignalSet>& info ) {
@@ -300,6 +307,8 @@ namespace FormatConverter{
     };
 
     for ( auto& en : hrmap ) {
+      //      output( ) << en.first << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
+      //          << en.second << std::endl;
       if ( en.second != 0x8000 ) {
         auto& hrsig = info->addVital( en.first );
         hrsig->add( DataRow( currentTime, std::to_string( en.second ) ) );
@@ -314,25 +323,40 @@ namespace FormatConverter{
       {"ST-V", readInt8( ) },
     };
     for ( auto& en : stmap ) {
+      //      output( ) << en.first << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
+      //          << en.second << " " << std::dec << en.second << std::endl;
       if ( en.second != 0x80 ) {
         auto& sig = info->addVital( en.first );
-        sig->add( DataRow( currentTime, std::to_string( en.second ) ) );
+        sig->add( DataRow( currentTime, div10s( en.second ) ) );
       }
     }
 
     work.skip( 5 );
-    std::map<std::string, int> avmap = {
-      {"AV1-R", readInt8( ) },
-      {"AV1-L", readInt8( ) },
-      {"AV1-F", readInt8( ) },
+    std::map<std::string, short> avmap = {
+      {"ST-AVR", readInt8( ) },
+      {"ST-AVL", readInt8( ) },
+      {"ST-AVF", readInt8( ) },
     };
     for ( auto& en : avmap ) {
+      //      output( ) << en.first << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
+      //          << en.second << " " << std::dec << en.second << std::endl;
       if ( en.second != 0x80 ) {
         auto& sig = info->addVital( en.first );
-        sig->add( DataRow( currentTime, std::to_string( en.second ) ) );
+        sig->add( DataRow( currentTime, div10s( en.second ) ) );
       }
     }
 
     work.skip( 40 );
+  }
+
+  static std::string StpReader::div10s( int val ) {
+    if ( 0 == val ) {
+      return "0";
+    }
+    std::stringstream ss;
+    ss << std::dec << std::setprecision( 2 ) << val / 10.0;
+    std::string s;
+    ss>>s;
+    return s;
   }
 }

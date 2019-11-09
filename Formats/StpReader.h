@@ -78,6 +78,9 @@ namespace FormatConverter {
 		static const BlockConfig STI;
 		static const BlockConfig STII;
 		static const BlockConfig STIII;
+		static const BlockConfig STAVR;
+		static const BlockConfig STAVL;
+		static const BlockConfig STAVF;
 		static const BlockConfig STV;
 		static const BlockConfig BT;
 		static const BlockConfig IT;
@@ -87,6 +90,10 @@ namespace FormatConverter {
 		static const BlockConfig NBP_S;
 		static const BlockConfig NBP_D;
 		static const BlockConfig CUFF;
+		static const BlockConfig AR1_M;
+		static const BlockConfig AR1_S;
+		static const BlockConfig AR1_D;
+		static const BlockConfig AR1_R;
 
 		StpReader( const StpReader& orig );
 		ReadResult processOneChunk( std::unique_ptr<SignalSet>& );
@@ -94,12 +101,11 @@ namespace FormatConverter {
 		std::string readString( size_t length );
 		int readInt16( );
 		int readInt8( );
+		unsigned int readUInt8( );
 
 		void readHrBlock( std::unique_ptr<SignalSet>& info );
 		void readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals );
-
-		void readRestApneaBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals );
-		void readNbpBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals );
+		static std::string div10s( int val );
 
 		bool firstread;
 		dr_time currentTime;

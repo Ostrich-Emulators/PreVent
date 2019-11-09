@@ -82,7 +82,7 @@ namespace FormatConverter {
 
 			tail = ( tail + maxsize - steps ) % maxsize;
 			_full = ( head == tail );
-			_mark--;
+			_mark -= steps;
 		}
 
 		void rewindToMark( ) {
