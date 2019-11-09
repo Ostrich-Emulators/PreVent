@@ -38,6 +38,26 @@
 
 namespace FormatConverter{
 
+  const StpReader::BlockConfig StpReader::SKIP = BlockConfig::skip( );
+  const StpReader::BlockConfig StpReader::SKIP2 = BlockConfig::skip( 2 );
+  const StpReader::BlockConfig StpReader::SKIP4 = BlockConfig::skip( 4 );
+  const StpReader::BlockConfig StpReader::SKIP5 = BlockConfig::skip( 5 );
+  const StpReader::BlockConfig StpReader::SKIP6 = BlockConfig::skip( 6 );
+  const StpReader::BlockConfig StpReader::HR = BlockConfig::vital( "HR" );
+  const StpReader::BlockConfig StpReader::PVC = BlockConfig::vital( "PVC" );
+  const StpReader::BlockConfig StpReader::STI = BlockConfig::vital( "ST-I", 1, true );
+  const StpReader::BlockConfig StpReader::STII = BlockConfig::vital( "ST-II", 1, true );
+  const StpReader::BlockConfig StpReader::STIII = BlockConfig::vital( "ST-III", 1, true );
+  const StpReader::BlockConfig StpReader::STV = BlockConfig::vital( "ST-V", 1, true );
+  const StpReader::BlockConfig StpReader::BT = BlockConfig::vital( "BT", 2, true );
+  const StpReader::BlockConfig StpReader::IT = BlockConfig::vital( "IT", 2, true );
+  const StpReader::BlockConfig StpReader::RESP = BlockConfig::vital( "RESP" );
+  const StpReader::BlockConfig StpReader::APNEA = BlockConfig::vital( "APNEA" );
+  const StpReader::BlockConfig StpReader::NBP_M = BlockConfig::vital( "NBP-M" );
+  const StpReader::BlockConfig StpReader::NBP_S = BlockConfig::vital( "NBP-S" );
+  const StpReader::BlockConfig StpReader::NBP_D = BlockConfig::vital( "NBP-D" );
+  const StpReader::BlockConfig StpReader::CUFF = BlockConfig::vital( "CUFF" );
+
   StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ) {
   }
 
@@ -151,7 +171,20 @@ namespace FormatConverter{
         auto data = work.popvec( 66 );
         int blocktype = readInt8( );
         int blockfmt = readInt8( );
+        work.rewind( 68 ); // go back to the start of this block
         output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << blocktype << " " << blockfmt << std::endl;
+        //int combined = ( blocktype << 8 | blockfmt );
+        switch ( blocktype ) {
+          case 0x08:
+            readDataBlock( info,{ SKIP6, RESP, APNEA } );
+            break;
+          case 0x09:
+            readDataBlock( info,{ SKIP6, BT, IT } );
+            break;
+          case 0x0A:
+            readDataBlock( info,{ SKIP5, NBP_M, SKIP, NBP_S, NBP_D, SKIP2, CUFF } );
+            break;
+        }
       }
       work.skip( 6 );
       output( ) << "first wave id: " << readInt8( ) << "; vals:" << readInt8( ) << std::endl;
@@ -201,6 +234,62 @@ namespace FormatConverter{
       }
     }
     return false;
+  }
+
+  void StpReader::readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals ) {
+    size_t read = 0;
+    for ( const auto& cfg : vitals ) {
+      read += cfg.readcount;
+      if ( cfg.isskip ) {
+        work.skip( cfg.readcount );
+      }
+      else {
+        bool okval = false;
+        int val;
+        if ( 1 == cfg.readcount ) {
+          val = readInt8( );
+          okval = ( val != 0x80 );
+        }
+        else {
+          val = readInt16( );
+          okval = ( val != 0x8000 );
+        }
+
+        if ( okval ) {
+          auto& sig = info->addVital( cfg.label );
+          sig->add( DataRow( currentTime, std::to_string( val ) ) );
+        }
+      }
+    }
+
+    work.skip( 68 - read );
+  }
+
+  void StpReader::readRestApneaBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& signals ) {
+    //    work.skip( 6 );
+    //
+    //    std::map<std::string, int> sigmap;
+    //    for ( auto signal : signals ) {
+    //      sigmap.insert( std::make_pair( signal, readInt16( ) ) );
+    //    }
+    //
+    //    for ( auto& en : sigmap ) {
+    //      if ( en.second != 0x8000 ) {
+    //        auto& hrsig = info->addVital( en.first );
+    //        hrsig->add( DataRow( currentTime, std::to_string( en.second ) ) );
+    //      }
+    //    }
+    //
+    //    work.skip( 58 );
+  }
+
+  void StpReader::readNbpBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals ) {
+    //    work.skip( 6 );
+    //    std::map<std::string, int> sigmap;
+    //    for ( auto signal : signals ) {
+    //      sigmap.insert( std::make_pair( signal, readInt16( ) ) );
+    //    }
+
   }
 
   void StpReader::readHrBlock( std::unique_ptr<SignalSet>& info ) {

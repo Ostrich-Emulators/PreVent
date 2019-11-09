@@ -42,6 +42,52 @@ namespace FormatConverter {
 		void finish( ) override;
 
 	private:
+
+		class BlockConfig {
+		public:
+			const bool isskip;
+			const std::string label;
+			const bool divBy10;
+			const size_t readcount;
+
+			static BlockConfig skip( size_t count = 1 ) {
+				return BlockConfig( count );
+			}
+
+			static BlockConfig vital( const std::string& lbl, size_t read = 2, bool div = false ) {
+				return BlockConfig( lbl, read, div );
+			}
+		private:
+
+			BlockConfig( int read = 1 )
+			: isskip( true ), label( "SKIP" ), divBy10( false ), readcount( read ) {
+			}
+
+			BlockConfig( const std::string& lbl, size_t read = 2, bool div = false )
+			: isskip( false ), label( lbl ), divBy10( div ), readcount( read ) {
+			}
+		};
+
+		static const BlockConfig SKIP;
+		static const BlockConfig SKIP2;
+		static const BlockConfig SKIP4;
+		static const BlockConfig SKIP5;
+		static const BlockConfig SKIP6;
+		static const BlockConfig HR;
+		static const BlockConfig PVC;
+		static const BlockConfig STI;
+		static const BlockConfig STII;
+		static const BlockConfig STIII;
+		static const BlockConfig STV;
+		static const BlockConfig BT;
+		static const BlockConfig IT;
+		static const BlockConfig RESP;
+		static const BlockConfig APNEA;
+		static const BlockConfig NBP_M;
+		static const BlockConfig NBP_S;
+		static const BlockConfig NBP_D;
+		static const BlockConfig CUFF;
+
 		StpReader( const StpReader& orig );
 		ReadResult processOneChunk( std::unique_ptr<SignalSet>& );
 		dr_time readTime( );
@@ -50,6 +96,10 @@ namespace FormatConverter {
 		int readInt8( );
 
 		void readHrBlock( std::unique_ptr<SignalSet>& info );
+		void readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals );
+
+		void readRestApneaBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals );
+		void readNbpBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals );
 
 		bool firstread;
 		dr_time currentTime;
