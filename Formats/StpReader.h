@@ -56,14 +56,14 @@ namespace FormatConverter {
 				return BlockConfig( count );
 			}
 
-			static BlockConfig vital( const std::string& lbl, size_t read = 2, bool div = false,
-					bool unsign = true, const std::string& uom = "" ) {
-				return BlockConfig( lbl, read, div, unsign, uom );
-			}
-
 			static BlockConfig vital( const std::string& lbl, const std::string& uom,
 					size_t read = 2, bool div = false, bool unsign = true ) {
 				return BlockConfig( lbl, read, div, unsign, uom );
+			}
+
+			static BlockConfig div10( const std::string& lbl, const std::string& uom,
+					size_t read = 2, bool unsign = true ) {
+				return BlockConfig( lbl, read, true, unsign, uom );
 			}
 
 		private:
@@ -105,6 +105,18 @@ namespace FormatConverter {
 		static const BlockConfig AR1_S;
 		static const BlockConfig AR1_D;
 		static const BlockConfig AR1_R;
+		static const BlockConfig AR2_M;
+		static const BlockConfig AR2_S;
+		static const BlockConfig AR2_D;
+		static const BlockConfig AR2_R;
+		static const BlockConfig AR3_M;
+		static const BlockConfig AR3_S;
+		static const BlockConfig AR3_D;
+		static const BlockConfig AR3_R;
+		static const BlockConfig AR4_M;
+		static const BlockConfig AR4_S;
+		static const BlockConfig AR4_D;
+		static const BlockConfig AR4_R;
 
 		static const BlockConfig SPO2_P;
 		static const BlockConfig SPO2_R;
@@ -121,6 +133,36 @@ namespace FormatConverter {
 		static const BlockConfig RESIS;
 		static const BlockConfig MEAS_PEEP;
 		static const BlockConfig INSP_TV;
+
+		static const BlockConfig HF_FLW;
+		static const BlockConfig HF_R;
+		static const BlockConfig HF_PRS;
+		static const BlockConfig TMP_1;
+		static const BlockConfig TMP_2;
+		static const BlockConfig DELTA_TMP;
+		static const BlockConfig LA1;
+		static const BlockConfig CVP1;
+		static const BlockConfig ICP1;
+		static const BlockConfig CPP1;
+		static const BlockConfig SP1;
+		static const BlockConfig PA1_M;
+		static const BlockConfig PA1_S;
+		static const BlockConfig PA1_D;
+		static const BlockConfig PA1_R;
+		static const BlockConfig PA2_M;
+		static const BlockConfig PA2_S;
+		static const BlockConfig PA2_D;
+		static const BlockConfig PA2_R;
+		static const BlockConfig PA3_M;
+		static const BlockConfig PA3_S;
+		static const BlockConfig PA3_D;
+		static const BlockConfig PA3_R;
+		static const BlockConfig PA4_M;
+		static const BlockConfig PA4_S;
+		static const BlockConfig PA4_D;
+		static const BlockConfig PA4_R;
+
+
 
 		StpReader( const StpReader& orig );
 		ReadResult processOneChunk( std::unique_ptr<SignalSet>& );

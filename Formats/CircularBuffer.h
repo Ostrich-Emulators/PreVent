@@ -76,7 +76,7 @@ namespace FormatConverter {
 		}
 
 		void rewind( size_t steps = 1 ) {
-			if ( steps > size( ) ) {
+			if ( steps > available( ) ) {
 				throw std::runtime_error( "rewind will exceed buffer size" );
 			}
 
@@ -112,6 +112,10 @@ namespace FormatConverter {
 
 		size_t capacity( ) const {
 			return maxsize;
+		}
+
+		size_t available( ) const {
+			return capacity( ) - size( );
 		}
 
 		size_t size( ) const {

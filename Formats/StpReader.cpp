@@ -45,15 +45,15 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::SKIP6 = BlockConfig::skip( 6 );
   const StpReader::BlockConfig StpReader::HR = BlockConfig::vital( "HR", "Bpm" );
   const StpReader::BlockConfig StpReader::PVC = BlockConfig::vital( "PVC", "Bpm" );
-  const StpReader::BlockConfig StpReader::STI = BlockConfig::vital( "ST-I", "mm", 1, true, false );
-  const StpReader::BlockConfig StpReader::STII = BlockConfig::vital( "ST-II", "mm", 1, true, false );
-  const StpReader::BlockConfig StpReader::STIII = BlockConfig::vital( "ST-III", "mm", 1, true, false );
-  const StpReader::BlockConfig StpReader::STAVR = BlockConfig::vital( "ST-AVR", "mm", 1, true, false );
-  const StpReader::BlockConfig StpReader::STAVL = BlockConfig::vital( "ST-AVL", "mm", 1, true, false );
-  const StpReader::BlockConfig StpReader::STAVF = BlockConfig::vital( "ST-AVF", "mm", 1, true, false );
-  const StpReader::BlockConfig StpReader::STV = BlockConfig::vital( "ST-V", "mm", 1, true, false );
-  const StpReader::BlockConfig StpReader::BT = BlockConfig::vital( "BT", 2, true );
-  const StpReader::BlockConfig StpReader::IT = BlockConfig::vital( "IT", 2, true );
+  const StpReader::BlockConfig StpReader::STI = BlockConfig::div10( "ST-I", "mm", 1, false );
+  const StpReader::BlockConfig StpReader::STII = BlockConfig::div10( "ST-II", "mm", 1, false );
+  const StpReader::BlockConfig StpReader::STIII = BlockConfig::div10( "ST-III", "mm", 1, false );
+  const StpReader::BlockConfig StpReader::STAVR = BlockConfig::div10( "ST-AVR", "mm", 1, false );
+  const StpReader::BlockConfig StpReader::STAVL = BlockConfig::div10( "ST-AVL", "mm", 1, false );
+  const StpReader::BlockConfig StpReader::STAVF = BlockConfig::div10( "ST-AVF", "mm", 1, false );
+  const StpReader::BlockConfig StpReader::STV = BlockConfig::div10( "ST-V", "mm", 1, false );
+  const StpReader::BlockConfig StpReader::BT = BlockConfig::div10( "BT", "Deg C", 2 );
+  const StpReader::BlockConfig StpReader::IT = BlockConfig::div10( "IT", "Deg C", 2 );
   const StpReader::BlockConfig StpReader::RESP = BlockConfig::vital( "RESP", "BrMin" );
   const StpReader::BlockConfig StpReader::APNEA = BlockConfig::vital( "APNEA", "mmHg" );
   const StpReader::BlockConfig StpReader::NBP_M = BlockConfig::vital( "NBP-M", "mmHg" );
@@ -64,6 +64,18 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::AR1_S = BlockConfig::vital( "AR1-S", "mmHg" );
   const StpReader::BlockConfig StpReader::AR1_D = BlockConfig::vital( "AR1-D", "mmHg" );
   const StpReader::BlockConfig StpReader::AR1_R = BlockConfig::vital( "AR1-R", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR2_M = BlockConfig::vital( "AR1-M", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR2_S = BlockConfig::vital( "AR1-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR2_D = BlockConfig::vital( "AR1-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR2_R = BlockConfig::vital( "AR1-R", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR3_M = BlockConfig::vital( "AR1-M", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR3_S = BlockConfig::vital( "AR1-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR3_D = BlockConfig::vital( "AR1-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR3_R = BlockConfig::vital( "AR1-R", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR4_M = BlockConfig::vital( "AR1-M", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR4_S = BlockConfig::vital( "AR1-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR4_D = BlockConfig::vital( "AR1-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::AR4_R = BlockConfig::vital( "AR1-R", "mmHg" );
 
   const StpReader::BlockConfig StpReader::SPO2_P = BlockConfig::vital( "SPO2-%", "%" );
   const StpReader::BlockConfig StpReader::SPO2_R = BlockConfig::vital( "SPO2-R", "Bpm" );
@@ -72,14 +84,42 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::PRS_SUP = BlockConfig::vital( "PRS-SUP", "cmH2O" );
   const StpReader::BlockConfig StpReader::INSP_TM = BlockConfig::vital( "INSP-TM", "Sec" );
   const StpReader::BlockConfig StpReader::INSP_PC = BlockConfig::vital( "INSP-PC", "%" );
-  const StpReader::BlockConfig StpReader::I_E = BlockConfig::vital( "I:E" );
+  const StpReader::BlockConfig StpReader::I_E = BlockConfig::vital( "I:E", "" );
   const StpReader::BlockConfig StpReader::SET_PCP = BlockConfig::vital( "SET-PCP", "cmH2O" );
-  const StpReader::BlockConfig StpReader::SET_IE = BlockConfig::vital( "SET-IE" );
+  const StpReader::BlockConfig StpReader::SET_IE = BlockConfig::vital( "SET-IE", "" );
   const StpReader::BlockConfig StpReader::APRV_LO_T = BlockConfig::vital( "APRV-LO-T", "Sec" );
   const StpReader::BlockConfig StpReader::APRV_HI_T = BlockConfig::vital( "APRV-HI-T", "Sec" );
   const StpReader::BlockConfig StpReader::RESIS = BlockConfig::vital( "RESIS", "cmH2O/L/Sec" );
   const StpReader::BlockConfig StpReader::MEAS_PEEP = BlockConfig::vital( "MEAS-PEEP", "cmH2O" );
-  const StpReader::BlockConfig StpReader::INSP_TV = BlockConfig::vital( "INSP-TV" );
+  const StpReader::BlockConfig StpReader::INSP_TV = BlockConfig::vital( "INSP-TV", "" );
+
+  const StpReader::BlockConfig StpReader::HF_FLW = BlockConfig::vital( "HF-FLW", "L/Min" );
+  const StpReader::BlockConfig StpReader::HF_R = BlockConfig::vital( "HF-R", "Sec" );
+  const StpReader::BlockConfig StpReader::HF_PRS = BlockConfig::vital( "HF-PRS", "cmH2O" );
+  const StpReader::BlockConfig StpReader::TMP_1 = BlockConfig::div10( "TMP-1", "Deg C" );
+  const StpReader::BlockConfig StpReader::TMP_2 = BlockConfig::div10( "TMP-2", "Deg C" );
+  const StpReader::BlockConfig StpReader::DELTA_TMP = BlockConfig::div10( "DELTA-TMP", "Deg C" );
+  const StpReader::BlockConfig StpReader::LA1 = BlockConfig::vital( "LA1", "mmHg" );
+  const StpReader::BlockConfig StpReader::CVP1 = BlockConfig::vital( "CVP1", "mmHg" );
+  const StpReader::BlockConfig StpReader::CPP1 = BlockConfig::vital( "CPP1", "mmHg" );
+  const StpReader::BlockConfig StpReader::ICP1 = BlockConfig::vital( "ICP1", "mmHg" );
+  const StpReader::BlockConfig StpReader::SP1 = BlockConfig::vital( "SP1", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA1_S = BlockConfig::vital( "PA1-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA1_D = BlockConfig::vital( "PA1-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA1_R = BlockConfig::vital( "PA1-R", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA1_M = BlockConfig::vital( "PA1-M", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA2_S = BlockConfig::vital( "PA2-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA2_D = BlockConfig::vital( "PA2-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA2_R = BlockConfig::vital( "PA2-R", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA2_M = BlockConfig::vital( "PA2-M", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA3_S = BlockConfig::vital( "PA3-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA3_D = BlockConfig::vital( "PA3-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA3_R = BlockConfig::vital( "PA3-R", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA3_M = BlockConfig::vital( "PA3-M", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA4_S = BlockConfig::vital( "PA4-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA4_D = BlockConfig::vital( "PA4-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA4_R = BlockConfig::vital( "PA4-R", "mmHg" );
+  const StpReader::BlockConfig StpReader::PA4_M = BlockConfig::vital( "PA4-M", "mmHg" );
 
   StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ) {
   }
@@ -141,7 +181,7 @@ namespace FormatConverter{
           output( ) << v->name( ) << " " << dr->data << std::endl;
         }
       }
-      info->reset();
+      info->reset( );
 
 
       if ( ReadResult::NORMAL != rslt ) {
@@ -203,15 +243,67 @@ namespace FormatConverter{
 
       while ( work.readSinceMark( ) < waveoffset - 6 ) {
         work.skip( 66 );
-        int blocktype = readInt8( );
-        int blockfmt = readInt8( );
+        unsigned int blocktype = readUInt8( );
+        unsigned int blockfmt = readUInt8( );
         work.rewind( 68 ); // go back to the start of this block
         output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
             << blocktype << " " << blockfmt << " starting at " << std::dec << work.readSinceMark( ) << std::endl;
         //int combined = ( blocktype << 8 | blockfmt );
         switch ( blocktype ) {
           case 0x02:
-            readDataBlock( info,{ SKIP6, AR1_M, AR1_S, AR1_D, SKIP2, AR1_R } );
+            switch ( blockfmt ) {
+              case 0x4D:
+                readDataBlock( info,{ SKIP6, AR1_M, AR1_S, AR1_D, SKIP2, AR1_R } );
+                break;
+              case 0x4E:
+                readDataBlock( info,{ SKIP6, AR2_M, AR2_S, AR2_D, SKIP2, AR2_R } );
+                break;
+              case 0x4F:
+                readDataBlock( info,{ SKIP6, AR3_M, AR3_S, AR3_D, SKIP2, AR3_R } );
+                break;
+              case 0x50:
+                readDataBlock( info,{ SKIP6, AR4_M, AR4_S, AR4_D, SKIP2, AR4_R } );
+                break;
+            }
+            break;
+          case 0x03:
+            switch ( blockfmt ) {
+              case 0x4D:
+                readDataBlock( info,{ SKIP6, PA1_M, PA1_S, PA1_D, SKIP2, PA1_R } );
+                break;
+              case 0x4E:
+                readDataBlock( info,{ SKIP6, PA2_M, PA2_S, PA2_D, SKIP2, PA2_R } );
+                break;
+              case 0x4F:
+                readDataBlock( info,{ SKIP6, PA3_M, PA3_S, PA3_D, SKIP2, PA3_R } );
+                break;
+              case 0x50:
+                readDataBlock( info,{ SKIP6, PA4_M, PA4_S, PA4_D, SKIP2, PA4_R } );
+                break;
+            }
+            break;
+          case 0x04:
+            readDataBlock( info,{ SKIP6, LA1 } );
+            break;
+          case 0x05:
+            readDataBlock( info,{ SKIP6, CVP1 } );
+            break;
+          case 0x06:
+            if ( blockfmt == 0x4D ) {
+              readDataBlock( info,{ SKIP6, ICP1, CPP1 } );
+            }
+            else {
+              readDataBlock( info,{ } );
+            }
+            break;
+          case 0x07:
+            if ( blockfmt == 0x4D ) {
+              readDataBlock( info,{ SKIP6, SP1 } );
+            }
+            else {
+              readDataBlock( info,{ } );
+            }
+            break;
           case 0x08:
             readDataBlock( info,{ SKIP6, RESP, APNEA } );
             break;
@@ -222,10 +314,29 @@ namespace FormatConverter{
             readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
             break;
           case 0x0B:
-            readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
+            readDataBlock( info,{ SKIP6, SPO2_P, SPO2_R } );
+            break;
+          case 0x0C:
+            readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
             break;
           case 0x0D:
             readDataBlock( info,{ } );
+            break;
+          case 0x13:
+            readDataBlock( info,{ } );
+            break;
+          case 0x2A:
+            switch ( blockfmt ) {
+              case 0x2D:
+                readDataBlock( info,{ SKIP6, VENT } );
+                break;
+              case 0x5C:
+                readDataBlock( info,{ SKIP6, VENT } );
+                break;
+              case 0x5D:
+                readDataBlock( info,{ SKIP6, VENT } );
+                break;
+            }
             break;
         }
       }
@@ -297,7 +408,7 @@ namespace FormatConverter{
     for ( const auto& cfg : vitals ) {
       read += cfg.readcount;
       if ( cfg.isskip ) {
-        output( ) << "skipping";
+        //output( ) << "skipping";
         //        for ( size_t i = 0; i < cfg.readcount; i++ ) {
         //          output( ) << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << (int) work.pop( );
         //        }
@@ -369,8 +480,27 @@ namespace FormatConverter{
     if ( 0 == val ) {
       return "0";
     }
+    else if ( 0 == val % 10 ) {
+      // if our number ends in 0, lop it off and return
+      return std::to_string( val / 10 );
+    }
+
+    // else we're in the soup...
+    // make sure our precision matches the number of positions in our number
+    // which avoids rounding
+    int prec = 2;
+    if ( val >= 100 ) {
+      prec++;
+    }
+    if ( val >= 1000 ) {
+      prec++;
+    }
+    if ( val >= 10000 ) {
+      prec++;
+    }
+
     std::stringstream ss;
-    ss << std::dec << std::setprecision( 2 ) << val / 10.0;
+    ss << std::dec << std::setprecision( prec ) << val / 10.0;
     std::string s;
     ss>>s;
     return s;
