@@ -121,6 +121,16 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::PA4_R = BlockConfig::vital( "PA4-R", "mmHg" );
   const StpReader::BlockConfig StpReader::PA4_M = BlockConfig::vital( "PA4-M", "mmHg" );
 
+  const StpReader::BlockConfig StpReader::PT_RR = BlockConfig::vital( "PT-RR", "BrMin" );
+  const StpReader::BlockConfig StpReader::PEEP = BlockConfig::vital( "PEEP", "cmH20" );
+  const StpReader::BlockConfig StpReader::MV = BlockConfig::div10( "MV", "L/min" );
+  const StpReader::BlockConfig StpReader::Fi02 = BlockConfig::vital( "Fi02", "%" );
+  const StpReader::BlockConfig StpReader::TV = BlockConfig::vital( "TV", "ml" );
+  const StpReader::BlockConfig StpReader::PIP = BlockConfig::vital( "PIP", "cmH20" );
+  const StpReader::BlockConfig StpReader::PPLAT = BlockConfig::vital( "PPLAT", "cmH20" );
+  const StpReader::BlockConfig StpReader::MAWP = BlockConfig::vital( "MAWP", "cmH20" );
+  const StpReader::BlockConfig StpReader::SENS = BlockConfig::div10( "SENS", "cmH20" );
+
   StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ) {
   }
 
@@ -264,6 +274,9 @@ namespace FormatConverter{
               case 0x50:
                 readDataBlock( info,{ SKIP6, AR4_M, AR4_S, AR4_D, SKIP2, AR4_R } );
                 break;
+              default:
+                readDataBlock( info,{ } );
+                break;
             }
             break;
           case 0x03:
@@ -279,6 +292,9 @@ namespace FormatConverter{
                 break;
               case 0x50:
                 readDataBlock( info,{ SKIP6, PA4_M, PA4_S, PA4_D, SKIP2, PA4_R } );
+                break;
+              default:
+                readDataBlock( info,{ } );
                 break;
             }
             break;
@@ -325,6 +341,9 @@ namespace FormatConverter{
           case 0x13:
             readDataBlock( info,{ } );
             break;
+          case 0x14:
+            readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
+            break;
           case 0x2A:
             switch ( blockfmt ) {
               case 0x2D:
@@ -335,6 +354,9 @@ namespace FormatConverter{
                 break;
               case 0x5D:
                 readDataBlock( info,{ SKIP6, VENT } );
+                break;
+              default:
+                readDataBlock( info,{ } );
                 break;
             }
             break;
@@ -471,6 +493,10 @@ namespace FormatConverter{
           }
         }
       }
+    }
+
+    if ( 0 == read ) {
+      output( ) << "  nothing specified for data block" << std::endl;
     }
 
     work.skip( blocksize - read );

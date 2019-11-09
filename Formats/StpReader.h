@@ -162,6 +162,15 @@ namespace FormatConverter {
 		static const BlockConfig PA4_D;
 		static const BlockConfig PA4_R;
 
+		static const BlockConfig PT_RR;
+		static const BlockConfig PEEP;
+		static const BlockConfig MV;
+		static const BlockConfig Fi02;
+		static const BlockConfig TV;
+		static const BlockConfig PIP;
+		static const BlockConfig PPLAT;
+		static const BlockConfig MAWP;
+		static const BlockConfig SENS;
 
 
 		StpReader( const StpReader& orig );
