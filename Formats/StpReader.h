@@ -195,6 +195,8 @@ namespace FormatConverter {
 		void readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize = 68 );
 		static std::string div10s( int val );
 
+		void unhandledBlockType( unsigned int type, unsigned int fmt ) const;
+
 		bool firstread;
 		dr_time currentTime;
 		zstr::ifstream * filestream;

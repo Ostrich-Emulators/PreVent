@@ -266,9 +266,8 @@ namespace FormatConverter{
         unsigned int blocktype = readUInt8( );
         unsigned int blockfmt = readUInt8( );
         work.rewind( 68 ); // go back to the start of this block
-        output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-            << blocktype << " " << blockfmt << " starting at " << std::dec << work.readSinceMark( ) << std::endl;
-        //int combined = ( blocktype << 8 | blockfmt );
+        //        output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
+        //            << blocktype << " " << blockfmt << " starting at " << std::dec << work.readSinceMark( ) << std::endl;
         switch ( blocktype ) {
           case 0x02:
             switch ( blockfmt ) {
@@ -285,7 +284,7 @@ namespace FormatConverter{
                 readDataBlock( info,{ SKIP6, AR4_M, AR4_S, AR4_D, SKIP2, AR4_R } );
                 break;
               default:
-                readDataBlock( info,{ } );
+                unhandledBlockType( blocktype, blockfmt );
                 break;
             }
             break;
@@ -304,7 +303,7 @@ namespace FormatConverter{
                 readDataBlock( info,{ SKIP6, PA4_M, PA4_S, PA4_D, SKIP2, PA4_R } );
                 break;
               default:
-                readDataBlock( info,{ } );
+                unhandledBlockType( blocktype, blockfmt );
                 break;
             }
             break;
@@ -319,7 +318,7 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, ICP1, CPP1 } );
             }
             else {
-              readDataBlock( info,{ } );
+              unhandledBlockType( blocktype, blockfmt );
             }
             break;
           case 0x07:
@@ -327,7 +326,7 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, SP1 } );
             }
             else {
-              readDataBlock( info,{ } );
+              unhandledBlockType( blocktype, blockfmt );
             }
             break;
           case 0x08:
@@ -347,9 +346,10 @@ namespace FormatConverter{
             break;
           case 0x0D:
             readDataBlock( info,{ } );
+            //unhandledBlockType( blocktype, blockfmt );
             break;
           case 0x13:
-            readDataBlock( info,{ } );
+            unhandledBlockType( blocktype, blockfmt );
             break;
           case 0x14:
             readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
@@ -369,16 +369,18 @@ namespace FormatConverter{
                 readDataBlock( info,{ SKIP6, INSP_TV } );
                 break;
               default:
-                readDataBlock( info,{ } );
+                unhandledBlockType( blocktype, blockfmt );
                 break;
             }
             break;
+          default:
+            unhandledBlockType( blocktype, blockfmt );
         }
       }
       work.skip( 6 );
-      output( ) << "first wave id: " << std::setfill( '0' ) << std::setw( 2 )
-          << std::hex << readInt8( ) << "; vals:" << std::setfill( '0' ) << std::setw( 2 )
-          << readInt8( ) << std::endl;
+      output( ) << "waves start at " << std::dec << work.readSinceMark( ) << " with: " << std::setfill( '0' ) << std::setw( 2 )
+          << std::hex << readUInt8( ) << "; vals:" << std::setfill( '0' ) << std::setw( 2 )
+          << readUInt8( ) << std::endl;
 
       return ReadResult::END_OF_PATIENT;
       //return ReadResult::NORMAL;
@@ -388,6 +390,15 @@ namespace FormatConverter{
       // hopefully, we just need a little more data to read a full segment
       return ReadResult::READER_DEPENDENT;
     }
+  }
+
+  void StpReader::unhandledBlockType( unsigned int type, unsigned int fmt ) const {
+    std::stringstream ss;
+    ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
+        << type << " " << fmt << " starting at " << std::dec << work.readSinceMark( );
+    std::string ex;
+    ss>>ex;
+    throw std::runtime_error( ex );
   }
 
   unsigned int StpReader::readUInt16( ) {
@@ -539,11 +550,9 @@ namespace FormatConverter{
     }
     if ( val >= 1000 || val <= -1000 ) {
       prec++;
-      std::cout << val << std::endl;
     }
     if ( val >= 10000 || val <= -10000 ) {
       prec++;
-      std::cout << val << std::endl;
     }
 
     std::stringstream ss;
