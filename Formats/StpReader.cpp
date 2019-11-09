@@ -59,7 +59,7 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::NBP_M = BlockConfig::vital( "NBP-M", "mmHg" );
   const StpReader::BlockConfig StpReader::NBP_S = BlockConfig::vital( "NBP-S", "mmHg" );
   const StpReader::BlockConfig StpReader::NBP_D = BlockConfig::vital( "NBP-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::CUFF = BlockConfig::vital( "CUFF", "mmHg", 2, false, false );
+  const StpReader::BlockConfig StpReader::CUFF = BlockConfig::vital( "CUFF", "mmHg", 2, false );
   const StpReader::BlockConfig StpReader::AR1_M = BlockConfig::vital( "AR1-M", "mmHg" );
   const StpReader::BlockConfig StpReader::AR1_S = BlockConfig::vital( "AR1-S", "mmHg" );
   const StpReader::BlockConfig StpReader::AR1_D = BlockConfig::vital( "AR1-D", "mmHg" );
@@ -87,15 +87,22 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::I_E = BlockConfig::vital( "I:E", "" );
   const StpReader::BlockConfig StpReader::SET_PCP = BlockConfig::vital( "SET-PCP", "cmH2O" );
   const StpReader::BlockConfig StpReader::SET_IE = BlockConfig::vital( "SET-IE", "" );
-  const StpReader::BlockConfig StpReader::APRV_LO_T = BlockConfig::vital( "APRV-LO-T", "Sec" );
-  const StpReader::BlockConfig StpReader::APRV_HI_T = BlockConfig::vital( "APRV-HI-T", "Sec" );
-  const StpReader::BlockConfig StpReader::RESIS = BlockConfig::vital( "RESIS", "cmH2O/L/Sec" );
+  const StpReader::BlockConfig StpReader::APRV_LO_T = BlockConfig::div10( "APRV-LO-T", "Sec", 2, false );
+  const StpReader::BlockConfig StpReader::APRV_HI_T = BlockConfig::div10( "APRV-HI-T", "Sec", 2, false );
+  const StpReader::BlockConfig StpReader::APRV_LO = BlockConfig::vital( "APRV-LO", "cmH20", 2, false );
+  const StpReader::BlockConfig StpReader::APRV_HI = BlockConfig::vital( "APRV-HI", "cmH20", 2, false );
+  const StpReader::BlockConfig StpReader::RESIS = BlockConfig::div10( "RESIS", "cmH2O/L/Sec", 2, false );
   const StpReader::BlockConfig StpReader::MEAS_PEEP = BlockConfig::vital( "MEAS-PEEP", "cmH2O" );
+  const StpReader::BlockConfig StpReader::INTR_PEEP = BlockConfig::vital( "INTR-PEEP", "cmH2O", 2, false );
   const StpReader::BlockConfig StpReader::INSP_TV = BlockConfig::vital( "INSP-TV", "" );
+  const StpReader::BlockConfig StpReader::COMP = BlockConfig::vital( "COMP", "ml/cmH20" );
 
-  const StpReader::BlockConfig StpReader::HF_FLW = BlockConfig::vital( "HF-FLW", "L/Min" );
-  const StpReader::BlockConfig StpReader::HF_R = BlockConfig::vital( "HF-R", "Sec" );
-  const StpReader::BlockConfig StpReader::HF_PRS = BlockConfig::vital( "HF-PRS", "cmH2O" );
+  const StpReader::BlockConfig StpReader::SPONT_MV = BlockConfig::vital( "SPONT-MV", "L/Min", 2, false );
+  const StpReader::BlockConfig StpReader::SPONT_R = BlockConfig::vital( "SPONT-R", "BrMin", 2, false );
+  const StpReader::BlockConfig StpReader::SET_TV = BlockConfig::vital( "SET-TV", "ml", 2, false );
+  const StpReader::BlockConfig StpReader::HF_FLW = BlockConfig::vital( "HF-FLW", "L/Min", 2, false );
+  const StpReader::BlockConfig StpReader::HF_R = BlockConfig::vital( "HF-R", "Sec", 2, false );
+  const StpReader::BlockConfig StpReader::HF_PRS = BlockConfig::vital( "HF-PRS", "cmH2O", 2, false );
   const StpReader::BlockConfig StpReader::TMP_1 = BlockConfig::div10( "TMP-1", "Deg C" );
   const StpReader::BlockConfig StpReader::TMP_2 = BlockConfig::div10( "TMP-2", "Deg C" );
   const StpReader::BlockConfig StpReader::DELTA_TMP = BlockConfig::div10( "DELTA-TMP", "Deg C" );
@@ -346,14 +353,17 @@ namespace FormatConverter{
             break;
           case 0x2A:
             switch ( blockfmt ) {
-              case 0x2D:
+              case 0xDB:
                 readDataBlock( info,{ SKIP6, VENT } );
+                break;
+              case 0xDC:
+                readDataBlock( info,{ SKIP6, HF_FLW, HF_R, HF_PRS, SPONT_MV, SKIP2, SET_TV, SET_PCP, SET_IE } );
                 break;
               case 0x5C:
-                readDataBlock( info,{ SKIP6, VENT } );
+                readDataBlock( info,{ SKIP6, APRV_LO, APRV_HI, APRV_LO_T, SKIP2, APRV_HI_T, COMP, RESIS, MEAS_PEEP, INTR_PEEP, SPONT_R } );
                 break;
               case 0x5D:
-                readDataBlock( info,{ SKIP6, VENT } );
+                readDataBlock( info,{ } );
                 break;
               default:
                 readDataBlock( info,{ } );
@@ -497,6 +507,12 @@ namespace FormatConverter{
 
     if ( 0 == read ) {
       output( ) << "  nothing specified for data block" << std::endl;
+      read = 18;
+      output( ) << "\tblock (" << std::dec << work.readSinceMark( ) << "):";
+      for ( size_t i = 0; i < read; i++ ) {
+        output( ) << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << readUInt8( );
+      }
+      output( ) << std::endl;
     }
 
     work.skip( blocksize - read );
@@ -515,14 +531,16 @@ namespace FormatConverter{
     // make sure our precision matches the number of positions in our number
     // which avoids rounding
     int prec = 2;
-    if ( val >= 100 ) {
+    if ( val >= 100 || val <= -100 ) {
       prec++;
     }
-    if ( val >= 1000 ) {
+    if ( val >= 1000 || val <= -1000 ) {
       prec++;
+      std::cout << val << std::endl;
     }
-    if ( val >= 10000 ) {
+    if ( val >= 10000 || val <= -10000 ) {
       prec++;
+      std::cout << val << std::endl;
     }
 
     std::stringstream ss;

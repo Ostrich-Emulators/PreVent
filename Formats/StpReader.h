@@ -57,8 +57,8 @@ namespace FormatConverter {
 			}
 
 			static BlockConfig vital( const std::string& lbl, const std::string& uom,
-					size_t read = 2, bool div = false, bool unsign = true ) {
-				return BlockConfig( lbl, read, div, unsign, uom );
+					size_t read = 2, bool unsign = true ) {
+				return BlockConfig( lbl, read, false, unsign, uom );
 			}
 
 			static BlockConfig div10( const std::string& lbl, const std::string& uom,
@@ -130,9 +130,13 @@ namespace FormatConverter {
 		static const BlockConfig SET_IE;
 		static const BlockConfig APRV_LO_T;
 		static const BlockConfig APRV_HI_T;
+		static const BlockConfig APRV_LO;
+		static const BlockConfig APRV_HI;
 		static const BlockConfig RESIS;
 		static const BlockConfig MEAS_PEEP;
+		static const BlockConfig INTR_PEEP;
 		static const BlockConfig INSP_TV;
+		static const BlockConfig COMP;
 
 		static const BlockConfig HF_FLW;
 		static const BlockConfig HF_R;
@@ -171,6 +175,9 @@ namespace FormatConverter {
 		static const BlockConfig PPLAT;
 		static const BlockConfig MAWP;
 		static const BlockConfig SENS;
+		static const BlockConfig SPONT_MV;
+		static const BlockConfig SPONT_R;
+		static const BlockConfig SET_TV;
 
 
 		StpReader( const StpReader& orig );
