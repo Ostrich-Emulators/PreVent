@@ -235,6 +235,7 @@ namespace FormatConverter{
       return ReadResult::ERROR;
     }
 
+    bool blocktypeex = false;
     try {
       work.skip( 18 );
       dr_time timer = readTime( );
@@ -266,8 +267,8 @@ namespace FormatConverter{
         unsigned int blocktype = readUInt8( );
         unsigned int blockfmt = readUInt8( );
         work.rewind( 68 ); // go back to the start of this block
-        //        output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-        //            << blocktype << " " << blockfmt << " starting at " << std::dec << work.readSinceMark( ) << std::endl;
+        output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
+            << blocktype << " " << blockfmt << " starting at " << std::dec << work.readSinceMark( ) << std::endl;
         switch ( blocktype ) {
           case 0x02:
             switch ( blockfmt ) {
@@ -284,6 +285,7 @@ namespace FormatConverter{
                 readDataBlock( info,{ SKIP6, AR4_M, AR4_S, AR4_D, SKIP2, AR4_R } );
                 break;
               default:
+                blocktypeex = true;
                 unhandledBlockType( blocktype, blockfmt );
                 break;
             }
@@ -303,21 +305,35 @@ namespace FormatConverter{
                 readDataBlock( info,{ SKIP6, PA4_M, PA4_S, PA4_D, SKIP2, PA4_R } );
                 break;
               default:
+                blocktypeex = true;
                 unhandledBlockType( blocktype, blockfmt );
                 break;
             }
             break;
           case 0x04:
-            readDataBlock( info,{ SKIP6, LA1 } );
+            if ( blockfmt == 0x4D ) {
+              readDataBlock( info,{ SKIP6, LA1 } );
+            }
+            else {
+              blocktypeex = true;
+              unhandledBlockType( blocktype, blockfmt );
+            }
             break;
           case 0x05:
-            readDataBlock( info,{ SKIP6, CVP1 } );
+            if ( blockfmt == 0x4D ) {
+              readDataBlock( info,{ SKIP6, CVP1 } );
+            }
+            else {
+              blocktypeex = true;
+              unhandledBlockType( blocktype, blockfmt );
+            }
             break;
           case 0x06:
             if ( blockfmt == 0x4D ) {
               readDataBlock( info,{ SKIP6, ICP1, CPP1 } );
             }
             else {
+              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
             break;
@@ -326,33 +342,68 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, SP1 } );
             }
             else {
+              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
             break;
           case 0x08:
-            readDataBlock( info,{ SKIP6, RESP, APNEA } );
+            if ( blockfmt == 0x22 ) {
+              readDataBlock( info,{ SKIP6, RESP, APNEA } );
+            }
+            else {
+              blocktypeex = true;
+              unhandledBlockType( blocktype, blockfmt );
+            }
+
             break;
           case 0x09:
-            readDataBlock( info,{ SKIP6, BT, IT } );
+            if ( blockfmt == 0x22 ) {
+              readDataBlock( info,{ SKIP6, BT, IT } );
+            }
+            else {
+              blocktypeex = true;
+              unhandledBlockType( blocktype, blockfmt );
+            }
             break;
           case 0x0A:
-            readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
+            if ( blockfmt == 0x18 ) {
+              readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
+            }
+            else {
+              blocktypeex = true;
+              unhandledBlockType( blocktype, blockfmt );
+            }
             break;
           case 0x0B:
-            readDataBlock( info,{ SKIP6, SPO2_P, SPO2_R } );
+            if ( blockfmt == 0x2D ) {
+              readDataBlock( info,{ SKIP6, SPO2_P, SPO2_R } );
+            }
+            else {
+              blocktypeex = true;
+              unhandledBlockType( blocktype, blockfmt );
+            }
             break;
           case 0x0C:
-            readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
+            if ( blockfmt == 0x22 ) {
+              readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
+            }
+            else {
+              blocktypeex = true;
+              unhandledBlockType( blocktype, blockfmt );
+            }
             break;
           case 0x0D:
             readDataBlock( info,{ } );
-            //unhandledBlockType( blocktype, blockfmt );
-            break;
-          case 0x13:
-            unhandledBlockType( blocktype, blockfmt );
+            //blocktypeex=true; unhandledBlockType( blocktype, blockfmt );
             break;
           case 0x14:
-            readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
+            if ( blockfmt == 0xC2 ) {
+              readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
+            }
+            else {
+              blocktypeex = true;
+              unhandledBlockType( blocktype, blockfmt );
+            }
             break;
           case 0x2A:
             switch ( blockfmt ) {
@@ -369,11 +420,13 @@ namespace FormatConverter{
                 readDataBlock( info,{ SKIP6, INSP_TV } );
                 break;
               default:
+                blocktypeex = true;
                 unhandledBlockType( blocktype, blockfmt );
                 break;
             }
             break;
           default:
+            blocktypeex = true;
             unhandledBlockType( blocktype, blockfmt );
         }
       }
@@ -381,14 +434,18 @@ namespace FormatConverter{
       output( ) << "waves start at " << std::dec << work.readSinceMark( ) << " with: " << std::setfill( '0' ) << std::setw( 2 )
           << std::hex << readUInt8( ) << "; vals:" << std::setfill( '0' ) << std::setw( 2 )
           << readUInt8( ) << std::endl;
-
-      return ReadResult::END_OF_PATIENT;
-      //return ReadResult::NORMAL;
+      return ReadResult::NORMAL;
     }
     catch ( const std::runtime_error & err ) {
+      output( ) << "exception occurred: " << err.what( ) << std::endl;
       work.rewindToMark( );
-      // hopefully, we just need a little more data to read a full segment
-      return ReadResult::READER_DEPENDENT;
+      if ( blocktypeex ) {
+        throw err;
+      }
+      else {
+        // hopefully, we just need a little more data to read a full segment
+        return ReadResult::READER_DEPENDENT;
+      }
     }
   }
 
