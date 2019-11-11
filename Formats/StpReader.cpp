@@ -206,12 +206,19 @@ namespace FormatConverter{
         rslt = processOneChunk( info );
       }
 
-      for ( const auto& v : info->vitals( ) ) {
-        while ( !v->empty( ) ) {
-          auto dr = v->pop( );
-          output( ) << v->name( ) << " " << dr->data << std::endl;
-        }
-      }
+      //      for ( const auto& v : info->vitals( ) ) {
+      //        while ( !v->empty( ) ) {
+      //          auto dr = v->pop( );
+      //          output( ) << v->name( ) << " " << dr->data << std::endl;
+      //        }
+      //      }
+      //      for ( const auto& v : info->waves( ) ) {
+      //        while ( !v->empty( ) ) {
+      //          auto dr = v->pop( );
+      //          output( ) << v->name( ) << std::endl << "\t" << dr->data << std::endl;
+      //        }
+      //      }
+
       //info->reset( );
 
 
@@ -447,7 +454,7 @@ namespace FormatConverter{
       readWavesBlock( info );
 
       // if no exception has been thrown yet, then we read the entire wave
-      // segment. It doesn't matter if we stopped at the end of a segment
+      // block. It doesn't matter if we stopped at the end of a segment
       // or at the end of the work buffer
       return ReadResult::NORMAL;
     }
@@ -479,9 +486,11 @@ namespace FormatConverter{
   }
 
   int StpReader::readInt16( ) {
-    char b1 = work.pop( );
-    char b2 = work.pop( );
-    return ( b1 << 8 | b2 );
+    unsigned char b1 = work.pop( );
+    unsigned char b2 = work.pop( );
+
+    short val = ( b1 << 8 | b2 );
+    return val;
   }
 
   int StpReader::readInt8( ) {
@@ -577,7 +586,8 @@ namespace FormatConverter{
                 << std::setfill( '0' ) << std::setw( 2 ) << std::hex << shifty << " for "
                 << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte << std::endl;
           }
-          wavevals[waveid].push_back( readInt16( ) );
+          int inty = readInt16( );
+          wavevals[waveid].push_back( inty );
         }
       }
     }
@@ -593,14 +603,19 @@ namespace FormatConverter{
           waveok = true;
         }
         if ( 0 != i ) {
-          vals << ", ";
+          vals << ",";
         }
         vals << w.second[i];
       }
 
       if ( waveok ) {
         //output( ) << vals.str( ) << std::endl;
-        auto& signal = info->addWave( WAVELABELS.at( w.first ) );
+        bool first = false;
+        auto& signal = info->addWave( WAVELABELS.at( w.first ), &first );
+        if ( first ) {
+          signal->setChunkIntervalAndSampleRate( 2000, w.second.size( ) );
+        }
+
         signal->add( DataRow( currentTime, vals.str( ) ) );
       }
     }
