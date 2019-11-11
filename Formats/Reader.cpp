@@ -39,7 +39,7 @@ namespace FormatConverter {
         return std::unique_ptr<Reader>( new WfdbReader( ) );
       case FormatConverter::DSZL:
         return std::unique_ptr<Reader>( new ZlReader2( ) );
-      case FormatConverter::STP:
+      case FormatConverter::STPGE:
         return std::unique_ptr<Reader>( new StpReader( ) );
       case FormatConverter::STPXML:
         return std::unique_ptr<Reader>( new StpXmlReader( ) );

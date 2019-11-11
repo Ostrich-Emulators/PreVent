@@ -35,13 +35,13 @@ namespace FormatConverter {
 		StpReader( const std::string& name );
 		virtual ~StpReader( );
 
-		static bool waveIsOk( const std::string& wavedata );
 	protected:
 		ReadResult fill( std::unique_ptr<SignalSet>&, const ReadResult& lastfill ) override;
 		int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
 		void finish( ) override;
 
 	private:
+		enum WaveReadResult { END_OF_SEGMENT, END_OF_READ };
 
 		class BlockConfig {
 		public:
@@ -187,6 +187,8 @@ namespace FormatConverter {
 		static const BlockConfig SPONT_R;
 		static const BlockConfig SET_TV;
 
+		static const std::map<int, std::string> WAVELABELS;
+
 
 		StpReader( const StpReader& orig );
 		ReadResult processOneChunk( std::unique_ptr<SignalSet>& );
@@ -201,6 +203,7 @@ namespace FormatConverter {
 		static std::string div10s( int val, unsigned int multiple = 1 );
 
 		void unhandledBlockType( unsigned int type, unsigned int fmt ) const;
+		WaveReadResult readWavesBlock( std::unique_ptr<SignalSet>& info );
 
 		bool firstread;
 		dr_time currentTime;

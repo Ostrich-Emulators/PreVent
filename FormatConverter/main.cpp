@@ -46,7 +46,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-C or --no-cache"
       << std::endl << "\t-T or --time-step (store timing information as offset from start of file"
       << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
-      << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, cpcxml, stpjson, tdms, medi, zl"
+      << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, cpcxml, stpjson, tdms, medi, zl"
       << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
       << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
       << std::endl << "\tthe --pattern option recognizes these format specifiers:"
@@ -210,8 +210,8 @@ int main( int argc, char** argv ) {
       case FormatConverter::MAT73:
         fromstr = "mat73";
         break;
-      case FormatConverter::STP:
-        fromstr = "stp";
+      case FormatConverter::STPGE:
+        fromstr = "stpge";
         break;
       case FormatConverter::STPXML:
         fromstr = "stpxml";

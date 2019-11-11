@@ -38,6 +38,18 @@
 
 namespace FormatConverter{
 
+  const std::map<int, std::string> StpReader::WAVELABELS = {
+    {0x07, "I" },
+    {0x08, "II" },
+    {0x09, "III" },
+    {0x0A, "V" },
+    {0x17, "RR" },
+    {0x1B, "AR1" },
+    {0x27, "SPO2" },
+    {0xC8, "VNT_PRES" },
+    {0xC9, "VNT_FLOW" },
+  };
+
   const StpReader::BlockConfig StpReader::SKIP = BlockConfig::skip( );
   const StpReader::BlockConfig StpReader::SKIP2 = BlockConfig::skip( 2 );
   const StpReader::BlockConfig StpReader::SKIP4 = BlockConfig::skip( 4 );
@@ -190,10 +202,9 @@ namespace FormatConverter{
       }
 
       ReadResult rslt = processOneChunk( info );
-      while ( ReadResult::NORMAL == rslt ) {
+      while ( ReadResult::NORMAL == rslt && !work.empty( ) ) {
         rslt = processOneChunk( info );
       }
-
 
       for ( const auto& v : info->vitals( ) ) {
         while ( !v->empty( ) ) {
@@ -201,7 +212,7 @@ namespace FormatConverter{
           output( ) << v->name( ) << " " << dr->data << std::endl;
         }
       }
-      info->reset( );
+      //info->reset( );
 
 
       if ( ReadResult::NORMAL != rslt ) {
@@ -431,16 +442,20 @@ namespace FormatConverter{
         }
       }
       work.skip( 6 );
-      output( ) << "waves start at " << std::dec << work.readSinceMark( ) << " with: " << std::setfill( '0' ) << std::setw( 2 )
-          << std::hex << readUInt8( ) << "; vals:" << std::setfill( '0' ) << std::setw( 2 )
-          << readUInt8( ) << std::endl;
+      output( ) << "waves start at " << std::dec << work.readSinceMark( ) << std::endl;
+      //WaveReadResult rslt = readWavesBlock( info );
+      readWavesBlock( info );
+
+      // if no exception has been thrown yet, then we read the entire wave
+      // segment. It doesn't matter if we stopped at the end of a segment
+      // or at the end of the work buffer
       return ReadResult::NORMAL;
     }
     catch ( const std::runtime_error & err ) {
       output( ) << "exception occurred: " << err.what( ) << std::endl;
       work.rewindToMark( );
       if ( blocktypeex ) {
-        throw err;
+        return ReadResult::ERROR;
       }
       else {
         // hopefully, we just need a little more data to read a full segment
@@ -453,9 +468,8 @@ namespace FormatConverter{
     std::stringstream ss;
     ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
         << type << " " << fmt << " starting at " << std::dec << work.readSinceMark( );
-    std::string ex;
-    ss>>ex;
-    throw std::runtime_error( ex );
+    std::string ex = ss.str( );
+    throw std::runtime_error( ss.str( ) );
   }
 
   unsigned int StpReader::readUInt16( ) {
@@ -495,15 +509,103 @@ namespace FormatConverter{
     return time * 1000;
   }
 
-  bool StpReader::waveIsOk( const std::string& wavedata ) {
-    // if all the values are -32768 or -32753, this isn't a valid reading
-    std::stringstream stream( wavedata );
-    for ( std::string each; std::getline( stream, each, ',' ); ) {
-      if ( !( "-32768" == each || "-32753" == each ) ) {
-        return true;
+  StpReader::WaveReadResult StpReader::readWavesBlock( std::unique_ptr<SignalSet>& info ) {
+    std::map<int, std::vector<int>> wavevals;
+    bool oktocontinue = true;
+    WaveReadResult rslt;
+    while ( oktocontinue ) {
+      unsigned int waveid = readUInt8( );
+      unsigned int countbyte = readUInt8( );
+      static unsigned int counts[] = { 1, 2, 4, 8 };
+
+      unsigned int shifty = countbyte;
+      shifty = ( shifty << 4 >> 4 );
+      // usually, we get 0x0B, but sometimes we get 0x3B. I don't know what
+      // that means, but the B part seems to be the only thing that matters
+      // so zero out the most significant bits
+      unsigned int valstoread = counts[shifty - 9];
+      //      output( ) << "wave "
+      //          << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << "; count:"
+      //          << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
+      //          << "..." << std::dec << valstoread << " vals to read" << std::endl;
+
+      if ( 0xFA == waveid && 0x0D == countbyte ) {
+        //skip the next 25, and see if we've started a new segment (0x7E is the next segment)
+        work.skip( 33 );
+        if ( work.empty( ) ) {
+          // we're at the end of the file, so nothing more to read
+          output( ) << "end of buffer data (maybe end of file)" << std::endl;
+          rslt = END_OF_READ;
+          oktocontinue = false;
+        }
+        else {
+          unsigned next = work.read( ); // read but don't move of read head
+          if ( 0x7E == next ) {
+            output( ) << "\t end of segment" << std::endl;
+            rslt = END_OF_SEGMENT;
+            oktocontinue = false;
+          }
+          else {
+            work.skip( 4 ); // should be ready for the next wave block
+          }
+        }
+      }
+      else if ( !( countbyte == 0x0B || countbyte == 0x3B || countbyte == 0x09 ) ) {
+        std::stringstream ss;
+        ss << "unhandled wave count for known id: "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
+            << " starting at " << std::dec << work.readSinceMark( );
+        std::string ex = ss.str( );
+        throw std::runtime_error( ex );
+      }
+      else if ( 0 == StpReader::WAVELABELS.count( waveid ) ) {
+        std::stringstream ss;
+        ss << "unknown wave id/count: "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
+            << " starting at " << std::dec << work.readSinceMark( );
+        std::string ex = ss.str( );
+        throw std::runtime_error( ex );
+      }
+      else {
+        //        output( ) << "reading " << valstoread
+        //            << " values starting at " << std::dec << work.readSinceMark( ) << std::endl;
+        for ( size_t i = 0; i < valstoread; i++ ) {
+          if ( countbyte != shifty ) {
+            output( ) << "countbyte discrepancy! using " << std::dec << work.readSinceMark( )
+                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << shifty << " for "
+                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte << std::endl;
+          }
+          wavevals[waveid].push_back( readInt16( ) );
+        }
       }
     }
-    return false;
+
+    // we have what we have...now add wavevals to the signalset
+    for ( auto& w : wavevals ) {
+      std::stringstream vals;
+      // make sure we have at least one val above the error code limit (-32753)
+      // while converting their values to a big string
+      bool waveok = false;
+      for ( size_t i = 0; i < w.second.size( ); i++ ) {
+        if ( w.second[i]> -32753 ) {
+          waveok = true;
+        }
+        if ( 0 != i ) {
+          vals << ", ";
+        }
+        vals << w.second[i];
+      }
+
+      if ( waveok ) {
+        //output( ) << vals.str( ) << std::endl;
+        auto& signal = info->addWave( WAVELABELS.at( w.first ) );
+        signal->add( DataRow( currentTime, vals.str( ) ) );
+      }
+    }
+
+    return rslt;
   }
 
   void StpReader::readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize ) {
@@ -618,8 +720,6 @@ namespace FormatConverter{
 
     std::stringstream ss;
     ss << std::dec << std::setprecision( prec ) << val / (double) denominator;
-    std::string s;
-    ss>>s;
-    return s;
+    return ss.str( );
   }
 }

@@ -7,6 +7,7 @@
 #include "Formats.h"
 #include <algorithm>
 #include <string>
+#include <iostream>
 
 namespace FormatConverter{
 
@@ -26,8 +27,8 @@ namespace FormatConverter{
     if ( "hdf5" == fmt ) {
       return HDF5;
     }
-    if ( "stp" == fmt ) {
-      return STP;
+    if ( "stpge" == fmt ) {
+      return STPGE;
     }
     if ( "stpxml" == fmt ) {
       return STPXML;
@@ -78,8 +79,12 @@ namespace FormatConverter{
       else if ( "hea" == suffix ) {
         return Format::WFDB;
       }
+      else if ( "stpge" == suffix ) {
+        return Format::STPGE;
+      }
       else if ( "stp" == suffix ) {
-        return Format::STP;
+        std::cout<<"\"stp\" interpretted as \"stpge\""<<std::endl;
+        return Format::STPGE;
       }
       else if ( "csv" == suffix ) {
         return Format::CSV;
