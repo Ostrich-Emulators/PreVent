@@ -27,7 +27,8 @@ namespace FormatConverter {
 
 		explicit CircularBuffer( size_t size ) :
 		buffer( std::unique_ptr<T[]>( new T[size] ) ),
-		maxsize( size ), head( 0 ), tail( 0 ), _full( false ), _mark( 0 ) {
+		maxsize( size ), head( 0 ), tail( 0 ), _full( false ), _mark( 0 ),
+                _pushed(0), _popped(0) {
 		}
 
 		void push( T item ) {
@@ -38,6 +39,7 @@ namespace FormatConverter {
 			buffer[head] = item;
 			head = ( head + 1 ) % maxsize;
 			_full = ( head == tail );
+            _pushed++;
 		}
 
 		T pop( ) {
@@ -49,6 +51,7 @@ namespace FormatConverter {
 			_full = false;
 			tail = ( tail + 1 ) % maxsize;
 			_mark++;
+            _popped++;
 			return val;
 		}
 
@@ -83,6 +86,7 @@ namespace FormatConverter {
 			tail = ( tail + maxsize - steps ) % maxsize;
 			_full = ( head == tail );
 			_mark -= steps;
+            _popped -= steps;
 		}
 
 		void rewindToMark( ) {
@@ -100,6 +104,9 @@ namespace FormatConverter {
 		void reset( ) {
 			head = tail;
 			_full = false;
+            _popped = 0;
+            _pushed = 0;
+            _mark = 0;
 		}
 
 		bool empty( ) const {
@@ -109,6 +116,14 @@ namespace FormatConverter {
 		bool full( ) const {
 			return _full;
 		}
+
+        size_t pushed() const {
+          return _pushed;
+        }
+        
+        size_t popped() const {
+          return _popped;
+        }
 
 		size_t capacity( ) const {
 			return maxsize;
@@ -135,6 +150,8 @@ namespace FormatConverter {
 		size_t tail;
 		bool _full;
 		size_t _mark;
+        size_t _pushed;
+        size_t _popped;
 	};
 }
 #endif /* CIRCULARBUFFER_H */
