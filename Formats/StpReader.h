@@ -41,7 +41,7 @@ namespace FormatConverter {
 		void finish( ) override;
 
 	private:
-		enum WaveReadResult { END_OF_SEGMENT, END_OF_READ };
+		enum WaveReadResult { END_OF_SEGMENT, SKIP_TO_NEXT_SECTION };
 
 		class BlockConfig {
 		public:
@@ -192,24 +192,27 @@ namespace FormatConverter {
 
 		StpReader( const StpReader& orig );
 		ReadResult processOneChunk( std::unique_ptr<SignalSet>& );
-		dr_time readTime( );
-		std::string readString( size_t length );
-		int readInt16( );
-		int readInt8( );
-		unsigned int readUInt8( );
-		unsigned int readUInt16( );
+		dr_time popTime( );
+		std::string popString( size_t length );
+		int popInt16( );
+		int popInt8( );
+		unsigned int popUInt8( );
+		unsigned int popUInt16( );
 
 		void readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize = 68 );
 		static std::string div10s( int val, unsigned int multiple = 1 );
 
 		void unhandledBlockType( unsigned int type, unsigned int fmt ) const;
 		WaveReadResult readWavesBlock( std::unique_ptr<SignalSet>& info );
+		void copySaved( std::unique_ptr<SignalSet>& from, std::unique_ptr<SignalSet>& to );
 
 		bool firstread;
 		dr_time currentTime;
 		zstr::ifstream * filestream;
 		CircularBuffer<unsigned char> work;
 		std::vector<unsigned char> decodebuffer;
+		unsigned long magiclong;
+		std::map<int, std::vector<int>> leftoverwaves;
 	};
 }
 #endif /* STPREADER_H */
