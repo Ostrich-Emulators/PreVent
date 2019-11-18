@@ -297,10 +297,10 @@ namespace FormatConverter{
 
   void StpReader::copySaved( std::unique_ptr<SignalSet>& from, std::unique_ptr<SignalSet>& to ) {
     // FIXME: use up our leftover waveforms at the current time
-    output( ) << "copying temp data to real signalset" << std::endl;
-    for ( auto e : from->metadata( ) ) {
-      output( ) << e.first << " " << e.second << std::endl;
-    }
+//    output( ) << "copying temp data to real signalset" << std::endl;
+//    for ( auto e : from->metadata( ) ) {
+//      output( ) << e.first << " " << e.second << std::endl;
+//    }
 
     to->setMetadataFrom( *from );
 
@@ -352,11 +352,11 @@ namespace FormatConverter{
       output( ) << "marking at " << work.popped( ) << std::endl;
 
       work.skip( 18 );
-      dr_time timer = popTime( );
-      if ( isRollover( currentTime, timer ) ) {
+      dr_time oldtime = currentTime;
+      currentTime = popTime( );
+      if ( isRollover( currentTime, oldtime ) ) {
         return ReadResult::END_OF_DAY;
       }
-      currentTime = timer;
 
       work.skip( 2 );
       info->setMeta( "Patient Name", popString( 32 ) );
@@ -619,17 +619,26 @@ namespace FormatConverter{
   }
 
   StpReader::WaveReadResult StpReader::readWavesBlock( std::unique_ptr<SignalSet>& info ) {
+    // if our wave section starts with an FA 0D (i.e., no wave data is present),
+    // skip ahead to the next segment
+    if ( 0xFA == work.read( ) && 0x0D == work.read( 1 ) ) {
+      while ( 0x7E != popUInt8( ) ) {
+        // skip!
+      }
+      output( ) << "no wave data in waves section" << std::endl;
+      return WaveReadResult::SKIP_TO_NEXT_SECTION;
+    }
+
     output( ) << "waves section starts at: " << std::dec << work.popped( ) << std::endl;
     work.skip( 4 );
     output( ) << "first wave at: " << work.popped( ) << std::endl;
 
+
+
+
     static const unsigned int READCOUNTS[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
     std::map<int, unsigned int> expectedValues;
     std::map<int, std::vector<int>> wavevals;
-
-    if ( work.popped( ) >= 15449069 ) {
-      output( ) << "here 0!";
-    }
 
     int fa0dloops = 0;
     // basically, we're just going to keep reading until we hit the next
@@ -653,7 +662,7 @@ namespace FormatConverter{
 
       if ( 0xFA == waveid && 0x0D == countbyte ) {
         fa0dloops++;
-        output( ) << "FA 0D section at byte: " << std::dec << ( work.popped( ) - 2 ) << " (loop " << fa0dloops << ")" << std::endl;
+        //output( ) << "FA 0D section at byte: " << std::dec << ( work.popped( ) - 2 ) << " (loop " << fa0dloops << ")" << std::endl;
         // skip through this section to get to the next waveform section
 
         work.skip( 33 );
@@ -693,13 +702,13 @@ namespace FormatConverter{
         throw std::runtime_error( ex );
       }
       else {
-        output( ) << "reading " << valstoread
-            << " values starting at " << std::dec << work.readSinceMark( ) << std::endl;
+        //        output( ) << "reading " << valstoread
+        //            << " values starting at " << std::dec << work.readSinceMark( ) << std::endl;
         if ( countbyte > 0x0C ) {
           // we had a 0x3B or something
-          output( ) << "countbyte discrepancy! "
-              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-              << " at byte " << std::dec << ( work.popped( ) - 1 ) << std::endl;
+          //          output( ) << "countbyte discrepancy! "
+          //              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
+          //              << " at byte " << std::dec << ( work.popped( ) - 1 ) << std::endl;
         }
 
         if ( 0 == expectedValues.count( waveid ) ) {
@@ -740,11 +749,13 @@ namespace FormatConverter{
 
       if ( vector.size( ) != expectedValues[w.first] ) {
         int missingcount = expectedValues[w.first] - vector.size( );
-        output( ) << "filling in " << missingcount << " missing values for wave wave " << w.first << std::endl;
-
-        for ( int i = 0; i < missingcount; i++ ) {
-          vector.push_back( SignalData::MISSING_VALUE );
+        if ( missingcount > 0 ) {
+          output( ) << "filling in " << missingcount << " missing values for wave wave " << w.first << std::endl;
+          for ( int i = 0; i < missingcount; i++ ) {
+            vector.push_back( SignalData::MISSING_VALUE );
+          }
         }
+
       }
 
       // make sure we have at least one val above the error code limit (-32753)
