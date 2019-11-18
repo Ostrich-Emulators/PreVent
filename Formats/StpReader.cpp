@@ -201,7 +201,7 @@ namespace FormatConverter{
     //    delete []skipper;
 
     filestream = new zstr::ifstream( filename );
-    decodebuffer.reserve( 1024 * 16 );
+    decodebuffer.reserve( 1024 * 32 );
     magiclong = 0;
     return 0;
   }
@@ -214,7 +214,10 @@ namespace FormatConverter{
 
     while ( 0 != cnt ) {
       if ( work.available( ) < 1024 * 768 ) {
-        output( ) << "we're in trouble!" << std::endl;
+        // we should never come close to filling up our work buffer
+        // so if we have, make sure the sure knows
+        std::cerr << "work buffer is too full...something is going wrong" << std::endl;
+        return ReadResult::ERROR;
       }
 
       //      output( ) << "read " << cnt << " bytes from input" << std::endl
@@ -237,8 +240,6 @@ namespace FormatConverter{
       size_t segsize = 0;
       while ( workHasFullSegment( &segsize ) && ChunkReadResult::OK == rslt ) {
         //output( ) << "next segment is " << segsize << " bytes big" << std::endl;
-
-        //filler->reset( );
 
         size_t startpop = work.popped( );
         rslt = processOneChunk( info );
@@ -266,11 +267,6 @@ namespace FormatConverter{
         }
       }
 
-      //      output( ) << "reading more data from input stream" << std::endl;
-      //      output( ) << "before read..." << std::endl;
-      //      output( ) << "work buffer size : " << work.size( ) << std::endl;
-      //      output( ) << "             cap : " << work.capacity( ) << std::endl;
-      //      output( ) << "           avail : " << work.available( ) << std::endl;
       filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
       cnt = filestream->gcount( );
     }
@@ -320,7 +316,7 @@ namespace FormatConverter{
     // we are guaranteed to have a complete segment in the work buffer
     // and the work buffer head is pointing to the start of the segment
     work.mark( );
-    output( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
+    // output( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
     try {
       work.skip( 18 );
       dr_time oldtime = currentTime;
@@ -584,11 +580,11 @@ namespace FormatConverter{
       return ChunkReadResult::OK;
     }
 
-    output( ) << "waves section starts at: " << std::dec << work.popped( ) << std::endl;
+    //output( ) << "waves section starts at: " << std::dec << work.popped( ) << std::endl;
     if ( 0x04 == work.read( ) ) {
       work.skip( 4 );
     }
-    output( ) << "first wave at: " << work.popped( ) << std::endl;
+    //output( ) << "first wave at: " << work.popped( ) << std::endl;
 
     static const unsigned int READCOUNTS[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
     std::map<int, unsigned int> expectedValues;
@@ -688,20 +684,16 @@ namespace FormatConverter{
 
     // we read a whole waveform section, so we can add our values to the ones
     // we saved from previous loops, and then write one complete block
-    for ( auto& en : wavevals ) {
-      leftoverwaves[en.first].insert( leftoverwaves[en.first].end( ), en.second.begin( ), en.second.end( ) );
-    }
-
     for ( auto& w : wavevals ) {
-      if ( leftoverwaves[w.first].size( ) != expectedValues[w.first] ) {
-        output( ) << "wave " << w.first << " read " << w.second.size( )
-            << " values for a total of " << leftoverwaves[w.first].size( )
-            << " expecting to write " << expectedValues[w.first] << " values..." << std::endl;
-      }
       std::stringstream vals;
-      std::vector<int>& vector = leftoverwaves.at( w.first );
+      std::vector<int>& vector = leftoverwaves[w.first];
+      vector.insert( vector.end( ), w.second.begin( ), w.second.end( ) );
 
       if ( vector.size( ) != expectedValues[w.first] ) {
+        output( ) << "wave " << w.first << " read " << w.second.size( )
+            << " values for a total of " << vector.size( )
+            << " expecting to write " << expectedValues[w.first] << " values..." << std::endl;
+
         int missingcount = expectedValues[w.first] - vector.size( );
         if ( missingcount > 0 ) {
           output( ) << "filling in " << missingcount << " missing values for wave wave " << w.first << std::endl;
@@ -709,7 +701,6 @@ namespace FormatConverter{
             vector.push_back( SignalData::MISSING_VALUE );
           }
         }
-
       }
 
       // make sure we have at least one val above the error code limit (-32753)
@@ -730,7 +721,7 @@ namespace FormatConverter{
         bool first = false;
         auto& signal = info->addWave( WAVELABELS.at( w.first ), &first );
         if ( first ) {
-          signal->setChunkIntervalAndSampleRate( 2000, w.second.size( ) );
+          signal->setChunkIntervalAndSampleRate( 2000, expectedValues[w.first] );
         }
 
         signal->add( DataRow( currentTime, vals.str( ) ) );
@@ -740,6 +731,9 @@ namespace FormatConverter{
       //      }
       vector.erase( vector.begin( ), vector.begin( ) + expectedValues[w.first] );
       //      output( ) << "after writing, " << vector.size( ) << " vals left for next loop" << std::endl;
+      if ( !vector.empty( ) ) {
+        output( ) << "keeping " << vector.size() << " values for next loop" << std::endl;
+      }
     }
 
     return ChunkReadResult::OK;
