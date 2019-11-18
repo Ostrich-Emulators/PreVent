@@ -202,6 +202,7 @@ namespace FormatConverter{
 
     filestream = new zstr::ifstream( filename );
     decodebuffer.reserve( 1024 * 16 );
+    magiclong = 0;
     return 0;
   }
 
@@ -209,77 +210,69 @@ namespace FormatConverter{
     output( ) << "initial reading from input stream" << std::endl;
     filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
     std::streamsize cnt = filestream->gcount( );
-    output( ) << "read " << cnt << " bytes from input" << std::endl;
-    output( ) << "work buffer size : " << work.size( ) << std::endl;
-    output( ) << "             cap : " << work.capacity( ) << std::endl;
-    output( ) << "           avail : " << work.available( ) << std::endl;
-
-    std::unique_ptr<SignalSet> filler( new BasicSignalSet( ) );
+    output( ) << "work buffer capacity: " << work.capacity( ) << std::endl;
 
     while ( 0 != cnt ) {
+      if ( work.available( ) < 1024 * 768 ) {
+        output( ) << "we're in trouble!" << std::endl;
+      }
+
+      //      output( ) << "read " << cnt << " bytes from input" << std::endl
+      //          << "size before: " << work.size( ) << std::endl;
       // put everything on our buffer, and we'll read only full segments from there
       for ( int i = 0; i < cnt; i++ ) {
         work.push( decodebuffer[i] );
       }
+      //      output( ) << "size after : " << work.size( ) << std::endl
+      //          << "     avail : " << work.available( ) << std::endl;
 
-      if ( ReadResult::FIRST_READ == lastrr ) {
+      if ( ReadResult::FIRST_READ == lastrr && 0 == magiclong ) {
         // the first 4 bytes of the file are the segment demarcator
-        std::vector<unsigned char> vec = work.popvec( 4 );
-        magiclong = ( vec[0] << 24 | vec[1] << 16 | vec[2] << 8 | vec[3] );
+        magiclong = popUInt64( );
         work.rewind( 4 );
       }
 
-      ReadResult rslt;
-      do {
-        filler->reset( );
+      ChunkReadResult rslt = ChunkReadResult::OK;
+      // read as many segments as we can before reading more data
+      size_t segsize = 0;
+      while ( workHasFullSegment( &segsize ) && ChunkReadResult::OK == rslt ) {
+        //output( ) << "next segment is " << segsize << " bytes big" << std::endl;
+
+        //filler->reset( );
 
         size_t startpop = work.popped( );
-        rslt = processOneChunk( filler );
+        rslt = processOneChunk( info );
         size_t endpop = work.popped( );
-        if ( rslt == ReadResult::NORMAL ) {
-          output( ) << "chunk was " << ( endpop - startpop ) << " bytes big" << std::endl;
-          copySaved( filler, info );
+
+        if ( ChunkReadResult::OK == rslt ) {
+          size_t bytesread = endpop - startpop;
+          //output( ) << "read " << bytesread << " bytes of segment" << std::endl;
+          if ( bytesread < segsize ) {
+            work.skip( segsize - bytesread );
+            output( ) << "skipping ahead " << ( segsize - bytesread ) << " bytes to next segment at " << ( startpop + segsize ) << std::endl;
+          }
+          //copySaved( filler, info );
         }
-      }
-      while ( ReadResult::NORMAL == rslt && !work.empty( ) );
+        else {
+          // something happened so rewind our to our mark
+          output( ) << "rewinding to start of segment" << std::endl;
+          work.rewindToMark( );
 
-      //      for ( const auto& v : info->vitals( ) ) {
-      //        while ( !v->empty( ) ) {
-      //          auto dr = v->pop( );
-      //          output( ) << v->name( ) << " " << dr->data << std::endl;
-      //        }
-      //      }
-      //      for ( const auto& v : info->waves( ) ) {
-      //        while ( !v->empty( ) ) {
-      //          auto dr = v->pop( );
-      //          output( ) << v->name( ) << std::endl << "\t" << dr->data << std::endl;
-      //        }
-      //      }
-
-      //info->reset( );
-
-
-      if ( ReadResult::NORMAL != rslt ) {
-        // something happened so rewind our to our mark
-        output( ) << "rewinding to start of segment" << std::endl;
-        work.rewindToMark( );
-
-        // ...but maybe we just have an incomplete segment
-        // so reading more data will fix our problem
-        if ( ReadResult::READER_DEPENDENT != rslt ) {
-          // or not, so let the caller know
-          return rslt;
+          return ( ChunkReadResult::ROLLOVER == rslt
+              ? ReadResult::END_OF_DAY
+              : ChunkReadResult::NEW_PATIENT == rslt
+              ? ReadResult::END_OF_PATIENT
+              : ReadResult::ERROR );
         }
       }
 
-      output( ) << "reading more data from input stream" << std::endl;
-      output( ) << "before read..." << std::endl;
-      output( ) << "work buffer size : " << work.size( ) << std::endl;
-      output( ) << "             cap : " << work.capacity( ) << std::endl;
-      output( ) << "           avail : " << work.available( ) << std::endl;
+      //      output( ) << "reading more data from input stream" << std::endl;
+      //      output( ) << "before read..." << std::endl;
+      //      output( ) << "work buffer size : " << work.size( ) << std::endl;
+      //      output( ) << "             cap : " << work.capacity( ) << std::endl;
+      //      output( ) << "           avail : " << work.available( ) << std::endl;
       filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
       cnt = filestream->gcount( );
-      output( ) << "read " << cnt << " bytes from input" << std::endl;
     }
 
     output( ) << "file is exhausted" << std::endl;
@@ -291,16 +284,16 @@ namespace FormatConverter{
     if ( !work.empty( ) ) {
       output( ) << "still have stuff in our work buffer!" << std::endl;
     }
-    copySaved( filler, info );
+    //copySaved( filler, info );
     return ReadResult::END_OF_FILE;
   }
 
   void StpReader::copySaved( std::unique_ptr<SignalSet>& from, std::unique_ptr<SignalSet>& to ) {
     // FIXME: use up our leftover waveforms at the current time
-//    output( ) << "copying temp data to real signalset" << std::endl;
-//    for ( auto e : from->metadata( ) ) {
-//      output( ) << e.first << " " << e.second << std::endl;
-//    }
+    //    output( ) << "copying temp data to real signalset" << std::endl;
+    //    for ( auto e : from->metadata( ) ) {
+    //      output( ) << e.first << " " << e.second << std::endl;
+    //    }
 
     to->setMetadataFrom( *from );
 
@@ -323,43 +316,27 @@ namespace FormatConverter{
     }
   }
 
-  ReadResult StpReader::processOneChunk( std::unique_ptr<SignalSet>& info ) {
-    // make sure we're looking at a header block
+  StpReader::ChunkReadResult StpReader::processOneChunk( std::unique_ptr<SignalSet>& info ) {
+    // we are guaranteed to have a complete segment in the work buffer
+    // and the work buffer head is pointing to the start of the segment
+    work.mark( );
     output( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
-
-    output( ) << "work buffer size : " << work.size( ) << std::endl;
-    output( ) << "             cap : " << work.capacity( ) << std::endl;
-    output( ) << "           avail : " << work.available( ) << std::endl;
-
-    bool blocktypeex = false;
     try {
-      // we need to start reading at the beginning of a segment, but sometimes
-      // the waveforms appear to end with an extra FA 0D section. My simple
-      // (and probably wrong) solution is just to skip ahead until we see the
-      // next segment start sequence
-      int cnt = 0;
-      while ( !( work.read( ) == 0x7E && work.read( 6 ) == 0x7E ) ) {
-        work.skip( );
-        cnt++;
-      }
-      if ( cnt > 0 ) {
-        output( ) << "  skipped " << cnt << " bytes to find section start at byte: " << work.popped( ) << std::endl;
-      }
-
-      // NOTE: we don't know if our working data has a full segment in it,
-      // so mark where we started reading, in case we need to rewind
-      work.mark( );
-      output( ) << "marking at " << work.popped( ) << std::endl;
-
       work.skip( 18 );
       dr_time oldtime = currentTime;
       currentTime = popTime( );
-      if ( isRollover( currentTime, oldtime ) ) {
-        return ReadResult::END_OF_DAY;
+      if ( isRollover( oldtime, currentTime ) ) {
+        return ChunkReadResult::ROLLOVER;
       }
 
       work.skip( 2 );
-      info->setMeta( "Patient Name", popString( 32 ) );
+      std::string patient = popString( 32 );
+      //      if ( 0 == info->metadata( ).count( "Patient Name" ) ) {
+      info->setMeta( "Patient Name", patient );
+      //      }
+      //      else if ( info->metadata( ).at( "Patient Name" ) != patient ) {
+      //        return ChunkReadResult::NEW_PATIENT;
+      //      }
       work.skip( 2 );
       // offset is number of bytes from byte 64, but we want to track bytes
       // since we started reading (set our mark)
@@ -372,11 +349,11 @@ namespace FormatConverter{
 
         if ( 0x013A != popUInt16( ) ) {
           // we expected a "closing" 0x013A, so something is wrong
-          return ReadResult::ERROR;
+          return ChunkReadResult::HR_BLOCK_PROBLEM;
         }
       }
 
-      while ( work.readSinceMark( ) < waveoffset - 6 ) {
+      while ( work.readSinceMark( ) < waveoffset - 6 && waveoffset != 138 ) { // 138!? basically, no vitals
         work.skip( 66 );
         unsigned int blocktype = popUInt8( );
         unsigned int blockfmt = popUInt8( );
@@ -399,7 +376,6 @@ namespace FormatConverter{
                 readDataBlock( info,{ SKIP6, AR4_M, AR4_S, AR4_D, SKIP2, AR4_R } );
                 break;
               default:
-                blocktypeex = true;
                 unhandledBlockType( blocktype, blockfmt );
                 break;
             }
@@ -419,7 +395,6 @@ namespace FormatConverter{
                 readDataBlock( info,{ SKIP6, PA4_M, PA4_S, PA4_D, SKIP2, PA4_R } );
                 break;
               default:
-                blocktypeex = true;
                 unhandledBlockType( blocktype, blockfmt );
                 break;
             }
@@ -429,7 +404,6 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, LA1 } );
             }
             else {
-              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
             break;
@@ -438,7 +412,6 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, CVP1 } );
             }
             else {
-              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
             break;
@@ -447,7 +420,6 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, ICP1, CPP1 } );
             }
             else {
-              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
             break;
@@ -456,7 +428,6 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, SP1 } );
             }
             else {
-              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
             break;
@@ -465,7 +436,6 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, RESP, APNEA } );
             }
             else {
-              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
 
@@ -475,7 +445,6 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, BT, IT } );
             }
             else {
-              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
             break;
@@ -484,7 +453,6 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
             }
             else {
-              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
             break;
@@ -493,7 +461,6 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, SPO2_P, SPO2_R } );
             }
             else {
-              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
             break;
@@ -502,7 +469,6 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
             }
             else {
-              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
             break;
@@ -515,7 +481,6 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
             }
             else {
-              blocktypeex = true;
               unhandledBlockType( blocktype, blockfmt );
             }
             break;
@@ -534,49 +499,42 @@ namespace FormatConverter{
                 readDataBlock( info,{ SKIP6, INSP_TV } );
                 break;
               default:
-                blocktypeex = true;
                 unhandledBlockType( blocktype, blockfmt );
                 break;
             }
             break;
           default:
-            blocktypeex = true;
             unhandledBlockType( blocktype, blockfmt );
         }
       }
-      work.skip( 2 );
-      WaveReadResult rslt = readWavesBlock( info );
-      if ( WaveReadResult::SKIP_TO_NEXT_SECTION == rslt ) {
-        // we have the full section read, but there may be a few extra
-        // bytes before the start of the next section
-        output( ) << "skip to next section" << std::endl;
-      }
 
-
-      // if no exception has been thrown yet, then we read the entire wave
-      // block. It doesn't matter if we stopped at the end of a segment
-      // or at the end of the work buffer
-      return ReadResult::NORMAL;
-    }
-    catch ( const std::runtime_error & err ) {
-      if ( blocktypeex ) {
-        output( ) << "exception occurred: " << err.what( ) << " at byte: " << std::dec << work.popped( ) << std::endl;
-        return ReadResult::ERROR;
+      if ( 138 == waveoffset ) {
+        work.skip( 66 );
       }
       else {
-        // hopefully, we just need a little more data to read a full segment
-        output( ) << "ran out of data in work buffer" << std::endl;
-        return ReadResult::READER_DEPENDENT;
+        work.skip( 2 );
       }
+      // waves are always ok (?)
+      //ChunkReadResult rslt = readWavesBlock( info );
+      readWavesBlock( info );
+      return ChunkReadResult::OK;
+    }
+    catch ( const std::runtime_error & err ) {
+      std::cerr << err.what( ) << std::endl;
+      return ChunkReadResult::UNKNOWN_BLOCKTYPE;
     }
   }
 
   void StpReader::unhandledBlockType( unsigned int type, unsigned int fmt ) const {
     std::stringstream ss;
     ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-        << type << " " << fmt << " starting at " << std::dec << work.readSinceMark( );
-    std::string ex = ss.str( );
+        << type << " " << fmt << " starting at " << std::dec << work.popped( );
     throw std::runtime_error( ss.str( ) );
+  }
+
+  unsigned long StpReader::popUInt64( ) {
+    std::vector<unsigned char> vec = work.popvec( 4 );
+    return ( vec[0] << 24 | vec[1] << 16 | vec[2] << 8 | vec[3] );
   }
 
   unsigned int StpReader::popUInt16( ) {
@@ -618,23 +576,19 @@ namespace FormatConverter{
     return time * 1000;
   }
 
-  StpReader::WaveReadResult StpReader::readWavesBlock( std::unique_ptr<SignalSet>& info ) {
+  StpReader::ChunkReadResult StpReader::readWavesBlock( std::unique_ptr<SignalSet>& info ) {
     // if our wave section starts with an FA 0D (i.e., no wave data is present),
     // skip ahead to the next segment
     if ( 0xFA == work.read( ) && 0x0D == work.read( 1 ) ) {
-      while ( 0x7E != popUInt8( ) ) {
-        // skip!
-      }
       output( ) << "no wave data in waves section" << std::endl;
-      return WaveReadResult::SKIP_TO_NEXT_SECTION;
+      return ChunkReadResult::OK;
     }
 
     output( ) << "waves section starts at: " << std::dec << work.popped( ) << std::endl;
-    work.skip( 4 );
+    if ( 0x04 == work.read( ) ) {
+      work.skip( 4 );
+    }
     output( ) << "first wave at: " << work.popped( ) << std::endl;
-
-
-
 
     static const unsigned int READCOUNTS[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
     std::map<int, unsigned int> expectedValues;
@@ -683,9 +637,9 @@ namespace FormatConverter{
         //        }
         //        output( ) << std::endl;
       }
-      else if ( !( countbyte == 0x0B || countbyte == 0x3B || countbyte == 0xFB || countbyte == 0x09 ) ) {
+      else if ( valstoread > 4 ) {
         std::stringstream ss;
-        ss << "unhandled wave count for known id: "
+        ss << "don't really think we want to read " << valstoread << " values for wave/count:"
             << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
             << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
             << " starting at " << std::dec << work.popped( );
@@ -704,12 +658,12 @@ namespace FormatConverter{
       else {
         //        output( ) << "reading " << valstoread
         //            << " values starting at " << std::dec << work.readSinceMark( ) << std::endl;
-        if ( countbyte > 0x0C ) {
-          // we had a 0x3B or something
-          //          output( ) << "countbyte discrepancy! "
-          //              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-          //              << " at byte " << std::dec << ( work.popped( ) - 1 ) << std::endl;
-        }
+        //if ( countbyte > 0x0C ) {
+        // we had a 0x3B or something
+        //          output( ) << "countbyte discrepancy! "
+        //              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
+        //              << " at byte " << std::dec << ( work.popped( ) - 1 ) << std::endl;
+        //}
 
         if ( 0 == expectedValues.count( waveid ) ) {
           expectedValues[waveid] = valstoread * 120;
@@ -788,7 +742,7 @@ namespace FormatConverter{
       //      output( ) << "after writing, " << vector.size( ) << " vals left for next loop" << std::endl;
     }
 
-    return WaveReadResult::SKIP_TO_NEXT_SECTION;
+    return ChunkReadResult::OK;
   }
 
   void StpReader::readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize ) {
@@ -903,5 +857,57 @@ namespace FormatConverter{
     std::stringstream ss;
     ss << std::dec << std::setprecision( prec ) << val / (double) denominator;
     return ss.str( );
+  }
+
+  bool StpReader::workHasFullSegment( size_t* size ) {
+    // ensure the data in our buffer starts with a segment marker, and goes at
+    // least to the next segment marker. we do this by reading each byte (sorry)
+
+    if ( work.empty( ) ) {
+      return false;
+    }
+
+    bool ok = false;
+    try {
+      work.mark( );
+      // a segment starts with a 64 bit long, then two blank bytes, then
+      // the long again, and then two more blank bytes... we'll just treat
+      // it as a 6-byte string that is repeated. I believe the segment
+      // always starts with 0x7E.
+
+      // WARNING: if we don't start with our magic number, what do we do?
+      // subsequent calls will never match
+
+      std::string magic1 = popString( 6 );
+      std::string magic2 = popString( 6 );
+      if ( magic1 == magic2 ) {
+        // segment started...now search for a 0x7E, and then check again
+
+        // the two while loops are a little strange, but we only want to do
+        // a comparison if we have a shot at getting a match
+        unsigned long check = 0;
+        while ( check != magiclong ) {
+          while ( 0x7E != work.pop( ) ) {
+            // skip forward until we see another 0x7E
+          }
+          work.rewind( ); // get that 0x7E back in the buffer
+          check = popUInt64( );
+        }
+        ok = true;
+
+        if ( nullptr != size ) {
+          *size = ( work.readSinceMark( ) - 4 );
+        }
+      }
+      else {
+        ok = false;
+      }
+    }
+    catch ( const std::runtime_error& x ) {
+      // don't care, but don't throw
+    }
+
+    work.rewindToMark( );
+    return ok;
   }
 }

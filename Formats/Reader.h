@@ -24,7 +24,6 @@ namespace FormatConverter {
 		END_OF_DAY = 3,
 		END_OF_FILE = 4,
 		ERROR = 5,
-		READER_DEPENDENT = 6
 	};
 
 	class Reader {
@@ -75,7 +74,14 @@ namespace FormatConverter {
 		static bool strptime2( const std::string& input, const std::string& format,
 				std::tm * tm );
 
-		bool isRollover(const dr_time& now, const dr_time& then) const;
+		/**
+		 * Decides if now is in a new day from then.  If then is 0, this function
+		 * always returns false
+		 * @param then the old time
+		 * @param now the time to check
+		 * @return true, if now and then are in different days
+		 */
+		bool isRollover(const dr_time& then, const dr_time& now) const;
 
 		/**
 		 * Gets root attributes from the given input. If this can be accomplished

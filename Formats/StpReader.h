@@ -41,7 +41,10 @@ namespace FormatConverter {
 		void finish( ) override;
 
 	private:
-		enum WaveReadResult { END_OF_SEGMENT, SKIP_TO_NEXT_SECTION };
+
+		enum ChunkReadResult {
+			OK, ROLLOVER, NEW_PATIENT, UNKNOWN_BLOCKTYPE, HR_BLOCK_PROBLEM
+		};
 
 		class BlockConfig {
 		public:
@@ -191,20 +194,28 @@ namespace FormatConverter {
 
 
 		StpReader( const StpReader& orig );
-		ReadResult processOneChunk( std::unique_ptr<SignalSet>& );
+		ChunkReadResult processOneChunk( std::unique_ptr<SignalSet>& );
 		dr_time popTime( );
 		std::string popString( size_t length );
 		int popInt16( );
 		int popInt8( );
 		unsigned int popUInt8( );
 		unsigned int popUInt16( );
+		unsigned long popUInt64( );
 
 		void readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize = 68 );
 		static std::string div10s( int val, unsigned int multiple = 1 );
 
 		void unhandledBlockType( unsigned int type, unsigned int fmt ) const;
-		WaveReadResult readWavesBlock( std::unique_ptr<SignalSet>& info );
+		ChunkReadResult readWavesBlock( std::unique_ptr<SignalSet>& info );
 		void copySaved( std::unique_ptr<SignalSet>& from, std::unique_ptr<SignalSet>& to );
+		
+		/**
+		 * determines if the work buffer has at least one full segment in it
+		 * @param size the size of the first segment in the work buffer, if a complete segment exists
+		 * @return 
+		 */
+		bool workHasFullSegment( size_t * size = nullptr );
 
 		bool firstread;
 		dr_time currentTime;
