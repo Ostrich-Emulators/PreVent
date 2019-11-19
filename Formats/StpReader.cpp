@@ -242,7 +242,7 @@ namespace FormatConverter{
         //output( ) << "next segment is " << segsize << " bytes big" << std::endl;
 
         size_t startpop = work.popped( );
-        rslt = processOneChunk( info );
+        rslt = processOneChunk( info, segsize );
         size_t endpop = work.popped( );
 
         if ( ChunkReadResult::OK == rslt ) {
@@ -279,6 +279,7 @@ namespace FormatConverter{
     // if we still have stuff in our work buffer, process it
     if ( !work.empty( ) ) {
       output( ) << "still have stuff in our work buffer!" << std::endl;
+      ChunkReadResult rslt = processOneChunk( info, work.size( ) );
     }
     //copySaved( filler, info );
     return ReadResult::END_OF_FILE;
@@ -312,11 +313,12 @@ namespace FormatConverter{
     }
   }
 
-  StpReader::ChunkReadResult StpReader::processOneChunk( std::unique_ptr<SignalSet>& info ) {
+  StpReader::ChunkReadResult StpReader::processOneChunk( std::unique_ptr<SignalSet>& info,
+      const size_t& maxread ) {
     // we are guaranteed to have a complete segment in the work buffer
     // and the work buffer head is pointing to the start of the segment
     work.mark( );
-    // output( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
+    output( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
     try {
       work.skip( 18 );
       dr_time oldtime = currentTime;
@@ -327,192 +329,218 @@ namespace FormatConverter{
 
       work.skip( 2 );
       std::string patient = popString( 32 );
-      //      if ( 0 == info->metadata( ).count( "Patient Name" ) ) {
-      info->setMeta( "Patient Name", patient );
-      //      }
-      //      else if ( info->metadata( ).at( "Patient Name" ) != patient ) {
-      //        return ChunkReadResult::NEW_PATIENT;
-      //      }
+      if ( !patient.empty( ) ) {
+        if ( 0 == info->metadata( ).count( "Patient Name" ) ) {
+          info->setMeta( "Patient Name", patient );
+        }
+        else if ( info->metadata( ).at( "Patient Name" ) != patient ) {
+          return ChunkReadResult::NEW_PATIENT;
+        }
+      }
       work.skip( 2 );
       // offset is number of bytes from byte 64, but we want to track bytes
       // since we started reading (set our mark)
-      size_t waveoffset = popUInt16( ) + 64;
+      size_t waveoffset = popUInt16( ) + 60; // offset is at pos 60 in the segment
       work.skip( 4 ); // don't know what these mean
       work.skip( 2 ); // don't know what these mean, either
 
-      if ( 0x013A == popUInt16( ) ) {
-        readDataBlock( info,{ SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF }, 62 );
+      // We have two types of blocks here: the 0x013A block, which is 62 bytes
+      // big and contains HR, PVC, and ST-* vitals, and all other blocks, which
+      // are 68 (but sometimes 66?!) bytes big and contain everything else. Both
+      // types are optional, but if the 0x013A block is present, it always seems
+      // to be first. Our strategy is to keep looping until, if we do one more
+      // loop, we'll pass our wave offset limit
 
-        if ( 0x013A != popUInt16( ) ) {
-          // we expected a "closing" 0x013A, so something is wrong
-          return ChunkReadResult::HR_BLOCK_PROBLEM;
+      while ( work.poppedSinceMark( ) + 66 <= waveoffset ) {
+        //output( ) << "psm: " << work.poppedSinceMark( ) << "\t" << work.popped( ) << std::endl;
+        if ( 0x013A == readUInt16( ) ) {
+          work.skip( 2 ); // the int16 we just read
+          readDataBlock( info,{ SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF }, 62 );
+
+          if ( 0x013A != popUInt16( ) ) {
+            // we expected a "closing" 0x013A, so something is wrong
+            return ChunkReadResult::HR_BLOCK_PROBLEM;
+          }
+        }
+        else {
+          work.skip( 66 ); // skip to end of the block to read the block type and format
+          unsigned int blocktype = popUInt8( );
+          unsigned int blockfmt = popUInt8( );
+          work.rewind( 68 ); // go back to the start of this block
+          //output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
+          //  << blocktype << " " << blockfmt << " starting at " << std::dec << work.popped( ) << std::endl;
+          switch ( blocktype ) {
+            case 0x01:
+              if ( 0x00 == blockfmt ) {
+                // sometimes our 68-byte block is only 66 bytes big! Luckily,
+                // this only seems to happen when the blocktype is actuall 0x0D,
+                // which we ignore anyway. It seems to be followed by 0x0100,
+                // so just ignore this, too
+                readDataBlock( info,{ } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+              break;
+            case 0x02:
+              switch ( blockfmt ) {
+                case 0x4D:
+                  readDataBlock( info,{ SKIP6, AR1_M, AR1_S, AR1_D, SKIP2, AR1_R } );
+                  break;
+                case 0x4E:
+                  readDataBlock( info,{ SKIP6, AR2_M, AR2_S, AR2_D, SKIP2, AR2_R } );
+                  break;
+                case 0x4F:
+                  readDataBlock( info,{ SKIP6, AR3_M, AR3_S, AR3_D, SKIP2, AR3_R } );
+                  break;
+                case 0x50:
+                  readDataBlock( info,{ SKIP6, AR4_M, AR4_S, AR4_D, SKIP2, AR4_R } );
+                  break;
+                default:
+                  unhandledBlockType( blocktype, blockfmt );
+                  break;
+              }
+              break;
+            case 0x03:
+              switch ( blockfmt ) {
+                case 0x4D:
+                  readDataBlock( info,{ SKIP6, PA1_M, PA1_S, PA1_D, SKIP2, PA1_R } );
+                  break;
+                case 0x4E:
+                  readDataBlock( info,{ SKIP6, PA2_M, PA2_S, PA2_D, SKIP2, PA2_R } );
+                  break;
+                case 0x4F:
+                  readDataBlock( info,{ SKIP6, PA3_M, PA3_S, PA3_D, SKIP2, PA3_R } );
+                  break;
+                case 0x50:
+                  readDataBlock( info,{ SKIP6, PA4_M, PA4_S, PA4_D, SKIP2, PA4_R } );
+                  break;
+                default:
+                  unhandledBlockType( blocktype, blockfmt );
+                  break;
+              }
+              break;
+            case 0x04:
+              if ( blockfmt == 0x4D ) {
+                readDataBlock( info,{ SKIP6, LA1 } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+              break;
+            case 0x05:
+              if ( blockfmt == 0x4D ) {
+                readDataBlock( info,{ SKIP6, CVP1 } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+              break;
+            case 0x06:
+              if ( blockfmt == 0x4D ) {
+                readDataBlock( info,{ SKIP6, ICP1, CPP1 } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+              break;
+            case 0x07:
+              if ( blockfmt == 0x4D ) {
+                readDataBlock( info,{ SKIP6, SP1 } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+              break;
+            case 0x08:
+              if ( blockfmt == 0x22 ) {
+                readDataBlock( info,{ SKIP6, RESP, APNEA } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+
+              break;
+            case 0x09:
+              if ( blockfmt == 0x22 ) {
+                readDataBlock( info,{ SKIP6, BT, IT } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+              break;
+            case 0x0A:
+              if ( blockfmt == 0x18 ) {
+                readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+              break;
+            case 0x0B:
+              if ( blockfmt == 0x2D ) {
+                readDataBlock( info,{ SKIP6, SPO2_P, SPO2_R } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+              break;
+            case 0x0C:
+              if ( blockfmt == 0x22 ) {
+                readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+              break;
+            case 0x0D:
+              readDataBlock( info,{ } );
+              //unhandledBlockType( blocktype, blockfmt );
+              break;
+            case 0x14:
+              if ( blockfmt == 0xC2 ) {
+                readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+              break;
+            case 0x2A:
+              switch ( blockfmt ) {
+                case 0xDB:
+                  readDataBlock( info,{ SKIP6, VENT, FLW_R, SKIP4, IN_HLD, SKIP2, PRS_SUP, INSP_TM, INSP_PC, I_E } );
+                  break;
+                case 0xDC:
+                  readDataBlock( info,{ SKIP6, HF_FLW, HF_R, HF_PRS, SPONT_MV, SKIP2, SET_TV, SET_PCP, SET_IE, B_FLW, FLW_TRIG } );
+                  break;
+                case 0x5C:
+                  readDataBlock( info,{ SKIP6, APRV_LO, APRV_HI, APRV_LO_T, SKIP2, APRV_HI_T, COMP, RESIS, MEAS_PEEP, INTR_PEEP, SPONT_R } );
+                  break;
+                case 0x5D:
+                  readDataBlock( info,{ SKIP6, INSP_TV } );
+                  break;
+                default:
+                  unhandledBlockType( blocktype, blockfmt );
+                  break;
+              }
+              break;
+            default:
+              unhandledBlockType( blocktype, blockfmt );
+          }
         }
       }
 
-      while ( work.readSinceMark( ) < waveoffset - 6 && waveoffset != 138 ) { // 138!? basically, no vitals
-        work.skip( 66 );
-        unsigned int blocktype = popUInt8( );
-        unsigned int blockfmt = popUInt8( );
-        work.rewind( 68 ); // go back to the start of this block
-        //output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-        //    << blocktype << " " << blockfmt << " starting at " << std::dec << work.popped( ) << std::endl;
-        switch ( blocktype ) {
-          case 0x02:
-            switch ( blockfmt ) {
-              case 0x4D:
-                readDataBlock( info,{ SKIP6, AR1_M, AR1_S, AR1_D, SKIP2, AR1_R } );
-                break;
-              case 0x4E:
-                readDataBlock( info,{ SKIP6, AR2_M, AR2_S, AR2_D, SKIP2, AR2_R } );
-                break;
-              case 0x4F:
-                readDataBlock( info,{ SKIP6, AR3_M, AR3_S, AR3_D, SKIP2, AR3_R } );
-                break;
-              case 0x50:
-                readDataBlock( info,{ SKIP6, AR4_M, AR4_S, AR4_D, SKIP2, AR4_R } );
-                break;
-              default:
-                unhandledBlockType( blocktype, blockfmt );
-                break;
-            }
-            break;
-          case 0x03:
-            switch ( blockfmt ) {
-              case 0x4D:
-                readDataBlock( info,{ SKIP6, PA1_M, PA1_S, PA1_D, SKIP2, PA1_R } );
-                break;
-              case 0x4E:
-                readDataBlock( info,{ SKIP6, PA2_M, PA2_S, PA2_D, SKIP2, PA2_R } );
-                break;
-              case 0x4F:
-                readDataBlock( info,{ SKIP6, PA3_M, PA3_S, PA3_D, SKIP2, PA3_R } );
-                break;
-              case 0x50:
-                readDataBlock( info,{ SKIP6, PA4_M, PA4_S, PA4_D, SKIP2, PA4_R } );
-                break;
-              default:
-                unhandledBlockType( blocktype, blockfmt );
-                break;
-            }
-            break;
-          case 0x04:
-            if ( blockfmt == 0x4D ) {
-              readDataBlock( info,{ SKIP6, LA1 } );
-            }
-            else {
-              unhandledBlockType( blocktype, blockfmt );
-            }
-            break;
-          case 0x05:
-            if ( blockfmt == 0x4D ) {
-              readDataBlock( info,{ SKIP6, CVP1 } );
-            }
-            else {
-              unhandledBlockType( blocktype, blockfmt );
-            }
-            break;
-          case 0x06:
-            if ( blockfmt == 0x4D ) {
-              readDataBlock( info,{ SKIP6, ICP1, CPP1 } );
-            }
-            else {
-              unhandledBlockType( blocktype, blockfmt );
-            }
-            break;
-          case 0x07:
-            if ( blockfmt == 0x4D ) {
-              readDataBlock( info,{ SKIP6, SP1 } );
-            }
-            else {
-              unhandledBlockType( blocktype, blockfmt );
-            }
-            break;
-          case 0x08:
-            if ( blockfmt == 0x22 ) {
-              readDataBlock( info,{ SKIP6, RESP, APNEA } );
-            }
-            else {
-              unhandledBlockType( blocktype, blockfmt );
-            }
-
-            break;
-          case 0x09:
-            if ( blockfmt == 0x22 ) {
-              readDataBlock( info,{ SKIP6, BT, IT } );
-            }
-            else {
-              unhandledBlockType( blocktype, blockfmt );
-            }
-            break;
-          case 0x0A:
-            if ( blockfmt == 0x18 ) {
-              readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
-            }
-            else {
-              unhandledBlockType( blocktype, blockfmt );
-            }
-            break;
-          case 0x0B:
-            if ( blockfmt == 0x2D ) {
-              readDataBlock( info,{ SKIP6, SPO2_P, SPO2_R } );
-            }
-            else {
-              unhandledBlockType( blocktype, blockfmt );
-            }
-            break;
-          case 0x0C:
-            if ( blockfmt == 0x22 ) {
-              readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
-            }
-            else {
-              unhandledBlockType( blocktype, blockfmt );
-            }
-            break;
-          case 0x0D:
-            readDataBlock( info,{ } );
-            //blocktypeex=true; unhandledBlockType( blocktype, blockfmt );
-            break;
-          case 0x14:
-            if ( blockfmt == 0xC2 ) {
-              readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
-            }
-            else {
-              unhandledBlockType( blocktype, blockfmt );
-            }
-            break;
-          case 0x2A:
-            switch ( blockfmt ) {
-              case 0xDB:
-                readDataBlock( info,{ SKIP6, VENT, FLW_R, SKIP4, IN_HLD, SKIP2, PRS_SUP, INSP_TM, INSP_PC, I_E } );
-                break;
-              case 0xDC:
-                readDataBlock( info,{ SKIP6, HF_FLW, HF_R, HF_PRS, SPONT_MV, SKIP2, SET_TV, SET_PCP, SET_IE, B_FLW, FLW_TRIG } );
-                break;
-              case 0x5C:
-                readDataBlock( info,{ SKIP6, APRV_LO, APRV_HI, APRV_LO_T, SKIP2, APRV_HI_T, COMP, RESIS, MEAS_PEEP, INTR_PEEP, SPONT_R } );
-                break;
-              case 0x5D:
-                readDataBlock( info,{ SKIP6, INSP_TV } );
-                break;
-              default:
-                unhandledBlockType( blocktype, blockfmt );
-                break;
-            }
-            break;
-          default:
-            unhandledBlockType( blocktype, blockfmt );
-        }
+      if ( work.poppedSinceMark( ) < waveoffset ) {
+        work.skip( waveoffset - work.poppedSinceMark( ) );
+      }
+      else if ( work.poppedSinceMark( ) > waveoffset ) {
+        std::cerr << "we passed the wave start. that ain't right!" << std::endl;
+        work.rewind( work.poppedSinceMark( ) - waveoffset );
       }
 
-      if ( 138 == waveoffset ) {
-        work.skip( 66 );
-      }
-      else {
-        work.skip( 2 );
-      }
       // waves are always ok (?)
       //ChunkReadResult rslt = readWavesBlock( info );
-      readWavesBlock( info );
+      readWavesBlock( info, maxread );
       return ChunkReadResult::OK;
     }
     catch ( const std::runtime_error & err ) {
@@ -539,6 +567,12 @@ namespace FormatConverter{
     return ( b1 << 8 | b2 );
   }
 
+  unsigned int StpReader::readUInt16( ) {
+    unsigned char b1 = work.read( );
+    unsigned char b2 = work.read( 1 );
+    return ( b1 << 8 | b2 );
+  }
+
   int StpReader::popInt16( ) {
     unsigned char b1 = work.pop( );
     unsigned char b2 = work.pop( );
@@ -559,7 +593,7 @@ namespace FormatConverter{
     std::vector<char> chars;
     chars.reserve( length );
     auto data = work.popvec( length );
-    for ( size_t i = 0; i < data.size( ); i++ ) {
+    for ( size_t i = 0; i < data.size( ) && 0 != data[i]; i++ ) {
       chars.push_back( (char) data[i] );
     }
     return std::string( chars.begin( ), chars.end( ) );
@@ -572,7 +606,11 @@ namespace FormatConverter{
     return time * 1000;
   }
 
-  StpReader::ChunkReadResult StpReader::readWavesBlock( std::unique_ptr<SignalSet>& info ) {
+  StpReader::ChunkReadResult StpReader::readWavesBlock( std::unique_ptr<SignalSet>& info, const size_t& maxread ) {
+    if ( 0x04 == work.read( ) ) {
+      work.skip( 4 );
+    }
+
     // if our wave section starts with an FA 0D (i.e., no wave data is present),
     // skip ahead to the next segment
     if ( 0xFA == work.read( ) && 0x0D == work.read( 1 ) ) {
@@ -580,21 +618,17 @@ namespace FormatConverter{
       return ChunkReadResult::OK;
     }
 
-    //output( ) << "waves section starts at: " << std::dec << work.popped( ) << std::endl;
-    if ( 0x04 == work.read( ) ) {
-      work.skip( 4 );
-    }
-    //output( ) << "first wave at: " << work.popped( ) << std::endl;
+    output( ) << "waves section starts at: " << std::dec << work.popped( ) << std::endl;
 
     static const unsigned int READCOUNTS[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
     std::map<int, unsigned int> expectedValues;
     std::map<int, std::vector<int>> wavevals;
 
     int fa0dloops = 0;
-    // basically, we're just going to keep reading until we hit the next
-    // segment...then write the appropriate number of values to the signalset
+    // we know we have at least one full segment in our work buffer,
+    // so keep reading until we hit the next segment...then write the appropriate number of values to the signalset
     // and keep any overrun for the next loop
-    while ( 0x7E != work.read( ) ) {
+    while ( 0x7E != work.read( ) && work.poppedSinceMark( ) < maxread ) {
       const unsigned int waveid = popUInt8( );
       const unsigned int countbyte = popUInt8( );
 
@@ -732,7 +766,7 @@ namespace FormatConverter{
       vector.erase( vector.begin( ), vector.begin( ) + expectedValues[w.first] );
       //      output( ) << "after writing, " << vector.size( ) << " vals left for next loop" << std::endl;
       if ( !vector.empty( ) ) {
-        output( ) << "keeping " << vector.size() << " values for next loop" << std::endl;
+        output( ) << "keeping " << vector.size( ) << " values for next loop" << std::endl;
       }
     }
 
@@ -802,6 +836,7 @@ namespace FormatConverter{
               sig->add( DataRow( currentTime, div10s( val, cfg.divBy10 ) ) );
             }
             else {
+
               sig->add( DataRow( currentTime, std::to_string( val ) ) );
             }
           }
@@ -850,6 +885,7 @@ namespace FormatConverter{
 
     std::stringstream ss;
     ss << std::dec << std::setprecision( prec ) << val / (double) denominator;
+
     return ss.str( );
   }
 
@@ -890,7 +926,7 @@ namespace FormatConverter{
         ok = true;
 
         if ( nullptr != size ) {
-          *size = ( work.readSinceMark( ) - 4 );
+          *size = ( work.poppedSinceMark( ) - 4 );
         }
       }
       else {

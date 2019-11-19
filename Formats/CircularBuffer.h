@@ -97,7 +97,7 @@ namespace FormatConverter {
 			_mark = 0;
 		}
 
-		size_t readSinceMark( ) const {
+		size_t poppedSinceMark( ) const {
 			return _mark;
 		}
 

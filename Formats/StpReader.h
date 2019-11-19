@@ -194,22 +194,23 @@ namespace FormatConverter {
 
 
 		StpReader( const StpReader& orig );
-		ChunkReadResult processOneChunk( std::unique_ptr<SignalSet>& );
+		ChunkReadResult processOneChunk( std::unique_ptr<SignalSet>&, const size_t& maxread );
 		dr_time popTime( );
 		std::string popString( size_t length );
 		int popInt16( );
 		int popInt8( );
 		unsigned int popUInt8( );
 		unsigned int popUInt16( );
+		unsigned int readUInt16( );
 		unsigned long popUInt64( );
 
 		void readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize = 68 );
 		static std::string div10s( int val, unsigned int multiple = 1 );
 
 		void unhandledBlockType( unsigned int type, unsigned int fmt ) const;
-		ChunkReadResult readWavesBlock( std::unique_ptr<SignalSet>& info );
+		ChunkReadResult readWavesBlock( std::unique_ptr<SignalSet>& info, const size_t& maxread );
 		void copySaved( std::unique_ptr<SignalSet>& from, std::unique_ptr<SignalSet>& to );
-		
+
 		/**
 		 * determines if the work buffer has at least one full segment in it
 		 * @param size the size of the first segment in the work buffer, if a complete segment exists
