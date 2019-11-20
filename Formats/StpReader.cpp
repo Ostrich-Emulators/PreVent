@@ -124,6 +124,9 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::DELTA_TMP = BlockConfig::div10( "DELTA-TMP", "Deg C" );
   const StpReader::BlockConfig StpReader::LA1 = BlockConfig::vital( "LA1", "mmHg" );
   const StpReader::BlockConfig StpReader::CVP1 = BlockConfig::vital( "CVP1", "mmHg" );
+  const StpReader::BlockConfig StpReader::CVP2 = BlockConfig::vital( "CVP1", "mmHg" );
+  const StpReader::BlockConfig StpReader::CVP3 = BlockConfig::vital( "CVP1", "mmHg" );
+  const StpReader::BlockConfig StpReader::CVP4 = BlockConfig::vital( "CVP4", "mmHg" );
   const StpReader::BlockConfig StpReader::CPP1 = BlockConfig::vital( "CPP1", "mmHg" );
   const StpReader::BlockConfig StpReader::ICP1 = BlockConfig::vital( "ICP1", "mmHg" );
   const StpReader::BlockConfig StpReader::SP1 = BlockConfig::vital( "SP1", "mmHg" );
@@ -143,6 +146,23 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::PA4_D = BlockConfig::vital( "PA4-D", "mmHg" );
   const StpReader::BlockConfig StpReader::PA4_R = BlockConfig::vital( "PA4-R", "mmHg" );
   const StpReader::BlockConfig StpReader::PA4_M = BlockConfig::vital( "PA4-M", "mmHg" );
+
+  const StpReader::BlockConfig StpReader::UAC1_S = BlockConfig::vital( "UAC1-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::UAC1_D = BlockConfig::vital( "UAC1-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::UAC1_R = BlockConfig::vital( "UAC1-R", "Bpm" );
+  const StpReader::BlockConfig StpReader::UAC1_M = BlockConfig::vital( "UAC1-M", "mmHg" );
+  const StpReader::BlockConfig StpReader::UAC2_S = BlockConfig::vital( "UAC2-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::UAC2_D = BlockConfig::vital( "UAC2-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::UAC2_R = BlockConfig::vital( "UAC2-R", "Bpm" );
+  const StpReader::BlockConfig StpReader::UAC2_M = BlockConfig::vital( "UAC2-M", "mmHg" );
+  const StpReader::BlockConfig StpReader::UAC3_S = BlockConfig::vital( "UAC3-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::UAC3_D = BlockConfig::vital( "UAC3-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::UAC3_R = BlockConfig::vital( "UAC3-R", "Bpm" );
+  const StpReader::BlockConfig StpReader::UAC3_M = BlockConfig::vital( "UAC3-M", "mmHg" );
+  const StpReader::BlockConfig StpReader::UAC4_S = BlockConfig::vital( "UAC4-S", "mmHg" );
+  const StpReader::BlockConfig StpReader::UAC4_D = BlockConfig::vital( "UAC4-D", "mmHg" );
+  const StpReader::BlockConfig StpReader::UAC4_R = BlockConfig::vital( "UAC4-R", "Bpm" );
+  const StpReader::BlockConfig StpReader::UAC4_M = BlockConfig::vital( "UAC4-M", "mmHg" );
 
   const StpReader::BlockConfig StpReader::PT_RR = BlockConfig::vital( "PT-RR", "BrMin" );
   const StpReader::BlockConfig StpReader::PEEP = BlockConfig::vital( "PEEP", "cmH20" );
@@ -421,7 +441,7 @@ namespace FormatConverter{
               }
               break;
             case 0x04:
-              if ( blockfmt == 0x4D ) {
+              if ( 0x4D == blockfmt ) {
                 readDataBlock( info,{ SKIP6, LA1 } );
               }
               else {
@@ -429,15 +449,24 @@ namespace FormatConverter{
               }
               break;
             case 0x05:
-              if ( blockfmt == 0x4D ) {
+              if ( 0x4D == blockfmt ) {
                 readDataBlock( info,{ SKIP6, CVP1 } );
+              }
+              else if ( 0x4E == blockfmt ) {
+                readDataBlock( info,{ SKIP6, CVP2 } );
+              }
+              else if ( 0x4F == blockfmt ) {
+                readDataBlock( info,{ SKIP6, CVP3 } );
+              }
+              else if ( 0x50 == blockfmt ) {
+                readDataBlock( info,{ SKIP6, CVP4 } );
               }
               else {
                 unhandledBlockType( blocktype, blockfmt );
               }
               break;
             case 0x06:
-              if ( blockfmt == 0x4D ) {
+              if ( 0x4D == blockfmt ) {
                 readDataBlock( info,{ SKIP6, ICP1, CPP1 } );
               }
               else {
@@ -445,7 +474,7 @@ namespace FormatConverter{
               }
               break;
             case 0x07:
-              if ( blockfmt == 0x4D ) {
+              if ( 0x4D == blockfmt ) {
                 readDataBlock( info,{ SKIP6, SP1 } );
               }
               else {
@@ -453,7 +482,7 @@ namespace FormatConverter{
               }
               break;
             case 0x08:
-              if ( blockfmt == 0x22 ) {
+              if ( 0x22 == blockfmt ) {
                 readDataBlock( info,{ SKIP6, RESP, APNEA } );
               }
               else {
@@ -462,7 +491,7 @@ namespace FormatConverter{
 
               break;
             case 0x09:
-              if ( blockfmt == 0x22 ) {
+              if ( 0x22 == blockfmt ) {
                 readDataBlock( info,{ SKIP6, BT, IT } );
               }
               else {
@@ -470,7 +499,7 @@ namespace FormatConverter{
               }
               break;
             case 0x0A:
-              if ( blockfmt == 0x18 ) {
+              if ( 0x18 == blockfmt ) {
                 readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
               }
               else {
@@ -478,7 +507,7 @@ namespace FormatConverter{
               }
               break;
             case 0x0B:
-              if ( blockfmt == 0x2D ) {
+              if ( 0x2D == blockfmt ) {
                 readDataBlock( info,{ SKIP6, SPO2_P, SPO2_R } );
               }
               else {
@@ -486,7 +515,7 @@ namespace FormatConverter{
               }
               break;
             case 0x0C:
-              if ( blockfmt == 0x22 ) {
+              if ( 0x22 == blockfmt || 0x23 == blockfmt ) {
                 readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
               }
               else {
@@ -497,6 +526,22 @@ namespace FormatConverter{
               readDataBlock( info,{ } );
               //unhandledBlockType( blocktype, blockfmt );
               break;
+            case 0x10:
+              if ( blockfmt == 0x4D ) {
+                readDataBlock( info,{ SKIP6, UAC1_M, UAC1_S, UAC1_M, SKIP2, UAC1_R } );
+              }
+              else if ( 0x4E == blockfmt ) {
+                readDataBlock( info,{ SKIP6, UAC2_M, UAC2_S, UAC2_M, SKIP2, UAC2_R } );
+              }
+              else if ( 0x4F == blockfmt ) {
+                readDataBlock( info,{ SKIP6, UAC3_M, UAC3_S, UAC3_M, SKIP2, UAC3_R } );
+              }
+              else if ( 0x50 == blockfmt ) {
+                readDataBlock( info,{ SKIP6, UAC4_M, UAC4_S, UAC4_M, SKIP2, UAC4_R } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
             case 0x14:
               if ( blockfmt == 0xC2 ) {
                 readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );

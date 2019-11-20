@@ -157,6 +157,9 @@ namespace FormatConverter {
 		static const BlockConfig DELTA_TMP;
 		static const BlockConfig LA1;
 		static const BlockConfig CVP1;
+  	static const BlockConfig CVP2;
+  	static const BlockConfig CVP3;
+  	static const BlockConfig CVP4;
 		static const BlockConfig ICP1;
 		static const BlockConfig CPP1;
 		static const BlockConfig SP1;
@@ -177,6 +180,23 @@ namespace FormatConverter {
 		static const BlockConfig PA4_D;
 		static const BlockConfig PA4_R;
 
+		static const BlockConfig UAC1_M;
+		static const BlockConfig UAC1_S;
+		static const BlockConfig UAC1_D;
+		static const BlockConfig UAC1_R;
+		static const BlockConfig UAC2_M;
+		static const BlockConfig UAC2_S;
+		static const BlockConfig UAC2_D;
+		static const BlockConfig UAC2_R;
+		static const BlockConfig UAC3_M;
+		static const BlockConfig UAC3_S;
+		static const BlockConfig UAC3_D;
+		static const BlockConfig UAC3_R;
+		static const BlockConfig UAC4_M;
+		static const BlockConfig UAC4_S;
+		static const BlockConfig UAC4_D;
+		static const BlockConfig UAC4_R;
+
 		static const BlockConfig PT_RR;
 		static const BlockConfig PEEP;
 		static const BlockConfig MV;
@@ -189,6 +209,7 @@ namespace FormatConverter {
 		static const BlockConfig SPONT_MV;
 		static const BlockConfig SPONT_R;
 		static const BlockConfig SET_TV;
+
 
 		static const std::map<int, std::string> WAVELABELS;
 
