@@ -162,6 +162,12 @@ namespace FormatConverter {
   	static const BlockConfig CVP4;
 		static const BlockConfig ICP1;
 		static const BlockConfig CPP1;
+		static const BlockConfig ICP2;
+		static const BlockConfig CPP2;
+		static const BlockConfig ICP3;
+		static const BlockConfig CPP3;
+		static const BlockConfig ICP4;
+		static const BlockConfig CPP4;
 		static const BlockConfig SP1;
 		static const BlockConfig PA1_M;
 		static const BlockConfig PA1_S;

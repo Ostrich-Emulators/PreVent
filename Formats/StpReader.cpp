@@ -129,6 +129,12 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::CVP4 = BlockConfig::vital( "CVP4", "mmHg" );
   const StpReader::BlockConfig StpReader::CPP1 = BlockConfig::vital( "CPP1", "mmHg" );
   const StpReader::BlockConfig StpReader::ICP1 = BlockConfig::vital( "ICP1", "mmHg" );
+  const StpReader::BlockConfig StpReader::CPP2 = BlockConfig::vital( "CPP2", "mmHg" );
+  const StpReader::BlockConfig StpReader::ICP2 = BlockConfig::vital( "ICP2", "mmHg" );
+  const StpReader::BlockConfig StpReader::CPP3 = BlockConfig::vital( "CPP3", "mmHg" );
+  const StpReader::BlockConfig StpReader::ICP3 = BlockConfig::vital( "ICP3", "mmHg" );
+  const StpReader::BlockConfig StpReader::CPP4 = BlockConfig::vital( "CPP4", "mmHg" );
+  const StpReader::BlockConfig StpReader::ICP4 = BlockConfig::vital( "ICP4", "mmHg" );
   const StpReader::BlockConfig StpReader::SP1 = BlockConfig::vital( "SP1", "mmHg" );
   const StpReader::BlockConfig StpReader::PA1_S = BlockConfig::vital( "PA1-S", "mmHg" );
   const StpReader::BlockConfig StpReader::PA1_D = BlockConfig::vital( "PA1-D", "mmHg" );
@@ -299,7 +305,7 @@ namespace FormatConverter{
     // if we still have stuff in our work buffer, process it
     if ( !work.empty( ) ) {
       output( ) << "still have stuff in our work buffer!" << std::endl;
-      ChunkReadResult rslt = processOneChunk( info, work.size( ) );
+      processOneChunk( info, work.size( ) );
     }
     //copySaved( filler, info );
     return ReadResult::END_OF_FILE;
@@ -468,6 +474,15 @@ namespace FormatConverter{
             case 0x06:
               if ( 0x4D == blockfmt ) {
                 readDataBlock( info,{ SKIP6, ICP1, CPP1 } );
+              }
+              else if ( 0x4E == blockfmt ) {
+                readDataBlock( info,{ SKIP6, ICP2, CPP2 } );
+              }
+              else if ( 0x4F == blockfmt ) {
+                readDataBlock( info,{ SKIP6, ICP3, CPP3 } );
+              }
+              else if ( 0x50 == blockfmt ) {
+                readDataBlock( info,{ SKIP6, ICP4, CPP4 } );
               }
               else {
                 unhandledBlockType( blocktype, blockfmt );
