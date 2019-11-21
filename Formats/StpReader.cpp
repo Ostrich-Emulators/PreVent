@@ -180,6 +180,12 @@ namespace FormatConverter{
   const StpReader::BlockConfig StpReader::MAWP = BlockConfig::vital( "MAWP", "cmH20" );
   const StpReader::BlockConfig StpReader::SENS = BlockConfig::div10( "SENS", "cmH20" );
 
+  const StpReader::BlockConfig StpReader::CO2_EX = BlockConfig::vital( "CO2-EX", "mmHg" );
+  const StpReader::BlockConfig StpReader::CO2_IN = BlockConfig::vital( "CO2-IN", "mmHg" );
+  const StpReader::BlockConfig StpReader::CO2_RR = BlockConfig::vital( "CO2-RR", "BrMin" );
+  const StpReader::BlockConfig StpReader::O2_EXP = BlockConfig::div10( "O2-EXP", "%" );
+  const StpReader::BlockConfig StpReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" );
+
   StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ) {
   }
 
@@ -541,6 +547,15 @@ namespace FormatConverter{
               readDataBlock( info,{ } );
               //unhandledBlockType( blocktype, blockfmt );
               break;
+
+            case 0x0E:
+              if ( blockfmt == 0x4D ) {
+                readDataBlock( info,{ SKIP6, CO2_EX, CO2_IN, CO2_RR, SKIP2, O2_EXP, O2_INSP } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
+              break;
             case 0x10:
               if ( blockfmt == 0x4D ) {
                 readDataBlock( info,{ SKIP6, UAC1_M, UAC1_S, UAC1_M, SKIP2, UAC1_R } );
@@ -558,13 +573,20 @@ namespace FormatConverter{
                 unhandledBlockType( blocktype, blockfmt );
               }
             case 0x14:
-              if ( blockfmt == 0xC2 ) {
+              if ( 0xC2 == blockfmt ) {
                 readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
               }
               else {
                 unhandledBlockType( blocktype, blockfmt );
               }
               break;
+            case 0x1D:
+              if ( 0x0A == blockfmt ) {
+                readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
+              }
+              else {
+                unhandledBlockType( blocktype, blockfmt );
+              }
             case 0x2A:
               switch ( blockfmt ) {
                 case 0xDB:
