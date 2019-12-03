@@ -20,6 +20,7 @@
 #include "StreamChunkReader.h"
 #include "BasicSignalSet.h"
 
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -350,7 +351,8 @@ namespace FormatConverter{
     // we are guaranteed to have a complete segment in the work buffer
     // and the work buffer head is pointing to the start of the segment
     work.mark( );
-    output( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
+    size_t chunkstart = work.popped( );
+    //output( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
     try {
       work.skip( 18 );
       dr_time oldtime = currentTime;
@@ -626,7 +628,8 @@ namespace FormatConverter{
       return ChunkReadResult::OK;
     }
     catch ( const std::runtime_error & err ) {
-      std::cerr << err.what( ) << std::endl;
+      std::cerr << err.what( ) << " (chunk started at byte: "
+          << chunkstart << ")" << std::endl;
       return ChunkReadResult::UNKNOWN_BLOCKTYPE;
     }
   }
@@ -697,16 +700,26 @@ namespace FormatConverter{
     // skip ahead to the next segment
     if ( 0xFA == work.read( ) && 0x0D == work.read( 1 ) ) {
       output( ) << "no wave data in waves section" << std::endl;
+
+      // FIXME: just read to the end of the FA0D section...they may be populated
+      // sections after the first one
+
       return ChunkReadResult::OK;
     }
 
-    output( ) << "waves section starts at: " << std::dec << work.popped( ) << std::endl;
+    size_t wavestart = work.popped( );
+    // output( ) << "waves section starts at: " << std::dec << wavestart << std::endl;
+
+    // FIXME: I think we should read all values until the next chunk start
+    // so we don't have to account for mysteriously appearing and disappearing
+    // wave signals!
 
     static const unsigned int READCOUNTS[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
     std::map<int, unsigned int> expectedValues;
     std::map<int, std::vector<int>> wavevals;
+    std::map<int, int> fa0dminicount;
 
-    int fa0dloops = 0;
+    int fa0dloop = 0;
     // we know we have at least one full segment in our work buffer,
     // so keep reading until we hit the next segment...then write the appropriate number of values to the signalset
     // and keep any overrun for the next loop
@@ -727,8 +740,9 @@ namespace FormatConverter{
       //          << "..." << std::dec << valstoread << " vals to read" << std::endl;
 
       if ( 0xFA == waveid && 0x0D == countbyte ) {
-        fa0dloops++;
-        //output( ) << "FA 0D section at byte: " << std::dec << ( work.popped( ) - 2 ) << " (loop " << fa0dloops << ")" << std::endl;
+        fa0dloop++;
+        fa0dminicount.clear( );
+        //output( ) << "FA 0D section at byte: " << std::dec << ( work.popped( ) - 2 ) << " (loop " << fa0dloop << ")" << std::endl;
         // skip through this section to get to the next waveform section
 
         work.skip( 33 );
@@ -768,8 +782,10 @@ namespace FormatConverter{
         throw std::runtime_error( ex );
       }
       else {
-        //        output( ) << "reading " << valstoread
-        //            << " values starting at " << std::dec << work.readSinceMark( ) << std::endl;
+        //        if ( 23 == waveid ) {
+        //          output( ) << "wave " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid
+        //              << " reading " << valstoread << " values starting at " << std::dec << work.popped( ) << std::endl;
+        //        }
         //if ( countbyte > 0x0C ) {
         // we had a 0x3B or something
         //          output( ) << "countbyte discrepancy! "
@@ -780,41 +796,77 @@ namespace FormatConverter{
         if ( 0 == expectedValues.count( waveid ) ) {
           expectedValues[waveid] = valstoread * 120;
           wavevals[waveid].reserve( expectedValues[waveid] );
+          //std::fill( wavevals[waveid].begin( ), wavevals[waveid].end( ), SignalData::MISSING_VALUE );
 
-          // if we've already seen a couple fa0d loops,
-          // fill in the missing values to this point
-          if ( fa0dloops > 0 ) {
-            // we expect 15 values per fa0d loop
-            for ( unsigned int i = 0; i < fa0dloops * 15 * valstoread; i++ ) {
-              wavevals[waveid].push_back( SignalData::MISSING_VALUE );
+          if ( fa0dloop > 1 ) {
+            // we started a wave in the middle of an FA 0D block, so "catch up"
+            // our counting with the max minicount so far
+            int max = 1;
+            for ( auto & m : fa0dminicount ) {
+              if ( m.second > max ) {
+                max = m.second;
+              }
             }
+
+            // FIXME: this -1 isn't really right...if our new signal is in fact
+            // the first signal, then none of the other signals have incremented
+            // their miniloop yet, so we wouldn't want to subtract 1 here
+            // in practice, this doesn't seem to be an issue
+            fa0dminicount[waveid] = max - 1;
           }
         }
 
+        // make sure we have enough room for our new values
+        // NOTE: we want to do this incrementally (per fa0dloop) for the
+        // situation where we only have 7 fa0d loops instead of 8: we don't
+        // want to think we have, say 480 values when we only have 420
+        // also: sometimes we have 9 fa0d loops
+        wavevals[waveid].resize( ( fa0dloop + 1 ) * valstoread * 15, SignalData::MISSING_VALUE );
+
+        // there are 15 "miniloops" in one fa0d section
+        int startidx = fa0dloop * valstoread * 15 + fa0dminicount[waveid] * valstoread;
+        // calculate the position based on fa0dloop and the number of times
+        // we've seen this waveid in this loop
+        //if ( 23 == waveid ) {
+        //  output( ) << "\tfilling in values array starting at " << startidx << std::endl;
+        //}
         for ( size_t i = 0; i < valstoread; i++ ) {
           int inty = popInt16( );
-          wavevals[waveid].push_back( inty );
+          wavevals[waveid][startidx + i] = inty;
         }
+
+        fa0dminicount[waveid]++;
       }
     }
+
+    bool warned = false;
+    if ( !( warned || 8 == fa0dloop ) ) {
+      warned = true;
+      output( ) << "unexpected FA 0D loop count (" << fa0dloop
+          << " instead of 8) for wave section starting at " << wavestart << std::endl;
+    }
+
+    //if ( fa0dloop != 8 ) {
+    //  output( ) << fa0dloop << " FA 0D loops! (instead of 8)" << std::endl;
+    //}
 
     // we read a whole waveform section, so we can add our values to the ones
     // we saved from previous loops, and then write one complete block
     for ( auto& w : wavevals ) {
       std::stringstream vals;
-      std::vector<int>& vector = leftoverwaves[w.first];
-      vector.insert( vector.end( ), w.second.begin( ), w.second.end( ) );
+      std::vector<int>& leftoversvec = leftoverwaves[w.first];
+      leftoversvec.insert( leftoversvec.end( ), w.second.begin( ), w.second.end( ) );
 
-      if ( vector.size( ) != expectedValues[w.first] ) {
+      if ( w.second.size( ) != expectedValues[w.first] ) {
         output( ) << "wave " << w.first << " read " << w.second.size( )
-            << " values for a total of " << vector.size( )
+            << " values for a total of " << leftoversvec.size( )
             << " expecting to write " << expectedValues[w.first] << " values..." << std::endl;
 
-        int missingcount = expectedValues[w.first] - vector.size( );
+        int missingcount = expectedValues[w.first] - leftoversvec.size( );
         if ( missingcount > 0 ) {
           output( ) << "filling in " << missingcount << " missing values for wave wave " << w.first << std::endl;
           for ( int i = 0; i < missingcount; i++ ) {
-            vector.push_back( SignalData::MISSING_VALUE );
+            leftoversvec.push_back( SignalData::MISSING_VALUE );
           }
         }
       }
@@ -823,17 +875,21 @@ namespace FormatConverter{
       // while converting their values to a big string
       bool waveok = false;
       for ( size_t i = 0; i < expectedValues[w.first]; i++ ) {
-        if ( vector[i]> -32753 ) {
+        if ( leftoversvec[i]> -32753 ) {
           waveok = true;
         }
         if ( 0 != i ) {
           vals << ",";
         }
-        vals << vector[i];
+        vals << leftoversvec[i];
       }
 
       if ( waveok ) {
-        //output( ) << vals.str( ) << std::endl;
+        //        if ( 23 == w.first ) {
+        //          output( ) << "wave " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << w.first
+        //              << " valstr: " << vals.str( ) << std::endl;
+        //        }
+
         bool first = false;
         auto& signal = info->addWave( WAVELABELS.at( w.first ), &first );
         if ( first ) {
@@ -845,10 +901,10 @@ namespace FormatConverter{
       //      else {
       //        output( ) << "(wave not ok)";
       //      }
-      vector.erase( vector.begin( ), vector.begin( ) + expectedValues[w.first] );
+      leftoversvec.erase( leftoversvec.begin( ), leftoversvec.begin( ) + expectedValues[w.first] );
       //      output( ) << "after writing, " << vector.size( ) << " vals left for next loop" << std::endl;
-      if ( !vector.empty( ) ) {
-        output( ) << "keeping " << vector.size( ) << " values for next loop" << std::endl;
+      if ( !leftoversvec.empty( ) ) {
+        output( ) << "keeping " << leftoversvec.size( ) << " values for next loop" << std::endl;
       }
     }
 
