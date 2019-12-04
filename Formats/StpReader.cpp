@@ -47,7 +47,9 @@ namespace FormatConverter{
     {0x0A, "V" },
     {0x17, "RR" },
     {0x1B, "AR1" },
+    {0x1D, "CVP3" },
     {0x27, "SPO2" },
+    {0x2A, "CO2" },
     {0xC8, "VNT_PRES" },
     {0xC9, "VNT_FLOW" },
   };
@@ -511,7 +513,6 @@ namespace FormatConverter{
               else {
                 unhandledBlockType( blocktype, blockfmt );
               }
-
               break;
             case 0x09:
               if ( 0x22 == blockfmt ) {
@@ -549,7 +550,6 @@ namespace FormatConverter{
               readDataBlock( info,{ } );
               //unhandledBlockType( blocktype, blockfmt );
               break;
-
             case 0x0E:
               if ( blockfmt == 0x4D ) {
                 readDataBlock( info,{ SKIP6, CO2_EX, CO2_IN, CO2_RR, SKIP2, O2_EXP, O2_INSP } );
@@ -574,6 +574,7 @@ namespace FormatConverter{
               else {
                 unhandledBlockType( blocktype, blockfmt );
               }
+              break;
             case 0x14:
               if ( 0xC2 == blockfmt ) {
                 readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
@@ -589,6 +590,7 @@ namespace FormatConverter{
               else {
                 unhandledBlockType( blocktype, blockfmt );
               }
+              break;
             case 0x2A:
               switch ( blockfmt ) {
                 case 0xDB:
@@ -903,9 +905,9 @@ namespace FormatConverter{
       //      }
       leftoversvec.erase( leftoversvec.begin( ), leftoversvec.begin( ) + expectedValues[w.first] );
       //      output( ) << "after writing, " << vector.size( ) << " vals left for next loop" << std::endl;
-      if ( !leftoversvec.empty( ) ) {
-        output( ) << "keeping " << leftoversvec.size( ) << " values for next loop" << std::endl;
-      }
+      //if ( !leftoversvec.empty( ) ) {
+      //  output( ) << "keeping " << leftoversvec.size( ) << " values for next loop" << std::endl;
+      //}
     }
 
     return ChunkReadResult::OK;
