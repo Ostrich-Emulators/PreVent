@@ -38,7 +38,7 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-namespace FormatConverter{
+namespace FormatConverter {
 
   const std::map<int, std::string> StpReader::WAVELABELS = {
     {0x07, "I" },
@@ -245,6 +245,7 @@ namespace FormatConverter{
 
   ReadResult StpReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
     output( ) << "initial reading from input stream" << std::endl;
+    waveseq = 0;
     filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
     std::streamsize cnt = filestream->gcount( );
     output( ) << "work buffer capacity: " << work.capacity( ) << std::endl;
@@ -297,10 +298,10 @@ namespace FormatConverter{
           work.rewindToMark( );
 
           return ( ChunkReadResult::ROLLOVER == rslt
-              ? ReadResult::END_OF_DAY
-              : ChunkReadResult::NEW_PATIENT == rslt
-              ? ReadResult::END_OF_PATIENT
-              : ReadResult::ERROR );
+                  ? ReadResult::END_OF_DAY
+                  : ChunkReadResult::NEW_PATIENT == rslt
+                  ? ReadResult::END_OF_PATIENT
+                  : ReadResult::ERROR );
         }
       }
 
@@ -351,7 +352,7 @@ namespace FormatConverter{
   }
 
   StpReader::ChunkReadResult StpReader::processOneChunk( std::unique_ptr<SignalSet>& info,
-      const size_t& maxread ) {
+          const size_t& maxread ) {
     // we are guaranteed to have a complete segment in the work buffer
     // and the work buffer head is pointing to the start of the segment
     work.mark( );
@@ -633,7 +634,7 @@ namespace FormatConverter{
     }
     catch ( const std::runtime_error & err ) {
       std::cerr << err.what( ) << " (chunk started at byte: "
-          << chunkstart << ")" << std::endl;
+              << chunkstart << ")" << std::endl;
       return ChunkReadResult::UNKNOWN_BLOCKTYPE;
     }
   }
@@ -641,7 +642,7 @@ namespace FormatConverter{
   void StpReader::unhandledBlockType( unsigned int type, unsigned int fmt ) const {
     std::stringstream ss;
     ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-        << type << " " << fmt << " starting at " << std::dec << work.popped( );
+            << type << " " << fmt << " starting at " << std::dec << work.popped( );
     throw std::runtime_error( ss.str( ) );
   }
 
@@ -695,9 +696,37 @@ namespace FormatConverter{
     return time * 1000;
   }
 
+  StpReader::WaveSequenceResult StpReader::checkAndSetNewWaveSequenceNumber( const unsigned short& seqnum ) {
+    output( ) << "\t\t\t\tsequence number: " << seqnum << std::endl;
+    WaveSequenceResult rslt;
+    if ( 0 == waveseq || seqnum == ( waveseq + 1 ) ) {
+      rslt = WaveSequenceResult::NORMAL;
+    }
+    else if ( seqnum == waveseq ) {
+      rslt = WaveSequenceResult::DUPLICATE;
+    }
+    else {
+      // we will roll-over short limits eventually (and that's ok)
+      rslt = ( 0xFF == waveseq && 0x00 == seqnum
+              ? WaveSequenceResult::NORMAL
+              : WaveSequenceResult::BREAK );
+    }
+
+    waveseq = seqnum;
+    return rslt;
+  }
+
   StpReader::ChunkReadResult StpReader::readWavesBlock( std::unique_ptr<SignalSet>& info, const size_t& maxread ) {
     if ( 0x04 == work.read( ) ) {
-      work.skip( 4 );
+      work.skip( ); // skip the 0x04
+      auto oldseq = waveseq;
+      WaveSequenceResult wavecheck = checkAndSetNewWaveSequenceNumber( popUInt8( ) );
+      if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::BREAK == wavecheck ) {
+        output( ) << "wave sequence check: " << wavecheck << " (old/new): " << oldseq << "/" << waveseq <<
+                " at byte " << ( work.popped( ) - 1 ) << std::endl;
+      }
+      // skip the other two bytes (don't know what they mean, if anything)
+      work.skip( 2 );
     }
 
     // if our wave section starts with an FA 0D (i.e., no wave data is present),
@@ -759,7 +788,13 @@ namespace FormatConverter{
 
 
         if ( 0x04 == work.read( ) ) {
-          work.skip( 4 );
+          work.skip( ); // skip the 0x04
+          WaveSequenceResult wavecheck = checkAndSetNewWaveSequenceNumber( popUInt8( ) );
+          if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::BREAK == wavecheck ) {
+            output( ) << "wave sequence check: " << wavecheck << std::endl;
+          }
+          // skip the other two bytes (don't know what they mean, if anything)
+          work.skip( 2 );
         }
         //        output( ) << "  wave counts:";
         //        for ( auto& e : wavevals ) {
@@ -770,18 +805,18 @@ namespace FormatConverter{
       else if ( valstoread > 4 ) {
         std::stringstream ss;
         ss << "don't really think we want to read " << valstoread << " values for wave/count:"
-            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
-            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-            << " starting at " << std::dec << work.popped( );
+                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
+                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
+                << " starting at " << std::dec << work.popped( );
         std::string ex = ss.str( );
         throw std::runtime_error( ex );
       }
       else if ( 0 == StpReader::WAVELABELS.count( waveid ) ) {
         std::stringstream ss;
         ss << "unknown wave id/count: "
-            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
-            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-            << " starting at " << std::dec << work.popped( );
+                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
+                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
+                << " starting at " << std::dec << work.popped( );
         std::string ex = ss.str( );
         throw std::runtime_error( ex );
       }
@@ -847,7 +882,7 @@ namespace FormatConverter{
     if ( !( warned || 8 == fa0dloop ) ) {
       warned = true;
       output( ) << "unexpected FA 0D loop count (" << fa0dloop
-          << " instead of 8) for wave section starting at " << wavestart << std::endl;
+              << " instead of 8) for wave section starting at " << wavestart << std::endl;
     }
 
     //if ( fa0dloop != 8 ) {
@@ -863,8 +898,8 @@ namespace FormatConverter{
 
       if ( w.second.size( ) != expectedValues[w.first] ) {
         output( ) << "wave " << w.first << " read " << w.second.size( )
-            << " values for a total of " << leftoversvec.size( )
-            << " expecting to write " << expectedValues[w.first] << " values..." << std::endl;
+                << " values for a total of " << leftoversvec.size( )
+                << " expecting to write " << expectedValues[w.first] << " values..." << std::endl;
 
         int missingcount = expectedValues[w.first] - leftoversvec.size( );
         if ( missingcount > 0 ) {
