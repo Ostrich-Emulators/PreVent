@@ -11,26 +11,23 @@
  * Created on July 7, 2017, 2:57 PM
  */
 
-#ifndef WFDBREADER_H
-#define WFDBREADER_H
+#ifndef UMWFDBREADER_H
+#define UMWFDBREADER_H
 
-#include "Reader.h"
+#include "WfdbReader.h"
 #include <ctime>
 #include <wfdb/wfdb.h>
 
 #include "dr_time.h"
 namespace FormatConverter {
 
-  class WfdbReader : public Reader {
+  class UmWfdbReader : public WfdbReader {
   public:
-    WfdbReader();
+    UmWfdbReader();
 
-    virtual ~WfdbReader();
-
-    dr_time convert(const char * timestr);
+    virtual ~UmWfdbReader();
 
   protected:
-    WfdbReader( const std::string& name );
     int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
     void finish() override;
 
@@ -39,9 +36,7 @@ namespace FormatConverter {
   private:
     int sigcount;
     WFDB_Siginfo * siginfo;
-    int interval;
-    int freqhz;
   };
 }
-#endif /* WFDBREADER_H */
+#endif /* UMWFDBREADER_H */
 

@@ -54,6 +54,9 @@ namespace FormatConverter{
     if ( "tdms" == fmt || "medi" == fmt ) {
       return MEDI;
     }
+    if( "um" == fmt ){
+      return UM;
+    }
 
     return UNRECOGNIZED;
   }
@@ -83,7 +86,7 @@ namespace FormatConverter{
         return Format::STPGE;
       }
       else if ( "stp" == suffix ) {
-        std::cout<<"\"stp\" interpretted as \"stpge\""<<std::endl;
+        std::cout<<"\"stp\" interpreted as \"stpge\""<<std::endl;
         return Format::STPGE;
       }
       else if ( "csv" == suffix ) {

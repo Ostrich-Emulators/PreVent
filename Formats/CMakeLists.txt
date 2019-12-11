@@ -68,6 +68,7 @@ ZlReader.cpp
 TimeModifier.cpp
 TimeParser.cpp
 StpReader.cpp
+UmWfdbReader.cpp
 generated/config.h
 )
 
@@ -135,6 +136,7 @@ XmlReaderBase.h
 ZlReader2.h
 ZlReader.h
 StpReader.h
+UmWfdbReader.h
 zstr.hpp
 strict_fstream.hpp
 CircularBuffer.hpp
