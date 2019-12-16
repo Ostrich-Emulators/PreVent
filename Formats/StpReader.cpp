@@ -38,7 +38,7 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   const std::map<int, std::string> StpReader::WAVELABELS = {
     {0x07, "I" },
@@ -56,6 +56,7 @@ namespace FormatConverter {
     {0xC9, "VNT_FLOW" },
   };
 
+  // <editor-fold defaultstate="collapsed" desc="block configs">
   const StpReader::BlockConfig StpReader::SKIP = BlockConfig::skip( );
   const StpReader::BlockConfig StpReader::SKIP2 = BlockConfig::skip( 2 );
   const StpReader::BlockConfig StpReader::SKIP4 = BlockConfig::skip( 4 );
@@ -189,7 +190,152 @@ namespace FormatConverter {
   const StpReader::BlockConfig StpReader::CO2_IN = BlockConfig::vital( "CO2-IN", "mmHg" );
   const StpReader::BlockConfig StpReader::CO2_RR = BlockConfig::vital( "CO2-RR", "BrMin" );
   const StpReader::BlockConfig StpReader::O2_EXP = BlockConfig::div10( "O2-EXP", "%" );
-  const StpReader::BlockConfig StpReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" );
+  const StpReader::BlockConfig StpReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" ); // </editor-fold>
+
+  StpReader::WaveTracker::WaveTracker( ) : starttime( 0 ), startseq( -1 ),
+  currentseq( -1 ), seen( -1 ) {
+  }
+
+  StpReader::WaveTracker::~WaveTracker( ) {
+  }
+
+  StpReader::WaveSequenceResult StpReader::WaveTracker::nextseq( unsigned short seqnum, dr_time time ) {
+    std::cout << "\t\t\t\tsequence number: " << seqnum << std::endl;
+
+    if ( seen < 0 ) {
+      // we're in a brand new tracker
+      seen = 1;
+      starttime = time;
+      startseq = seqnum;
+      currentseq = seqnum;
+      return WaveSequenceResult::NORMAL;
+    }
+
+    WaveSequenceResult rslt;
+    if ( 0 == currentseq || seqnum == ( currentseq + 1 ) ) {
+      rslt = WaveSequenceResult::NORMAL;
+    }
+    else if ( seqnum == currentseq ) {
+      rslt = WaveSequenceResult::DUPLICATE;
+    }
+    else {
+      // we will roll-over short limits eventually (and that's ok)
+      rslt = ( 0xFF == currentseq && 0x00 == seqnum
+          ? WaveSequenceResult::NORMAL
+          : WaveSequenceResult::BREAK );
+    }
+
+    currentseq = seqnum;
+    miniseen.clear( );
+
+    // FIXME: we probably want to check to make sure the time isn't too far
+    // away from our starttime...they should always be pretty close
+    // FIXME: figure out what "pretty close" means
+
+    seen++;
+    return rslt;
+  }
+
+  void StpReader::WaveTracker::nextvalues( int fa0dloop, int waveid, std::vector<int> values ) {
+    size_t valstoread = values.size( );
+    if ( 0 == expectedValues.count( waveid ) ) {
+      expectedValues[waveid] = valstoread * 120;
+      wavevals[waveid].reserve( expectedValues[waveid] );
+
+      // within an FA0D block, there are 15 "mini" blocks, and waves can just
+      // start appearing. To keep everything in sync, we track which miniblock
+      // we're in for each wave. After a wave has been seen, its miniblock
+      // count is the same as all the others, but the first time it shows up,
+      // we may need to "catch up" with everybody else.
+      for ( auto&m : miniseen ) {
+        if ( m.second > 1 ) {
+          // FIXME: this -1 isn't really right...if our new signal is in fact
+          // the first signal of the miniloop, then none of the other signals
+          // have incremented their miniloop yet, so we wouldn't want to
+          // subtract 1 here.
+          // 
+          // in practice, this doesn't seem to be an issue
+          miniseen[waveid] = m.second - 1;
+          break;
+        }
+      }
+    }
+
+    wavevals[waveid].resize( ( fa0dloop + 1 ) * valstoread * 15, SignalData::MISSING_VALUE );
+
+    // there are 15 "miniloops" in one fa0d section
+    int startidx = ( fa0dloop * 15 + miniseen[waveid] ) * valstoread;
+
+    for ( size_t i = 0; i < valstoread; i++ ) {
+      wavevals[waveid][startidx + i] = values[i];
+    }
+
+    miniseen[waveid]++;
+  }
+
+  void StpReader::WaveTracker::reset( ) {
+    seen = -1;
+  }
+
+  bool StpReader::WaveTracker::writable( ) const {
+    return seen > 7;
+  }
+
+  bool StpReader::WaveTracker::empty( ) const {
+    return seen < 1;
+  }
+
+  void StpReader::WaveTracker::flushone( std::unique_ptr<SignalSet>& info ) {
+    std::cout << "flushing wave values" << std::endl;
+    for ( auto& w : wavevals ) {
+      const int waveid = w.first;
+      std::vector<int>& datapoints = w.second;
+
+      std::stringstream vals;
+      if ( datapoints.size( ) < expectedValues[waveid] ) {
+        std::cout << "filling in " << ( expectedValues[waveid] - datapoints.size( ) )
+            << " for waveid: " << waveid << std::endl;
+        datapoints.resize( expectedValues[waveid], SignalData::MISSING_VALUE );
+      }
+
+      // make sure we have at least one val above the error code limit (-32753)
+      // while converting their values to a big string
+      bool waveok = false;
+      for ( size_t i = 0; i < expectedValues[waveid]; i++ ) {
+        if ( datapoints[i]> -32753 ) {
+          waveok = true;
+        }
+        if ( 0 != i ) {
+          vals << ",";
+        }
+        vals << datapoints[i];
+      }
+
+      if ( waveok ) {
+        //        if ( 23 == w.first ) {
+        //          output( ) << "wave " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << w.first
+        //              << " valstr: " << vals.str( ) << std::endl;
+        //        }
+
+        bool first = false;
+        auto& signal = info->addWave( StpReader::WAVELABELS.at( waveid ), &first );
+        if ( first ) {
+          signal->setChunkIntervalAndSampleRate( 2000, expectedValues[waveid] );
+        }
+
+        signal->add( DataRow( starttime, vals.str( ) ) );
+      }
+
+      datapoints.erase( datapoints.begin( ), datapoints.begin( ) + expectedValues[waveid] );
+    }
+
+    // get ready for the next flush
+    seen -= 8;
+    if ( seen > 0 ) {
+      std::cout << "still have " << seen << " fa0d loops in the chute" << std::endl;
+    }
+    starttime += 2000;
+  }
 
   StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ) {
   }
@@ -245,10 +391,10 @@ namespace FormatConverter {
 
   ReadResult StpReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
     output( ) << "initial reading from input stream" << std::endl;
-    waveseq = 0;
+    wavetracker.reset( );
+
     filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
     std::streamsize cnt = filestream->gcount( );
-    output( ) << "work buffer capacity: " << work.capacity( ) << std::endl;
 
     while ( 0 != cnt ) {
       if ( work.available( ) < 1024 * 768 ) {
@@ -298,10 +444,10 @@ namespace FormatConverter {
           work.rewindToMark( );
 
           return ( ChunkReadResult::ROLLOVER == rslt
-                  ? ReadResult::END_OF_DAY
-                  : ChunkReadResult::NEW_PATIENT == rslt
-                  ? ReadResult::END_OF_PATIENT
-                  : ReadResult::ERROR );
+              ? ReadResult::END_OF_DAY
+              : ChunkReadResult::NEW_PATIENT == rslt
+              ? ReadResult::END_OF_PATIENT
+              : ReadResult::ERROR );
         }
       }
 
@@ -318,6 +464,9 @@ namespace FormatConverter {
     if ( !work.empty( ) ) {
       output( ) << "still have stuff in our work buffer!" << std::endl;
       processOneChunk( info, work.size( ) );
+      while ( !wavetracker.empty( ) ) {
+        wavetracker.flushone( info );
+      }
     }
     //copySaved( filler, info );
     return ReadResult::END_OF_FILE;
@@ -352,7 +501,7 @@ namespace FormatConverter {
   }
 
   StpReader::ChunkReadResult StpReader::processOneChunk( std::unique_ptr<SignalSet>& info,
-          const size_t& maxread ) {
+      const size_t& maxread ) {
     // we are guaranteed to have a complete segment in the work buffer
     // and the work buffer head is pointing to the start of the segment
     work.mark( );
@@ -634,7 +783,7 @@ namespace FormatConverter {
     }
     catch ( const std::runtime_error & err ) {
       std::cerr << err.what( ) << " (chunk started at byte: "
-              << chunkstart << ")" << std::endl;
+          << chunkstart << ")" << std::endl;
       return ChunkReadResult::UNKNOWN_BLOCKTYPE;
     }
   }
@@ -642,7 +791,7 @@ namespace FormatConverter {
   void StpReader::unhandledBlockType( unsigned int type, unsigned int fmt ) const {
     std::stringstream ss;
     ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-            << type << " " << fmt << " starting at " << std::dec << work.popped( );
+        << type << " " << fmt << " starting at " << std::dec << work.popped( );
     throw std::runtime_error( ss.str( ) );
   }
 
@@ -696,34 +845,14 @@ namespace FormatConverter {
     return time * 1000;
   }
 
-  StpReader::WaveSequenceResult StpReader::checkAndSetNewWaveSequenceNumber( const unsigned short& seqnum ) {
-    output( ) << "\t\t\t\tsequence number: " << seqnum << std::endl;
-    WaveSequenceResult rslt;
-    if ( 0 == waveseq || seqnum == ( waveseq + 1 ) ) {
-      rslt = WaveSequenceResult::NORMAL;
-    }
-    else if ( seqnum == waveseq ) {
-      rslt = WaveSequenceResult::DUPLICATE;
-    }
-    else {
-      // we will roll-over short limits eventually (and that's ok)
-      rslt = ( 0xFF == waveseq && 0x00 == seqnum
-              ? WaveSequenceResult::NORMAL
-              : WaveSequenceResult::BREAK );
-    }
-
-    waveseq = seqnum;
-    return rslt;
-  }
-
   StpReader::ChunkReadResult StpReader::readWavesBlock( std::unique_ptr<SignalSet>& info, const size_t& maxread ) {
     if ( 0x04 == work.read( ) ) {
       work.skip( ); // skip the 0x04
-      auto oldseq = waveseq;
-      WaveSequenceResult wavecheck = checkAndSetNewWaveSequenceNumber( popUInt8( ) );
+      auto oldseq = wavetracker.currentseq;
+      WaveSequenceResult wavecheck = wavetracker.nextseq( popUInt8( ), currentTime );
       if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::BREAK == wavecheck ) {
-        output( ) << "wave sequence check: " << wavecheck << " (old/new): " << oldseq << "/" << waveseq <<
-                " at byte " << ( work.popped( ) - 1 ) << std::endl;
+        output( ) << "wave sequence check: " << wavecheck << " (old/new): " << oldseq << "/"
+            << wavetracker.currentseq << " at byte " << ( work.popped( ) - 1 ) << std::endl;
       }
       // skip the other two bytes (don't know what they mean, if anything)
       work.skip( 2 );
@@ -740,7 +869,7 @@ namespace FormatConverter {
       return ChunkReadResult::OK;
     }
 
-    size_t wavestart = work.popped( );
+    //size_t wavestart = work.popped( );
     // output( ) << "waves section starts at: " << std::dec << wavestart << std::endl;
 
     // FIXME: I think we should read all values until the next chunk start
@@ -748,10 +877,6 @@ namespace FormatConverter {
     // wave signals!
 
     static const unsigned int READCOUNTS[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
-    std::map<int, unsigned int> expectedValues;
-    std::map<int, std::vector<int>> wavevals;
-    std::map<int, int> fa0dminicount;
-
     int fa0dloop = 0;
     // we know we have at least one full segment in our work buffer,
     // so keep reading until we hit the next segment...then write the appropriate number of values to the signalset
@@ -774,7 +899,6 @@ namespace FormatConverter {
 
       if ( 0xFA == waveid && 0x0D == countbyte ) {
         fa0dloop++;
-        fa0dminicount.clear( );
         //output( ) << "FA 0D section at byte: " << std::dec << ( work.popped( ) - 2 ) << " (loop " << fa0dloop << ")" << std::endl;
         // skip through this section to get to the next waveform section
 
@@ -789,10 +913,13 @@ namespace FormatConverter {
 
         if ( 0x04 == work.read( ) ) {
           work.skip( ); // skip the 0x04
-          WaveSequenceResult wavecheck = checkAndSetNewWaveSequenceNumber( popUInt8( ) );
+          auto oldseq = wavetracker.currentseq;
+          WaveSequenceResult wavecheck = wavetracker.nextseq( popUInt8( ), currentTime );
           if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::BREAK == wavecheck ) {
-            output( ) << "wave sequence check: " << wavecheck << std::endl;
+            output( ) << "wave sequence check (2): " << wavecheck << " (old/new): " << oldseq << "/"
+                << wavetracker.currentseq << " at byte " << ( work.popped( ) - 1 ) << std::endl;
           }
+
           // skip the other two bytes (don't know what they mean, if anything)
           work.skip( 2 );
         }
@@ -805,18 +932,18 @@ namespace FormatConverter {
       else if ( valstoread > 4 ) {
         std::stringstream ss;
         ss << "don't really think we want to read " << valstoread << " values for wave/count:"
-                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
-                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-                << " starting at " << std::dec << work.popped( );
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
+            << " starting at " << std::dec << work.popped( );
         std::string ex = ss.str( );
         throw std::runtime_error( ex );
       }
       else if ( 0 == StpReader::WAVELABELS.count( waveid ) ) {
         std::stringstream ss;
         ss << "unknown wave id/count: "
-                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
-                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-                << " starting at " << std::dec << work.popped( );
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
+            << " starting at " << std::dec << work.popped( );
         std::string ex = ss.str( );
         throw std::runtime_error( ex );
       }
@@ -832,119 +959,16 @@ namespace FormatConverter {
         //              << " at byte " << std::dec << ( work.popped( ) - 1 ) << std::endl;
         //}
 
-        if ( 0 == expectedValues.count( waveid ) ) {
-          expectedValues[waveid] = valstoread * 120;
-          wavevals[waveid].reserve( expectedValues[waveid] );
-          //std::fill( wavevals[waveid].begin( ), wavevals[waveid].end( ), SignalData::MISSING_VALUE );
-
-          if ( fa0dloop > 1 ) {
-            // we started a wave in the middle of an FA 0D block, so "catch up"
-            // our counting with the max minicount so far
-            int max = 1;
-            for ( auto & m : fa0dminicount ) {
-              if ( m.second > max ) {
-                max = m.second;
-              }
-            }
-
-            // FIXME: this -1 isn't really right...if our new signal is in fact
-            // the first signal, then none of the other signals have incremented
-            // their miniloop yet, so we wouldn't want to subtract 1 here
-            // in practice, this doesn't seem to be an issue
-            fa0dminicount[waveid] = max - 1;
-          }
-        }
-
-        // make sure we have enough room for our new values
-        // NOTE: we want to do this incrementally (per fa0dloop) for the
-        // situation where we only have 7 fa0d loops instead of 8: we don't
-        // want to think we have, say 480 values when we only have 420
-        // also: sometimes we have 9 fa0d loops
-        wavevals[waveid].resize( ( fa0dloop + 1 ) * valstoread * 15, SignalData::MISSING_VALUE );
-
-        // there are 15 "miniloops" in one fa0d section
-        int startidx = fa0dloop * valstoread * 15 + fa0dminicount[waveid] * valstoread;
-        // calculate the position based on fa0dloop and the number of times
-        // we've seen this waveid in this loop
-        //if ( 23 == waveid ) {
-        //  output( ) << "\tfilling in values array starting at " << startidx << std::endl;
-        //}
+        std::vector<int> vals;
         for ( size_t i = 0; i < valstoread; i++ ) {
-          int inty = popInt16( );
-          wavevals[waveid][startidx + i] = inty;
+          vals.push_back( popInt16( ) );
         }
-
-        fa0dminicount[waveid]++;
+        wavetracker.nextvalues( fa0dloop, waveid, vals );
       }
     }
 
-    bool warned = false;
-    if ( !( warned || 8 == fa0dloop ) ) {
-      warned = true;
-      output( ) << "unexpected FA 0D loop count (" << fa0dloop
-              << " instead of 8) for wave section starting at " << wavestart << std::endl;
-    }
-
-    //if ( fa0dloop != 8 ) {
-    //  output( ) << fa0dloop << " FA 0D loops! (instead of 8)" << std::endl;
-    //}
-
-    // we read a whole waveform section, so we can add our values to the ones
-    // we saved from previous loops, and then write one complete block
-    for ( auto& w : wavevals ) {
-      std::stringstream vals;
-      std::vector<int>& leftoversvec = leftoverwaves[w.first];
-      leftoversvec.insert( leftoversvec.end( ), w.second.begin( ), w.second.end( ) );
-
-      if ( w.second.size( ) != expectedValues[w.first] ) {
-        output( ) << "wave " << w.first << " read " << w.second.size( )
-                << " values for a total of " << leftoversvec.size( )
-                << " expecting to write " << expectedValues[w.first] << " values..." << std::endl;
-
-        int missingcount = expectedValues[w.first] - leftoversvec.size( );
-        if ( missingcount > 0 ) {
-          output( ) << "filling in " << missingcount << " missing values for wave wave " << w.first << std::endl;
-          for ( int i = 0; i < missingcount; i++ ) {
-            leftoversvec.push_back( SignalData::MISSING_VALUE );
-          }
-        }
-      }
-
-      // make sure we have at least one val above the error code limit (-32753)
-      // while converting their values to a big string
-      bool waveok = false;
-      for ( size_t i = 0; i < expectedValues[w.first]; i++ ) {
-        if ( leftoversvec[i]> -32753 ) {
-          waveok = true;
-        }
-        if ( 0 != i ) {
-          vals << ",";
-        }
-        vals << leftoversvec[i];
-      }
-
-      if ( waveok ) {
-        //        if ( 23 == w.first ) {
-        //          output( ) << "wave " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << w.first
-        //              << " valstr: " << vals.str( ) << std::endl;
-        //        }
-
-        bool first = false;
-        auto& signal = info->addWave( WAVELABELS.at( w.first ), &first );
-        if ( first ) {
-          signal->setChunkIntervalAndSampleRate( 2000, expectedValues[w.first] );
-        }
-
-        signal->add( DataRow( currentTime, vals.str( ) ) );
-      }
-      //      else {
-      //        output( ) << "(wave not ok)";
-      //      }
-      leftoversvec.erase( leftoversvec.begin( ), leftoversvec.begin( ) + expectedValues[w.first] );
-      //      output( ) << "after writing, " << vector.size( ) << " vals left for next loop" << std::endl;
-      //if ( !leftoversvec.empty( ) ) {
-      //  output( ) << "keeping " << leftoversvec.size( ) << " values for next loop" << std::endl;
-      //}
+    while ( wavetracker.writable( ) ) {
+      wavetracker.flushone( info );
     }
 
     return ChunkReadResult::OK;
