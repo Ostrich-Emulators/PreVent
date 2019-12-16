@@ -55,8 +55,8 @@ namespace FormatConverter {
 			WaveTracker( );
 			virtual ~WaveTracker( );
 
-			WaveSequenceResult nextseq( unsigned short seqnum, dr_time time );
-			void nextvalues( int fa0dloop, int waveid, std::vector<int> values );
+			WaveSequenceResult newseq( const unsigned short& seqnum, const dr_time& time );
+			void newvalues( int waveid, std::vector<int>& values );
 			void reset( );
 			/**
 			 * Have we seen at least 8 FA0D loops?
@@ -71,14 +71,15 @@ namespace FormatConverter {
 			void flushone( std::unique_ptr<SignalSet>& signals );
 			bool empty() const;
 
+			unsigned short currentseq() const;
+			const dr_time& starttime() const;
+			dr_time vitalstarttime() const;
 
-			dr_time starttime;
-			unsigned short startseq;
-			unsigned short currentseq;
+			std::map<unsigned short, dr_time> sequencenums;
 			std::map<int, std::vector<int>> wavevals;
 			std::map<int, size_t> expectedValues;
 			std::map<int, size_t> miniseen;
-			int seen;
+			dr_time mytime;
 		};
 
 		class BlockConfig {
@@ -276,8 +277,7 @@ namespace FormatConverter {
 
 		void unhandledBlockType( unsigned int type, unsigned int fmt ) const;
 		ChunkReadResult readWavesBlock( std::unique_ptr<SignalSet>& info, const size_t& maxread );
-		void copySaved( std::unique_ptr<SignalSet>& from, std::unique_ptr<SignalSet>& to );
-
+		
 		/**
 		 * determines if the work buffer has at least one full segment in it
 		 * @param size the size of the first segment in the work buffer, if a complete segment exists
