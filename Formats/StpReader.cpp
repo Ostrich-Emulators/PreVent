@@ -237,39 +237,38 @@ namespace FormatConverter{
       // if we have a break, fill up the current 2-second block we're on
       // then fill in the number of seconds until we're back in sync
       if ( WaveSequenceResult::BREAK == rslt ) {
-        size_t seqdiff = ( timedbreak
-            ? 0
-            :  );
 
-        // we need to know how much of the current 2s block we're filling in
+
+        // the -1 is because we haven't read the seqnum values yet
+        // we don't use these variables if it's a timedbreak
+        unsigned short seqcalc = ( seqnum - 1 < currseq ? seqnum + 0xFF : seqnum - 1 );
+        unsigned short seqdiff = ( seqcalc - currseq );
 
         for ( auto& w : wavevals ) {
           const int waveid = w.first;
           std::vector<int>& datapoints = w.second;
 
+          std::cout << "before filling, data points for wave " << waveid << ": " << datapoints.size( ) << std::endl;
+          if ( timedbreak ) {
+            if ( datapoints.size( ) < expectedValues[waveid] ) {
+              datapoints.resize( expectedValues[waveid], SignalData::MISSING_VALUE );
+            }
 
-
-
-
-
-          // FIXME: if we have a small break based on the sequence numbers,
-          // then don't add a full second to the waves
-
-
-
-          
-
-
-          if ( datapoints.size( ) < expectedValues[waveid] ) {
-            datapoints.resize( expectedValues[waveid], SignalData::MISSING_VALUE );
+            // we added a fragment of the 2s block (above), so subtract the amount
+            // we added from the amount we need to fill in.
+            size_t start = ( datapoints.size( ) * 2000 / expectedValues[waveid] );
+            for (; start < timediff; start *= 2000 ) {
+              datapoints.resize( datapoints.size( ) + expectedValues[waveid], SignalData::MISSING_VALUE );
+            }
+          }
+          else {
+            // break is based on missing sequence numbers
+            size_t valsPerSeqNum = expectedValues[waveid] / 8; // 8 FA0D loops/sec
+            size_t valsToAdd = seqdiff * valsPerSeqNum;
+            datapoints.resize( datapoints.size( ) + valsToAdd, SignalData::MISSING_VALUE );
           }
 
-          // we added a fragment of the 2s block (above), so subtract the amount
-          // we added from the amount we need to fill in.
-          size_t start = ( datapoints.size( ) * 2000 / expectedValues[waveid] );
-          for (; start < timediff; start *= 2000 ) {
-            datapoints.resize( datapoints.size( ) + expectedValues[waveid], SignalData::MISSING_VALUE );
-          }
+          std::cout << "after fill-in, data points for wave " << waveid << ": " << datapoints.size( ) << std::endl;
         }
       }
     }
@@ -321,6 +320,8 @@ namespace FormatConverter{
       std::cout << "no wave data to flush" << std::endl;
     }
 
+    std::cout << "flushing values...";
+
     dr_time startt = starttime( );
     for ( auto& w : wavevals ) {
       const int waveid = w.first;
@@ -370,13 +371,14 @@ namespace FormatConverter{
 
     // get ready for the next flush
     if ( !empty( ) ) {
-      std::cout << "still have " << sequencenums.size( ) << " fa0d loops in the chute" << std::endl;
+      std::cout << "still have " << sequencenums.size( ) << " seq numbers in the chute:" << std::endl;
       for ( auto& x : sequencenums ) {
         std::cout << "\tseqs: " << x.first << " " << x.second << std::endl;
       }
     }
 
     mytime += 2000;
+    std::cout << "done" << std::endl;
   }
 
   unsigned short StpReader::WaveTracker::currentseq( ) const {
@@ -1003,6 +1005,10 @@ namespace FormatConverter{
         }
         wavetracker.newvalues( waveid, vals );
       }
+    }
+
+    if ( 8 != fa0dloop ) {
+      output( ) << "got " << fa0dloop << " loops instead of 8 at pos: " << work.popped( ) << std::endl;
     }
 
     while ( wavetracker.writable( ) ) {
