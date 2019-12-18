@@ -47,7 +47,7 @@ namespace FormatConverter {
 		};
 
 		enum WaveSequenceResult {
-			NORMAL, DUPLICATE, BREAK
+			NORMAL, DUPLICATE, SEQBREAK, TIMEBREAK
 		};
 
 		class WaveTracker {
@@ -69,13 +69,18 @@ namespace FormatConverter {
 			 * @param signals
 			 */
 			void flushone( std::unique_ptr<SignalSet>& signals );
-			bool empty() const;
+			bool empty( ) const;
 
-			unsigned short currentseq() const;
-			const dr_time& starttime() const;
-			dr_time vitalstarttime() const;
+			unsigned short currentseq( ) const;
+			const dr_time& starttime( ) const;
+			dr_time vitalstarttime( ) const;
 
-			std::map<unsigned short, dr_time> sequencenums;
+		private:
+			void prune( );
+			void breaksync( WaveSequenceResult rslt,
+					const unsigned short& seqnum, const dr_time& time );
+
+			std::vector<std::pair<unsigned short, dr_time>> sequencenums;
 			std::map<int, std::vector<int>> wavevals;
 			std::map<int, size_t> expectedValues;
 			std::map<int, size_t> miniseen;
@@ -277,7 +282,7 @@ namespace FormatConverter {
 
 		void unhandledBlockType( unsigned int type, unsigned int fmt ) const;
 		ChunkReadResult readWavesBlock( std::unique_ptr<SignalSet>& info, const size_t& maxread );
-		
+
 		/**
 		 * determines if the work buffer has at least one full segment in it
 		 * @param size the size of the first segment in the work buffer, if a complete segment exists

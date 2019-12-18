@@ -198,30 +198,53 @@ namespace FormatConverter{
   StpReader::WaveTracker::~WaveTracker( ) {
   }
 
+  void StpReader::WaveTracker::prune( ) {
+    for ( auto& m : wavevals ) {
+      if ( m.second.empty( ) ) {
+        wavevals.erase( m.first );
+        expectedValues.erase( m.first );
+      }
+    }
+
+    if ( !wavevals.empty( ) ) {
+      std::cerr << "NO sequence numbers, but wave vals? WRONG!" << std::endl;
+      for ( const auto& m : wavevals ) {
+        std::cerr << "\twave: " << m.first << "\t" << m.second.size( ) << std::endl;
+      }
+    }
+  }
+
   StpReader::WaveSequenceResult StpReader::WaveTracker::newseq( const unsigned short& seqnum,
       const dr_time& time ) {
-    std::cout << "\t\tnew sequence number: " << seqnum << std::endl;
+    std::cout << "\t\tnew sequence number: " << seqnum << "\ttime: " << time << std::endl;
 
     WaveSequenceResult rslt;
-    if ( sequencenums.empty( ) ) {
+    if ( empty( ) ) {
       rslt = WaveSequenceResult::NORMAL;
+      prune( );
       mytime = time;
     }
     else {
       unsigned short currseq = currentseq( );
       size_t timediff = time - starttime( );
-      bool timedbreak = false;
 
       // we get 4 sequence numbers per second, so they duplicate every 64 seconds
       // thus, if our times are out of whack by >=64 seconds, we're sure our
       // times have diverged
-      if ( timediff > 64000 ) { // 64000ms == 64s
-        rslt = WaveSequenceResult::BREAK;
-        timedbreak = true;
+      if ( timediff > 64000 ) {
+        rslt = WaveSequenceResult::TIMEBREAK;
       }
       else {
-        if ( 0 == currseq || seqnum == ( currseq + 1 ) ) {
+        if ( 0 == currseq ) {
           rslt = WaveSequenceResult::NORMAL;
+        }
+        else if ( seqnum == ( currseq + 1 ) ) {
+          // sometimes, we get the right sequence number, but the time is
+          // more than one interval away (but shorter than 64s). In this case,
+          // we say there's a timedbreak.
+          rslt = ( time - mytime >= 4000
+              ? WaveSequenceResult::TIMEBREAK
+              : WaveSequenceResult::NORMAL );
         }
         else if ( seqnum == currseq ) {
           rslt = WaveSequenceResult::DUPLICATE;
@@ -230,52 +253,71 @@ namespace FormatConverter{
           // we will roll-over short limits eventually (and that's ok)
           rslt = ( 0xFF == currseq && 0x00 == seqnum
               ? WaveSequenceResult::NORMAL
-              : WaveSequenceResult::BREAK );
+              : WaveSequenceResult::SEQBREAK );
         }
       }
 
       // if we have a break, fill up the current 2-second block we're on
       // then fill in the number of seconds until we're back in sync
-      if ( WaveSequenceResult::BREAK == rslt ) {
-
-
-        // the -1 is because we haven't read the seqnum values yet
-        // we don't use these variables if it's a timedbreak
-        unsigned short seqcalc = ( seqnum - 1 < currseq ? seqnum + 0xFF : seqnum - 1 );
-        unsigned short seqdiff = ( seqcalc - currseq );
-
-        for ( auto& w : wavevals ) {
-          const int waveid = w.first;
-          std::vector<int>& datapoints = w.second;
-
-          std::cout << "before filling, data points for wave " << waveid << ": " << datapoints.size( ) << std::endl;
-          if ( timedbreak ) {
-            if ( datapoints.size( ) < expectedValues[waveid] ) {
-              datapoints.resize( expectedValues[waveid], SignalData::MISSING_VALUE );
-            }
-
-            // we added a fragment of the 2s block (above), so subtract the amount
-            // we added from the amount we need to fill in.
-            size_t start = ( datapoints.size( ) * 2000 / expectedValues[waveid] );
-            for (; start < timediff; start *= 2000 ) {
-              datapoints.resize( datapoints.size( ) + expectedValues[waveid], SignalData::MISSING_VALUE );
-            }
-          }
-          else {
-            // break is based on missing sequence numbers
-            size_t valsPerSeqNum = expectedValues[waveid] / 8; // 8 FA0D loops/sec
-            size_t valsToAdd = seqdiff * valsPerSeqNum;
-            datapoints.resize( datapoints.size( ) + valsToAdd, SignalData::MISSING_VALUE );
-          }
-
-          std::cout << "after fill-in, data points for wave " << waveid << ": " << datapoints.size( ) << std::endl;
-        }
+      if ( WaveSequenceResult::SEQBREAK == rslt || WaveSequenceResult::TIMEBREAK == rslt ) {
+        breaksync( rslt, seqnum, time );
       }
     }
 
-    sequencenums[seqnum] = time;
+    sequencenums.push_back( std::make_pair( seqnum, time ) );
     miniseen.clear( );
     return rslt;
+  }
+
+  void StpReader::WaveTracker::breaksync( StpReader::WaveSequenceResult rslt,
+      const unsigned short& seqnum, const dr_time& time ) {
+
+    unsigned short currseq = currentseq( );
+
+    if ( WaveSequenceResult::TIMEBREAK == rslt ) {
+      // just add phantom sequence numbers to fill up the current block and we're done
+      // first, we need to figure out how many sequence numbers to add by counting
+      // how many we have at the current time
+      const dr_time ctime = ( --sequencenums.end( ) )->second;
+      size_t count = std::count_if( sequencenums.begin( ), sequencenums.end( ),
+          [ctime]( std::pair<unsigned short, dr_time> p ) {
+            return (p.second == ctime );
+          } );
+      for (; count < 8; count++ ) {
+        sequencenums.push_back( std::make_pair( currseq, time ) );
+      }
+    }
+    else {
+      // the -1 is because we haven't read the seqnum values yet
+      // we don't use these variables if it's a timedbreak
+      unsigned short seqcalc = ( seqnum - 1 < currseq ? seqnum + 0xFF : seqnum - 1 );
+      unsigned short seqdiff = ( seqcalc - currseq );
+
+      std::cout << "break in sequence! current map:" << std::endl;
+      for ( const auto& m : sequencenums ) {
+        std::cout << "\t" << m.first << "\t" << m.second << std::endl;
+      }
+
+      for ( auto& w : wavevals ) {
+        const int waveid = w.first;
+        std::vector<int>& datapoints = w.second;
+
+        std::cout << "wave " << waveid << ": before filling: " << datapoints.size( );
+        // break is based on missing sequence numbers
+        size_t valsPerSeqNum = expectedValues[waveid] / 8; // 8 FA0D loops/sec
+        size_t valsToAdd = seqdiff * valsPerSeqNum;
+        datapoints.resize( datapoints.size( ) + valsToAdd, SignalData::MISSING_VALUE );
+
+        std::cout << "; after filling: " << datapoints.size( ) << std::endl;
+      }
+      for ( unsigned short i = 1; i <= seqdiff; i++ ) {
+        sequencenums.push_back( std::make_pair( ( currseq + i ) % 0xFF, time ) );
+      }
+      std::cout << "new map: " << std::endl;
+      for ( const auto& m : sequencenums ) {
+        std::cout << "\t" << m.first << "\t" << m.second << std::endl;
+      }
+    }
   }
 
   void StpReader::WaveTracker::newvalues( int waveid, std::vector<int>& values ) {
@@ -320,7 +362,9 @@ namespace FormatConverter{
       std::cout << "no wave data to flush" << std::endl;
     }
 
-    std::cout << "flushing values...";
+    int erasers = std::min( (int) sequencenums.size( ), 8 );
+    std::cout << "flushing " << erasers << " values from seqnum " << sequencenums[0].first << "\t"
+        << sequencenums[0].second << " (" << mytime << ")...";
 
     dr_time startt = starttime( );
     for ( auto& w : wavevals ) {
@@ -364,16 +408,16 @@ namespace FormatConverter{
       datapoints.erase( datapoints.begin( ), datapoints.begin( ) + expectedValues[waveid] );
     }
 
-    size_t loops = 0;
-    for ( auto it = sequencenums.begin( ); it != sequencenums.end( ) && loops++ < 8; it++ ) {
-      sequencenums.erase( it );
-    }
+    sequencenums.erase( sequencenums.begin( ), sequencenums.begin( ) + erasers );
 
     // get ready for the next flush
-    if ( !empty( ) ) {
+    if ( empty( ) ) {
+      prune( );
+    }
+    else {
       std::cout << "still have " << sequencenums.size( ) << " seq numbers in the chute:" << std::endl;
       for ( auto& x : sequencenums ) {
-        std::cout << "\tseqs: " << x.first << " " << x.second << std::endl;
+        std::cout << "\tseqs: " << x.first << "\t" << x.second << std::endl;
       }
     }
 
@@ -890,23 +934,18 @@ namespace FormatConverter{
       work.skip( ); // skip the 0x04
       auto oldseq = wavetracker.currentseq( );
       WaveSequenceResult wavecheck = wavetracker.newseq( popUInt8( ), currentTime );
-      if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::BREAK == wavecheck ) {
+      if ( WaveSequenceResult::TIMEBREAK == wavecheck ) {
+        while ( wavetracker.writable( ) ) {
+          output( ) << "time break at byte " << ( work.popped( ) - 1 ) << std::endl;
+          wavetracker.flushone( info );
+        }
+      }
+      else if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::SEQBREAK == wavecheck ) {
         output( ) << "wave sequence check: " << wavecheck << " (old/new): " << oldseq << "/"
             << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
       }
       // skip the other two bytes (don't know what they mean, if anything)
       work.skip( 2 );
-    }
-
-    // if our wave section starts with an FA 0D (i.e., no wave data is present),
-    // skip ahead to the next segment
-    if ( 0xFA == work.read( ) && 0x0D == work.read( 1 ) ) {
-      output( ) << "no wave data in waves section" << std::endl;
-
-      // FIXME: just read to the end of the FA0D section...they may be populated
-      // sections after the first one
-
-      return ChunkReadResult::OK;
     }
 
     //size_t wavestart = work.popped( );
@@ -955,7 +994,13 @@ namespace FormatConverter{
           work.skip( ); // skip the 0x04
           auto oldseq = wavetracker.currentseq( );
           WaveSequenceResult wavecheck = wavetracker.newseq( popUInt8( ), currentTime );
-          if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::BREAK == wavecheck ) {
+          if ( WaveSequenceResult::TIMEBREAK == wavecheck ) {
+            while ( wavetracker.writable( ) ) {
+              output( ) << "time break (2) at byte " << ( work.popped( ) - 1 ) << std::endl;
+              wavetracker.flushone( info );
+            }
+          }
+          else if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::SEQBREAK == wavecheck ) {
             output( ) << "wave sequence check (2): " << wavecheck << " (old/new): " << oldseq << "/"
                 << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
           }
