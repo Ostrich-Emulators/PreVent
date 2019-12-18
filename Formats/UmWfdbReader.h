@@ -29,8 +29,6 @@ namespace FormatConverter {
 
   protected:
     int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
-    void finish() override;
-
     ReadResult fill(std::unique_ptr<SignalSet>& data, const ReadResult& lastfill) override;
 
   private:

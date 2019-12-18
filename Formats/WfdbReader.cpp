@@ -26,6 +26,17 @@ namespace FormatConverter {
   WfdbReader::~WfdbReader( ) {
   }
 
+  void WfdbReader::setBaseTime( const dr_time& basetime ) {
+    dr_time modded = modtime( basetime );
+    char * buffer = new char[80];
+    time_t raw = ( modded / 1000 );
+    struct tm * timeinfo = localtime( &raw );
+    strftime( buffer, 80, "%H:%M:%S\t%d/%m/%Y", timeinfo );
+
+    setbasetime( buffer );
+    delete [] buffer;
+  }
+
   dr_time WfdbReader::convert( const char * timestr ) {
     // HH:MM:SS format by timstr, with leading zero digits and colons suppressed.
     // If t is zero or negative, it is taken to represent negated elapsed time from
@@ -123,6 +134,8 @@ namespace FormatConverter {
     // for what timer is
     char * timer = timstr( 0 );
     dr_time timet = convert( timer );
+
+    output( ) << "timer: " << timer << std::endl;
 
     int retcode = 0;
     ReadResult rslt = ReadResult::NORMAL;

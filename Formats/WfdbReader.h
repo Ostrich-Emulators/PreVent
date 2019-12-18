@@ -33,10 +33,11 @@ namespace FormatConverter {
     WfdbReader( const std::string& name );
     int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
     void finish() override;
+    void setBaseTime( const dr_time& time );
 
     ReadResult fill(std::unique_ptr<SignalSet>& data, const ReadResult& lastfill) override;
 
-  private:
+  protected:
     int sigcount;
     WFDB_Siginfo * siginfo;
     int interval;
