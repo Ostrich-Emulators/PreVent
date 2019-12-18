@@ -10,6 +10,7 @@
 
 #include <wfdb/wfdb.h>
 #include <iostream>
+#include <iterator>
 #include <ctime>
 #include <sys/stat.h>
 #include <math.h>
@@ -114,76 +115,75 @@ namespace FormatConverter {
     wfdbquit( );
   }
 
-  ReadResult WfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
+  ReadResult WfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
     WFDB_Sample v[sigcount];
-    int retcode = getvec( v );
-    int sampleno = 0;
-
-    int timecount = 0; // how many times have we seen the same time? (we should see it freqhz times, no?)
-    dr_time lasttime = -1;
-    FormatConverter::DataRow currents[sigcount];
     bool iswave = ( freqhz > 1 );
 
-    while ( retcode > 0 ) {
-      for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
-        char * timer = timstr( sampleno );
-        dr_time timet = convert( timer );
-        // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
-        // for what timer is
+    // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
+    // for what timer is
+    char * timer = timstr( 0 );
+    dr_time timet = convert( timer );
 
-        if ( timet == lasttime ) {
-          timecount++;
+    int retcode = 0;
+    ReadResult rslt = ReadResult::NORMAL;
+    while ( true ) {
+      std::map<int, std::vector<int>> currents;
+      for ( int i = 0; i < sigcount; i++ ) {
+        currents[i].reserve( freqhz );
+      }
+
+      for ( size_t i = 0; i < freqhz; i++ ) {
+        retcode = getvec( v );
+        if ( retcode < 0 ) {
+          if ( -3 == retcode ) {
+            std::cerr << "unexpected end of file" << std::endl;
+            return ReadResult::ERROR;
+          }
+          else if ( -4 == retcode ) {
+            std::cerr << "invalid checksum" << std::endl;
+            return ReadResult::ERROR;
+          }
+
+          if ( -1 == retcode ) {
+            rslt = ReadResult::END_OF_FILE;
+          }
         }
         else {
-          timecount = 0;
-          lasttime = timet;
+          for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
+            currents[signalidx].push_back( v[signalidx] );
+          }
+        }
+      }
 
+      for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
+        if ( !currents[signalidx].empty( ) ) {
           std::unique_ptr<SignalData>& dataset = ( iswave
                   ? info->addWave( siginfo[signalidx].desc )
                   : info->addVital( siginfo[signalidx].desc ) );
 
-          if ( !currents[signalidx].data.empty( ) ) {
-            // don't add a row on the very first loop through
-            dataset->add( currents[signalidx] );
+          if ( currents[signalidx].size( ) < freqhz ) {
+            output( ) << "filling in " << ( freqhz - currents[signalidx].size( ) )
+                    << " values for wave " << siginfo[signalidx].desc << std::endl;
+            currents[signalidx].resize( freqhz, SignalData::MISSING_VALUE );
           }
 
-          currents[signalidx].time = timet;
-          currents[signalidx].data.clear( );
-        }
+          std::ostringstream ss;
+          std::copy( currents[signalidx].begin( ), currents[signalidx].end( ) - 1,
+                  std::ostream_iterator<int>( ss, "," ) );
+          ss << currents[signalidx].back( );
 
-        if ( !currents[signalidx].data.empty( ) ) {
-          currents[signalidx].data.append( "," );
+          std::string vals = ss.str( );
+          dataset->add( DataRow( timet, vals ) );
         }
-        currents[signalidx].data.append( std::to_string( v[signalidx] ) );
-        // FIXME: we need to string together freqhz values into a string for timet
       }
 
-      retcode = getvec( v );
-      sampleno++;
+      timet += interval;
+
+      if ( ReadResult::END_OF_FILE == rslt ) {
+        break;
+      }
     }
 
-    // now add our last data point
-    for ( int j = 0; j < sigcount; j++ ) {
-      std::unique_ptr<SignalData>& dataset = ( iswave
-              ? info->addWave( siginfo[j].desc )
-              : info->addVital( siginfo[j].desc ) );
-
-      currents[j].time = lasttime;
-      dataset->add( currents[j] );
-    }
-
-
-    if ( -3 == retcode ) {
-      std::cerr << "unexpected end of file" << std::endl;
-    }
-    else if ( -4 == retcode ) {
-      std::cerr << "invalid checksum" << std::endl;
-    }
-
-    if ( -1 == retcode ) {
-      return ReadResult::END_OF_FILE;
-    }
-
-    return ( 0 <= retcode ? ReadResult::NORMAL : ReadResult::ERROR );
+    return rslt;
   }
 }

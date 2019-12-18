@@ -40,7 +40,7 @@ namespace FormatConverter {
     int sigcount;
     WFDB_Siginfo * siginfo;
     int interval;
-    int freqhz;
+    unsigned int freqhz;
   };
 }
 #endif /* WFDBREADER_H */
