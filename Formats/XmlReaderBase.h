@@ -42,14 +42,6 @@ namespace FormatConverter {
   protected:
     XmlReaderBase(const XmlReaderBase& orig);
 
-  protected:
-    /**
-     * Trims the given string in-place, and returns it
-     * @param totrim
-     * @return
-     */
-    static std::string trim(std::string& totrim);
-
     void copySavedInto(std::unique_ptr<SignalSet>& newset);
     virtual void start(const std::string& element, std::map<std::string, std::string>& attrs) = 0;
     virtual void end(const std::string& element, const std::string& text) = 0;

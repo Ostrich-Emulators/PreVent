@@ -15,25 +15,36 @@
 #define UMWFDBREADER_H
 
 #include "WfdbReader.h"
-#include <ctime>
-#include <wfdb/wfdb.h>
-
+#include <fstream>
 #include "dr_time.h"
+
 namespace FormatConverter {
 
   class UmWfdbReader : public WfdbReader {
   public:
-    UmWfdbReader();
+    UmWfdbReader( );
 
-    virtual ~UmWfdbReader();
+    virtual ~UmWfdbReader( );
 
   protected:
-    int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
-    ReadResult fill(std::unique_ptr<SignalSet>& data, const ReadResult& lastfill) override;
+    int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
+    ReadResult fill( std::unique_ptr<SignalSet>& data, const ReadResult& lastfill ) override;
 
   private:
-    int sigcount;
-    WFDB_Siginfo * siginfo;
+    static const size_t FIRST_VITAL_COL;
+    static const size_t DATE_COL;
+    static const size_t TIME_COL;
+    std::ifstream numerics;
+    std::vector<std::string> headings;
+
+    static std::vector<std::string> splitcsv( const std::string& csvline );
+
+    /**
+     *
+     * @param csvline
+     * @return
+     */
+    std::map<std::string, double> linevalues( const std::string& csvline, dr_time& time );
   };
 }
 #endif /* UMWFDBREADER_H */

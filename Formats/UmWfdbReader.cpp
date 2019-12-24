@@ -7,14 +7,15 @@
 #include "UmWfdbReader.h"
 #include "DataRow.h"
 #include "SignalData.h"
+#include "SignalUtils.h"
 
-#include <ctime>
-#include <iostream>
-#include <fstream>
 #include <iostream>
 #include <iterator>
 
 namespace FormatConverter {
+  const size_t UmWfdbReader::FIRST_VITAL_COL = 4;
+  const size_t UmWfdbReader::TIME_COL = 1;
+  const size_t UmWfdbReader::DATE_COL = 0;
 
   UmWfdbReader::UmWfdbReader( ) : WfdbReader( "UM WFDB" ) {
   }
@@ -32,7 +33,7 @@ namespace FormatConverter {
     // recordset should be a directory containing a .hea file, a .numerics.csv
     // file, and optionally a .clock.txt file
     std::string clockfile( recordset );
-    clockfile += ".clock.txt";
+    clockfile.append( ".clock.txt" );
     std::ifstream clock( clockfile );
     if ( clock.good( ) ) {
       std::string firstline;
@@ -42,6 +43,9 @@ namespace FormatConverter {
       struct tm timeinfo;
       Reader::strptime2( timepart, "%m/%d/%Y %T %z", &timeinfo );
 
+      std::string mspart( firstline.substr( 22, 3 ) );
+      int ms = std::stoi( mspart );
+
       int tzoff = std::stoi( firstline.substr( 26, 3 ) );
       timeinfo.tm_gmtoff = tzoff * 3600;
       // FIXME: we still need to handle DST properly
@@ -49,12 +53,21 @@ namespace FormatConverter {
         timeinfo.tm_isdst = true;
       }
       time_t tt = std::mktime( &timeinfo );
-
-
-      setBaseTime( tt * 1000 );
+      setBaseTime( tt * 1000 + ms );
     }
 
     // read the vitals out of the CSV, too
+    std::string numsfile( recordset );
+    numsfile.append( ".numerics.csv" );
+
+    numerics.open( numsfile );
+    if ( !numerics.good( ) ) {
+      return -1;
+    }
+
+    std::string firstline;
+    std::getline( numerics, firstline );
+    headings = UmWfdbReader::splitcsv( firstline );
     return rslt;
   }
 
@@ -64,14 +77,23 @@ namespace FormatConverter {
 
     // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
     // for what timer is
-    char * timer = timstr( 0 );
+    char * timer = mstimstr( 0 );
     dr_time timet = convert( timer );
 
     output( ) << "timer: " << timer << std::endl;
 
     int retcode = 0;
     ReadResult rslt = ReadResult::NORMAL;
+    std::string csvline;
     while ( true ) {
+
+      std::getline( numerics, csvline );
+      dr_time timer;
+      auto vitvals = linevalues( csvline, timer );
+      for ( auto& m : vitvals ) {
+        output( ) << m.first << ": " << m.second << std::endl;
+      }
+
       std::map<int, std::vector<int>> currents;
       for ( int i = 0; i < sigcount; i++ ) {
         currents[i].reserve( freqhz );
@@ -130,5 +152,51 @@ namespace FormatConverter {
     }
 
     return rslt;
+  }
+
+  std::vector<std::string> UmWfdbReader::splitcsv( const std::string& csvline ) {
+    std::vector<std::string> rslt;
+    std::stringstream ss( csvline );
+    std::string cellvalue;
+
+    while ( std::getline( ss, cellvalue, ',' ) ) {
+      cellvalue.erase( std::remove( cellvalue.begin( ), cellvalue.end( ), '\r' ), cellvalue.end( ) );
+      rslt.push_back( SignalUtils::trim( cellvalue ) );
+    }
+    return rslt;
+  }
+
+  std::map<std::string, double> UmWfdbReader::linevalues( const std::string& csvline, dr_time& timer ) {
+    std::vector<std::string> strings = splitcsv( csvline );
+    std::map<std::string, double> values;
+
+    struct tm timeinfo = { 0 };
+    std::string date = strings[DATE_COL];
+    std::string time = strings[TIME_COL];
+
+    // fix the date string by adding leading zeros to the month, day
+    if ( '/' == date[1] ) {
+      // need a leading 0 for the month
+      date.insert( date.begin( ), '0' );
+    }
+    // do we need a leading zero for the day, too?
+    if ( '/' == date[4] ) {
+      date.insert( date.begin( ) + 3, '0' );
+    }
+    Reader::strptime2( date, "%m/%d/%Y", &timeinfo );
+    Reader::strptime2( time, "%H:%M:%S", &timeinfo );
+
+    // FIXME: get ms, too
+    int ms = 0;
+    timer = modtime( timegm( &timeinfo ) * 1000 + ms );
+
+    for ( size_t i = FIRST_VITAL_COL; i < headings.size( ); i++ ) {
+      const auto& h = headings[i];
+      const auto& v = strings[i];
+      if ( v.size( ) > 0 ) {
+        values[h] = std::stod( v );
+      }
+    }
+    return values;
   }
 }

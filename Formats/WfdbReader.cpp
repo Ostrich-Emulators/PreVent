@@ -8,10 +8,8 @@
 #include "DataRow.h"
 #include "SignalData.h"
 
-#include <wfdb/wfdb.h>
 #include <iostream>
 #include <iterator>
-#include <ctime>
 #include <sys/stat.h>
 #include <math.h>
 
@@ -28,24 +26,39 @@ namespace FormatConverter {
 
   void WfdbReader::setBaseTime( const dr_time& basetime ) {
     dr_time modded = modtime( basetime );
-    char * buffer = new char[80];
+    char * timepart = new char[40];
+    char * datepart = new char[40];
     time_t raw = ( modded / 1000 );
     struct tm * timeinfo = localtime( &raw );
-    strftime( buffer, 80, "%H:%M:%S\t%d/%m/%Y", timeinfo );
+
+    // NOTE: WFDB's setbasetime does NOT seem to handle ms, so we skip it, too
+    // int ms = ( modded % 1000 );
+    strftime( timepart, 80, "%H:%M:%S", timeinfo );
+    strftime( datepart, 80, " %d/%m/%Y", timeinfo );
+
+    std::string timestr( timepart );
+    //timestr += std::to_string( ms );
+    timestr.append( datepart );
+
+    char * buffer = new char[timestr.size( )];
+    strcpy( buffer, timestr.c_str( ) );
 
     setbasetime( buffer );
+    delete [] timepart;
+    delete [] datepart;
     delete [] buffer;
   }
 
-  dr_time WfdbReader::convert( const char * timestr ) {
+  dr_time WfdbReader::convert( const char * mstimestr ) {
     // HH:MM:SS format by timstr, with leading zero digits and colons suppressed.
     // If t is zero or negative, it is taken to represent negated elapsed time from
     // the beginning of the record, and it is converted to a time of day using the base
     // time for the record as indicated by the ‘hea’ file; in this case, if the
     // base time is defined, the string will contain all digits even if there are
     // leading zeroes, it will include the date if a base date is defined, and it
-    // will be marked as a time of day by being bracketed (e.g., ‘[08:45:00 23/04/1989]’).
-    std::string checker( timestr );
+    // will be marked as a time of day by being bracketed (e.g., ‘[08:45:00.387 23/04/1989]’).
+    std::string checker( mstimestr );
+    int ms = 0;
 
     struct tm timeDate = { 0 };
     timeDate.tm_year = 70;
@@ -64,16 +77,23 @@ namespace FormatConverter {
       }
       else {
         // hour, minute, second
-        strptime2( timestr, "%H:%M:%S", &timeDate );
+        strptime2( mstimestr, "%H:%M:%S", &timeDate );
       }
     }
     else {
-      // we have a date and time
-      strptime2( timestr, "[%H:%M:%S %D]", &timeDate );
+      // we have a date (and time?)
+      strptime2( mstimestr, "[%H:%M:%S", &timeDate );
+      char substr[10];
+      memcpy( substr, &mstimestr[10], 3 );
+      ms = std::stoi( substr );
+
+      memcpy( substr, &mstimestr[14], 10 );
+
+      strptime2( substr, "%D", &timeDate );
     }
 
     // mktime includes timezone, and we want UTC
-    return modtime( timegm( &timeDate )* 1000 );
+    return modtime( timegm( &timeDate ) * 1000 + ms );
   }
 
   int WfdbReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
@@ -132,7 +152,7 @@ namespace FormatConverter {
 
     // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
     // for what timer is
-    char * timer = timstr( 0 );
+    char * timer = mstimstr( 0 );
     dr_time timet = convert( timer );
 
     output( ) << "timer: " << timer << std::endl;

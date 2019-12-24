@@ -27,6 +27,18 @@ namespace FormatConverter {
   SignalUtils::~SignalUtils( ) {
   }
 
+  std::string SignalUtils::trim( std::string & totrim ) {
+    // ltrim
+    totrim.erase( totrim.begin( ), std::find_if( totrim.begin( ), totrim.end( ),
+            std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
+
+    // rtrim
+    totrim.erase( std::find_if( totrim.rbegin( ), totrim.rend( ),
+            std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
+
+    return totrim;
+  }
+
   dr_time SignalUtils::firstlast( const std::map<std::string, std::unique_ptr<SignalData>>&map,
           dr_time * first, dr_time * last ) {
 

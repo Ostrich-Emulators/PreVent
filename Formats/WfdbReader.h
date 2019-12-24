@@ -18,7 +18,6 @@
 #include <ctime>
 #include <wfdb/wfdb.h>
 
-#include "dr_time.h"
 namespace FormatConverter {
 
   class WfdbReader : public Reader {
@@ -31,11 +30,11 @@ namespace FormatConverter {
 
   protected:
     WfdbReader( const std::string& name );
-    int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
+    virtual int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
     void finish() override;
     void setBaseTime( const dr_time& time );
 
-    ReadResult fill(std::unique_ptr<SignalSet>& data, const ReadResult& lastfill) override;
+    virtual ReadResult fill(std::unique_ptr<SignalSet>& data, const ReadResult& lastfill) override;
 
   protected:
     int sigcount;
