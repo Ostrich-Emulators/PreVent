@@ -213,7 +213,6 @@ namespace FormatConverter{
 
 
       if ( isRollover( timet, timet + interval ) ) {
-        timet += interval;
         rslt = ReadResult::END_OF_DAY;
         break;
       }
