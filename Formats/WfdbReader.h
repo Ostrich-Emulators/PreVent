@@ -41,7 +41,7 @@ namespace FormatConverter {
     WFDB_Siginfo * siginfo;
     int interval;
     unsigned int freqhz;
-		size_t reads;
+		dr_time curtime;
   };
 }
 #endif /* WFDBREADER_H */

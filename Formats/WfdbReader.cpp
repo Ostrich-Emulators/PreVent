@@ -89,7 +89,7 @@ namespace FormatConverter{
 
       memcpy( substr, &mstimestr[14], 10 );
 
-      strptime2( substr, "%D", &timeDate );
+      strptime2( substr, "%d/%m/%Y", &timeDate );
     }
 
     // mktime includes timezone, and we want UTC
@@ -138,8 +138,6 @@ namespace FormatConverter{
       }
     }
 
-    reads = 0;
-
     return ( sigcount > 0 ? 0 : -1 );
   }
 
@@ -152,10 +150,13 @@ namespace FormatConverter{
     WFDB_Sample v[sigcount];
     bool iswave = ( freqhz > 1 );
 
-    // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
-    // for what timer is
-    char * timer = mstimstr( reads );
-    dr_time timet = convert( timer );
+    if ( ReadResult::FIRST_READ == lastrr ) {
+      // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
+      // for what timer is
+      char * timer = mstimstr( 0 );
+      curtime = convert( timer );
+    }
+
 
     int retcode = 0;
     ReadResult rslt = ReadResult::NORMAL;
@@ -167,7 +168,6 @@ namespace FormatConverter{
 
       for ( size_t i = 0; i < freqhz; i++ ) {
         retcode = getvec( v );
-        reads++;
         if ( retcode < 0 ) {
           if ( -3 == retcode ) {
             std::cerr << "unexpected end of file" << std::endl;
@@ -180,6 +180,7 @@ namespace FormatConverter{
 
           if ( -1 == retcode ) {
             rslt = ReadResult::END_OF_FILE;
+            break;
           }
         }
         else {
@@ -191,9 +192,21 @@ namespace FormatConverter{
 
       for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
         if ( !currents[signalidx].empty( ) ) {
+          bool added = false;
           std::unique_ptr<SignalData>& dataset = ( iswave
-              ? info->addWave( siginfo[signalidx].desc )
-              : info->addVital( siginfo[signalidx].desc ) );
+              ? info->addWave( siginfo[signalidx].desc, &added )
+              : info->addVital( siginfo[signalidx].desc, &added ) );
+
+          if ( added ) {
+            dataset->setChunkIntervalAndSampleRate( interval, freqhz );
+            if ( 1024 == interval ) {
+              dataset->setMeta( "Notes", "The frequency from the input file was multiplied by 1.024" );
+            }
+
+            if ( NULL != siginfo[signalidx].units ) {
+              dataset->setUom( siginfo[signalidx].units );
+            }
+          }
 
           if ( currents[signalidx].size( ) < freqhz ) {
             output( ) << "filling in " << ( freqhz - currents[signalidx].size( ) )
@@ -207,12 +220,13 @@ namespace FormatConverter{
           ss << currents[signalidx].back( );
 
           std::string vals = ss.str( );
-          dataset->add( DataRow( timet, vals ) );
+          dataset->add( DataRow( curtime, vals ) );
         }
       }
 
-
-      if ( isRollover( timet, timet + interval ) ) {
+      dr_time oldtime = curtime;
+      curtime += interval;
+      if ( isRollover( oldtime, curtime ) ) {
         rslt = ReadResult::END_OF_DAY;
         break;
       }
@@ -220,7 +234,6 @@ namespace FormatConverter{
         break;
       }
 
-      timet += interval;
     }
 
     return rslt;

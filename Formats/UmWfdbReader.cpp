@@ -107,7 +107,7 @@ namespace FormatConverter{
       }
     }
 
-    return ( numerics.eof( ) || ReadResult::END_OF_DAY == rslt
+    return ( numerics.eof( ) || ReadResult::END_OF_DAY == rslt || ReadResult::NORMAL == rslt
         ? WfdbReader::fill( info, lastrr )
         : ReadResult::ERROR );
   }
@@ -145,7 +145,8 @@ namespace FormatConverter{
     Reader::strptime2( time, "%H:%M:%S", &timeinfo );
 
     // FIXME: get ms, too
-    int ms = 0;
+    int ms = std::stoi( time.substr( 9, 3 ) );
+
     timer = modtime( timegm( &timeinfo ) * 1000 + ms );
 
     for ( size_t i = FIRST_VITAL_COL; i < headings.size( ); i++ ) {
