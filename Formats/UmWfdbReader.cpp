@@ -12,7 +12,7 @@
 #include <iostream>
 #include <iterator>
 
-namespace FormatConverter {
+namespace FormatConverter{
   const size_t UmWfdbReader::FIRST_VITAL_COL = 4;
   const size_t UmWfdbReader::TIME_COL = 1;
   const size_t UmWfdbReader::DATE_COL = 0;
@@ -72,86 +72,44 @@ namespace FormatConverter {
   }
 
   ReadResult UmWfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
-    WFDB_Sample v[sigcount];
-    bool iswave = ( freqhz > 1 );
-
-    // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
-    // for what timer is
-    char * timer = mstimstr( 0 );
-    dr_time timet = convert( timer );
-
-    output( ) << "timer: " << timer << std::endl;
-
-    int retcode = 0;
+    dr_time lastcsvtime = 0;
     ReadResult rslt = ReadResult::NORMAL;
     std::string csvline;
-    while ( true ) {
 
+    // we have two different files and ways of reading
+    // so, read from the CSV until we either exhaust the file
+    // or get to a rollover. Once we've gotten there, read the
+    // WFDB files for that day/file.
+
+    while ( !numerics.eof( ) ) {
+      auto offset = numerics.tellg( ); // in case we need to rewind the stream
       std::getline( numerics, csvline );
-      dr_time timer;
-      auto vitvals = linevalues( csvline, timer );
-      for ( auto& m : vitvals ) {
-        output( ) << m.first << ": " << m.second << std::endl;
-      }
+      if ( !csvline.empty( ) ) { // skip empty lines (expect maybe a trailing newline)
+        dr_time csvtime;
+        auto vitvals = linevalues( csvline, csvtime );
 
-      std::map<int, std::vector<int>> currents;
-      for ( int i = 0; i < sigcount; i++ ) {
-        currents[i].reserve( freqhz );
-      }
-
-      for ( size_t i = 0; i < freqhz; i++ ) {
-        retcode = getvec( v );
-        if ( retcode < 0 ) {
-          if ( -3 == retcode ) {
-            std::cerr << "unexpected end of file" << std::endl;
-            return ReadResult::ERROR;
-          }
-          else if ( -4 == retcode ) {
-            std::cerr << "invalid checksum" << std::endl;
-            return ReadResult::ERROR;
-          }
-
-          if ( -1 == retcode ) {
-            rslt = ReadResult::END_OF_FILE;
-          }
+        if ( lastcsvtime > 0 && isRollover( lastcsvtime, csvtime ) ) {
+          // "unread" the last line for the next call to fill()
+          numerics.seekg( offset );
+          rslt = ReadResult::END_OF_DAY;
+          break;
         }
-        else {
-          for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
-            currents[signalidx].push_back( v[signalidx] );
+        lastcsvtime = csvtime;
+
+        for ( auto& m : vitvals ) {
+          bool added = false;
+          auto& signal = info->addVital( m.first, &added );
+          if ( added ) {
+            signal->setChunkIntervalAndSampleRate( interval, 1 );
           }
+          signal->add( DataRow( csvtime, m.second ) );
         }
-      }
-
-      for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
-        if ( !currents[signalidx].empty( ) ) {
-          std::unique_ptr<SignalData>& dataset = ( iswave
-                  ? info->addWave( siginfo[signalidx].desc )
-                  : info->addVital( siginfo[signalidx].desc ) );
-
-          if ( currents[signalidx].size( ) < freqhz ) {
-            output( ) << "filling in " << ( freqhz - currents[signalidx].size( ) )
-                    << " values for wave " << siginfo[signalidx].desc << std::endl;
-            currents[signalidx].resize( freqhz, SignalData::MISSING_VALUE );
-          }
-
-          std::ostringstream ss;
-          std::copy( currents[signalidx].begin( ), currents[signalidx].end( ) - 1,
-                  std::ostream_iterator<int>( ss, "," ) );
-          ss << currents[signalidx].back( );
-
-          std::string vals = ss.str( );
-          dataset->add( DataRow( timet, vals ) );
-        }
-      }
-
-      timet += interval;
-
-      if ( ReadResult::END_OF_FILE == rslt ) {
-        break;
       }
     }
 
-    return rslt;
+    return ( numerics.eof( ) || ReadResult::END_OF_DAY == rslt
+        ? WfdbReader::fill( info, lastrr )
+        : ReadResult::ERROR );
   }
 
   std::vector<std::string> UmWfdbReader::splitcsv( const std::string& csvline ) {
@@ -166,9 +124,9 @@ namespace FormatConverter {
     return rslt;
   }
 
-  std::map<std::string, double> UmWfdbReader::linevalues( const std::string& csvline, dr_time& timer ) {
+  std::map<std::string, std::string> UmWfdbReader::linevalues( const std::string& csvline, dr_time& timer ) {
     std::vector<std::string> strings = splitcsv( csvline );
-    std::map<std::string, double> values;
+    std::map<std::string, std::string> values;
 
     struct tm timeinfo = { 0 };
     std::string date = strings[DATE_COL];
@@ -194,7 +152,7 @@ namespace FormatConverter {
       const auto& h = headings[i];
       const auto& v = strings[i];
       if ( v.size( ) > 0 ) {
-        values[h] = std::stod( v );
+        values[h] = v;
       }
     }
     return values;

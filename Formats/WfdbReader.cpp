@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <math.h>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
   }
@@ -124,8 +124,8 @@ namespace FormatConverter {
 
       for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
         std::unique_ptr<SignalData>& dataset = ( iswave
-                ? info->addWave( siginfo[signalidx].desc )
-                : info->addVital( siginfo[signalidx].desc ) );
+            ? info->addWave( siginfo[signalidx].desc )
+            : info->addVital( siginfo[signalidx].desc ) );
 
         dataset->setChunkIntervalAndSampleRate( interval, freqhz );
         if ( 1024 == interval ) {
@@ -137,6 +137,8 @@ namespace FormatConverter {
         }
       }
     }
+
+    reads = 0;
 
     return ( sigcount > 0 ? 0 : -1 );
   }
@@ -152,10 +154,8 @@ namespace FormatConverter {
 
     // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
     // for what timer is
-    char * timer = mstimstr( 0 );
+    char * timer = mstimstr( reads );
     dr_time timet = convert( timer );
-
-    output( ) << "timer: " << timer << std::endl;
 
     int retcode = 0;
     ReadResult rslt = ReadResult::NORMAL;
@@ -167,6 +167,7 @@ namespace FormatConverter {
 
       for ( size_t i = 0; i < freqhz; i++ ) {
         retcode = getvec( v );
+        reads++;
         if ( retcode < 0 ) {
           if ( -3 == retcode ) {
             std::cerr << "unexpected end of file" << std::endl;
@@ -191,18 +192,18 @@ namespace FormatConverter {
       for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
         if ( !currents[signalidx].empty( ) ) {
           std::unique_ptr<SignalData>& dataset = ( iswave
-                  ? info->addWave( siginfo[signalidx].desc )
-                  : info->addVital( siginfo[signalidx].desc ) );
+              ? info->addWave( siginfo[signalidx].desc )
+              : info->addVital( siginfo[signalidx].desc ) );
 
           if ( currents[signalidx].size( ) < freqhz ) {
             output( ) << "filling in " << ( freqhz - currents[signalidx].size( ) )
-                    << " values for wave " << siginfo[signalidx].desc << std::endl;
+                << " values for wave " << siginfo[signalidx].desc << std::endl;
             currents[signalidx].resize( freqhz, SignalData::MISSING_VALUE );
           }
 
           std::ostringstream ss;
           std::copy( currents[signalidx].begin( ), currents[signalidx].end( ) - 1,
-                  std::ostream_iterator<int>( ss, "," ) );
+              std::ostream_iterator<int>( ss, "," ) );
           ss << currents[signalidx].back( );
 
           std::string vals = ss.str( );
@@ -210,11 +211,17 @@ namespace FormatConverter {
         }
       }
 
-      timet += interval;
 
-      if ( ReadResult::END_OF_FILE == rslt ) {
+      if ( isRollover( timet, timet + interval ) ) {
+        timet += interval;
+        rslt = ReadResult::END_OF_DAY;
         break;
       }
+      else if ( ReadResult::END_OF_FILE == rslt ) {
+        break;
+      }
+
+      timet += interval;
     }
 
     return rslt;

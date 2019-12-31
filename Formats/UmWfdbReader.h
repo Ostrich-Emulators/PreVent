@@ -37,14 +37,20 @@ namespace FormatConverter {
     std::ifstream numerics;
     std::vector<std::string> headings;
 
+		/**
+		 * Splits the CSV line into component strings
+		 * @param csvline
+		 * @return
+		 */
     static std::vector<std::string> splitcsv( const std::string& csvline );
 
     /**
-     *
+     * Gets a mapping of vital name to value. The value is in all cases expected
+		 * to be a number
      * @param csvline
      * @return
      */
-    std::map<std::string, double> linevalues( const std::string& csvline, dr_time& time );
+    std::map<std::string, std::string> linevalues( const std::string& csvline, dr_time& time );
   };
 }
 #endif /* UMWFDBREADER_H */
