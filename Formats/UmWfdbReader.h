@@ -37,16 +37,16 @@ namespace FormatConverter {
     std::ifstream numerics;
     std::vector<std::string> headings;
 
-		/**
-		 * Splits the CSV line into component strings
-		 * @param csvline
-		 * @return
-		 */
-    static std::vector<std::string> splitcsv( const std::string& csvline );
+    /**
+     * Splits the CSV line into component strings
+     * @param csvline
+     * @return
+     */
+    static std::vector<std::string> splitcsv( const std::string& csvline, char = ',' );
 
     /**
      * Gets a mapping of vital name to value. The value is in all cases expected
-		 * to be a number
+     * to be a number
      * @param csvline
      * @return
      */

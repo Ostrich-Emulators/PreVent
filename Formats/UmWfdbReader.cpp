@@ -12,7 +12,7 @@
 #include <iostream>
 #include <iterator>
 
-namespace FormatConverter{
+namespace FormatConverter {
   const size_t UmWfdbReader::FIRST_VITAL_COL = 4;
   const size_t UmWfdbReader::TIME_COL = 1;
   const size_t UmWfdbReader::DATE_COL = 0;
@@ -68,6 +68,30 @@ namespace FormatConverter{
     std::string firstline;
     std::getline( numerics, firstline );
     headings = UmWfdbReader::splitcsv( firstline );
+
+    std::ifstream infofile( recordset + ".info" );
+    // if we have an info file, parse it and set the metadata in the SignalData
+    while ( infofile.good( ) ) {
+      std::getline( infofile, firstline );
+      std::vector<std::string> parts = UmWfdbReader::splitcsv( firstline, ' ' );
+      if ( !( parts.empty( ) || "#" == parts[0] || "dummy" == parts[0] ) ) {
+        auto name = parts[4].substr( 1, parts[4].length( ) - 2 );
+        auto& signal = info->addWave( name );
+        for ( size_t pos = 5; pos < parts.size( ); pos++ ) {
+          auto part = parts[pos];
+          size_t eqpos = part.find( "=" );
+          if ( eqpos != std::string::npos ) {
+            auto key = part.substr( 0, eqpos );
+            auto val = part.substr( eqpos + 1 );
+
+            if ( "offset" == key ) {
+              signal->setMeta( "offset", std::stod( val ) );
+            }
+          }
+        }
+      }
+    }
+
     return rslt;
   }
 
@@ -108,16 +132,16 @@ namespace FormatConverter{
     }
 
     return ( numerics.eof( ) || ReadResult::END_OF_DAY == rslt || ReadResult::NORMAL == rslt
-        ? WfdbReader::fill( info, lastrr )
-        : ReadResult::ERROR );
+            ? WfdbReader::fill( info, lastrr )
+            : ReadResult::ERROR );
   }
 
-  std::vector<std::string> UmWfdbReader::splitcsv( const std::string& csvline ) {
+  std::vector<std::string> UmWfdbReader::splitcsv( const std::string& csvline, char delim ) {
     std::vector<std::string> rslt;
     std::stringstream ss( csvline );
     std::string cellvalue;
 
-    while ( std::getline( ss, cellvalue, ',' ) ) {
+    while ( std::getline( ss, cellvalue, delim ) ) {
       cellvalue.erase( std::remove( cellvalue.begin( ), cellvalue.end( ), '\r' ), cellvalue.end( ) );
       rslt.push_back( SignalUtils::trim( cellvalue ) );
     }
