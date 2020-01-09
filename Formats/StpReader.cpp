@@ -697,7 +697,7 @@ namespace FormatConverter {
   }
 
   StpReader::WaveSequenceResult StpReader::checkAndSetNewWaveSequenceNumber( const unsigned short& seqnum ) {
-    output( ) << "\t\t\t\tsequence number: " << seqnum << std::endl;
+    //output( ) << "\t\t\t\tsequence number: " << seqnum << std::endl;
     WaveSequenceResult rslt;
     if ( 0 == waveseq || seqnum == ( waveseq + 1 ) ) {
       rslt = WaveSequenceResult::NORMAL;
