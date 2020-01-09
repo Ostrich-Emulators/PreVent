@@ -199,11 +199,17 @@ namespace FormatConverter{
   }
 
   void StpReader::WaveTracker::prune( ) {
+
+    std::vector<int> toremove;
     for ( auto& m : wavevals ) {
       if ( m.second.empty( ) ) {
-        wavevals.erase( m.first );
-        expectedValues.erase( m.first );
+        toremove.push_back( m.first );
       }
+    }
+
+    for ( int waveid : toremove ) {
+      wavevals.erase( waveid );
+      expectedValues.erase( waveid );
     }
 
     if ( !wavevals.empty( ) ) {
@@ -214,8 +220,7 @@ namespace FormatConverter{
     }
   }
 
-  StpReader::WaveSequenceResult StpReader::WaveTracker::newseq( const unsigned short& seqnum,
-      const dr_time& time ) {
+  StpReader::WaveSequenceResult StpReader::WaveTracker::newseq( const unsigned short& seqnum, dr_time time ) {
     std::cout << "\t\tnew sequence number: " << seqnum << "\ttime: " << time << std::endl;
 
     WaveSequenceResult rslt;
@@ -239,12 +244,23 @@ namespace FormatConverter{
           rslt = WaveSequenceResult::NORMAL;
         }
         else if ( seqnum == ( currseq + 1 ) ) {
-          // sometimes, we get the right sequence number, but the time is
-          // more than one interval away (but shorter than 64s). In this case,
-          // we say there's a timedbreak.
-          rslt = ( time - mytime >= 4000
-              ? WaveSequenceResult::TIMEBREAK
-              : WaveSequenceResult::NORMAL );
+          // sometimes, we get the right sequence number, but the time is off
+          if ( time - mytime >= 4000 ) {
+            // sequence is right, but the time is off, so figure out what
+            // the time should be by reading what's in our chute
+            size_t counter = 0;
+            auto it = sequencenums.rbegin( );
+            dr_time xtime = it->second;
+            while ( it++ != sequencenums.rend( ) && ++counter < 8 && it->second == xtime ) {
+              // everything is handled in the loop check
+            }
+            time = xtime;
+            if ( 8 == counter ) {
+              time += 2000;
+            }
+          }
+
+          rslt = WaveSequenceResult::NORMAL;
         }
         else if ( seqnum == currseq ) {
           rslt = WaveSequenceResult::DUPLICATE;

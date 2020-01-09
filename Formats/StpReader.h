@@ -55,7 +55,7 @@ namespace FormatConverter {
 			WaveTracker( );
 			virtual ~WaveTracker( );
 
-			WaveSequenceResult newseq( const unsigned short& seqnum, const dr_time& time );
+			WaveSequenceResult newseq( const unsigned short& seqnum, dr_time time );
 			void newvalues( int waveid, std::vector<int>& values );
 			void reset( );
 			/**
