@@ -139,5 +139,5 @@ StpReader.h
 UmWfdbReader.h
 zstr.hpp
 strict_fstream.hpp
-CircularBuffer.hpp
+CircularBuffer.h
 DESTINATION ${include_dest} )
