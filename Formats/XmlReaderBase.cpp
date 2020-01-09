@@ -17,6 +17,7 @@
 #include "SignalData.h"
 #include "StreamChunkReader.h"
 #include "BasicSignalSet.h"
+#include "SignalUtils.h"
 
 #include <ctime>
 #include <iostream>
@@ -71,7 +72,7 @@ namespace FormatConverter {
 
   void XmlReaderBase::end( void * data, const char * el ) {
     XmlReaderBase * rdr = static_cast<XmlReaderBase *> ( data );
-    rdr->end( el, trim( working ) );
+    rdr->end( el, SignalUtils::trim( working ) );
     working.clear( );
     accumulateText = false;
   }
@@ -80,18 +81,6 @@ namespace FormatConverter {
     if ( accumulateText ) {
       working.append( text, len );
     }
-  }
-
-  std::string XmlReaderBase::trim( std::string & totrim ) {
-    // ltrim
-    totrim.erase( totrim.begin( ), std::find_if( totrim.begin( ), totrim.end( ),
-            std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
-
-    // rtrim
-    totrim.erase( std::find_if( totrim.rbegin( ), totrim.rend( ),
-            std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
-
-    return totrim;
   }
 
   void XmlReaderBase::startSaving( dr_time savetime ) {
@@ -135,7 +124,7 @@ namespace FormatConverter {
   void XmlReaderBase::comment( void* data, const char* text ) {
     XmlReaderBase * rdr = static_cast<XmlReaderBase *> ( data );
     std::string comment( text );
-    rdr->comment( trim( comment ) );
+    rdr->comment( SignalUtils::trim( comment ) );
   }
 
   void XmlReaderBase::copySavedInto( std::unique_ptr<SignalSet>& tgt ) {

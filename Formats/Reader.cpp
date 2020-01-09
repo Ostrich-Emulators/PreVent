@@ -9,6 +9,7 @@
 #include "CpcXmlReader.h"
 #include "TdmsReader.h"
 #include "StpReader.h"
+#include "UmWfdbReader.h"
 
 #include <iostream>       // std::cout, std::ios
 #include <sstream>        // std::istringstream
@@ -51,6 +52,8 @@ namespace FormatConverter {
         return std::unique_ptr<Reader>( new StpJsonReader( ) );
       case FormatConverter::MEDI:
         return std::unique_ptr<Reader>( new TdmsReader( ) );
+      case FormatConverter::UM:
+        return std::unique_ptr<Reader>( new UmWfdbReader( ) );
       default:
         throw "reader not yet implemented";
     }
@@ -98,7 +101,6 @@ namespace FormatConverter {
     return false;
   }
 
-
   bool Reader::isRollover( const dr_time& then, const dr_time& now ) const {
     if ( nonbreaking( ) ) {
       return false;
@@ -117,7 +119,6 @@ namespace FormatConverter {
 
     return false;
   }
-
 
   void Reader::splice( const std::string& inputfile, const std::string& path,
           dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {

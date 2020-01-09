@@ -2,7 +2,7 @@
 # the hdf5c++ wrapper has some incompatibility with cmake, I think
 #set(CMAKE_CXX_COMPILER ${HDF5_CXX_COMPILER_EXECUTABLE})
 
-set(LIBVERSION 4.1.3)
+set(LIBVERSION 4.1.4)
 project(formatconverter VERSION ${LIBVERSION} LANGUAGES CXX)
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/../lib/formatconverter-${LIBVERSION}:$ORIGIN/")
@@ -68,6 +68,7 @@ ZlReader.cpp
 TimeModifier.cpp
 TimeParser.cpp
 StpReader.cpp
+UmWfdbReader.cpp
 generated/config.h
 )
 
@@ -135,7 +136,8 @@ XmlReaderBase.h
 ZlReader2.h
 ZlReader.h
 StpReader.h
+UmWfdbReader.h
 zstr.hpp
 strict_fstream.hpp
-CircularBuffer.hpp
+CircularBuffer.h
 DESTINATION ${include_dest} )
