@@ -221,8 +221,6 @@ namespace FormatConverter {
   }
 
   StpReader::WaveSequenceResult StpReader::WaveTracker::newseq( const unsigned short& seqnum, dr_time time ) {
-    std::cout << "\t\tnew sequence number: " << seqnum << "\ttime: " << time << std::endl;
-
     WaveSequenceResult rslt;
     if ( empty( ) ) {
       rslt = WaveSequenceResult::NORMAL;
@@ -379,8 +377,8 @@ namespace FormatConverter {
     }
 
     int erasers = std::min( (int) sequencenums.size( ), 8 );
-    std::cout << "flushing " << erasers << " values from seqnum " << sequencenums[0].first << "\t"
-        << sequencenums[0].second << " (" << mytime << ")...";
+    //std::cout << "flushing " << erasers << " values from seqnum " << sequencenums[0].first << "\t"
+    //    << sequencenums[0].second << " (" << mytime << ")...";
 
     dr_time startt = starttime( );
     for ( auto& w : wavevals ) {
@@ -438,7 +436,7 @@ namespace FormatConverter {
     }
 
     mytime += 2000;
-    std::cout << "done" << std::endl;
+    //std::cout << "done" << std::endl;
   }
 
   unsigned short StpReader::WaveTracker::currentseq( ) const {
