@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <math.h>
 
-namespace FormatConverter{
+namespace FormatConverter {
 
   WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
   }
@@ -124,8 +124,8 @@ namespace FormatConverter{
 
       for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
         std::unique_ptr<SignalData>& dataset = ( iswave
-            ? info->addWave( siginfo[signalidx].desc )
-            : info->addVital( siginfo[signalidx].desc ) );
+                ? info->addWave( siginfo[signalidx].desc )
+                : info->addVital( siginfo[signalidx].desc ) );
 
         dataset->setChunkIntervalAndSampleRate( interval, freqhz );
         if ( 1024 == interval ) {
@@ -135,6 +135,10 @@ namespace FormatConverter{
         if ( NULL != siginfo[signalidx].units ) {
           dataset->setUom( siginfo[signalidx].units );
         }
+
+        dataset->setMeta( "wfdb-gain", siginfo[signalidx].gain );
+        dataset->setMeta( "wfdb-spf", siginfo[signalidx].spf );
+        dataset->setMeta( "wfdb-adcres", siginfo[signalidx].adcres );
       }
     }
 
@@ -194,8 +198,8 @@ namespace FormatConverter{
         if ( !currents[signalidx].empty( ) ) {
           bool added = false;
           std::unique_ptr<SignalData>& dataset = ( iswave
-              ? info->addWave( siginfo[signalidx].desc, &added )
-              : info->addVital( siginfo[signalidx].desc, &added ) );
+                  ? info->addWave( siginfo[signalidx].desc, &added )
+                  : info->addVital( siginfo[signalidx].desc, &added ) );
 
           if ( added ) {
             dataset->setChunkIntervalAndSampleRate( interval, freqhz );
@@ -210,13 +214,13 @@ namespace FormatConverter{
 
           if ( currents[signalidx].size( ) < freqhz ) {
             output( ) << "filling in " << ( freqhz - currents[signalidx].size( ) )
-                << " values for wave " << siginfo[signalidx].desc << std::endl;
+                    << " values for wave " << siginfo[signalidx].desc << std::endl;
             currents[signalidx].resize( freqhz, SignalData::MISSING_VALUE );
           }
 
           std::ostringstream ss;
           std::copy( currents[signalidx].begin( ), currents[signalidx].end( ) - 1,
-              std::ostream_iterator<int>( ss, "," ) );
+                  std::ostream_iterator<int>( ss, "," ) );
           ss << currents[signalidx].back( );
 
           std::string vals = ss.str( );
