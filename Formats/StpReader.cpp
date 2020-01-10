@@ -589,7 +589,7 @@ namespace FormatConverter {
       output( ) << "still have stuff in our work buffer!" << std::endl;
       processOneChunk( info, work.size( ) );
 
-      // we're done witht he file, so write all the wave data we have
+      // we're done with the file, so write all the wave data we have
       while ( !wavetracker.empty( ) ) {
         wavetracker.flushone( info );
       }
