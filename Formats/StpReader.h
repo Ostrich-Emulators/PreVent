@@ -290,6 +290,8 @@ namespace FormatConverter {
 		 */
 		bool workHasFullSegment( size_t * size = nullptr );
 
+    bool isunity() const;
+
 		bool firstread;
 		dr_time currentTime;
 		zstr::ifstream * filestream;

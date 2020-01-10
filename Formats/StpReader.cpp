@@ -41,19 +41,22 @@
 namespace FormatConverter {
 
   const std::map<int, std::string> StpReader::WAVELABELS = {
-    {0x07, "I"},
-    {0x08, "II"},
-    {0x09, "III"},
-    {0x0A, "V"},
-    {0x17, "RR"},
-    {0x1B, "AR1"},
-    {0x1C, "ICP2"},
-    {0x1D, "CVP3"}, // may also be PA3?
-    {0x1E, "CVP4"},
-    {0x27, "SPO2"},
-    {0x2A, "CO2"},
-    {0xC8, "VNT_PRES"},
-    {0xC9, "VNT_FLOW"},
+    {0x07, "I" },
+    {0x08, "II" },
+    {0x09, "III" },
+    {0x0A, "V" },
+    {0x0B, "AVR" },
+    {0x0C, "AVF" },
+    {0x0D, "AVL" },
+    {0x17, "RR" },
+    {0x1B, "AR1" },
+    {0x1C, "ICP2" },
+    {0x1D, "CVP3" }, // may also be PA3?
+    {0x1E, "CVP4" },
+    {0x27, "SPO2" },
+    {0x2A, "CO2" },
+    {0xC8, "VNT_PRES" },
+    {0xC9, "VNT_FLOW" },
   };
 
   // <editor-fold defaultstate="collapsed" desc="block configs">
@@ -192,6 +195,8 @@ namespace FormatConverter {
   const StpReader::BlockConfig StpReader::O2_EXP = BlockConfig::div10( "O2-EXP", "%" );
   const StpReader::BlockConfig StpReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" ); // </editor-fold>
 
+  // <editor-fold defaultstate="collapsed" desc="Wave Tracker">
+
   StpReader::WaveTracker::WaveTracker( ) {
   }
 
@@ -266,8 +271,8 @@ namespace FormatConverter {
         else {
           // we will roll-over short limits eventually (and that's ok)
           rslt = ( 0xFF == currseq && 0x00 == seqnum
-              ? WaveSequenceResult::NORMAL
-              : WaveSequenceResult::SEQBREAK );
+                  ? WaveSequenceResult::NORMAL
+                  : WaveSequenceResult::SEQBREAK );
         }
       }
 
@@ -284,7 +289,7 @@ namespace FormatConverter {
   }
 
   void StpReader::WaveTracker::breaksync( StpReader::WaveSequenceResult rslt,
-      const unsigned short& seqnum, const dr_time& time ) {
+          const unsigned short& seqnum, const dr_time& time ) {
 
     unsigned short currseq = currentseq( );
 
@@ -294,9 +299,9 @@ namespace FormatConverter {
       // how many we have at the current time
       const dr_time ctime = ( --sequencenums.end( ) )->second;
       size_t count = std::count_if( sequencenums.begin( ), sequencenums.end( ),
-          [ctime]( std::pair<unsigned short, dr_time> p ) {
-            return (p.second == ctime );
-          } );
+              [ctime]( std::pair<unsigned short, dr_time> p ) {
+                return (p.second == ctime );
+              } );
       for (; count < 8; count++ ) {
         sequencenums.push_back( std::make_pair( currseq, time ) );
       }
@@ -388,11 +393,11 @@ namespace FormatConverter {
       std::stringstream vals;
       if ( datapoints.size( ) > expectedValues[waveid] ) {
         std::cout << "more values than needed (" << datapoints.size( ) << "/" << expectedValues[waveid]
-            << ") for waveid: " << waveid << std::endl;
+                << ") for waveid: " << waveid << std::endl;
       }
       if ( datapoints.size( ) < expectedValues[waveid] ) {
         std::cout << "filling in " << ( expectedValues[waveid] - datapoints.size( ) )
-            << " for waveid: " << waveid << std::endl;
+                << " for waveid: " << waveid << std::endl;
         datapoints.resize( expectedValues[waveid], SignalData::MISSING_VALUE );
       }
 
@@ -441,8 +446,8 @@ namespace FormatConverter {
 
   unsigned short StpReader::WaveTracker::currentseq( ) const {
     return ( empty( )
-        ? 0
-        : ( --sequencenums.end( ) )->first );
+            ? 0
+            : ( --sequencenums.end( ) )->first );
   }
 
   dr_time StpReader::WaveTracker::vitalstarttime( ) const {
@@ -455,6 +460,7 @@ namespace FormatConverter {
   const dr_time& StpReader::WaveTracker::starttime( ) const {
     return mytime;
   }
+  // </editor-fold>
 
   StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ) {
   }
@@ -504,7 +510,7 @@ namespace FormatConverter {
 
     filestream = new zstr::ifstream( filename );
     decodebuffer.reserve( 1024 * 32 );
-    magiclong = 0;
+    magiclong = std::numeric_limits<unsigned long>::max( );
     return 0;
   }
 
@@ -531,17 +537,21 @@ namespace FormatConverter {
       //      output( ) << "size after : " << work.size( ) << std::endl
       //          << "     avail : " << work.available( ) << std::endl;
 
-      if ( ReadResult::FIRST_READ == lastrr && 0 == magiclong ) {
+      if ( ReadResult::FIRST_READ == lastrr && std::numeric_limits<unsigned long>::max( ) == magiclong ) {
         // the first 4 bytes of the file are the segment demarcator
         magiclong = popUInt64( );
         work.rewind( 4 );
+        // note: GE Unity systems seem to always have a 0 for this marker
+        if ( isunity( ) ) {
+          output( ) << "note: assuming GE Carescape input" << std::endl;
+        }
       }
 
       ChunkReadResult rslt = ChunkReadResult::OK;
       // read as many segments as we can before reading more data
       size_t segsize = 0;
       while ( workHasFullSegment( &segsize ) && ChunkReadResult::OK == rslt ) {
-        //output( ) << "next segment is " << segsize << " bytes big" << std::endl;
+        //output( ) << "next segment is " << std::dec << segsize << " bytes big" << std::endl;
 
         size_t startpop = work.popped( );
         rslt = processOneChunk( info, segsize );
@@ -598,6 +608,10 @@ namespace FormatConverter {
     return ReadResult::END_OF_FILE;
   }
 
+  bool StpReader::isunity( ) const {
+    return 0 == magiclong;
+  }
+
   StpReader::ChunkReadResult StpReader::processOneChunk( std::unique_ptr<SignalSet>& info,
           const size_t& maxread ) {
     // we are guaranteed to have a complete segment in the work buffer
@@ -641,7 +655,7 @@ namespace FormatConverter {
         //output( ) << "psm: " << work.poppedSinceMark( ) << "\t" << work.popped( ) << std::endl;
         if ( 0x013A == readUInt16( ) ) {
           work.skip( 2 ); // the int16 we just read
-          readDataBlock( info,{SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF}, 62 );
+          readDataBlock( info,{ SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF }, 62 );
 
           if ( 0x013A != popUInt16( ) ) {
             // we expected a "closing" 0x013A, so something is wrong
@@ -660,116 +674,116 @@ namespace FormatConverter {
               // this only seems to happen when the blocktype is actuall 0x0D,
               // which we ignore anyway. It seems to be followed by 0x0100,
               // so just ignore this, too
-              readDataBlock( info,{} );
+              readDataBlock( info,{ } );
               break;
             case 0x024D:
-              readDataBlock( info,{SKIP6, AR1_M, AR1_S, AR1_D, SKIP2, AR1_R} );
+              readDataBlock( info,{ SKIP6, AR1_M, AR1_S, AR1_D, SKIP2, AR1_R } );
               break;
             case 0x024E:
-              readDataBlock( info,{SKIP6, AR2_M, AR2_S, AR2_D, SKIP2, AR2_R} );
+              readDataBlock( info,{ SKIP6, AR2_M, AR2_S, AR2_D, SKIP2, AR2_R } );
               break;
             case 0x024F:
-              readDataBlock( info,{SKIP6, AR3_M, AR3_S, AR3_D, SKIP2, AR3_R} );
+              readDataBlock( info,{ SKIP6, AR3_M, AR3_S, AR3_D, SKIP2, AR3_R } );
               break;
             case 0x0250:
-              readDataBlock( info,{SKIP6, AR4_M, AR4_S, AR4_D, SKIP2, AR4_R} );
+              readDataBlock( info,{ SKIP6, AR4_M, AR4_S, AR4_D, SKIP2, AR4_R } );
               break;
             case 0x034D:
-              readDataBlock( info,{SKIP6, PA1_M, PA1_S, PA1_D, SKIP2, PA1_R} );
+              readDataBlock( info,{ SKIP6, PA1_M, PA1_S, PA1_D, SKIP2, PA1_R } );
               break;
             case 0x034E:
-              readDataBlock( info,{SKIP6, PA2_M, PA2_S, PA2_D, SKIP2, PA2_R} );
+              readDataBlock( info,{ SKIP6, PA2_M, PA2_S, PA2_D, SKIP2, PA2_R } );
               break;
             case 0x034F:
-              readDataBlock( info,{SKIP6, PA3_M, PA3_S, PA3_D, SKIP2, PA3_R} );
+              readDataBlock( info,{ SKIP6, PA3_M, PA3_S, PA3_D, SKIP2, PA3_R } );
               break;
             case 0x0350:
-              readDataBlock( info,{SKIP6, PA4_M, PA4_S, PA4_D, SKIP2, PA4_R} );
+              readDataBlock( info,{ SKIP6, PA4_M, PA4_S, PA4_D, SKIP2, PA4_R } );
               break;
             case 0x044D:
-              readDataBlock( info,{SKIP6, LA1} );
+              readDataBlock( info,{ SKIP6, LA1 } );
               break;
             case 0x054D:
-              readDataBlock( info,{SKIP6, CVP1} );
+              readDataBlock( info,{ SKIP6, CVP1 } );
               break;
             case 0x054E:
-              readDataBlock( info,{SKIP6, CVP2} );
+              readDataBlock( info,{ SKIP6, CVP2 } );
               break;
             case 0x054F:
-              readDataBlock( info,{SKIP6, CVP3} );
+              readDataBlock( info,{ SKIP6, CVP3 } );
               break;
             case 0x0550:
-              readDataBlock( info,{SKIP6, CVP4} );
+              readDataBlock( info,{ SKIP6, CVP4 } );
               break;
             case 0x064D:
-              readDataBlock( info,{SKIP6, ICP1, CPP1} );
+              readDataBlock( info,{ SKIP6, ICP1, CPP1 } );
               break;
             case 0x064E:
-              readDataBlock( info,{SKIP6, ICP2, CPP2} );
+              readDataBlock( info,{ SKIP6, ICP2, CPP2 } );
               break;
             case 0x064F:
-              readDataBlock( info,{SKIP6, ICP3, CPP3} );
+              readDataBlock( info,{ SKIP6, ICP3, CPP3 } );
               break;
             case 0x0650:
-              readDataBlock( info,{SKIP6, ICP4, CPP4} );
+              readDataBlock( info,{ SKIP6, ICP4, CPP4 } );
               break;
             case 0x074D:
-              readDataBlock( info,{SKIP6, SP1} );
+              readDataBlock( info,{ SKIP6, SP1 } );
               break;
             case 0x0822:
-              readDataBlock( info,{SKIP6, RESP, APNEA} );
+              readDataBlock( info,{ SKIP6, RESP, APNEA } );
               break;
             case 0x0922:
-              readDataBlock( info,{SKIP6, BT, IT} );
+              readDataBlock( info,{ SKIP6, BT, IT } );
               break;
             case 0x0A18:
-              readDataBlock( info,{SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF} );
+              readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
               break;
             case 0x0B2D:
-              readDataBlock( info,{SKIP6, SPO2_P, SPO2_R} );
+              readDataBlock( info,{ SKIP6, SPO2_P, SPO2_R } );
               break;
             case 0x0C22:
             case 0x0C23:
-              readDataBlock( info,{SKIP6, TMP_1, TMP_2, DELTA_TMP} );
+              readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
               break;
             case 0x0D56:
             case 0x0D57:
             case 0x0D58:
             case 0x0D59:
-              readDataBlock( info,{} );
+              readDataBlock( info,{ } );
               break;
             case 0x0E4D:
-              readDataBlock( info,{SKIP6, CO2_EX, CO2_IN, CO2_RR, SKIP2, O2_EXP, O2_INSP} );
+              readDataBlock( info,{ SKIP6, CO2_EX, CO2_IN, CO2_RR, SKIP2, O2_EXP, O2_INSP } );
               break;
             case 0x104D:
-              readDataBlock( info,{SKIP6, UAC1_M, UAC1_S, UAC1_M, SKIP2, UAC1_R} );
+              readDataBlock( info,{ SKIP6, UAC1_M, UAC1_S, UAC1_M, SKIP2, UAC1_R } );
               break;
             case 0x104E:
-              readDataBlock( info,{SKIP6, UAC2_M, UAC2_S, UAC2_M, SKIP2, UAC2_R} );
+              readDataBlock( info,{ SKIP6, UAC2_M, UAC2_S, UAC2_M, SKIP2, UAC2_R } );
               break;
             case 0x104F:
-              readDataBlock( info,{SKIP6, UAC3_M, UAC3_S, UAC3_M, SKIP2, UAC3_R} );
+              readDataBlock( info,{ SKIP6, UAC3_M, UAC3_S, UAC3_M, SKIP2, UAC3_R } );
               break;
             case 0x1050:
-              readDataBlock( info,{SKIP6, UAC4_M, UAC4_S, UAC4_M, SKIP2, UAC4_R} );
+              readDataBlock( info,{ SKIP6, UAC4_M, UAC4_S, UAC4_M, SKIP2, UAC4_R } );
               break;
             case 0x14C2:
-              readDataBlock( info,{SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS} );
+              readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
               break;
             case 0x1D0A:
-              readDataBlock( info,{SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF} );
+              readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
               break;
             case 0x2ADB:
-              readDataBlock( info,{SKIP6, VENT, FLW_R, SKIP4, IN_HLD, SKIP2, PRS_SUP, INSP_TM, INSP_PC, I_E} );
+              readDataBlock( info,{ SKIP6, VENT, FLW_R, SKIP4, IN_HLD, SKIP2, PRS_SUP, INSP_TM, INSP_PC, I_E } );
               break;
             case 0x2ADC:
-              readDataBlock( info,{SKIP6, HF_FLW, HF_R, HF_PRS, SPONT_MV, SKIP2, SET_TV, SET_PCP, SET_IE, B_FLW, FLW_TRIG} );
+              readDataBlock( info,{ SKIP6, HF_FLW, HF_R, HF_PRS, SPONT_MV, SKIP2, SET_TV, SET_PCP, SET_IE, B_FLW, FLW_TRIG } );
               break;
             case 0x2A5C:
-              readDataBlock( info,{SKIP6, APRV_LO, APRV_HI, APRV_LO_T, SKIP2, APRV_HI_T, COMP, RESIS, MEAS_PEEP, INTR_PEEP, SPONT_R} );
+              readDataBlock( info,{ SKIP6, APRV_LO, APRV_HI, APRV_LO_T, SKIP2, APRV_HI_T, COMP, RESIS, MEAS_PEEP, INTR_PEEP, SPONT_R } );
               break;
             case 0x2A5D:
-              readDataBlock( info,{SKIP6, INSP_TV} );
+              readDataBlock( info,{ SKIP6, INSP_TV } );
               break;
             default:
               int type = ( blocktypefmt >> 8 );
@@ -869,14 +883,14 @@ namespace FormatConverter {
       }
       else if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::SEQBREAK == wavecheck ) {
         output( ) << "wave sequence check: " << wavecheck << " (old/new): " << oldseq << "/"
-            << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
+                << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
       }
       // skip the other two bytes (don't know what they mean, if anything)
       work.skip( 2 );
     }
 
     //size_t wavestart = work.popped( );
-    // output( ) << "waves section starts at: " << std::dec << wavestart << std::endl;
+    //output( ) << "waves section starts at: " << std::dec << wavestart << std::endl;
 
     // FIXME: I think we should read all values until the next chunk start
     // so we don't have to account for mysteriously appearing and disappearing
@@ -888,7 +902,7 @@ namespace FormatConverter {
     // we know we have at least one full segment in our work buffer,
     // so keep reading until we hit the next segment...then write the appropriate number of values to the signalset
     // and keep any overrun for the next loop
-    while ( 0x7E != work.read( ) && work.poppedSinceMark( ) < maxread ) {
+    while ( work.poppedSinceMark( ) < maxread ) {
       const unsigned int waveid = popUInt8( );
       const unsigned int countbyte = popUInt8( );
 
@@ -909,7 +923,7 @@ namespace FormatConverter {
         //output( ) << "FA 0D section at byte: " << std::dec << ( work.popped( ) - 2 ) << " (loop " << fa0dloop << ")" << std::endl;
         // skip through this section to get to the next waveform section
 
-        work.skip( 33 );
+        work.skip( isunity( ) ? 49 : 33 );
         //work.rewind( 33 );
         //        auto vec = work.popvec( 33 );
         //        for ( auto& i : vec ) {
@@ -930,7 +944,7 @@ namespace FormatConverter {
           }
           else if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::SEQBREAK == wavecheck ) {
             output( ) << "wave sequence check (2): " << wavecheck << " (old/new): " << oldseq << "/"
-                << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
+                    << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
           }
 
           // skip the other two bytes (don't know what they mean, if anything)
@@ -1079,7 +1093,7 @@ namespace FormatConverter {
       return "0";
     }
 
-    int denoms[] = {1, 10, 100, 1000, 10000};
+    int denoms[] = { 1, 10, 100, 1000, 10000 };
     int denominator = denoms[multiple];
 
     if ( 0 == val % denominator ) {
@@ -1120,31 +1134,67 @@ namespace FormatConverter {
       work.mark( );
       // a segment starts with a 64 bit long, then two blank bytes, then
       // the long again, and then two more blank bytes... we'll just treat
-      // it as a 6-byte string that is repeated. I believe the segment
-      // always starts with 0x7E.
-
-      // WARNING: if we don't start with our magic number, what do we do?
-      // subsequent calls will never match
+      // it as a 6-byte string that is repeated.
+      // note: for unity systems, both of these strings are empty (doesn't matter)
 
       std::string magic1 = popString( 6 );
       std::string magic2 = popString( 6 );
+
       if ( magic1 == magic2 ) {
-        // segment started...now search for a 0x7E, and then check again
-
-        // the two while loops are a little strange, but we only want to do
-        // a comparison if we have a shot at getting a match
-        unsigned long check = 0;
-        while ( check != magiclong ) {
-          while ( 0x7E != work.pop( ) ) {
-            // skip forward until we see another 0x7E
+        if ( isunity( ) ) {
+          // we've gotten the 12 0x00s, but check to make sure our next two bytes
+          // are 0x00C9 before we know we're starting at the segment start
+          if ( 0x00C9 == popUInt16( ) ) {
+            // we've started at a segment boundary, and now we're looking for
+            // 12 0x00s followed by a 0x00C9 to know we have a complete segment
+            // we look for the 0xC9 byte, and then check the previous 13 bytes
+            // (we expect the 0xC9 byte to be much more rare than a 0x00 byte)
+            // we're looking for 13 instead of 12 0x00s, because the most
+            // significant byte of 0x00C9 is, well, 0x00.
+            while ( true ) {
+              const unsigned int check = popUInt8( );
+              if ( 0xC9 == check ) {
+                //unsigned long pos = work.popped( ) - 1;
+                //output( ) << "found 0xC9 at byte: " << std::dec << pos << std::endl;
+                // got a C9, so check the previous 13 bytes for 0s
+                bool found = true;
+                for ( int i = 1; i < 14 && found; i++ ) {
+//                  output( ) << "\tbyte " << ( pos - i ) << " is: "
+//                          << std::setfill( '0' ) << std::setw( 2 ) << std::hex
+//                          << (unsigned short) work.read( -i - 1 ) << std::endl;
+                  if ( 0 != work.read( -i - 1 ) ) {
+                    found = false;
+                  }
+                }
+                if ( found ) {
+                  ok = true;
+                  if ( nullptr != size ) {
+                    *size = ( work.poppedSinceMark( ) - 14 );
+                  }
+                  break;
+                }
+              }
+            }
           }
-          work.rewind( ); // get that 0x7E back in the buffer
-          check = popUInt64( );
         }
-        ok = true;
+        else { // carescape
+          // search ahead for the 0x7E byte, and then check again
 
-        if ( nullptr != size ) {
-          *size = ( work.poppedSinceMark( ) - 4 );
+          // the two while loops are a little strange, but we only want to do
+          // a comparison if we have a shot at getting a match
+          unsigned long check = 0;
+          while ( check != magiclong ) {
+            while ( 0x7E != work.pop( ) ) {
+              // skip forward until we see another 0x7E
+            }
+            work.rewind( ); // get that 0x7E back in the buffer
+            check = popUInt64( );
+          }
+          ok = true;
+
+          if ( nullptr != size ) {
+            *size = ( work.poppedSinceMark( ) - 4 );
+          }
         }
       }
       else {
