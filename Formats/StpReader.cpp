@@ -74,6 +74,7 @@ namespace FormatConverter {
   const StpReader::BlockConfig StpReader::STAVL = BlockConfig::div10( "ST-AVL", "mm", 1, false );
   const StpReader::BlockConfig StpReader::STAVF = BlockConfig::div10( "ST-AVF", "mm", 1, false );
   const StpReader::BlockConfig StpReader::STV = BlockConfig::div10( "ST-V", "mm", 1, false );
+  const StpReader::BlockConfig StpReader::STV1 = BlockConfig::div10( "ST-V1", "mm", 1, false );
   const StpReader::BlockConfig StpReader::BT = BlockConfig::div10( "BT", "Deg C", 2 );
   const StpReader::BlockConfig StpReader::IT = BlockConfig::div10( "IT", "Deg C", 2 );
   const StpReader::BlockConfig StpReader::RESP = BlockConfig::vital( "RESP", "BrMin" );
@@ -133,8 +134,8 @@ namespace FormatConverter {
   const StpReader::BlockConfig StpReader::DELTA_TMP = BlockConfig::div10( "DELTA-TMP", "Deg C" );
   const StpReader::BlockConfig StpReader::LA1 = BlockConfig::vital( "LA1", "mmHg" );
   const StpReader::BlockConfig StpReader::CVP1 = BlockConfig::vital( "CVP1", "mmHg" );
-  const StpReader::BlockConfig StpReader::CVP2 = BlockConfig::vital( "CVP1", "mmHg" );
-  const StpReader::BlockConfig StpReader::CVP3 = BlockConfig::vital( "CVP1", "mmHg" );
+  const StpReader::BlockConfig StpReader::CVP2 = BlockConfig::vital( "CVP2", "mmHg" );
+  const StpReader::BlockConfig StpReader::CVP3 = BlockConfig::vital( "CVP3", "mmHg" );
   const StpReader::BlockConfig StpReader::CVP4 = BlockConfig::vital( "CVP4", "mmHg" );
   const StpReader::BlockConfig StpReader::CPP1 = BlockConfig::vital( "CPP1", "mmHg" );
   const StpReader::BlockConfig StpReader::ICP1 = BlockConfig::vital( "ICP1", "mmHg" );
@@ -760,11 +761,16 @@ namespace FormatConverter {
               readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
               break;
             case 0x0D56:
+              readDataBlock( info,{ } );
+              break;
             case 0x0D57:
+              readDataBlock( info,{ SKIP6, SKIP, STV1 } );
+              break;
             case 0x0D58:
             case 0x0D59:
               readDataBlock( info,{ } );
               break;
+            case 0x0E36:
             case 0x0E4D:
               readDataBlock( info,{ SKIP6, CO2_EX, CO2_IN, CO2_RR, SKIP2, O2_EXP, O2_INSP } );
               break;
@@ -1063,7 +1069,7 @@ namespace FormatConverter {
           int val;
           if ( 1 == cfg.readcount ) {
             val = popInt8( );
-            okval = ( val > -128 ); // can't use hex values here, because our ints are signed
+            okval = ( val > -128 ); // compare signed ints
           }
           else {
             val = popInt16( );
@@ -1172,9 +1178,9 @@ namespace FormatConverter {
                 // got a C9, so check the previous 13 bytes for 0s
                 bool found = true;
                 for ( int i = 1; i < 14 && found; i++ ) {
-//                  output( ) << "\tbyte " << ( pos - i ) << " is: "
-//                          << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-//                          << (unsigned short) work.read( -i - 1 ) << std::endl;
+                  //                  output( ) << "\tbyte " << ( pos - i ) << " is: "
+                  //                          << std::setfill( '0' ) << std::setw( 2 ) << std::hex
+                  //                          << (unsigned short) work.read( -i - 1 ) << std::endl;
                   if ( 0 != work.read( -i - 1 ) ) {
                     found = false;
                   }

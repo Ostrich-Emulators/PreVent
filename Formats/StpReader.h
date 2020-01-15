@@ -143,6 +143,7 @@ namespace FormatConverter {
 		static const BlockConfig STAVL;
 		static const BlockConfig STAVF;
 		static const BlockConfig STV;
+    static const BlockConfig STV1;
 		static const BlockConfig BT;
 		static const BlockConfig IT;
 		static const BlockConfig RESP;
