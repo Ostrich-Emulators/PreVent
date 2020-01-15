@@ -509,7 +509,7 @@ namespace FormatConverter {
     //    delete []skipper;
 
     filestream = new zstr::ifstream( filename );
-    decodebuffer.reserve( 1024 * 32 ); // read file in 32K chunks (arbitrary)
+    decodebuffer.reserve( 1024 * 64 ); // read file in 64K chunks (arbitrary, but much less than 1/2 the work buffer size)
     magiclong = std::numeric_limits<unsigned long>::max( );
     return 0;
   }
