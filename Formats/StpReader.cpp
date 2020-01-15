@@ -509,7 +509,7 @@ namespace FormatConverter {
     //    delete []skipper;
 
     filestream = new zstr::ifstream( filename );
-    decodebuffer.reserve( 1024 * 32 );
+    decodebuffer.reserve( 1024 * 32 ); // read file in 32K chunks (arbitrary)
     magiclong = std::numeric_limits<unsigned long>::max( );
     return 0;
   }
@@ -517,7 +517,14 @@ namespace FormatConverter {
   ReadResult StpReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
     output( ) << "initial reading from input stream" << std::endl;
 
-    filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
+    try {
+      filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
+    }
+    catch ( zstr::Exception x ) {
+      std::cerr << x.what( ) << std::endl;
+      return ReadResult::ERROR;
+    }
+
     std::streamsize cnt = filestream->gcount( );
 
     while ( 0 != cnt ) {
@@ -585,8 +592,14 @@ namespace FormatConverter {
         }
       }
 
-      filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
-      cnt = filestream->gcount( );
+      try {
+        filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
+        cnt = filestream->gcount( );
+      }
+      catch ( zstr::Exception x ) {
+        std::cerr << x.what( ) << std::endl;
+        return ReadResult::ERROR;
+      }
     }
 
     output( ) << "file is exhausted" << std::endl;
