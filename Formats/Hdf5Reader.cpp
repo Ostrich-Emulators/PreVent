@@ -716,10 +716,9 @@ namespace FormatConverter {
     H5::DataSpace searchspace( 2, dim );
 
     hsize_t offset[] = {startrow, 0};
-    hsize_t stride[] = {1, COLS};
 
     int dd[rowstoget][COLS] = {};
-    dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
+    dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
     ds.read( &dd, ds.getDataType( ), searchspace, dsspace );
 
     //  for ( hsize_t i = startidx; i < endidx; i++ ) {
@@ -757,9 +756,8 @@ namespace FormatConverter {
     H5::DataSpace searchspace( 2, dim );
 
     hsize_t offset[] = {startrow, 0};
-    hsize_t stride[] = {1, COLS};
     short dd[rowstoget][COLS] = {};
-    dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
+    dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
     ds.read( &dd, ds.getDataType( ), searchspace, dsspace );
 
     std::vector<int> values;
