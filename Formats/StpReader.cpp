@@ -40,6 +40,9 @@
 
 namespace FormatConverter {
 
+  /**
+   * Note: wave labels *can* change depending on what vitals are in the file
+   */
   const std::map<int, std::string> StpReader::WAVELABELS = {
     {0x07, "I" },
     {0x08, "II" },
@@ -50,8 +53,8 @@ namespace FormatConverter {
     {0x0D, "AVL" },
     {0x17, "RR" },
     {0x1B, "AR1" },
-    {0x1C, "ICP2" },
-    {0x1D, "CVP3" }, // may also be PA3?
+    {0x1C, "ICP2" }, // may also be PA2
+    {0x1D, "CVP3" }, // may also be PA3
     {0x1E, "CVP4" },
     {0x27, "SPO2" },
     {0x2A, "CO2" },
@@ -417,7 +420,7 @@ namespace FormatConverter {
 
       if ( waveok ) {
         bool first = false;
-        auto& signal = info->addWave( StpReader::WAVELABELS.at( waveid ), &first );
+        auto& signal = info->addWave( wavelabel( waveid, info ), &first );
         if ( first ) {
           signal->setChunkIntervalAndSampleRate( 2000, expectedValues[waveid] );
         }
@@ -1226,5 +1229,27 @@ namespace FormatConverter {
 
     work.rewindToMark( );
     return ok;
+  }
+
+  std::string StpReader::wavelabel( int waveid, const std::unique_ptr<SignalSet>& info ) {
+    std::string name = StpReader::WAVELABELS.at( waveid );
+
+    if ( 28 == waveid ) {
+      // if we have PA2-X, then this is a PA2 wave
+      for ( auto& v : info->vitals( ) ) {
+        if ( PA2_D.label == v->name( ) ) {
+          return "PA2";
+        }
+      }
+    }
+    else if ( 29 == waveid ) {
+      for ( auto& v : info->vitals( ) ) {
+        if ( PA3_D.label == v->name( ) ) {
+          return "PA3";
+        }
+      }
+    }
+
+    return name;
   }
 }
