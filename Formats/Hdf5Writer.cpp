@@ -40,7 +40,7 @@ namespace FormatConverter {
   Hdf5Writer::~Hdf5Writer( ) {
   }
 
-  void Hdf5Writer::writeAttribute( H5::H5Location& loc,
+  void Hdf5Writer::writeAttribute( H5::H5Object& loc,
           const std::string& attr, const std::string& val ) {
     if ( !val.empty( ) ) {
       //std::cout << attr << ": " << val << std::endl;
@@ -53,30 +53,26 @@ namespace FormatConverter {
     }
   }
 
-  void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-          const std::string& attr, int val ) {
+  void Hdf5Writer::writeAttribute( H5::H5Object& loc, const std::string& attr, int val ) {
     //std::cout << "writing attribute (int):" << attr << ": "<<val<<std::endl;
     H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
     H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I32LE, space );
     attrib.write( H5::PredType::STD_I32LE, &val );
   }
 
-  void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-          const std::string& attr, dr_time val ) {
+  void Hdf5Writer::writeAttribute( H5::H5Object& loc, const std::string& attr, dr_time val ) {
     H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
     H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I64LE, space );
     attrib.write( H5::PredType::STD_I64LE, &val );
   }
 
-  void Hdf5Writer::writeAttribute( H5::H5Location& loc,
-          const std::string& attr, double val ) {
+  void Hdf5Writer::writeAttribute( H5::H5Object& loc, const std::string& attr, double val ) {
     H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
     H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::IEEE_F64LE, space );
     attrib.write( H5::PredType::IEEE_F64LE, &val );
   }
 
-  void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc,
-          const dr_time& start, const dr_time& end ) {
+  void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Object& loc, const dr_time& start, const dr_time& end ) {
     time_t stime = ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
             ? timesteplkp.at( start )
             : ( start / 1000 ) );
@@ -125,7 +121,7 @@ namespace FormatConverter {
     writeAttribute( loc, "Duration", duration );
   }
 
-  void Hdf5Writer::writeAttributes( H5::H5Location& ds, const std::unique_ptr<SignalData>& data ) {
+  void Hdf5Writer::writeAttributes( H5::H5Object& ds, const std::unique_ptr<SignalData>& data ) {
     // writeTimesAndDurationAttributes( ds, data.startTime( ), data.endTime( ) );
     for ( const auto& m : data->metad( ) ) {
       writeAttribute( ds, m.first, m.second );
@@ -197,11 +193,11 @@ namespace FormatConverter {
     std::vector<std::string> extras = data->extras( );
     hsize_t sz = data->size( );
 
-    hsize_t dims[] = {sz, 1 + extras.size( )};
+    hsize_t dims[] = { sz, 1 + extras.size( ) };
     H5::DataSpace space( 2, dims );
     H5::DSetCreatPropList props;
     if ( compression( ) > 0 ) {
-      hsize_t chunkdims[] = {0, 0};
+      hsize_t chunkdims[] = { 0, 0 };
       autochunk( dims, 2, sizeof (short ), chunkdims );
       props.setChunk( 2, chunkdims );
       props.setShuffle( );
@@ -231,8 +227,8 @@ namespace FormatConverter {
     const hsize_t maxslabcnt = ( rows > 125000
             ? 125000
             : rows );
-    hsize_t offset[] = {0, 0};
-    hsize_t count[] = {0, exc + 1};
+    hsize_t offset[] = { 0, 0 };
+    hsize_t count[] = { 0, exc + 1 };
 
     std::vector<short> sbuffer;
     std::vector<int> ibuffer;
@@ -320,11 +316,11 @@ namespace FormatConverter {
     const int scale = data->scale( );
     const int valsperrow = data->readingsPerChunk( );
 
-    hsize_t dims[] = {rows * valsperrow, 1};
+    hsize_t dims[] = { rows * valsperrow, 1 };
     H5::DataSpace space( 2, dims );
     H5::DSetCreatPropList props;
     if ( compression( ) > 0 ) {
-      hsize_t chunkdims[] = {0, 0};
+      hsize_t chunkdims[] = { 0, 0 };
       autochunk( dims, 2, sizeof (short ), chunkdims );
       props.setChunk( 2, chunkdims );
       props.setShuffle( );
@@ -342,8 +338,8 @@ namespace FormatConverter {
     writeAttribute( ds, "Columns", "scaled value" );
 
     const hsize_t maxslabcnt = ( rows * valsperrow > 125000 ? 125000 : rows * valsperrow );
-    hsize_t offset[] = {0, 0};
-    hsize_t count[] = {0, 1};
+    hsize_t offset[] = { 0, 0 };
+    hsize_t count[] = { 0, 1 };
 
     std::vector<short> sbuffer;
     std::vector<int> ibuffer;
@@ -479,12 +475,12 @@ namespace FormatConverter {
 
     std::map<long, dr_time> segmentsizes = data->offsets( );
     if ( !segmentsizes.empty( ) ) {
-      hsize_t dims[] = {segmentsizes.size( ), 2};
+      hsize_t dims[] = { segmentsizes.size( ), 2 };
       H5::DataSpace space( 2, dims );
 
       H5::DataSet ds = events.createDataSet( "Segment_Offsets",
               H5::PredType::STD_I64LE, space );
-      long long indexes[segmentsizes.size( ) * 2] = {0};
+      long long indexes[segmentsizes.size( ) * 2] = { 0 };
       int row = 0;
       for ( const auto& e : segmentsizes ) {
         indexes[ 2 * row ] = e.second;
@@ -533,12 +529,12 @@ namespace FormatConverter {
     }
 
     // now we can make our dataset
-    hsize_t dims[] = {alltimes.size( ), 1};
+    hsize_t dims[] = { alltimes.size( ), 1 };
     H5::DataSpace space( 2, dims );
 
     H5::DSetCreatPropList props;
     if ( compression( ) > 0 ) {
-      hsize_t chunkdims[] = {0, 0};
+      hsize_t chunkdims[] = { 0, 0 };
       autochunk( dims, 2, sizeof ( long ), chunkdims );
       props.setChunk( 2, chunkdims );
       props.setShuffle( );
@@ -779,12 +775,12 @@ namespace FormatConverter {
       times.insert( times.end( ), vec.rbegin( ), vec.rend( ) );
     }
 
-    hsize_t dims[] = {times.size( ), 1};
+    hsize_t dims[] = { times.size( ), 1 };
     H5::DataSpace space( 2, dims );
 
     H5::DSetCreatPropList props;
     if ( compression( ) > 0 ) {
-      hsize_t chunkdims[] = {0, 0};
+      hsize_t chunkdims[] = { 0, 0 };
       autochunk( dims, 2, sizeof (long ), chunkdims );
       props.setChunk( 2, chunkdims );
       props.setShuffle( );
@@ -821,12 +817,12 @@ namespace FormatConverter {
     for ( auto& type : types ) {
       auto times = data->events( type );
 
-      hsize_t dims[] = {times.size( ), 1};
+      hsize_t dims[] = { times.size( ), 1 };
       H5::DataSpace space( 2, dims );
 
       H5::DSetCreatPropList props;
       if ( compression( ) > 0 ) {
-        hsize_t chunkdims[] = {0, 0};
+        hsize_t chunkdims[] = { 0, 0 };
         autochunk( dims, 2, sizeof (long ), chunkdims );
         props.setChunk( 2, chunkdims );
         props.setShuffle( );

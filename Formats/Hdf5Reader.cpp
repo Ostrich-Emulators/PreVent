@@ -452,7 +452,7 @@ namespace FormatConverter {
     }
   }
 
-  int Hdf5Reader::metaint( const H5::H5Location& loc, const std::string & attrname ) {
+  int Hdf5Reader::metaint( const H5::H5Object& loc, const std::string & attrname ) {
     int val;
     if ( loc.attrExists( attrname ) ) {
 
@@ -463,7 +463,7 @@ namespace FormatConverter {
     return val;
   }
 
-  std::string Hdf5Reader::metastr( const H5::H5Location& loc, const std::string & attrname ) {
+  std::string Hdf5Reader::metastr( const H5::H5Object& loc, const std::string & attrname ) {
     return metastr( loc.openAttribute( attrname ) );
   }
 

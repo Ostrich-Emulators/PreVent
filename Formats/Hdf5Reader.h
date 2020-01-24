@@ -23,16 +23,16 @@ namespace FormatConverter {
 
   class Hdf5Reader : public Reader {
   public:
-    Hdf5Reader();
-    virtual ~Hdf5Reader();
+    Hdf5Reader( );
+    virtual ~Hdf5Reader( );
     static const std::set<std::string> IGNORABLE_PROPS;
 
-    int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
-    void finish() override;
-    ReadResult fill(std::unique_ptr<SignalSet>& data,
-            const ReadResult& lastresult = ReadResult::FIRST_READ) override;
+    int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
+    void finish( ) override;
+    ReadResult fill( std::unique_ptr<SignalSet>& data,
+        const ReadResult& lastresult = ReadResult::FIRST_READ ) override;
 
-    virtual bool getAttributes(const std::string& inputfile, std::map<std::string, std::string>& map) override;
+    virtual bool getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) override;
 
     /**
      * Gets a segment of data based on the from and to times.
@@ -42,29 +42,29 @@ namespace FormatConverter {
      * @param to
      * @return
      */
-    virtual void splice(const std::string& inputfile, const std::string& path,
-            dr_time from, dr_time to, std::unique_ptr<SignalData>& signal) override;
+    virtual void splice( const std::string& inputfile, const std::string& path,
+        dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) override;
 
   private:
-    Hdf5Reader(const Hdf5Reader&);
+    Hdf5Reader( const Hdf5Reader& );
 
     /**
      * Reads an attribute as a string (converts appropriately)
      * @param attr
      * @return 
      */
-    static std::string metastr(const H5::Attribute& attr);
-    static std::string metastr(const H5::H5Location& loc, const std::string& attrname);
-    static int metaint(const H5::H5Location& loc, const std::string& attrname);
+    static std::string metastr( const H5::Attribute& attr );
+    static std::string metastr( const H5::H5Object& loc, const std::string& attrname );
+    static int metaint( const H5::H5Object& loc, const std::string& attrname );
 
-    void copymetas(std::unique_ptr<SignalData>& signal, H5::DataSet& dataset) const;
-    void fillVital(std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-            const std::vector<dr_time>& times, int valsPerTime, int timeinterval, int scale) const;
-    void fillWave(std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-            const std::vector<dr_time>& tmes, int valsPerTime, int scale) const;
-    void readDataSet(H5::Group& dataAndTimeGroup, const bool& iswave,
-            std::unique_ptr<SignalSet>& info);
-    std::vector<dr_time> readTimes(H5::DataSet& times);
+    void copymetas( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
+    void fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
+        const std::vector<dr_time>& times, int valsPerTime, int timeinterval, int scale ) const;
+    void fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
+        const std::vector<dr_time>& tmes, int valsPerTime, int scale ) const;
+    void readDataSet( H5::Group& dataAndTimeGroup, const bool& iswave,
+        std::unique_ptr<SignalSet>& info );
+    std::vector<dr_time> readTimes( H5::DataSet& times );
 
     /**
      * Gets a single number representing the major/minor/revision nuumbers for
@@ -73,7 +73,7 @@ namespace FormatConverter {
      * @param file
      * @return 
      */
-    static unsigned int layoutVersion(const H5::H5File& file);
+    static unsigned int layoutVersion( const H5::H5File& file );
 
     /**
      * Find the index for the given time in the given dataset. If the time does 
@@ -83,7 +83,7 @@ namespace FormatConverter {
      * @param foundtime the time that was found at the returned index
      * @return 
      */
-    static hsize_t getIndexForTime(H5::DataSet& haystack, dr_time needle, dr_time * foundtime = nullptr);
+    static hsize_t getIndexForTime( H5::DataSet& haystack, dr_time needle, dr_time * foundtime = nullptr );
 
     /**
      * Reads (as ints) the given dataset from start (inclusive) to end (exclusive)
@@ -92,7 +92,7 @@ namespace FormatConverter {
      * @param endidx the index after the last row to retrieve
      * @return 
      */
-    static std::vector<int> slabreadi(H5::DataSet& data, hsize_t startidx, hsize_t endidx);
+    static std::vector<int> slabreadi( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
     /**
      * Reads (as shorts) the given dataset from start (inclusive) to end (exclusive)
      * @param data
@@ -100,7 +100,7 @@ namespace FormatConverter {
      * @param endidx the index after the last row to retrieve
      * @return
      */
-    static std::vector<int> slabreads(H5::DataSet& data, hsize_t startidx, hsize_t endidx);
+    static std::vector<int> slabreads( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
     /**
      * Reads (as longs) the given dataset from start (inclusive) to end (exclusive)
      * @param data
@@ -108,7 +108,7 @@ namespace FormatConverter {
      * @param endidx the index after the last row to retrieve
      * @return
      */
-    static std::vector<dr_time> slabreadt(H5::DataSet& data, hsize_t startidx, hsize_t endidx);
+    static std::vector<dr_time> slabreadt( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
 
     H5::H5File file;
   };

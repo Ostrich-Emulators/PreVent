@@ -519,7 +519,7 @@ namespace FormatConverter {
   }
 
   ReadResult StpReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
-    output( ) << "initial reading from input stream" << std::endl;
+    output( ) << "initial reading from input stream (" << filestream->tellg( ) << ")" std::endl;
 
     try {
       filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
