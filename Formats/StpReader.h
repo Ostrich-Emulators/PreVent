@@ -72,7 +72,7 @@ namespace FormatConverter {
       bool empty( ) const;
 
       unsigned short currentseq( ) const;
-      const dr_time& starttime( ) const;
+      const dr_time starttime( ) const;
       dr_time vitalstarttime( ) const;
 
     private:

@@ -252,7 +252,7 @@ namespace FormatConverter {
         }
         else if ( seqnum == ( currseq + 1 ) ) {
           // sometimes, we get the right sequence number, but the time is off
-          if ( time - mytime >= 4000 ) {
+          if ( time - mytime >= 4000 ) { // 4s is arbitrary
             // sequence is right, but the time is off, so figure out what
             // the time should be by reading what's in our chute
             size_t counter = 0;
@@ -295,9 +295,24 @@ namespace FormatConverter {
   void StpReader::WaveTracker::breaksync( StpReader::WaveSequenceResult rslt,
           const unsigned short& seqnum, const dr_time& time ) {
 
+    // for timed breaks, we really just want to fill up the current second
+    // with missing data.
+
+    // for sequence breaks, we don't want to fill up the whole second...just
+    // the missing sequences.
+
+    // if we're missing >8 elements, treat it as if it's a timed break
+
     unsigned short currseq = currentseq( );
 
-    if ( WaveSequenceResult::TIMEBREAK == rslt ) {
+    // the -1 is because we haven't read the seqnum values yet
+    // we don't use these variables if it's a timedbreak
+    unsigned short seqcalc = ( seqnum - 1 < currseq ? seqnum + 0xFF : seqnum - 1 );
+    unsigned short seqdiff = ( seqcalc - currseq );
+
+    // arbitrary: if the sequence break is more than 8 elements, just fill
+    // in the current second as if it was a timed break
+    if ( WaveSequenceResult::TIMEBREAK == rslt || seqdiff > 8 ) {
       // just add phantom sequence numbers to fill up the current block and we're done
       // first, we need to figure out how many sequence numbers to add by counting
       // how many we have at the current time
@@ -306,21 +321,32 @@ namespace FormatConverter {
               [ctime]( std::pair<unsigned short, dr_time> p ) {
                 return (p.second == ctime );
               } );
-      for (; count < 8; count++ ) {
-        sequencenums.push_back( std::make_pair( currseq, time ) );
+      for ( size_t lim = 1; lim <= ( 8 - count ); lim++ ) {
+        sequencenums.push_back( std::make_pair( ( currseq + lim ) % 0xFF, ctime ) );
+      }
+
+      // fill in MISSING values into our datapoints, too
+      for ( auto& w : wavevals ) {
+        const int waveid = w.first;
+        std::vector<int>& datapoints = w.second;
+        size_t loops = 8 - count;
+        std::cout << "wave " << waveid << ": before filling: " << datapoints.size( );
+        // break is based on missing sequence numbers
+        size_t valsPerSeqNum = expectedValues[waveid] / 8; // 8 FA0D loops/sec
+        size_t valsToAdd = loops * valsPerSeqNum;
+        datapoints.resize( datapoints.size( ) + valsToAdd, SignalData::MISSING_VALUE );
+
+        std::cout << "; after filling: " << datapoints.size( ) << std::endl;
       }
     }
     else {
-      // the -1 is because we haven't read the seqnum values yet
-      // we don't use these variables if it's a timedbreak
-      unsigned short seqcalc = ( seqnum - 1 < currseq ? seqnum + 0xFF : seqnum - 1 );
-      unsigned short seqdiff = ( seqcalc - currseq );
 
-      std::cout << "break in sequence! current map:" << std::endl;
+      std::cout << "small break in sequence (" << seqdiff << " elements) current map:" << std::endl;
       for ( const auto& m : sequencenums ) {
         std::cout << "\t" << m.first << "\t" << m.second << std::endl;
       }
 
+      // we have a small sequence difference, so fill in phantom values
       for ( auto& w : wavevals ) {
         const int waveid = w.first;
         std::vector<int>& datapoints = w.second;
@@ -336,6 +362,7 @@ namespace FormatConverter {
       for ( unsigned short i = 1; i <= seqdiff; i++ ) {
         sequencenums.push_back( std::make_pair( ( currseq + i ) % 0xFF, time ) );
       }
+
       std::cout << "new map: " << std::endl;
       for ( const auto& m : sequencenums ) {
         std::cout << "\t" << m.first << "\t" << m.second << std::endl;
@@ -386,8 +413,11 @@ namespace FormatConverter {
     }
 
     int erasers = std::min( (int) sequencenums.size( ), 8 );
-    //std::cout << "flushing " << erasers << " values from seqnum " << sequencenums[0].first << "\t"
-    //    << sequencenums[0].second << " (" << mytime << ")...";
+//    if ( mytime >= 1475072107000 ) {
+//      std::cout << "flushing " << erasers << " values from seqnum " << sequencenums[0].first << "\t"
+//              << sequencenums[0].second << " (" << mytime << ")...";
+//
+//    }
 
     dr_time startt = starttime( );
     for ( auto& w : wavevals ) {
@@ -442,10 +472,27 @@ namespace FormatConverter {
       for ( auto& x : sequencenums ) {
         std::cout << "\tseqs: " << x.first << "\t" << x.second << std::endl;
       }
+
+
+      // if we have >7 sequence nums in our chute, and the first 8 all have the
+      // same time, then that's our time. else use our calculated time
+      if ( sequencenums.size( ) > 7 ) {
+        const dr_time ctime = vitalstarttime( );
+
+        size_t count = std::count_if( sequencenums.begin( ), sequencenums.end( ),
+                [ctime]( std::pair<unsigned short, dr_time> p ) {
+                  return (p.second == ctime );
+                } );
+        if ( count > 7 ) {
+          mytime = ctime - 2000; // -2000 because we're about to increment it by 2000
+        }
+      }
     }
 
     mytime += 2000;
-    //std::cout << "done" << std::endl;
+//    if ( mytime >= 1475072107000 ) {
+//      std::cout << "done" << std::endl;
+//    }
   }
 
   unsigned short StpReader::WaveTracker::currentseq( ) const {
@@ -461,7 +508,7 @@ namespace FormatConverter {
     return sequencenums.begin( )->second;
   }
 
-  const dr_time& StpReader::WaveTracker::starttime( ) const {
+  const dr_time StpReader::WaveTracker::starttime( ) const {
     return mytime;
   }
   // </editor-fold>
@@ -519,7 +566,7 @@ namespace FormatConverter {
   }
 
   ReadResult StpReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
-    output( ) << "initial reading from input stream (" << filestream->tellg( ) << ")" std::endl;
+    output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
     try {
       filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
