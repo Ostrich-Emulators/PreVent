@@ -5,7 +5,7 @@ Dependencies to build these programs (ubuntu)
 * libhdf5-dev
 * libmatio-dev
 * libexpat-dev
-* wfdb-10.6.0 (https://www.physionet.org/physiotools/wfdb-linux-quick-start.shtml)
+* wfdb-10.6.0 (https://archive.physionet.org/physiotools/wfdb-linux-quick-start.shtml)
 * TDMSpp (https://github.com/Ostrich-Emulators/TDMSpp)
 * googletest 1.8.0 (for unit testing [optional]) (https://github.com/google/googletest)
 
