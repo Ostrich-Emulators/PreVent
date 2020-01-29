@@ -161,7 +161,12 @@ namespace FormatConverter {
   }
 
   void BasicSignalSet::setMeta( const std::string& key, const std::string & val ) {
-    metamap[key] = val;
+    if ( val.empty( ) ) {
+      metamap.erase( key );
+    }
+    else {
+      metamap[key] = val;
+    }
   }
 
   void BasicSignalSet::clearMetas( ) {

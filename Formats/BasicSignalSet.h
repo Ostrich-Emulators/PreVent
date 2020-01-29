@@ -61,7 +61,11 @@ namespace FormatConverter {
 
     virtual const std::map<std::string, std::string>& metadata() const override;
 
-
+    /**
+     * Sets a new metadata value.
+     * @param key
+     * @param val if empty, this key is removed from the metadata
+     */
     virtual void setMeta(const std::string& key, const std::string& val);
     virtual void clearMetas();
 

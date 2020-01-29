@@ -413,11 +413,11 @@ namespace FormatConverter {
     }
 
     int erasers = std::min( (int) sequencenums.size( ), 8 );
-//    if ( mytime >= 1475072107000 ) {
-//      std::cout << "flushing " << erasers << " values from seqnum " << sequencenums[0].first << "\t"
-//              << sequencenums[0].second << " (" << mytime << ")...";
-//
-//    }
+    //    if ( mytime >= 1475072107000 ) {
+    //      std::cout << "flushing " << erasers << " values from seqnum " << sequencenums[0].first << "\t"
+    //              << sequencenums[0].second << " (" << mytime << ")...";
+    //
+    //    }
 
     dr_time startt = starttime( );
     for ( auto& w : wavevals ) {
@@ -490,9 +490,9 @@ namespace FormatConverter {
     }
 
     mytime += 2000;
-//    if ( mytime >= 1475072107000 ) {
-//      std::cout << "done" << std::endl;
-//    }
+    //    if ( mytime >= 1475072107000 ) {
+    //      std::cout << "done" << std::endl;
+    //    }
   }
 
   unsigned short StpReader::WaveTracker::currentseq( ) const {
@@ -576,6 +576,10 @@ namespace FormatConverter {
       return ReadResult::ERROR;
     }
 
+    if ( ReadResult::END_OF_PATIENT == lastrr ) {
+      info->setMeta( "Patient Name", "" ); // reset the patient name
+    }
+
     std::streamsize cnt = filestream->gcount( );
 
     while ( 0 != cnt ) {
@@ -601,7 +605,7 @@ namespace FormatConverter {
         work.rewind( 4 );
         // note: GE Unity systems seem to always have a 0 for this marker
         if ( isunity( ) ) {
-          output( ) << "note: assuming GE Carescape input" << std::endl;
+          output( ) << "note: assuming GE Unity Carescape input" << std::endl;
         }
       }
 
@@ -625,8 +629,9 @@ namespace FormatConverter {
         }
         else {
           // something happened so rewind our to our mark
-          output( ) << "rewinding to start of segment" << std::endl;
+          output( ) << "rewinding to start of segment (mark: " << ( work.popped( ) - work.poppedSinceMark( ) ) << ")" << std::endl;
           work.rewindToMark( );
+
 
           // if we're ending a file, flush all the wave data we can, but don't
           // write values that should go in the next file
@@ -698,6 +703,7 @@ namespace FormatConverter {
           info->setMeta( "Patient Name", patient );
         }
         else if ( info->metadata( ).at( "Patient Name" ) != patient ) {
+          //output( ) << "new patient! (was: " << info->metadata( ).at( "Patient Name" ) << "; is: " << patient << ")" << std::endl;
           return ChunkReadResult::NEW_PATIENT;
         }
       }
