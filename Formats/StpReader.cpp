@@ -627,6 +627,9 @@ namespace FormatConverter {
             output( ) << "skipping ahead " << ( segsize - bytesread ) << " bytes to next segment at " << ( startpop + segsize ) << std::endl;
           }
         }
+        else if ( ChunkReadResult::UNKNOWN_BLOCKTYPE == rslt ) {
+          return ReadResult::ERROR;
+        }
         else {
           // something happened so rewind our to our mark
           output( ) << "rewinding to start of segment (mark: " << ( work.popped( ) - work.poppedSinceMark( ) ) << ")" << std::endl;
@@ -985,6 +988,9 @@ namespace FormatConverter {
       // that means, but the B part seems to be the only thing that matters
       // so zero out the most significant bits
       unsigned int shifty = ( countbyte & 0b00000111 );
+      if ( 0 == shifty || shifty > 7 ) {
+        throw std::runtime_error( "Inconsistent wave information...file is corrupt?" );
+      }
       unsigned int valstoread = READCOUNTS[shifty - 1];
       //      output( ) << "wave "
       //          << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << "; count:"
