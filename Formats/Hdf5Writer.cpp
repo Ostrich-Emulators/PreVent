@@ -40,7 +40,7 @@ namespace FormatConverter {
   Hdf5Writer::~Hdf5Writer( ) {
   }
 
-  void Hdf5Writer::writeAttribute( H5::H5Object& loc,
+  void Hdf5Writer::writeAttribute( H5::H5Location& loc,
           const std::string& attr, const std::string& val ) {
     if ( !val.empty( ) ) {
       //std::cout << attr << ": " << val << std::endl;
@@ -53,26 +53,26 @@ namespace FormatConverter {
     }
   }
 
-  void Hdf5Writer::writeAttribute( H5::H5Object& loc, const std::string& attr, int val ) {
+  void Hdf5Writer::writeAttribute( H5::H5Location& loc, const std::string& attr, int val ) {
     //std::cout << "writing attribute (int):" << attr << ": "<<val<<std::endl;
     H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
     H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I32LE, space );
     attrib.write( H5::PredType::STD_I32LE, &val );
   }
 
-  void Hdf5Writer::writeAttribute( H5::H5Object& loc, const std::string& attr, dr_time val ) {
+  void Hdf5Writer::writeAttribute( H5::H5Location& loc, const std::string& attr, dr_time val ) {
     H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
     H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::STD_I64LE, space );
     attrib.write( H5::PredType::STD_I64LE, &val );
   }
 
-  void Hdf5Writer::writeAttribute( H5::H5Object& loc, const std::string& attr, double val ) {
+  void Hdf5Writer::writeAttribute( H5::H5Location& loc, const std::string& attr, double val ) {
     H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
     H5::Attribute attrib = loc.createAttribute( attr, H5::PredType::IEEE_F64LE, space );
     attrib.write( H5::PredType::IEEE_F64LE, &val );
   }
 
-  void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Object& loc, const dr_time& start, const dr_time& end ) {
+  void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Location& loc, const dr_time& start, const dr_time& end ) {
     time_t stime = ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
             ? timesteplkp.at( start )
             : ( start / 1000 ) );
@@ -121,7 +121,7 @@ namespace FormatConverter {
     writeAttribute( loc, "Duration", duration );
   }
 
-  void Hdf5Writer::writeAttributes( H5::H5Object& ds, const std::unique_ptr<SignalData>& data ) {
+  void Hdf5Writer::writeAttributes( H5::H5Location& ds, const std::unique_ptr<SignalData>& data ) {
     // writeTimesAndDurationAttributes( ds, data.startTime( ), data.endTime( ) );
     for ( const auto& m : data->metad( ) ) {
       writeAttribute( ds, m.first, m.second );

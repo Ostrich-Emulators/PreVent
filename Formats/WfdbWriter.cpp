@@ -17,7 +17,7 @@
 #include "SignalUtils.h"
 #include "config.h"
 #include "FileNamer.h"
-namespace FormatConverter {
+namespace FormatConverter{
 
   WfdbWriter::WfdbWriter( ) : Writer( "hea" ) {
   }
@@ -34,7 +34,10 @@ namespace FormatConverter {
     // FIXME: need to figure out where our output directory is
     //std::string directory = filenamer( ).outputdir( );
     std::string directory( "." );
-    chdir( directory.c_str( ) );
+    int x = chdir( directory.c_str( ) );
+    if ( 0 != x ) {
+      return -1;
+    }
 
     files.clear( );
 
@@ -76,7 +79,7 @@ namespace FormatConverter {
   }
 
   int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&data,
-          const std::string& namestart ) {
+      const std::string& namestart ) {
     setsampfreq( freq );
 
     sigmap.clear( );
@@ -140,7 +143,7 @@ namespace FormatConverter {
       for ( std::vector<std::string> rowcols : data ) {
         int cols = rowcols.size( );
 
-        WFDB_Sample samples[cols][ifrq] = {0};
+        WFDB_Sample samples[cols][ifrq] = { 0 };
         for ( int col = 0; col < cols; col++ ) {
           std::vector<int> slices = FormatConverter::DataRow::ints( rowcols[col] );
           size_t numslices = slices.size( );
