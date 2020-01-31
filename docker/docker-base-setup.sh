@@ -6,7 +6,7 @@ curl --silent --create-dirs --output /tmp/matio.tgz https://ayera.dl.sourceforge
 cd /tmp
 tar xfz matio.tgz
 pushd matio-1.5.17
-./configure --prefix=/usr
+./configure --prefix=/usr --with-hdf5=/usr/lib/x86_64-linux-gnu/hdf5/serial
 make
 make install
 popd
