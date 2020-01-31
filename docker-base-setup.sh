@@ -51,3 +51,6 @@ popd
 
 ln -s /usr/lib/formatconverter-4.2.0/libformats.so /usr/lib
 ln -s /usr/lib/tdmspp-osem-2.0.0/libtdmspp-osem.so /usr/lib
+
+cd /tmp
+rm -rf TDMSpp* PreVent* matio* wfdb*
