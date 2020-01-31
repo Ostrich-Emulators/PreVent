@@ -93,9 +93,6 @@ target_link_libraries(formats
 	${MATIO_LIBRARIES}
 	${HDF5_LIBRARIES}
 	${WFDB_LIBRARIES}
-	# need this because MATIO says it links to -lhdf5, but
-	# the HDF5 package uses a full path to find the library
-	#"-L/usr/lib/x86_64-linux-gnu/hdf5/serial/lib"
 )
 
 install (TARGETS formats DESTINATION ${lib_dest})
