@@ -1,16 +1,4 @@
 #!/bin/bash
-
-apt-get update
-apt-get install -y \
-	vim \
-	curl \
-	git \
-	libsqlite3-dev \
-	cmake \
-	g++ \
-	pkg-config \
-	libhdf5-dev \
-	libexpat-dev
 	
 # Matio has an ubuntu package, but we build it ourselves because of 
 # inconsistencies in the packaging and CMAKE, and to avoid the dependency on HDF5 1.8 (we use 1.10)
