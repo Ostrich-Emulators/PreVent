@@ -33,6 +33,12 @@ configure_file (
   "generated/config.h"
 )
 
+add_custom_command(
+  OUTPUT generated/releases.h
+  COMMAND xxd -i releases.h.in generated/releases.h
+  DEPENDS releases.h.in
+)
+
 add_library(formats SHARED AnonymizingSignalSet.cpp
 Base64.cpp
 BasicSignalData.cpp
@@ -70,6 +76,7 @@ TimeParser.cpp
 StpReader.cpp
 UmWfdbReader.cpp
 generated/config.h
+generated/releases.h
 )
 
 set(include_dest include/formatconverter-${LIBVERSION})
@@ -140,4 +147,5 @@ UmWfdbReader.h
 zstr.hpp
 strict_fstream.hpp
 CircularBuffer.h
+generated/releases.h
 DESTINATION ${include_dest} )
