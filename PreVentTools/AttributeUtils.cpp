@@ -26,7 +26,7 @@ namespace FormatConverter {
       try {
         file.getObjinfo( itempath, stats );
       }
-      catch ( H5::FileIException error ) {
+      catch ( H5::FileIException& error ) {
         std::cerr << "could not open dataset/group: " << itempath << std::endl;
         return;
       }
@@ -100,7 +100,7 @@ namespace FormatConverter {
     try {
       file.getObjinfo( path, stats );
     }
-    catch ( H5::FileIException error ) {
+    catch ( H5::FileIException& error ) {
       std::cerr << "could not open dataset/group: " << path << std::endl;
       return;
     }
@@ -141,7 +141,7 @@ namespace FormatConverter {
     try {
       file.getObjinfo( path, stats );
     }
-    catch ( H5::FileIException error ) {
+    catch ( H5::FileIException& error ) {
       std::cerr << "could not open dataset/group: " << path << std::endl;
       return;
     }
@@ -171,7 +171,7 @@ namespace FormatConverter {
     try {
       file.getObjinfo( path, stats );
     }
-    catch ( H5::FileIException error ) {
+    catch ( H5::FileIException& error ) {
       std::cerr << "could not open dataset/group: " << path << std::endl;
       return;
     }

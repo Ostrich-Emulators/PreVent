@@ -243,12 +243,12 @@ int main( int argc, char** argv ) {
         H5::H5File file = H5::H5File( argv[i], H5F_ACC_RDONLY );
         AttributeUtils::printAttributes( file, path );
       }
-      catch ( H5::FileIException error ) {
+      catch ( H5::FileIException& error ) {
         std::cerr << error.getDetailMsg( ) << std::endl;
         return -1;
       }
       // catch failure caused by the DataSet operations
-      catch ( H5::DataSetIException error ) {
+      catch ( H5::DataSetIException& error ) {
         std::cerr << error.getDetailMsg( ) << std::endl;
         return -2;
       }
@@ -356,16 +356,16 @@ int main( int argc, char** argv ) {
           }
         }
       }
-      catch ( H5::FileIException error ) {
+      catch ( H5::FileIException& error ) {
         std::cerr << error.getDetailMsg( ) << std::endl;
         return -1;
       }
       // catch failure caused by the DataSet operations
-      catch ( H5::DataSetIException error ) {
+      catch ( H5::DataSetIException& error ) {
         std::cerr << error.getDetailMsg( ) << std::endl;
         return -2;
       }
-      catch ( std::invalid_argument error ) {
+      catch ( std::invalid_argument& error ) {
         std::cerr << "could not convert \"" << val << "\" to appropriate datatype (" << attrtype << ")" << std::endl;
         return -3;
       }
