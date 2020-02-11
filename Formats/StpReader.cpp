@@ -571,7 +571,7 @@ namespace FormatConverter {
     try {
       filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
     }
-    catch ( zstr::Exception x ) {
+    catch ( zstr::Exception& x ) {
       std::cerr << x.what( ) << std::endl;
       return ReadResult::ERROR;
     }
@@ -655,7 +655,7 @@ namespace FormatConverter {
         filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
         cnt = filestream->gcount( );
       }
-      catch ( zstr::Exception x ) {
+      catch ( zstr::Exception& x ) {
         std::cerr << x.what( ) << std::endl;
         return ReadResult::ERROR;
       }
