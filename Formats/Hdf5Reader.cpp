@@ -38,12 +38,12 @@ namespace FormatConverter {
       try {
         file = H5::H5File( filename, H5F_ACC_RDONLY );
       }
-      catch ( H5::FileIException error ) {
+      catch ( H5::FileIException& error ) {
         output( ) << error.getDetailMsg( ) << std::endl;
         return -1;
       }
       // catch failure caused by the DataSet operations
-      catch ( H5::DataSetIException error ) {
+      catch ( H5::DataSetIException& error ) {
         output( ) << error.getDetailMsg( ) << std::endl;
         return -2;
       }
@@ -66,13 +66,13 @@ namespace FormatConverter {
         map[a.getName( )] = metastr( a );
       }
     }
-    catch ( H5::FileIException error ) {
+    catch ( H5::FileIException& error ) {
       output( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
       return false;
     }
     // catch failure caused by the DataSet operations
-    catch ( H5::DataSetIException error ) {
+    catch ( H5::DataSetIException& error ) {
       output( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
       return false;
@@ -116,11 +116,11 @@ namespace FormatConverter {
       }
       egroup.close( );
     }
-    catch ( H5::FileIException error ) {
+    catch ( H5::FileIException& error ) {
       output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
     }
     // catch failure caused by the DataSet operations
-    catch ( H5::DataSetIException error ) {
+    catch ( H5::DataSetIException& error ) {
       output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
     }
 
@@ -134,11 +134,11 @@ namespace FormatConverter {
       }
       vgroup.close( );
     }
-    catch ( H5::FileIException error ) {
+    catch ( H5::FileIException& error ) {
       output( ) << "/VitalSigns: " << error.getDetailMsg( ) << std::endl;
     }
     // catch failure caused by the DataSet operations
-    catch ( H5::DataSetIException error ) {
+    catch ( H5::DataSetIException& error ) {
       output( ) << "/VitalSigns: " << error.getDetailMsg( ) << std::endl;
     }
 
@@ -151,11 +151,11 @@ namespace FormatConverter {
       }
       wgroup.close( );
     }
-    catch ( H5::FileIException error ) {
+    catch ( H5::FileIException& error ) {
       output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
     }
     // catch failure caused by the DataSet operations
-    catch ( H5::DataSetIException error ) {
+    catch ( H5::DataSetIException& error ) {
       output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
     }
 
@@ -514,7 +514,7 @@ namespace FormatConverter {
             rev += val;
           }
         }
-        catch ( std::invalid_argument x ) {
+        catch ( std::invalid_argument& x ) {
           // don't care
         }
       }
@@ -631,12 +631,12 @@ namespace FormatConverter {
         }
       }
     }
-    catch ( H5::FileIException error ) {
+    catch ( H5::FileIException& error ) {
       output( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
     }
     // catch failure caused by the DataSet operations
-    catch ( H5::DataSetIException error ) {
+    catch ( H5::DataSetIException& error ) {
       output( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
     }
