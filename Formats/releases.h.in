@@ -1,0 +1,12 @@
+4.2.0
+  * Created Docker image (ry99/prevent:4.2.0)
+  * Improved library search locations
+  * Fixed HDF5 slab reads when >1 data column
+
+4.1.5
+  * Dynamic wave labels based on vitals
+  * "Compile" wave data based on sequence numbers, time
+
+4.1.4
+  * Refactored WFDB reader
+  * Created UM WFDB reader

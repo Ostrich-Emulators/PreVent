@@ -26,6 +26,7 @@
 #include "TimeParser.h"
 
 #include "config.h"
+#include "releases.h"
 
 using namespace FormatConverter;
 
@@ -46,6 +47,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
           << std::endl << "\t-C or --no-cache"
           << std::endl << "\t-T or --time-step (store timing information as offset from start of file"
           << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
+          << std::endl << "\t-R or --release (show release information and exit)"
           << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, cpcxml, stpjson, tdms, medi, zl"
           << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
           << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
@@ -89,6 +91,7 @@ struct option longopts[] = {
   { "opening-date", required_argument, NULL, 'S' },
   { "stop-after-one", no_argument, NULL, '1' },
   { "no-cache", no_argument, NULL, 'C' },
+  { "release", no_argument, NULL, 'R' },
   { "time-step", no_argument, NULL, 'T' },
   { 0, 0, 0, 0 }
 };
@@ -111,7 +114,7 @@ int main( int argc, char** argv ) {
   bool stopatone = false;
   int compression = Writer::DEFAULT_COMPRESSION;
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1CTZ:S:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1CTZ:S:R", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -148,6 +151,10 @@ int main( int argc, char** argv ) {
       case 'C':
         Options::set( OptionsKey::NOCACHE );
         break;
+      case 'R':
+        std::cout << releases_h_in << std::endl;
+        exit( 0 );
+        break;
       case 'a':
         Options::set( OptionsKey::ANONYMIZE );
         if ( offsetstr.empty( ) ) {
@@ -180,7 +187,6 @@ int main( int argc, char** argv ) {
     std::cout << argv[0] << " version " << FC_VERS_MAJOR
             << "." << FC_VERS_MINOR << "." << FC_VERS_MICRO
             << "; build " << GIT_BUILD << std::endl;
-
   }
 
   if ( ( optind + 1 ) > argc ) {
