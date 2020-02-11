@@ -626,18 +626,18 @@ namespace FormatConverter {
       ret.push_back( outy );
     }
     // catch failure caused by the H5File operations
-    catch ( H5::FileIException error ) {
+    catch ( H5::FileIException& error ) {
       output( ) << "error writing file: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
     }
     // catch failure caused by the DataSet operations
-    catch ( H5::DataSetIException error ) {
+    catch ( H5::DataSetIException& error ) {
       output( ) << "error writing dataset: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
     }
     // catch failure caused by the DataSpace operations
-    catch ( H5::DataSpaceIException error ) {
+    catch ( H5::DataSpaceIException& error ) {
       output( ) << "error writing dataset: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
     }
-    catch ( H5::GroupIException error ) {
+    catch ( H5::GroupIException& error ) {
       output( ) << "error writing group: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
     }
 

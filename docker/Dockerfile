@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:19.10
 LABEL maintainer="Ryan Bobko <ryan@ostrich-emulators.com>", \
 BUILD_SIGNATURE="PreVent Format Converter", \
 version="4.2.0"
