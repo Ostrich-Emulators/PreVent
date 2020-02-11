@@ -259,7 +259,7 @@ namespace FormatConverter {
             }
             recordtime = 0;
           }
-          catch ( std::invalid_argument ) {
+          catch ( std::invalid_argument& ) {
             // don't really care since we're not adding the data to our dataset
             // value = MISSING_VALUESTR;
           }
