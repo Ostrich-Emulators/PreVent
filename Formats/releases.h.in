@@ -1,3 +1,6 @@
+4.2.1
+  * Updated HDF5 "Layout Version" to 4.1.1 (added Max/Min values to dataset metadata)
+
 4.2.0
   * Created Docker image (ry99/prevent:4.2.0)
   * Improved library search locations

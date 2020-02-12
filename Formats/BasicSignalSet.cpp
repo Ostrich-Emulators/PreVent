@@ -187,5 +187,12 @@ namespace FormatConverter {
 
   void BasicSignalSet::complete( ) {
     // nothing to do
+
+    // for each vital/wave, write the min/max values as attributes
+    for ( auto& data : vitals( ) ) {
+      data->setMeta( "Min Value", data->lowwater( ) );
+      data->setMeta( "Max Value", data->highwater( ) );
+      data->setMeta( "Note on Min/Max", "Min and Max are raw values (not scaled)");
+    }
   }
 }

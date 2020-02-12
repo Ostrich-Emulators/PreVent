@@ -29,7 +29,7 @@
 #include "Options.h"
 
 namespace FormatConverter {
-  const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.0";
+  const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.1";
 
   Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
   }

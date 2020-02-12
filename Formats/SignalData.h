@@ -65,12 +65,12 @@ namespace FormatConverter {
     virtual void setWave(bool wave = false) = 0;
     virtual bool wave() const = 0;
     /**
-     * Retrieves the highest value in this signal data
+     * Retrieves the highest value in this signal data. This value is *not* scaled.
      * @return
      */
     virtual double highwater() const = 0;
     /**
-     * Retrieves the lowest value in this signal data
+     * Retrieves the lowest value in this signal data. This value is *not* scaled.
      * @return
      */
     virtual double lowwater() const = 0;

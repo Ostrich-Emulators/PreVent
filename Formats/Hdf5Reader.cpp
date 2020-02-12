@@ -14,11 +14,11 @@
 #include "SignalUtils.h"
 
 namespace FormatConverter {
-  const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({"Duration", "End Date/Time",
+  const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
     "Start Date/Time", "End Time", "Start Time", SignalData::SCALE, SignalData::MSM,
     "Layout Version", "HDF5 Version", "HDF5 Version", "Layout Version",
     "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader",
-    "Note on Scale"} );
+    "Note on Scale", "Note on Min/Max", "Min Value", "Max Value" } );
 
   Hdf5Reader::Hdf5Reader( ) : Reader( "HDF5" ) {
 
@@ -100,14 +100,14 @@ namespace FormatConverter {
         if ( "Segment_Offsets" == ev ) {
           H5::DataSet offsets = egroup.openDataSet( ev );
           H5::DataSpace dataspace = offsets.getSpace( );
-          hsize_t DIMS[2] = {};
+          hsize_t DIMS[2] = { };
           dataspace.getSimpleExtentDims( DIMS );
           const hsize_t ROWS = DIMS[0];
           const hsize_t COLS = DIMS[1];
 
           // just read everything all at once...offsets should always be small
           // (yeah, right!)
-          long read[ROWS][COLS] = {};
+          long read[ROWS][COLS] = { };
           offsets.read( read, offsets.getDataType( ) );
           for ( size_t row = 0; row < ROWS; row++ ) {
             info->addOffset( read[row][1], read[row][0] );
@@ -165,14 +165,14 @@ namespace FormatConverter {
   std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) {
     //std::cout << group.getObjName( ) << " " << name << std::endl;
     H5::DataSpace dataspace = dataset.getSpace( );
-    hsize_t DIMS[2] = {};
+    hsize_t DIMS[2] = { };
     dataspace.getSimpleExtentDims( DIMS );
     const hsize_t ROWS = DIMS[0];
     const hsize_t COLS = DIMS[1];
     //std::cout << "dimensions: " << DIMS[0] << " " << DIMS[1] << std::endl;
 
     const hsize_t sizer = ROWS * COLS;
-    long read[sizer] = {};
+    long read[sizer] = { };
     dataset.read( read, dataset.getDataType( ) );
     std::vector<dr_time> times;
     times.reserve( sizer );
@@ -224,7 +224,7 @@ namespace FormatConverter {
   void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
           const std::vector<dr_time>& times, int timeinterval, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
-    hsize_t DIMS[2] = {};
+    hsize_t DIMS[2] = { };
     dataspace.getSimpleExtentDims( DIMS );
     const hsize_t ROWS = DIMS[0];
     const hsize_t COLS = DIMS[1];
@@ -247,7 +247,7 @@ namespace FormatConverter {
     // just read everything all at once...in the future, we probably want to
     // worry about using hyperslabs
     if ( dataset.getDataType( ) == H5::PredType::STD_I16LE ) {
-      short read[ROWS][COLS] = {};
+      short read[ROWS][COLS] = { };
       dataset.read( read, dataset.getDataType( ) );
       for ( size_t row = 0; row < ROWS; row++ ) {
         short val = read[row][0];
@@ -279,7 +279,7 @@ namespace FormatConverter {
       }
     }
     else { // data is in integers
-      int read[ROWS][COLS] = {};
+      int read[ROWS][COLS] = { };
       dataset.read( read, dataset.getDataType( ) );
       for ( size_t row = 0; row < ROWS; row++ ) {
 
@@ -318,7 +318,7 @@ namespace FormatConverter {
   void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
           const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
-    hsize_t DIMS[2] = {};
+    hsize_t DIMS[2] = { };
     dataspace.getSimpleExtentDims( DIMS );
 
     const hsize_t ROWS = DIMS[0];
@@ -326,9 +326,9 @@ namespace FormatConverter {
     const hsize_t MAXSLABROWS = 128 * 1024;
     hsize_t slabrows = ( MAXSLABROWS > ROWS ? ROWS : MAXSLABROWS );
 
-    hsize_t offset[] = {0, 0};
-    hsize_t count[] = {slabrows, COLS};
-    const hsize_t offset0[] = {0, 0};
+    hsize_t offset[] = { 0, 0 };
+    hsize_t count[] = { slabrows, COLS };
+    const hsize_t offset0[] = { 0, 0 };
 
     std::string values;
     int valcnt = 0;
@@ -644,7 +644,7 @@ namespace FormatConverter {
 
   hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, dr_time * found ) {
 
-    hsize_t DIMS[2] = {};
+    hsize_t DIMS[2] = { };
     H5::DataSpace dsspace = haystack.getSpace( );
     dsspace.getSimpleExtentDims( DIMS );
 
@@ -655,8 +655,8 @@ namespace FormatConverter {
     hsize_t startpos = 0;
     hsize_t endpos = ROWS - 1;
 
-    hsize_t dim[] = {1, 1};
-    hsize_t count[] = {1, 1};
+    hsize_t dim[] = { 1, 1 };
+    hsize_t count[] = { 1, 1 };
 
     H5::DataSpace searchspace( 2, dim );
 
@@ -665,7 +665,7 @@ namespace FormatConverter {
     while ( startpos < endpos ) { // stop looking if we can't find it
       checkpos = ( startpos + endpos ) / 2;
 
-      hsize_t offset[] = {checkpos, 0};
+      hsize_t offset[] = { checkpos, 0 };
       dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
       haystack.read( &checktime, haystack.getDataType( ), searchspace, dsspace );
 
@@ -702,7 +702,7 @@ namespace FormatConverter {
   std::vector<int> Hdf5Reader::slabreadi( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
     hsize_t rowstoget = endrow - startrow;
 
-    hsize_t DIMS[2] = {};
+    hsize_t DIMS[2] = { };
     H5::DataSpace dsspace = ds.getSpace( );
     dsspace.getSimpleExtentDims( DIMS );
 
@@ -710,14 +710,14 @@ namespace FormatConverter {
     const hsize_t COLS = DIMS[1];
 
     // we'll get everything in one read
-    hsize_t dim[] = {rowstoget, COLS};
-    hsize_t count[] = {rowstoget, COLS};
+    hsize_t dim[] = { rowstoget, COLS };
+    hsize_t count[] = { rowstoget, COLS };
 
     H5::DataSpace searchspace( 2, dim );
 
-    hsize_t offset[] = {startrow, 0};
+    hsize_t offset[] = { startrow, 0 };
 
-    int dd[rowstoget][COLS] = {};
+    int dd[rowstoget][COLS] = { };
     dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
     ds.read( &dd, ds.getDataType( ), searchspace, dsspace );
 
@@ -741,7 +741,7 @@ namespace FormatConverter {
   std::vector<int> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
     hsize_t rowstoget = endrow - startrow;
 
-    hsize_t DIMS[2] = {};
+    hsize_t DIMS[2] = { };
     H5::DataSpace dsspace = ds.getSpace( );
     dsspace.getSimpleExtentDims( DIMS );
 
@@ -750,13 +750,13 @@ namespace FormatConverter {
     //std::cout << "reading shorts " << ROWS << "," << COLS << std::endl;
 
     // we'll get everything in one read
-    hsize_t dim[] = {rowstoget, COLS};
-    hsize_t count[] = {rowstoget, COLS};
+    hsize_t dim[] = { rowstoget, COLS };
+    hsize_t count[] = { rowstoget, COLS };
 
     H5::DataSpace searchspace( 2, dim );
 
-    hsize_t offset[] = {startrow, 0};
-    short dd[rowstoget][COLS] = {};
+    hsize_t offset[] = { startrow, 0 };
+    short dd[rowstoget][COLS] = { };
     dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
     ds.read( &dd, ds.getDataType( ), searchspace, dsspace );
 
@@ -776,7 +776,7 @@ namespace FormatConverter {
   std::vector<dr_time> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
     hsize_t rowstoget = endrow - startrow;
 
-    hsize_t DIMS[2] = {};
+    hsize_t DIMS[2] = { };
     H5::DataSpace dsspace = ds.getSpace( );
     dsspace.getSimpleExtentDims( DIMS );
 
@@ -785,13 +785,13 @@ namespace FormatConverter {
     //std::cout << "reading shorts " << ROWS << "," << COLS << std::endl;
 
     // we'll get everything in one read
-    hsize_t dim[] = {rowstoget, COLS};
-    hsize_t count[] = {rowstoget, COLS};
+    hsize_t dim[] = { rowstoget, COLS };
+    hsize_t count[] = { rowstoget, COLS };
 
     H5::DataSpace searchspace( 2, dim );
 
-    hsize_t offset[] = {startrow, 0};
-    hsize_t stride[] = {1, COLS};
+    hsize_t offset[] = { startrow, 0 };
+    hsize_t stride[] = { 1, COLS };
     dr_time times[rowstoget];
     dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
     ds.read( &times, ds.getDataType( ), searchspace, dsspace );
