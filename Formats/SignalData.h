@@ -36,6 +36,7 @@ namespace FormatConverter {
     static const std::string LABEL;
     static const std::string BUILD_NUM;
     static const std::string STARTTIME;
+    static const std::string ENDTIME;
 
     static const std::string CHUNK_INTERVAL_MS;
     static const std::string READINGS_PER_CHUNK;

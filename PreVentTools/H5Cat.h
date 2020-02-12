@@ -23,20 +23,21 @@ namespace H5 {
   class H5File;
 }
 
-namespace FormatConverter{
+namespace FormatConverter {
+
   class H5Cat {
   public:
-    H5Cat(const std::string& output);
-    H5Cat(const H5Cat& orig);
-    virtual ~H5Cat();
+    H5Cat( const std::string& output );
+    H5Cat( const H5Cat& orig );
+    virtual ~H5Cat( );
 
-    void setDuration(const dr_time& duration_ms, dr_time * start = nullptr);
-    void setClipping(const dr_time& start, const dr_time& end);
+    void setDuration( const dr_time& duration_ms, dr_time * start = nullptr );
+    void setClipping( const dr_time& start, const dr_time& end );
 
-    void cat(std::vector<std::string>& filesToCat);
-    static void cat(const std::string& outfile, std::vector<std::string>& filesToCat);
+    void cat( std::vector<std::string>& filesToCat );
+    static void cat( const std::string& outfile, std::vector<std::string>& filesToCat );
   private:
-    static bool filesorter(const std::string& a, const std::string& b);
+    static bool filesorter( const std::string& a, const std::string& b );
 
     const std::string output;
 
@@ -46,6 +47,7 @@ namespace FormatConverter{
     dr_time duration_ms;
     dr_time start;
     dr_time end;
-  };}
+  };
+}
 #endif /* H5CAT_H */
 

@@ -101,6 +101,12 @@ namespace FormatConverter {
     return false;
   }
 
+  bool Reader::getAttributes( const std::string& inputfile, const std::string& signal,
+          std::map<std::string, int>& mapi, std::map<std::string, double>& mapd, std::map<std::string, std::string>& maps,
+          dr_time& starttime, dr_time& endtime) {
+    return false;
+  }
+
   bool Reader::isRollover( const dr_time& then, const dr_time& now ) const {
     if ( nonbreaking( ) ) {
       return false;

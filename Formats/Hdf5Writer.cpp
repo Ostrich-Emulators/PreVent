@@ -81,12 +81,12 @@ namespace FormatConverter {
             : ( end / 1000 ) );
 
     if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
-      writeAttribute( loc, "Start Time", timesteplkp.at( start ) );
-      writeAttribute( loc, "End Time", timesteplkp.at( end ) );
+      writeAttribute( loc, SignalData::STARTTIME, timesteplkp.at( start ) );
+      writeAttribute( loc, SignalData::ENDTIME, timesteplkp.at( end ) );
     }
     else {
-      writeAttribute( loc, "Start Time", start );
-      writeAttribute( loc, "End Time", end );
+      writeAttribute( loc, SignalData::STARTTIME, start );
+      writeAttribute( loc, SignalData::ENDTIME, end );
     }
 
     char buf[sizeof "2011-10-08T07:07:09Z"];

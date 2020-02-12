@@ -34,6 +34,10 @@ namespace FormatConverter {
 
     virtual bool getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) override;
 
+    virtual bool getAttributes( const std::string& inputfile, const std::string& signal,
+        std::map<std::string, int>& mapi, std::map<std::string, double>& mapd, std::map<std::string, std::string>& maps,
+        dr_time& start, dr_time& end ) override;
+
     /**
      * Gets a segment of data based on the from and to times.
      * @param inputfile
@@ -57,7 +61,8 @@ namespace FormatConverter {
     static std::string metastr( const H5::H5Object& loc, const std::string& attrname );
     static int metaint( const H5::H5Object& loc, const std::string& attrname );
 
-    void copymetas( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset ) const;
+    static void copymetas( std::unique_ptr<SignalData>& signal, H5::H5Object& dataset,
+        bool includeIgnorables = false );
     void fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
         const std::vector<dr_time>& times, int valsPerTime, int timeinterval, int scale ) const;
     void fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,

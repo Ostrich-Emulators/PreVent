@@ -12,10 +12,11 @@
 #include <exception>
 #include <cmath>
 #include "SignalUtils.h"
+#include "BasicSignalData.h"
 
 namespace FormatConverter {
   const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
-    "Start Date/Time", "End Time", "Start Time", SignalData::SCALE, SignalData::MSM,
+    "Start Date/Time", SignalData::ENDTIME, SignalData::STARTTIME, SignalData::SCALE, SignalData::MSM,
     "Layout Version", "HDF5 Version", "HDF5 Version", "Layout Version",
     "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader",
     "Note on Scale", "Note on Min/Max", "Min Value", "Max Value" } );
@@ -65,6 +66,49 @@ namespace FormatConverter {
         H5::Attribute a = root.openAttribute( i );
         map[a.getName( )] = metastr( a );
       }
+    }
+    catch ( H5::FileIException& error ) {
+      output( ) << error.getDetailMsg( ) << std::endl;
+      file.close( );
+      return false;
+    }
+    // catch failure caused by the DataSet operations
+    catch ( H5::DataSetIException& error ) {
+      output( ) << error.getDetailMsg( ) << std::endl;
+      file.close( );
+      return false;
+    }
+
+    return true;
+  }
+
+  bool Hdf5Reader::getAttributes( const std::string& inputfile, const std::string& signal,
+          std::map<std::string, int>& mapi, std::map<std::string, double>& mapd, std::map<std::string, std::string>& maps,
+          dr_time& starttime, dr_time& endtime ) {
+    H5::Exception::dontPrint( );
+    try {
+      file = H5::H5File( inputfile, H5F_ACC_RDONLY );
+      H5::Group data = file.openGroup( signal );
+      //H5::DataSet data = root.openDataSet( "data" );
+
+      std::unique_ptr<SignalData> ss( new BasicSignalData( "-" ) );
+      copymetas( ss, data, true );
+
+      for ( const auto& a : ss->metas( ) ) {
+        maps[a.first] = a.second;
+      }
+      for ( const auto& a : ss->metai( ) ) {
+        mapi[a.first] = a.second;
+      }
+      for ( const auto& a : ss->metad( ) ) {
+        mapd[a.first] = a.second;
+      }
+
+      H5::Attribute sattr = data.openAttribute( SignalData::STARTTIME );
+      sattr.read( sattr.getDataType( ), &starttime );
+
+      H5::Attribute eattr = data.openAttribute( SignalData::ENDTIME );
+      eattr.read( eattr.getDataType( ), &endtime );
     }
     catch ( H5::FileIException& error ) {
       output( ) << error.getDetailMsg( ) << std::endl;
@@ -418,14 +462,14 @@ namespace FormatConverter {
   }
 
   void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
-          H5::DataSet & dataset ) const {
+          H5::H5Object & dataset, bool includeIgnorables ) {
     hsize_t cnt = dataset.getNumAttrs( );
 
     for ( size_t i = 0; i < cnt; i++ ) {
       H5::Attribute attr = dataset.openAttribute( i );
       H5::DataType type = attr.getDataType( );
       const std::string key = attr.getName( );
-      if ( 0 == IGNORABLE_PROPS.count( key ) ) {
+      if ( 0 == IGNORABLE_PROPS.count( key ) || includeIgnorables ) {
 
         switch ( attr.getTypeClass( ) ) {
           case H5T_INTEGER:
