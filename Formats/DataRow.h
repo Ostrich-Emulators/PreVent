@@ -37,11 +37,11 @@ namespace FormatConverter {
      * multiplying the each value by the scale.
      * @return
      */
-    static std::vector<int> ints( const std::string&, int scale = 1 );
-    static std::vector<short> shorts( const std::string&, int scale = 1 );
+    static std::vector<int> ints( const std::string&, int scale = 0 );
+    static std::vector<short> shorts( const std::string&, int scale = 0 );
 
-    std::vector<int> ints( int scale = 1 ) const;
-    std::vector<short> shorts( int scale = 1 ) const;
+    std::vector<int> ints( int scale = 0 ) const;
+    std::vector<short> shorts( int scale = 0 ) const;
 
     /**
      * Iterates through the given string and determines the highest and lowest vals

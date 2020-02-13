@@ -5,7 +5,7 @@
 #include <limits>
 #include <iostream>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   StatisticalSignalData::StatisticalSignalData( const std::string& name, bool iswave )
   : BasicSignalData( name, iswave ), total( 0 ), count( 0 ), _min( std::numeric_limits<double>::max( ) ),
@@ -77,19 +77,23 @@ namespace FormatConverter {
 
   void StatisticalSignalData::add( const FormatConverter::DataRow& row ) {
     count++;
+    // FIXME: this only works for vitals, not waves
     double val = std::stod( row.data );
-    total += val;
 
-    if ( val < _min ) {
-      _min = val;
-    }
-    if ( val > _max ) {
-      _max = val;
-    }
+    if ( val != SignalData::MISSING_VALUE ) {
+      total += val;
 
-    if ( 0 == numcounts.count( val ) ) {
-      numcounts.insert( std::make_pair( val, 0 ) );
+      if ( val < _min ) {
+        _min = val;
+      }
+      if ( val > _max ) {
+        _max = val;
+      }
+
+      if ( 0 == numcounts.count( val ) ) {
+        numcounts.insert( std::make_pair( val, 0 ) );
+      }
+      numcounts[val]++;
     }
-    numcounts[val]++;
   }
 }
