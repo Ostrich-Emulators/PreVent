@@ -3,7 +3,7 @@ ClippingSignalSet.cpp
 H5Cat.cpp
 main.cpp
 OutputSignalData.cpp
-StatisticalSignaldata.cpp
+StatisticalSignalData.cpp
 Calc.cpp
 )
 

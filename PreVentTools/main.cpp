@@ -44,23 +44,23 @@ using namespace FormatConverter;
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
-          << "Syntax: " << progname << "[options] <input hdf5>"
-          << std::endl << "\toptions:"
-          << std::endl << "\t-o or --output <output file>"
-          << std::endl << "\t-S or --set-attr <key[:<i|s|d>]=value>\tsets the given attribute to the value"
-          << std::endl << "\t-C or --clobber\toverwrite input file"
-          << std::endl << "\t-c or --cat\tconcatenate files from command line, used with --output"
-          << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
-          << std::endl << "\t-e or --end <time>\tstop output immediately before this UTC time (many time formats supported)"
-          << std::endl << "\t-f or --for <s>\toutput this many seconds of data from the start of file (or --start)"
-          << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
-          << std::endl << "\t-p or --path\tsets the path for --set-attr and --attrs"
-          << std::endl << "\t-d or --print\tprints data from the path given with --path"
-          << std::endl << "\t-A or --attrs\tprints all attributes in the file"
-          << std::endl << "\t-V or --vitals\tprints a list of vital signs in this file"
-          << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
-          << std::endl << "\t-D or --statistics or --stats \tcalculates descriptive statistics"
-          << std::endl;
+      << "Syntax: " << progname << " [options] <input hdf5>"
+      << std::endl << "\toptions:"
+      << std::endl << "\t-o or --output <output file>"
+      << std::endl << "\t-S or --set-attr <key[:<i|s|d>]=value>\tsets the given attribute to the value"
+      << std::endl << "\t-C or --clobber\toverwrite input file"
+      << std::endl << "\t-c or --cat\tconcatenate files from command line, used with --output"
+      << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
+      << std::endl << "\t-e or --end <time>\tstop output immediately before this UTC time (many time formats supported)"
+      << std::endl << "\t-f or --for <s>\toutput this many seconds of data from the start of file (or --start)"
+      << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
+      << std::endl << "\t-p or --path\tsets the path for --set-attr and --attrs"
+      << std::endl << "\t-d or --print\tprints data from the path given with --path"
+      << std::endl << "\t-A or --attrs\tprints all attributes in the file"
+      << std::endl << "\t-V or --vitals\tprints a list of vital signs in this file"
+      << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
+      << std::endl << "\t-D or --statistics or --stats \tcalculates descriptive statistics"
+      << std::endl;
   exit( 1 );
 }
 
@@ -85,13 +85,13 @@ struct option longopts[] = {
 };
 
 void cloneFile( std::unique_ptr<H5::H5File>&infile,
-        std::unique_ptr<H5::H5File>& outfile ) {
+    std::unique_ptr<H5::H5File>& outfile ) {
   hid_t ocpypl_id = H5Pcreate( H5P_OBJECT_COPY );
   for ( hsize_t i = 0; i < infile->getNumObjs( ); i++ ) {
     std::string name = infile->getObjnameByIdx( i );
     H5Ocopy( infile->getId( ), name.c_str( ),
-            outfile->getId( ), name.c_str( ),
-            ocpypl_id, H5P_DEFAULT );
+        outfile->getId( ), name.c_str( ),
+        ocpypl_id, H5P_DEFAULT );
   }
 
   for ( int i = 0; i < infile->getNumAttrs( ); i++ ) {
@@ -366,8 +366,8 @@ int main( int argc, char** argv ) {
       std::string input = argv[i];
 
       std::ostream& outstream = ( outfilename.empty( )
-              ? std::cout
-              : *( new std::ofstream( outfilename ) ) );
+          ? std::cout
+          : *( new std::ofstream( outfilename ) ) );
       std::unique_ptr<SignalData> signal( new OutputSignalData( outstream ) );
 
       auto fmt = FormatConverter::Formats::guess( input );
@@ -428,12 +428,12 @@ int main( int argc, char** argv ) {
     rdr->splice( input, path, starttime, endtime, signal );
 
     std::cout
-            << "min: " << descriptives->min( ) << std::endl
-            << "max: " << descriptives->max( ) << std::endl
-            << "median: " << descriptives->median( ) << std::endl
-            << "mode: " << descriptives->mode( ) << std::endl
-            << "avg: " << descriptives->avg( ) << std::endl
-            ;
+        << "min: " << descriptives->min( ) << std::endl
+        << "max: " << descriptives->max( ) << std::endl
+        << "median: " << descriptives->median( ) << std::endl
+        << "mode: " << descriptives->mode( ) << std::endl
+        << "avg: " << descriptives->avg( ) << std::endl
+        ;
   }
   else {
     // something to acknowledge the program did something

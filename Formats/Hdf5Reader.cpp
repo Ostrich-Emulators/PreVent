@@ -14,7 +14,7 @@
 #include "SignalUtils.h"
 #include "BasicSignalData.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
   const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
     "Start Date/Time", SignalData::ENDTIME, SignalData::STARTTIME, SignalData::SCALE, SignalData::MSM,
     "Layout Version", "HDF5 Version", "HDF5 Version", "Layout Version",
@@ -83,8 +83,8 @@ namespace FormatConverter {
   }
 
   bool Hdf5Reader::getAttributes( const std::string& inputfile, const std::string& signal,
-          std::map<std::string, int>& mapi, std::map<std::string, double>& mapd, std::map<std::string, std::string>& maps,
-          dr_time& starttime, dr_time& endtime ) {
+      std::map<std::string, int>& mapi, std::map<std::string, double>& mapd, std::map<std::string, std::string>& maps,
+      dr_time& starttime, dr_time& endtime ) {
     H5::Exception::dontPrint( );
     try {
       file = H5::H5File( inputfile, H5F_ACC_RDONLY );
@@ -230,12 +230,12 @@ namespace FormatConverter {
   }
 
   void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
-          const bool& iswave, std::unique_ptr<SignalSet>& info ) {
+      const bool& iswave, std::unique_ptr<SignalSet>& info ) {
     std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
 
     std::unique_ptr<SignalData>& signal = ( iswave
-            ? info->addWave( name )
-            : info->addVital( name ) );
+        ? info->addWave( name )
+        : info->addVital( name ) );
     int timeinterval = 2000;
     if ( dataAndTimeGroup.attrExists( SignalData::CHUNK_INTERVAL_MS ) ) {
       timeinterval = metaint( dataAndTimeGroup, SignalData::CHUNK_INTERVAL_MS );
@@ -266,7 +266,7 @@ namespace FormatConverter {
   }
 
   void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-          const std::vector<dr_time>& times, int timeinterval, int valsPerTime, int scale ) const {
+      const std::vector<dr_time>& times, int timeinterval, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
     hsize_t DIMS[2] = { };
     dataspace.getSimpleExtentDims( DIMS );
@@ -360,7 +360,7 @@ namespace FormatConverter {
   }
 
   void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-          const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
+      const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
     hsize_t DIMS[2] = { };
     dataspace.getSimpleExtentDims( DIMS );
@@ -462,7 +462,7 @@ namespace FormatConverter {
   }
 
   void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
-          H5::H5Object & dataset, bool includeIgnorables ) {
+      H5::H5Object & dataset, bool includeIgnorables ) {
     hsize_t cnt = dataset.getNumAttrs( );
 
     for ( size_t i = 0; i < cnt; i++ ) {
@@ -568,7 +568,7 @@ namespace FormatConverter {
   }
 
   void Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
-          dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
+      dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
     size_t typeo = path.find( "VitalSigns" );
 
     signal->setWave( std::string::npos == typeo );
@@ -590,8 +590,8 @@ namespace FormatConverter {
       bool doints = ( H5::PredType::STD_I32LE == data.getDataType( ) );
 
       bool timeisindex = ( layoutVersion( file ) >= 40100
-              ? "index to Global_Times" == metastr( times, "Columns" )
-              : false );
+          ? "index to Global_Times" == metastr( times, "Columns" )
+          : false );
       std::vector<dr_time> realtimes;
       dr_time foundFrom = false;
       dr_time foundTo = false;
@@ -611,6 +611,8 @@ namespace FormatConverter {
 
       fromidx = getIndexForTime( times, from, &foundFrom );
       toidx = getIndexForTime( times, to, &foundTo );
+      //output( ) << from << "\tidx: " << fromidx << "\tfound? " << foundFrom << std::endl;
+      //output( ) << to << "\tidx: " << toidx << "\tfound? " << foundTo << std::endl;
       if ( !timeisindex ) {
         realtimes = slabreadt( times, fromidx, toidx );
       }
@@ -622,8 +624,8 @@ namespace FormatConverter {
       hsize_t slabstartidx = fromidx * readingsperperiod;
       const hsize_t slabstopidx = toidx * readingsperperiod;
       hsize_t currentstopidx = ( slabstopidx - slabstartidx > MAXSLABSIZE
-              ? slabstartidx + MAXSLABSIZE
-              : slabstopidx );
+          ? slabstartidx + MAXSLABSIZE
+          : slabstopidx );
 
       hsize_t dataidx = 0;
       std::vector<int> datavals;
@@ -636,8 +638,8 @@ namespace FormatConverter {
           //            << "/" << currentstopidx << std::endl;
 
           auto newvals = ( doints
-                  ? slabreadi( data, slabstartidx, currentstopidx )
-                  : slabreads( data, slabstartidx, currentstopidx ) );
+              ? slabreadi( data, slabstartidx, currentstopidx )
+              : slabreads( data, slabstartidx, currentstopidx ) );
 
           // get rid of the stuff we've already processed
           datavals.erase( datavals.begin( ), datavals.begin( ) + dataidx );
@@ -651,8 +653,8 @@ namespace FormatConverter {
           // now get ready for the next time we have to do this
           slabstartidx = currentstopidx;
           currentstopidx = ( slabstopidx - currentstopidx > MAXSLABSIZE
-                  ? currentstopidx + MAXSLABSIZE
-                  : slabstopidx );
+              ? currentstopidx + MAXSLABSIZE
+              : slabstopidx );
         }
 
         if ( 0 == scale ) {
@@ -705,35 +707,60 @@ namespace FormatConverter {
     H5::DataSpace searchspace( 2, dim );
 
     dr_time checktime;
-    hsize_t checkpos = 0;
-    while ( startpos < endpos ) { // stop looking if we can't find it
-      checkpos = ( startpos + endpos ) / 2;
+
+    // if we check a time, and it's too big, we'll obviously move to the smaller
+    // side of the array...however, that that next value is too small, we want 
+    // to return the value larger than our needle at the index larger than our
+    // check. This is where the new value *would* be if it were in our array
+    dr_time prevchecktime;
+    hsize_t prevcheckpos;
+    while ( startpos <= endpos ) { // stop looking if we can't find it
+      hsize_t checkpos = startpos + ( endpos - startpos ) / 2;
 
       hsize_t offset[] = { checkpos, 0 };
       dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
       haystack.read( &checktime, haystack.getDataType( ), searchspace, dsspace );
 
-      if ( checktime > needle ) {
+      if ( checktime == needle ) {
+        if ( nullptr != found ) {
+          *found = checktime;
+        }
+        return checkpos;
+      }
+      else if ( checktime < needle ) {
+        startpos = checkpos + 1;
+        if ( startpos < endpos ) {
+          prevchecktime = checktime;
+          prevcheckpos = checkpos;
+        }
+      }
+      else {
+        prevchecktime = checktime;
+        prevcheckpos = checkpos;
+
+        if ( startpos == endpos ) {
+          break;
+        }
         if ( checkpos > 0 ) {
           endpos = checkpos - 1;
         }
         else {
-          endpos = 0;
-          checktime = 0;
+          // didn't find the needle, but we're out of places to look
+          endpos = checkpos;
+          break;
         }
       }
-      else if ( checktime < needle ) {
-        startpos = checkpos + 1;
-      }
     }
-    if ( startpos == endpos ) {
-      checkpos = endpos;
+
+    if ( checktime < needle ) {
+      checktime = prevchecktime;
+      endpos = prevcheckpos;
     }
 
     if ( nullptr != found ) {
       *found = checktime;
     }
-    return checkpos;
+    return endpos;
   }
 
   /**
