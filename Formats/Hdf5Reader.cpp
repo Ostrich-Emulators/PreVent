@@ -688,6 +688,28 @@ namespace FormatConverter{
     }
   }
 
+  dr_time Hdf5Reader::getTimeAtIndex( H5::DataSet& haystack, hsize_t index ) {
+    hsize_t DIMS[2] = { };
+    H5::DataSpace dsspace = haystack.getSpace( );
+    dsspace.getSimpleExtentDims( DIMS );
+
+    if ( DIMS[0] < index ) {
+      // looking for an index bigger than our dataset
+      return std::numeric_limits<dr_time>::max( );
+    }
+
+    hsize_t dim[] = { 1, 1 };
+    hsize_t count[] = { 1, 1 };
+
+    H5::DataSpace searchspace( 2, dim );
+
+    hsize_t offset[] = { index, 0 };
+    dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
+    dr_time checktime;
+    haystack.read( &checktime, haystack.getDataType( ), searchspace, dsspace );
+    return checktime;
+  }
+
   hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, dr_time * found ) {
 
     hsize_t DIMS[2] = { };
@@ -695,31 +717,26 @@ namespace FormatConverter{
     dsspace.getSimpleExtentDims( DIMS );
 
     const hsize_t ROWS = DIMS[0];
-    //const hsize_t COLS = DIMS[1];
 
     // we'll do a binary search to get our number (or at least close to it!)
     hsize_t startpos = 0;
     hsize_t endpos = ROWS - 1;
 
-    hsize_t dim[] = { 1, 1 };
-    hsize_t count[] = { 1, 1 };
-
-    H5::DataSpace searchspace( 2, dim );
-
-    dr_time checktime;
-
-    // if we check a time, and it's too big, we'll obviously move to the smaller
-    // side of the array...however, that that next value is too small, we want 
-    // to return the value larger than our needle at the index larger than our
-    // check. This is where the new value *would* be if it were in our array
-    dr_time prevchecktime;
-    hsize_t prevcheckpos;
     while ( startpos <= endpos ) { // stop looking if we can't find it
       hsize_t checkpos = startpos + ( endpos - startpos ) / 2;
+      dr_time checktime = getTimeAtIndex( haystack, checkpos );
 
-      hsize_t offset[] = { checkpos, 0 };
-      dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
-      haystack.read( &checktime, haystack.getDataType( ), searchspace, dsspace );
+      if ( startpos == endpos && checktime != needle ) {
+        // no where else to look, but we didn't find our needle
+
+        if ( checktime < needle ) {
+          checkpos++;
+        }
+        if ( nullptr != found ) {
+          *found = getTimeAtIndex( haystack, checkpos );
+        }
+        return checkpos;
+      }
 
       if ( checktime == needle ) {
         if ( nullptr != found ) {
@@ -728,39 +745,32 @@ namespace FormatConverter{
         return checkpos;
       }
       else if ( checktime < needle ) {
-        startpos = checkpos + 1;
-        if ( startpos < endpos ) {
-          prevchecktime = checktime;
-          prevcheckpos = checkpos;
+        if ( checkpos < ROWS ) {
+          startpos = checkpos + 1;
+        }
+        else {
+          // didn't find the needle, but we're out of places to look
+          if ( nullptr != found ) {
+            *found = checktime;
+          }
+          return checkpos;
         }
       }
       else {
-        prevchecktime = checktime;
-        prevcheckpos = checkpos;
-
-        if ( startpos == endpos ) {
-          break;
-        }
         if ( checkpos > 0 ) {
           endpos = checkpos - 1;
         }
         else {
           // didn't find the needle, but we're out of places to look
-          endpos = checkpos;
-          break;
+          if ( nullptr != found ) {
+            *found = checktime;
+          }
+          return checkpos;
         }
       }
     }
 
-    if ( checktime < needle ) {
-      checktime = prevchecktime;
-      endpos = prevcheckpos;
-    }
-
-    if ( nullptr != found ) {
-      *found = checktime;
-    }
-    return endpos;
+    return 0; // should never get here
   }
 
   /**
