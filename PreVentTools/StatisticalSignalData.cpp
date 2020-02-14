@@ -5,6 +5,8 @@
 #include <limits>
 #include <iostream>
 #include <sstream>
+#include <algorithm>
+#include <cmath>
 
 namespace FormatConverter{
 
@@ -16,7 +18,7 @@ namespace FormatConverter{
   StatisticalSignalData::~StatisticalSignalData( ) {
   }
 
-  double StatisticalSignalData::avg( ) const {
+  double StatisticalSignalData::mean( ) const {
     if ( 0 == count ) {
       std::cerr << "no elements to average" << std::endl;
       return 0;
@@ -76,6 +78,21 @@ namespace FormatConverter{
     return vals;
   }
 
+  double StatisticalSignalData::variance( ) const {
+    double var = 0;
+    double avg = mean( );
+    for ( const auto& m : numcounts ) {
+      double diff = m.first - avg;
+      var += ( diff * diff ) * m.second;
+    }
+
+    return var / ( count - 1 );
+  }
+
+  double StatisticalSignalData::stddev( ) const {
+    return std::sqrt( variance( ) );
+  }
+
   void StatisticalSignalData::add( const FormatConverter::DataRow& row ) {
     std::vector<double> values;
     if ( wave( ) ) {
@@ -99,6 +116,7 @@ namespace FormatConverter{
           _max = val;
         }
 
+        // boy, we REALLY hope we have a small(ish) domain here...
         if ( 0 == numcounts.count( val ) ) {
           numcounts.insert( std::make_pair( val, 0 ) );
         }

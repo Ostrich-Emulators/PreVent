@@ -432,7 +432,9 @@ int main( int argc, char** argv ) {
         << "max: " << descriptives->max( ) << std::endl
         << "median: " << descriptives->median( ) << std::endl
         << "mode: " << descriptives->mode( ) << std::endl
-        << "avg: " << descriptives->avg( ) << std::endl
+        << "mean: " << descriptives->mean( ) << std::endl
+        << "variance: " << descriptives->variance( ) << std::endl
+        << "std dev: " << descriptives->stddev( ) << std::endl
         ;
   }
   else {

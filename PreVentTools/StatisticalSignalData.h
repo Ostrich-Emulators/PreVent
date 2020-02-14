@@ -30,8 +30,9 @@ namespace FormatConverter {
 
     virtual void add( const FormatConverter::DataRow& row ) override;
 
-    double avg( ) const;
+    double mean( ) const;
     double stddev( ) const;
+		double variance( ) const;
     double min( ) const;
     double max( ) const;
     double median( ) const;
