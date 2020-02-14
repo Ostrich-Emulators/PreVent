@@ -4,6 +4,7 @@
 #include "DataRow.h"
 #include <limits>
 #include <iostream>
+#include <sstream>
 
 namespace FormatConverter{
 
@@ -76,24 +77,35 @@ namespace FormatConverter{
   }
 
   void StatisticalSignalData::add( const FormatConverter::DataRow& row ) {
-    count++;
-    // FIXME: this only works for vitals, not waves
-    double val = std::stod( row.data );
-
-    if ( val != SignalData::MISSING_VALUE ) {
-      total += val;
-
-      if ( val < _min ) {
-        _min = val;
+    std::vector<double> values;
+    if ( wave( ) ) {
+      std::stringstream ss( row.data );
+      for ( std::string each; std::getline( ss, each, ',' ); ) {
+        values.push_back( std::stod( each ) );
       }
-      if ( val > _max ) {
-        _max = val;
-      }
-
-      if ( 0 == numcounts.count( val ) ) {
-        numcounts.insert( std::make_pair( val, 0 ) );
-      }
-      numcounts[val]++;
     }
+    else {
+      values.push_back( std::stod( row.data ) );
+    }
+
+    for ( auto val : values ) {
+      if ( val != SignalData::MISSING_VALUE ) {
+        total += val;
+
+        if ( val < _min ) {
+          _min = val;
+        }
+        if ( val > _max ) {
+          _max = val;
+        }
+
+        if ( 0 == numcounts.count( val ) ) {
+          numcounts.insert( std::make_pair( val, 0 ) );
+        }
+        numcounts[val]++;
+      }
+    }
+
+    count += values.size( );
   }
 }
