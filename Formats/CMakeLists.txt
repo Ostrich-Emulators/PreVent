@@ -126,7 +126,6 @@ OffsetTimeSignalSet.h
 Options.h
 Reader.h
 SignalData.h
-SignalDataIterator.h
 SignalDataWrapper.h
 SignalSet.h
 SignalSetWrapper.h

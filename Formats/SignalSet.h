@@ -15,7 +15,6 @@
 #define SIGNALSET_H
 
 #include "DataRow.h"
-//#include "SignalDataIterator.h"
 #include <memory>
 #include <string>
 #include <vector>
