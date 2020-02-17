@@ -10,8 +10,13 @@
 
 namespace FormatConverter{
 
-  StatisticalSignalData::StatisticalSignalData( const std::string& name, bool iswave )
-  : BasicSignalData( name, iswave ), total( 0 ), count( 0 ), _min( std::numeric_limits<double>::max( ) ),
+  StatisticalSignalData::StatisticalSignalData( const std::unique_ptr<SignalData>& data ) : SignalDataWrapper( data ),
+  total( 0 ), _count( 0 ), _min( std::numeric_limits<double>::max( ) ),
+  _max( std::numeric_limits<double>::min( ) ) {
+  }
+
+  StatisticalSignalData::StatisticalSignalData( SignalData * data ) : SignalDataWrapper( data ),
+  total( 0 ), _count( 0 ), _min( std::numeric_limits<double>::max( ) ),
   _max( std::numeric_limits<double>::min( ) ) {
   }
 
@@ -19,11 +24,11 @@ namespace FormatConverter{
   }
 
   double StatisticalSignalData::mean( ) const {
-    if ( 0 == count ) {
+    if ( 0 == _count ) {
       std::cerr << "no elements to average" << std::endl;
       return 0;
     }
-    return total / count;
+    return total / _count;
   }
 
   double StatisticalSignalData::min( ) const {
@@ -37,7 +42,7 @@ namespace FormatConverter{
   double StatisticalSignalData::median( ) const {
     // std::maps are sorted on the keys, but we need to figure out
     // the middle number, so iterate until we hit our number
-    size_t halfway = ( 0 == count % 2 ? count / 2 : ( count + 1 ) / 2 );
+    size_t halfway = ( 0 == _count % 2 ? _count / 2 : ( _count + 1 ) / 2 );
     size_t left = halfway;
     for ( auto& m : numcounts ) {
       if ( m.second > left ) {
@@ -86,7 +91,11 @@ namespace FormatConverter{
       var += ( diff * diff ) * m.second;
     }
 
-    return var / ( count - 1 );
+    return var / ( _count - 1 );
+  }
+
+  size_t StatisticalSignalData::count( ) const {
+    return _count;
   }
 
   double StatisticalSignalData::stddev( ) const {
@@ -94,6 +103,8 @@ namespace FormatConverter{
   }
 
   void StatisticalSignalData::add( const FormatConverter::DataRow& row ) {
+    SignalDataWrapper::add( row );
+
     std::vector<double> values;
     if ( wave( ) ) {
       std::stringstream ss( row.data );
@@ -124,6 +135,6 @@ namespace FormatConverter{
       }
     }
 
-    count += values.size( );
+    _count += values.size( );
   }
 }

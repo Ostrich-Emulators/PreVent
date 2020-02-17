@@ -14,7 +14,7 @@
 #ifndef STATISTICALSIGNALDATA_H
 #define STATISTICALSIGNALDATA_H
 
-#include "BasicSignalData.h"
+#include "SignalDataWrapper.h"
 #include <map>
 #include <vector>
 
@@ -23,9 +23,10 @@ namespace FormatConverter {
   /**
    * A SignalData that calculates descriptive statistics as data is added to it
    */
-  class StatisticalSignalData : public BasicSignalData {
+  class StatisticalSignalData : public SignalDataWrapper {
   public:
-    StatisticalSignalData( const std::string& name = "-", bool iswave = false );
+    StatisticalSignalData(const std::unique_ptr<SignalData>& data);
+    StatisticalSignalData(SignalData * data);
     virtual ~StatisticalSignalData( );
 
     virtual void add( const FormatConverter::DataRow& row ) override;
@@ -36,6 +37,7 @@ namespace FormatConverter {
     double min( ) const;
     double max( ) const;
     double median( ) const;
+		size_t count() const;
     /**
      * Gets the mode of this data set. If the dataset is multimodal, only
      * one of the modes is returned
@@ -46,7 +48,7 @@ namespace FormatConverter {
 
   private:
     double total;
-    size_t count;
+    size_t _count;
     double _min;
     double _max;
     std::map<double, size_t> numcounts;

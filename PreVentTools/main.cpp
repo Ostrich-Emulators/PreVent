@@ -37,8 +37,8 @@
 #include "AttributeUtils.h"
 #include "OutputSignalData.h"
 #include "StatisticalSignalData.h"
+#include "NullSignalData.h"
 #include "Hdf5Reader.h"
-#include "Calc.h"
 
 using namespace FormatConverter;
 
@@ -410,7 +410,7 @@ int main( int argc, char** argv ) {
     auto fmt = FormatConverter::Formats::guess( input );
     std::unique_ptr<Reader> rdr = Reader::get( fmt );
 
-    StatisticalSignalData * descriptives = new StatisticalSignalData( "-", iswave );
+    StatisticalSignalData * descriptives = new StatisticalSignalData( new NullSignalData( "-", iswave ) );
     std::unique_ptr<SignalData> signal( descriptives );
 
     if ( for_s > 0 ) {
@@ -428,6 +428,7 @@ int main( int argc, char** argv ) {
     rdr->splice( input, path, starttime, endtime, signal );
 
     std::cout
+        << "count: " << descriptives->count( ) << std::endl
         << "min: " << descriptives->min( ) << std::endl
         << "max: " << descriptives->max( ) << std::endl
         << "median: " << descriptives->median( ) << std::endl

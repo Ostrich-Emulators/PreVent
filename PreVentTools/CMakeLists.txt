@@ -4,7 +4,7 @@ H5Cat.cpp
 main.cpp
 OutputSignalData.cpp
 StatisticalSignalData.cpp
-Calc.cpp
+NullSignalData.cpp
 )
 
 target_link_libraries(preventtools formats)
