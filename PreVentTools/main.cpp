@@ -273,16 +273,28 @@ int main( int argc, char** argv ) {
     //  std::cout << "file to cat: " << x << std::endl;
     //}
 
+    // order the files so we can figure out our start time
+    std::sort( filesToCat.begin( ), filesToCat.end( ), H5Cat::filesorter );
 
     H5Cat catter( outfilename );
     if ( dotime ) {
+      if ( !havestarttime ) {
+        std::unique_ptr<Reader> areader( Reader::get( FormatConverter::Formats::guess( filesToCat[0] ) ) );
+        std::map<std::string, std::string> amap;
+        if ( areader->getAttributes( filesToCat[0], amap ) ) {
+          starttime = ( 0 == amap.count( SignalData::STARTTIME )
+              ? 0
+              : std::stol( amap.at( SignalData::STARTTIME ) ) );
+        }
+      }
+
       if ( for_s > 0 ) {
-        catter.setDuration( for_s * 1000, ( havestarttime ? &starttime : nullptr ) );
+        endtime = starttime + for_s * 1000;
       }
-      else {
-        catter.setClipping( starttime, endtime );
-      }
+
+      catter.setClipping( starttime, endtime );
     }
+
     catter.cat( filesToCat );
   }
   else if ( anon ) {

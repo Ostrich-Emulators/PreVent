@@ -36,8 +36,8 @@ namespace FormatConverter {
 
     void cat( std::vector<std::string>& filesToCat );
     static void cat( const std::string& outfile, std::vector<std::string>& filesToCat );
-  private:
     static bool filesorter( const std::string& a, const std::string& b );
+  private:
 
     const std::string output;
 
