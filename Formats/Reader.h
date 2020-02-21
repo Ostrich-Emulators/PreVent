@@ -85,8 +85,8 @@ namespace FormatConverter {
 
     /**
      * Gets root attributes from the given input if this can be accomplished
-     * without reading the whole file. (If not, the reader must process the
-     * whole file and get attributes from the SignalSet/SignalDatas.)
+     * without reading the whole file. (If not, the caller must process the
+     * whole file and get attributes from the SignalSet/SignalDatas as usual.)
      * @param inputfile
      * @param map the map to fill with attributes
      * @return true, if the read occurred
@@ -95,8 +95,8 @@ namespace FormatConverter {
 
     /**
      * Gets attributes from the given input and signal if this can be accomplished
-     * without reading the whole file. (If not, the reader must process the
-     * whole file and get attributes from the SignalSet/SignalDatas.)
+     * without reading the whole file. (If not, the caller must process the
+     * whole file and get attributes from the SignalSet/SignalDatas as usual.)
      * @param inputfile
      * @param signal
      * @return true, if the read occurred

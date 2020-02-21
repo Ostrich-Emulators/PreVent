@@ -59,7 +59,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-A or --attrs\tprints all attributes in the file"
       << std::endl << "\t-V or --vitals\tprints a list of vital signs in this file"
       << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
-      << std::endl << "\t-D or --statistics or --stats \tcalculates descriptive statistics"
+      << std::endl << "\t-D or --statistics or --stats\tcalculates descriptive statistics"
       << std::endl;
   exit( 1 );
 }
@@ -152,6 +152,7 @@ int main( int argc, char** argv ) {
   bool listwaves = false;
   bool listvitals = false;
   bool calc = false;
+  bool needsoutput = false;
 
   while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WVD", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
@@ -191,12 +192,14 @@ int main( int argc, char** argv ) {
         break;
       case 'a':
         anon = true;
+        needsoutput = true;
         break;
       case 'C':
         clobber = true;
         break;
       case 'c':
         catfiles = true;
+        needsoutput = true;
         break;
       case 's':
         starttime = TimeParser::parse( optarg );
@@ -225,6 +228,20 @@ int main( int argc, char** argv ) {
     helpAndExit( argv[0], "no file specified" );
   }
 
+
+  if ( needsoutput ) {
+    if ( outfilename.empty( ) ) {
+      helpAndExit( argv[0], "please specify an output filename with --output" );
+    }
+
+    struct stat buffer;
+    if ( stat( outfilename.c_str( ), &buffer ) == 0 && !clobber ) {
+      std::stringstream ss;
+      ss << "will not overwrite " << outfilename << " (use --clobber)";
+      helpAndExit( argv[0], ss.str( ) );
+    }
+  }
+
   // just in case an exception gets thrown...
   H5::Exception::dontPrint( );
   if ( printattrs ) {
@@ -247,10 +264,6 @@ int main( int argc, char** argv ) {
   else if ( catfiles ) {
     std::vector<std::string> filesToCat;
 
-    if ( outfilename.empty( ) ) {
-      helpAndExit( argv[0], "please specify an output filename with --output" );
-    }
-
     for ( int i = optind; i < argc; i++ ) {
       filesToCat.push_back( argv[i] );
     }
@@ -260,11 +273,6 @@ int main( int argc, char** argv ) {
     //  std::cout << "file to cat: " << x << std::endl;
     //}
 
-    struct stat buffer;
-    if ( stat( outfilename.c_str( ), &buffer ) == 0 && !clobber ) {
-      std::cerr << "will not overwrite " << outfilename << " (use --clobber)" << std::endl;
-      exit( 1 );
-    }
 
     H5Cat catter( outfilename );
     if ( dotime ) {
@@ -278,16 +286,6 @@ int main( int argc, char** argv ) {
     catter.cat( filesToCat );
   }
   else if ( anon ) {
-    if ( outfilename.empty( ) ) {
-      helpAndExit( argv[0], "please specify an output filename with --output" );
-    }
-
-    struct stat buffer;
-    if ( stat( outfilename.c_str( ), &buffer ) == 0 && !clobber ) {
-      std::cerr << "will not overwrite " << outfilename << " (use --clobber)" << std::endl;
-      exit( 1 );
-    }
-
     FileNamer namer = FileNamer::parse( outfilename );
 
     for ( int i = optind; i < argc; i++ ) {
@@ -303,7 +301,7 @@ int main( int argc, char** argv ) {
       std::unique_ptr<SignalSet>data( new AnonymizingSignalSet( to->filenamer( ) ) );
 
       if ( from->prepare( input, data ) < 0 ) {
-        std::cerr << "could not prepare file for reading" << std::endl;
+        std::cerr << "could not prepare file for reading: " << input << std::endl;
         continue;
       }
       else {

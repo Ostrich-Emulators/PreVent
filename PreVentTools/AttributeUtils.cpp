@@ -61,12 +61,21 @@ namespace FormatConverter {
 
       std::cout << "|" << attr.getName( ) << "|";
 
-      switch ( attr.getDataType( ).getClass( ) ) {
+      auto datatype = attr.getDataType();
+
+      switch ( datatype.getClass( ) ) {
         case H5T_INTEGER:
         {
-          int val = 0;
-          attr.read( dt, &val );
-          std::cout << val;
+          if ( datatype.getSize( ) <= sizeof (int ) ) {
+            int val = 0;
+            attr.read( dt, &val );
+            std::cout << val;
+          }
+          else if ( datatype.getSize( ) <= sizeof (long ) ) {
+            long val = 0;
+            attr.read( dt, &val );
+            std::cout << val;
+          }
         }
           break;
         case H5T_FLOAT:
