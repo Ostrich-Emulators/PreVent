@@ -34,14 +34,15 @@ namespace FormatConverter {
     Hdf5Writer( );
     virtual ~Hdf5Writer( );
 
-    static void writeAttribute( H5::H5Object& loc,
-        const std::string& attr, const std::string& val );
-    static void writeAttribute( H5::H5Object& loc,
-        const std::string& attr, int val );
-    static void writeAttribute( H5::H5Object& loc,
-        const std::string& attr, double val );
-    static void writeAttribute( H5::H5Object& loc,
-        const std::string& attr, dr_time val );
+    static void writeAttribute( H5::H5Object& loc, const std::string& attr, const std::string& val );
+    static void writeAttribute( H5::H5Object& loc, const std::string& attr, int val );
+    static void writeAttribute( H5::H5Object& loc, const std::string& attr, double val );
+    static void writeAttribute( H5::H5Object& loc, const std::string& attr, dr_time val );
+    static std::string getDatasetName( const std::unique_ptr<SignalData>& data );
+    static std::string getDatasetName( const std::string& oldname );
+    static void autochunk( hsize_t* dims, int rank, int bytesperdim, hsize_t* rslts );
+    static void writeAttributes( H5::H5Object& ds, const std::unique_ptr<SignalData>& data );
+
   protected:
     std::vector<std::string> closeDataSet( );
     int drain( std::unique_ptr<SignalSet>& );
@@ -53,7 +54,6 @@ namespace FormatConverter {
         const dr_time& firsttime, const dr_time& lasttime );
     void writeTimesAndDurationAttributes( H5::H5Object& loc,
         const dr_time& start, const dr_time& end );
-    static void writeAttributes( H5::H5Object& ds, const std::unique_ptr<SignalData>& data );
     void writeVital( H5::Group& group, std::unique_ptr<SignalData>& data );
     void writeVitalGroup( H5::Group& group, std::unique_ptr<SignalData>& data );
     void writeWave( H5::Group& group, std::unique_ptr<SignalData>& data );
@@ -61,10 +61,7 @@ namespace FormatConverter {
     void writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data );
     void writeEvents( H5::Group& group, std::unique_ptr<SignalData>& data );
     void writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data );
-    static void autochunk( hsize_t* dims, int rank, int bytesperdim, hsize_t* rslts );
     void createEventsAndTimes( H5::H5File, const std::unique_ptr<SignalSet>& data );
-    static std::string getDatasetName( const std::unique_ptr<SignalData>& data );
-    static std::string getDatasetName( const std::string& oldname );
 
     /**
      * Rescale the data to fit in shorts

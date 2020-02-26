@@ -39,6 +39,7 @@
 #include "StatisticalSignalData.h"
 #include "NullSignalData.h"
 #include "Hdf5Reader.h"
+#include "AppendingUtils.h"
 
 using namespace FormatConverter;
 
@@ -60,6 +61,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-V or --vitals\tprints a list of vital signs in this file"
       << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
       << std::endl << "\t-D or --statistics or --stats\tcalculates descriptive statistics"
+      << std::endl << "\t-P or --append <file>\tappends extra data to file (implies --clobber)"
       << std::endl;
   exit( 1 );
 }
@@ -81,6 +83,7 @@ struct option longopts[] = {
   { "cat", no_argument, NULL, 'c' },
   { "stats", no_argument, NULL, 'D' },
   { "statistics", no_argument, NULL, 'D' },
+  { "append", required_argument, NULL, 'P' },
   { 0, 0, 0, 0 }
 };
 
@@ -109,25 +112,6 @@ void cloneFile( std::unique_ptr<H5::H5File>&infile,
   }
 }
 
-void writeAttrs( std::unique_ptr<H5::H5File>& outfile, std::map<std::string, std::string> attrs ) {
-  for ( const auto& kv : attrs ) {
-    H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
-    H5::StrType st( H5::PredType::C_S1, H5T_VARIABLE );
-    st.setCset( H5T_CSET_UTF8 );
-
-    std::string attr = kv.first;
-    std::string val = kv.second;
-
-    if ( outfile->attrExists( attr ) ) {
-      outfile->removeAttr( attr );
-    }
-
-    H5::Attribute attrib = outfile->createAttribute( attr, st, space );
-    attrib.write( st, val );
-    attrib.close( );
-  }
-}
-
 /*
  * 
  */
@@ -153,8 +137,9 @@ int main( int argc, char** argv ) {
   bool listvitals = false;
   bool calc = false;
   bool needsoutput = false;
+  std::vector<std::string> appendfiles;
 
-  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WVD", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WVDP:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'o':
         outfilename = optarg;
@@ -176,6 +161,9 @@ int main( int argc, char** argv ) {
         break;
       case 'D':
         calc = true;
+        break;
+      case 'P':
+        appendfiles.push_back( optarg );
         break;
       case 'S':
       {
@@ -244,7 +232,26 @@ int main( int argc, char** argv ) {
 
   // just in case an exception gets thrown...
   H5::Exception::dontPrint( );
-  if ( printattrs ) {
+  if ( !appendfiles.empty( ) ) {
+    struct stat buffer;
+    for ( auto& f : appendfiles ) {
+      if ( stat( f.c_str( ), &buffer ) != 0 ) {
+        std::stringstream ss;
+        ss << "cannot access file to append: " << f;
+        helpAndExit( argv[0], ss.str( ) );
+      }
+    }
+
+    if ( argc - optind > 1 ) {
+      helpAndExit( argv[0], "cannot append to multiple files at once" );
+    }
+
+    AppendingUtils utils( argv[argc - 1] );
+    for ( auto& f : appendfiles ) {
+      utils.append( f );
+    }
+  }
+  else if ( printattrs ) {
     for ( int i = optind; i < argc; i++ ) {
       try {
         H5::H5File file = H5::H5File( argv[i], H5F_ACC_RDONLY );

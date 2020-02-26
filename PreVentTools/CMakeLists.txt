@@ -5,6 +5,7 @@ main.cpp
 OutputSignalData.cpp
 StatisticalSignalData.cpp
 NullSignalData.cpp
+AppendingUtils.cpp
 )
 
 target_link_libraries(preventtools formats)
@@ -15,9 +16,9 @@ target_include_directories(preventtools
     PUBLIC
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    PRIVATE
+		PRIVATE
         $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../Formats ${CMAKE_CURRENT_SOURCE_DIR}/../Formats/generated>
 )
 
 install (TARGETS preventtools DESTINATION bin)
