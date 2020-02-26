@@ -13,6 +13,7 @@
 #include <cmath>
 #include "SignalUtils.h"
 #include "BasicSignalData.h"
+#include "OffsetTimeSignalSet.h"
 
 namespace FormatConverter {
   const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
@@ -83,8 +84,8 @@ namespace FormatConverter {
   }
 
   bool Hdf5Reader::getAttributes( const std::string& inputfile, const std::string& signal,
-          std::map<std::string, int>& mapi, std::map<std::string, double>& mapd, std::map<std::string, std::string>& maps,
-          dr_time& starttime, dr_time& endtime ) {
+      std::map<std::string, int>& mapi, std::map<std::string, double>& mapd, std::map<std::string, std::string>& maps,
+      dr_time& starttime, dr_time& endtime ) {
     H5::Exception::dontPrint( );
     try {
       file = H5::H5File( inputfile, H5F_ACC_RDONLY );
@@ -130,10 +131,13 @@ namespace FormatConverter {
 
     for ( int i = 0; i < root.getNumAttrs( ); i++ ) {
       H5::Attribute a = root.openAttribute( i );
+      auto key = a.getName( );
 
-      // std::cout << a.getName( ) << ": " << aval << std::endl;
-      if ( 0 == IGNORABLE_PROPS.count( a.getName( ) ) ) {
-        info->setMeta( a.getName( ), metastr( a ) );
+      if ( 0 == IGNORABLE_PROPS.count( key ) ) {
+        std::string prop = ( OffsetTimeSignalSet::COLLECTION_OFFSET == key
+            ? std::to_string( metaint( a ) )
+            : metastr( a ) );
+        info->setMeta( key, prop );
       }
     }
 
@@ -230,12 +234,12 @@ namespace FormatConverter {
   }
 
   void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
-          const bool& iswave, std::unique_ptr<SignalSet>& info ) {
+      const bool& iswave, std::unique_ptr<SignalSet>& info ) {
     std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
 
     std::unique_ptr<SignalData>& signal = ( iswave
-            ? info->addWave( name )
-            : info->addVital( name ) );
+        ? info->addWave( name )
+        : info->addVital( name ) );
     int timeinterval = 2000;
     if ( dataAndTimeGroup.attrExists( SignalData::CHUNK_INTERVAL_MS ) ) {
       timeinterval = metaint( dataAndTimeGroup, SignalData::CHUNK_INTERVAL_MS );
@@ -266,7 +270,7 @@ namespace FormatConverter {
   }
 
   void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-          const std::vector<dr_time>& times, int timeinterval, int valsPerTime, int scale ) const {
+      const std::vector<dr_time>& times, int timeinterval, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
     hsize_t DIMS[2] = { };
     dataspace.getSimpleExtentDims( DIMS );
@@ -360,7 +364,7 @@ namespace FormatConverter {
   }
 
   void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
-          const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
+      const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
     hsize_t DIMS[2] = { };
     dataspace.getSimpleExtentDims( DIMS );
@@ -462,7 +466,7 @@ namespace FormatConverter {
   }
 
   void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
-          H5::H5Object & dataset, bool includeIgnorables ) {
+      H5::H5Object & dataset, bool includeIgnorables ) {
     hsize_t cnt = dataset.getNumAttrs( );
 
     for ( size_t i = 0; i < cnt; i++ ) {
@@ -504,13 +508,12 @@ namespace FormatConverter {
   }
 
   int Hdf5Reader::metaint( const H5::H5Object& loc, const std::string & attrname ) {
+    return metaint( loc.openAttribute( attrname ) );
+  }
+
+  int Hdf5Reader::metaint( const H5::Attribute & attr ) {
     int val;
-    if ( loc.attrExists( attrname ) ) {
-
-      H5::Attribute attr = loc.openAttribute( attrname );
-      attr.read( attr.getDataType( ), &val );
-    }
-
+    attr.read( attr.getDataType( ), &val );
     return val;
   }
 
@@ -575,7 +578,7 @@ namespace FormatConverter {
   }
 
   void Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
-          dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
+      dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
     size_t typeo = path.find( "VitalSigns" );
 
     signal->setWave( std::string::npos == typeo );
@@ -597,8 +600,8 @@ namespace FormatConverter {
       bool doints = ( H5::PredType::STD_I32LE == data.getDataType( ) );
 
       bool timeisindex = ( layoutVersion( file ) >= 40100
-              ? "index to Global_Times" == metastr( times, "Columns" )
-              : false );
+          ? "index to Global_Times" == metastr( times, "Columns" )
+          : false );
       std::vector<dr_time> realtimes;
       dr_time foundFrom = false;
       dr_time foundTo = false;
@@ -631,8 +634,8 @@ namespace FormatConverter {
       hsize_t slabstartidx = fromidx * readingsperperiod;
       const hsize_t slabstopidx = toidx * readingsperperiod;
       hsize_t currentstopidx = ( slabstopidx - slabstartidx > MAXSLABSIZE
-              ? slabstartidx + MAXSLABSIZE
-              : slabstopidx );
+          ? slabstartidx + MAXSLABSIZE
+          : slabstopidx );
 
       hsize_t dataidx = 0;
       std::vector<int> datavals;
@@ -645,8 +648,8 @@ namespace FormatConverter {
           //            << "/" << currentstopidx << std::endl;
 
           auto newvals = ( doints
-                  ? slabreadi( data, slabstartidx, currentstopidx )
-                  : slabreads( data, slabstartidx, currentstopidx ) );
+              ? slabreadi( data, slabstartidx, currentstopidx )
+              : slabreads( data, slabstartidx, currentstopidx ) );
 
           // get rid of the stuff we've already processed
           datavals.erase( datavals.begin( ), datavals.begin( ) + dataidx );
@@ -660,8 +663,8 @@ namespace FormatConverter {
           // now get ready for the next time we have to do this
           slabstartidx = currentstopidx;
           currentstopidx = ( slabstopidx - currentstopidx > MAXSLABSIZE
-                  ? currentstopidx + MAXSLABSIZE
-                  : slabstopidx );
+              ? currentstopidx + MAXSLABSIZE
+              : slabstopidx );
         }
 
         if ( 0 == scale ) {

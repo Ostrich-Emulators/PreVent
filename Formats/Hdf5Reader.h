@@ -60,6 +60,7 @@ namespace FormatConverter {
 		static std::string metastr( const H5::Attribute& attr );
 		static std::string metastr( const H5::H5Object& loc, const std::string& attrname );
 		static int metaint( const H5::H5Object& loc, const std::string& attrname );
+    static int metaint( const H5::Attribute& attr );
 
 		static void copymetas( std::unique_ptr<SignalData>& signal, H5::H5Object& dataset,
 				bool includeIgnorables = false );
