@@ -81,6 +81,10 @@ namespace FormatConverter {
     virtual std::vector<dr_time> events(const std::string& eventtype) override;
 
     virtual size_t inmemsize() const override;
+
+    virtual void auxfile( const std::string& file ) override;
+    virtual std::string auxfile( ) override;
+
   private:
     SignalData * signal;
     bool iOwnThisPtr;

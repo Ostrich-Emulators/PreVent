@@ -45,63 +45,75 @@ namespace FormatConverter {
 
     static const short MISSING_VALUE;
 
-    SignalData();
-    virtual ~SignalData();
+    SignalData( );
+    virtual ~SignalData( );
 
-    virtual std::unique_ptr<SignalData> shallowcopy(bool includedates = false) = 0;
-    virtual void add(const FormatConverter::DataRow& row) = 0;
-    virtual size_t size() const = 0;
-    virtual dr_time startTime() const = 0;
-    virtual dr_time endTime() const = 0;
-    virtual const std::string& name() const = 0;
+    virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) = 0;
+    virtual void add( const FormatConverter::DataRow& row ) = 0;
+    virtual size_t size( ) const = 0;
+    virtual dr_time startTime( ) const = 0;
+    virtual dr_time endTime( ) const = 0;
+    virtual const std::string& name( ) const = 0;
+
+    /**
+     * Some formats (WFDB, UM) can specify auxillary files for a signal
+     * @return
+     */
+    virtual void auxfile( const std::string& file ) = 0;
+    virtual std::string auxfile( ) = 0;
+
     /**
      * Gets the dr_times for this dataset.
      * @param offset_ms apply this offset (in ms) to every time (like for different timezones)
      *
      * @return
      */
-    virtual const std::deque<dr_time> times() const = 0;
+    virtual const std::deque<dr_time> times( ) const = 0;
 
-    virtual std::unique_ptr<FormatConverter::DataRow> pop() = 0;
-    virtual void setWave(bool wave = false) = 0;
-    virtual bool wave() const = 0;
+    virtual std::unique_ptr<FormatConverter::DataRow> pop( ) = 0;
+    virtual void setWave( bool wave = false ) = 0;
+    virtual bool wave( ) const = 0;
     /**
      * Retrieves the highest value in this signal data. This value is *not* scaled.
      * @return
      */
-    virtual double highwater() const = 0;
+    virtual double highwater( ) const = 0;
     /**
      * Retrieves the lowest value in this signal data. This value is *not* scaled.
      * @return
      */
-    virtual double lowwater() const = 0;
+    virtual double lowwater( ) const = 0;
 
-    virtual void setUom(const std::string& u);
-    virtual const std::string& uom() const;
-    virtual double hz() const;
-    virtual int readingsPerChunk() const;
-    virtual int chunkInterval() const;
-    virtual void setChunkIntervalAndSampleRate(int chunktime_ms, int samplerate);
-    virtual bool empty() const;
-    virtual void moveDataTo(std::unique_ptr<SignalData>& signal);
-    virtual void scale(int scaling);
-    virtual int scale() const;
+    virtual void setUom( const std::string& u );
+    virtual const std::string& uom( ) const;
+    virtual double hz( ) const;
+    virtual int readingsPerChunk( ) const;
+    virtual int chunkInterval( ) const;
+    virtual void setChunkIntervalAndSampleRate( int chunktime_ms, int samplerate );
+    virtual bool empty( ) const;
+    virtual void moveDataTo( std::unique_ptr<SignalData>& signal );
+    virtual void scale( int scaling );
+    virtual int scale( ) const;
 
-    virtual void setMetadataFrom(const SignalData& model) = 0;
-    virtual void setMeta(const std::string& key, const std::string& val) = 0;
-    virtual void setMeta(const std::string& key, int val) = 0;
-    virtual void setMeta(const std::string& key, double val) = 0;
+    virtual void setMetadataFrom( const SignalData& model ) = 0;
+    virtual void setMeta( const std::string& key, const std::string& val ) = 0;
+    virtual void setMeta( const std::string& key, int val ) = 0;
+    virtual void setMeta( const std::string& key, double val ) = 0;
 
-    virtual void erases(const std::string& key = "") = 0;
-    virtual void erasei(const std::string& key = "") = 0;
-    virtual void erased(const std::string& key = "") = 0;
+    virtual void erases( const std::string& key = "" ) = 0;
+    virtual void erasei( const std::string& key = "" ) = 0;
+    virtual void erased( const std::string& key = "" ) = 0;
 
-    virtual const std::map<std::string, std::string>& metas() const = 0;
-    virtual const std::map<std::string, int>& metai() const = 0;
-    virtual const std::map<std::string, double>& metad() const = 0;
-    virtual std::vector<std::string> extras() const = 0;
+    virtual const std::map<std::string, std::string>& metas( ) const = 0;
+    virtual const std::map<std::string, int>& metai( ) const = 0;
+    virtual const std::map<std::string, double>& metad( ) const = 0;
+    virtual std::vector<std::string> extras( ) const = 0;
 
-    virtual void extras(const std::string& ext) = 0;
+    /**
+     * Adds an extra field label for DataRows
+     * @param ext
+     */
+    virtual void extras( const std::string& ext ) = 0;
 
     /**
      * Creates an "event" data point at the given time. This is intended to
@@ -112,15 +124,15 @@ namespace FormatConverter {
      * @param time when the event happened
      *
      */
-    virtual void recordEvent(const std::string& eventtype, const dr_time& time) = 0;
-    virtual std::vector<std::string> eventtypes() = 0;
-    virtual std::vector<dr_time> events(const std::string& eventtype) = 0;
+    virtual void recordEvent( const std::string& eventtype, const dr_time& time ) = 0;
+    virtual std::vector<std::string> eventtypes( ) = 0;
+    virtual std::vector<dr_time> events( const std::string& eventtype ) = 0;
 
     /**
      * How many DataRows are in memory (not cached to disk)
      * @return
      */
-    virtual size_t inmemsize() const = 0;
+    virtual size_t inmemsize( ) const = 0;
   };
 }
 #endif /* SIGNALDATA_H */

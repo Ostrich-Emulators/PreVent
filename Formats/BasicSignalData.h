@@ -70,6 +70,9 @@ namespace FormatConverter {
 
     virtual size_t inmemsize() const override;
 
+    virtual void auxfile( const std::string& file ) override;
+    virtual std::string auxfile( ) override;
+
   private:
     void startPopping();
 
@@ -101,6 +104,7 @@ namespace FormatConverter {
     std::map<std::string, double> metadatad;
     std::set<std::string> extrafields;
     std::map<std::string, std::vector<dr_time>> namedevents;
+    std::string auxf;
   };
 }
 #endif /* DATASETDATACACHE_H */

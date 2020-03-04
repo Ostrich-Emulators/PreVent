@@ -11,11 +11,11 @@
 namespace FormatConverter {
 
   SignalDataWrapper::SignalDataWrapper( const std::unique_ptr<SignalData>& data )
-  : signal( data.get( ) ), iOwnThisPtr( false ) {
+      : signal( data.get( ) ), iOwnThisPtr( false ) {
   }
 
   SignalDataWrapper::SignalDataWrapper( SignalData * data )
-  : signal( data ), iOwnThisPtr( true ) {
+      : signal( data ), iOwnThisPtr( true ) {
   }
 
   SignalDataWrapper::~SignalDataWrapper( ) {
@@ -170,5 +170,13 @@ namespace FormatConverter {
 
   std::vector<dr_time> SignalDataWrapper::events( const std::string& type ) {
     return signal->events( type );
+  }
+
+  void SignalDataWrapper::auxfile( const std::string& file ) {
+    signal->auxfile( file );
+  }
+
+  std::string SignalDataWrapper::auxfile( ) {
+    return signal->auxfile( );
   }
 }

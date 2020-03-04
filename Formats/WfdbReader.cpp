@@ -25,7 +25,9 @@ namespace FormatConverter {
   }
 
   void WfdbReader::setBaseTime( const dr_time& basetime ) {
+    _basetime = basetime;
     dr_time modded = modtime( basetime );
+
     char * timepart = new char[40];
     char * datepart = new char[40];
     time_t raw = ( modded / 1000 );
@@ -96,6 +98,10 @@ namespace FormatConverter {
     return modtime( timegm( &timeDate ) * 1000 + ms );
   }
 
+  dr_time WfdbReader::basetime( ) const {
+    return _basetime;
+  }
+
   int WfdbReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
     int rslt = Reader::prepare( recordset, info );
     if ( 0 != rslt ) {
@@ -124,8 +130,8 @@ namespace FormatConverter {
 
       for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
         std::unique_ptr<SignalData>& dataset = ( iswave
-                ? info->addWave( siginfo[signalidx].desc )
-                : info->addVital( siginfo[signalidx].desc ) );
+            ? info->addWave( siginfo[signalidx].desc )
+            : info->addVital( siginfo[signalidx].desc ) );
 
         dataset->setChunkIntervalAndSampleRate( interval, freqhz );
         if ( 1024 == interval ) {
@@ -160,7 +166,6 @@ namespace FormatConverter {
       char * timer = mstimstr( 0 );
       curtime = convert( timer );
     }
-
 
     int retcode = 0;
     ReadResult rslt = ReadResult::NORMAL;
@@ -198,8 +203,8 @@ namespace FormatConverter {
         if ( !currents[signalidx].empty( ) ) {
           bool added = false;
           std::unique_ptr<SignalData>& dataset = ( iswave
-                  ? info->addWave( siginfo[signalidx].desc, &added )
-                  : info->addVital( siginfo[signalidx].desc, &added ) );
+              ? info->addWave( siginfo[signalidx].desc, &added )
+              : info->addVital( siginfo[signalidx].desc, &added ) );
 
           if ( added ) {
             dataset->setChunkIntervalAndSampleRate( interval, freqhz );
@@ -214,13 +219,13 @@ namespace FormatConverter {
 
           if ( currents[signalidx].size( ) < freqhz ) {
             output( ) << "filling in " << ( freqhz - currents[signalidx].size( ) )
-                    << " values for wave " << siginfo[signalidx].desc << std::endl;
+                << " values for wave " << siginfo[signalidx].desc << std::endl;
             currents[signalidx].resize( freqhz, SignalData::MISSING_VALUE );
           }
 
           std::ostringstream ss;
           std::copy( currents[signalidx].begin( ), currents[signalidx].end( ) - 1,
-                  std::ostream_iterator<int>( ss, "," ) );
+              std::ostream_iterator<int>( ss, "," ) );
           ss << currents[signalidx].back( );
 
           std::string vals = ss.str( );
@@ -229,6 +234,7 @@ namespace FormatConverter {
       }
 
       dr_time oldtime = curtime;
+
       curtime += interval;
       if ( isRollover( oldtime, curtime ) ) {
         rslt = ReadResult::END_OF_DAY;
@@ -237,7 +243,6 @@ namespace FormatConverter {
       else if ( ReadResult::END_OF_FILE == rslt ) {
         break;
       }
-
     }
 
     return rslt;

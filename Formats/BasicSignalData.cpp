@@ -28,11 +28,11 @@ namespace FormatConverter {
   const int BasicSignalData::CACHE_LIMIT = 30000;
 
   BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
-  : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
-  datacount( 0 ), livecount( 0 ), file( nullptr ), popping( false ), iswave( wavedata ),
-  highval( -std::numeric_limits<double>::max( ) ),
-  lowval( std::numeric_limits<double>::max( ) ),
-  nocache( FormatConverter::Options::asBool( FormatConverter::OptionsKey::NOCACHE ) ) {
+      : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
+      datacount( 0 ), livecount( 0 ), file( nullptr ), popping( false ), iswave( wavedata ),
+      highval( -std::numeric_limits<double>::max( ) ),
+      lowval( std::numeric_limits<double>::max( ) ),
+      nocache( FormatConverter::Options::asBool( FormatConverter::OptionsKey::NOCACHE ) ) {
     scale( 0 );
     setChunkIntervalAndSampleRate( 7, 1 ); // 7 is just an easy value to troubleshoot (it's not 2000 or 1024)
     setUom( "Uncalib" );
@@ -360,7 +360,15 @@ namespace FormatConverter {
 
   std::vector<dr_time> BasicSignalData::events( const std::string& type ) {
     return ( 0 == namedevents.count( type )
-            ? std::vector<dr_time>( )
-            : namedevents.at( type ) );
+        ? std::vector<dr_time>( )
+        : namedevents.at( type ) );
+  }
+
+  void BasicSignalData::auxfile( const std::string& file ) {
+    auxf = file;
+  }
+
+  std::string BasicSignalData::auxfile( ) {
+    return auxf;
   }
 }

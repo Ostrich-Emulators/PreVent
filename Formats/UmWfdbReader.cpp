@@ -87,6 +87,21 @@ namespace FormatConverter {
             if ( "offset" == key ) {
               signal->setMeta( "offset", std::stod( val ) );
             }
+            else if ( "anno_file" == key ) {
+              std::ifstream annofile( val );
+              std::string line;
+              std::vector<AnnoData> annos;
+              if ( annofile.is_open( ) ) {
+                while ( std::getline( annofile, line ) ) {
+                  std::vector<std::string> anns = UmWfdbReader::splitcsv( line, ' ' );
+                  AnnoData ad;
+                  ad.ms = std::stol( anns[0] );
+                  ad.val = SignalUtils::trim( anns[1] );
+                  annos.push_back( ad );
+                }
+                annomap[name] = annos;
+              }
+            }
           }
         }
       }
@@ -131,9 +146,16 @@ namespace FormatConverter {
       }
     }
 
-    return ( numerics.eof( ) || ReadResult::END_OF_DAY == rslt || ReadResult::NORMAL == rslt
-            ? WfdbReader::fill( info, lastrr )
-            : ReadResult::ERROR );
+    ReadResult rr = ( numerics.eof( ) || ReadResult::END_OF_DAY == rslt || ReadResult::NORMAL == rslt
+        ? WfdbReader::fill( info, lastrr )
+        : ReadResult::ERROR );
+
+    if ( rr == ReadResult::END_OF_DAY ) {
+      // at the end of the day, write all the annotation information for that day
+      for ( auto& aux : annomap ) {
+      }
+    }
+    return rr;
   }
 
   std::vector<std::string> UmWfdbReader::splitcsv( const std::string& csvline, char delim ) {
