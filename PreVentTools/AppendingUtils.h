@@ -29,23 +29,23 @@ namespace FormatConverter {
      * Appends the data from the given datafile to the targetfile. The targetfile
      * has the format:
      * <pre>
-     * NAME=calculated data
+NAME=calculated data
 int prop:i=183
 dbl prop:d=37.3
 str prop1=this is a string prop
 str prop2:s=this is also a string prop
 Columns=raw value
-DATA=i
-182
-1928
-12
-9587
-7364
-31
-43
-4
-7
-3422
+DATA
+1270638517000,182.5
+1270638519000,1928
+1270638521000,12
+1270638523000,9587
+1270638525000,7364
+1270638527000,31
+1270638529000,43
+1270638531000,4
+1270638533000,7
+1270638535000,3422
 ...</pre>
      *
      * The first line must be the NAME=...

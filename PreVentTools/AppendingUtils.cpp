@@ -90,7 +90,8 @@ namespace FormatConverter {
 
       if ( signal ) {
         if ( readingdata ) {
-          signal->add( DataRow( 0, line ) );
+          split( line, key, val, "," );
+          signal->add( DataRow( std::stol( key ), val ) );
         }
         else {
           // not reading data yet, so we're setting
@@ -127,9 +128,9 @@ namespace FormatConverter {
         signal->erasei( SignalData::CHUNK_INTERVAL_MS );
         signal->erasei( SignalData::READINGS_PER_CHUNK );
         signal->erasei( SignalData::MSM );
-        signal->erases( SignalData::TIMEZONE );
         signal->erases( "Note on Scale" );
-        signal->erases( "Unit of Measure" );
+        //signal->erases( "Unit of Measure" );
+        //signal->erases( SignalData::TIMEZONE );
       }
     }
 
@@ -137,39 +138,15 @@ namespace FormatConverter {
   }
 
   int AppendingUtils::writeSignal( std::unique_ptr<SignalData>& data ) {
-    std::string dataset = DATAGROUP + "/" + Hdf5Writer::getDatasetName( data );
-    H5::DataSet ds;
-
-    size_t rows = data->size( );
-    hsize_t sz = rows;
-    hsize_t dims[] = { sz, 1 };
-    H5::DataSpace space( 2, dims );
-    H5::DataSpace memspace( 2, dims );
-
-    if ( !file.exists( dataset ) ) {
-      H5::DSetCreatPropList props;
-      hsize_t chunkdims[] = { 0, 0 };
-      Hdf5Writer::autochunk( dims, 2, sizeof ( int ), chunkdims );
-      props.setChunk( 2, chunkdims );
-      props.setShuffle( );
-      props.setDeflate( 6 );
-
-      ds = file.createDataSet( dataset, H5::PredType::STD_I32LE, space, props );
-    }
-    else {
-      ds = file.openDataSet( dataset );
+    std::string groupname = DATAGROUP + "/" + Hdf5Writer::getDatasetName( data );
+    if ( !file.exists( groupname ) ) {
+      file.createGroup( groupname );
     }
 
-    Hdf5Writer::writeAttributes( ds, data );
-    int scale = data->scale( );
-    std::vector<int> datavec;
-    datavec.reserve( rows );
-    for ( size_t row = 0; row < rows; row++ ) {
-      datavec.push_back( data->pop( )->ints( scale )[0] );
-    }
-
-    ds.write( &datavec[0], H5::PredType::STD_I32LE, memspace, space );
-
+    H5::Group group = file.openGroup( groupname );
+    Hdf5Writer hdf5;
+    hdf5.drain( group, data );
+    group.close( );
     return 0;
   }
 

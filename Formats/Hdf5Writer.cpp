@@ -41,7 +41,7 @@ namespace FormatConverter {
   }
 
   void Hdf5Writer::writeAttribute( H5::H5Object& loc,
-          const std::string& attr, const std::string& val ) {
+      const std::string& attr, const std::string& val ) {
     if ( !val.empty( ) ) {
       //std::cout << attr << ": " << val << std::endl;
 
@@ -74,11 +74,11 @@ namespace FormatConverter {
 
   void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Object& loc, const dr_time& start, const dr_time& end ) {
     time_t stime = ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
-            ? timesteplkp.at( start )
-            : ( start / 1000 ) );
+        ? timesteplkp.at( start )
+        : ( start / 1000 ) );
     time_t etime = ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
-            ? timesteplkp.at( end )
-            : ( end / 1000 ) );
+        ? timesteplkp.at( end )
+        : ( end / 1000 ) );
 
     if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
       writeAttribute( loc, SignalData::STARTTIME, timesteplkp.at( start ) );
@@ -163,13 +163,13 @@ namespace FormatConverter {
   }
 
   void Hdf5Writer::writeFileAttributes( H5::H5File file,
-          std::map<std::string, std::string> datasetattrs,
-          const dr_time& firstTime, const dr_time& lastTime ) {
+      std::map<std::string, std::string> datasetattrs,
+      const dr_time& firstTime, const dr_time& lastTime ) {
 
     writeTimesAndDurationAttributes( file, firstTime, lastTime );
 
     for ( std::map<std::string, std::string>::const_iterator it = datasetattrs.begin( );
-            it != datasetattrs.end( ); ++it ) {
+        it != datasetattrs.end( ); ++it ) {
       //std::cout << "writing file attr: " << it->first << ": " << it->second << std::endl;
       if ( it->first == OffsetTimeSignalSet::COLLECTION_OFFSET ) {
         writeAttribute( file, it->first, std::stoi( it->second ) );
@@ -181,9 +181,9 @@ namespace FormatConverter {
 
     writeAttribute( file, "Layout Version", LAYOUT_VERSION );
     writeAttribute( file, "HDF5 Version",
-            std::to_string( H5_VERS_MAJOR ) + "."
-            + std::to_string( H5_VERS_MINOR ) + "."
-            + std::to_string( H5_VERS_RELEASE ) );
+        std::to_string( H5_VERS_MAJOR ) + "."
+        + std::to_string( H5_VERS_MINOR ) + "."
+        + std::to_string( H5_VERS_RELEASE ) );
   }
 
   void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data ) {
@@ -210,7 +210,7 @@ namespace FormatConverter {
     }
 
     H5::DataSet ds = group.createDataSet( "data",
-            ( useInts ? H5::PredType::STD_I32LE : H5::PredType::STD_I16LE ), space, props );
+        ( useInts ? H5::PredType::STD_I32LE : H5::PredType::STD_I16LE ), space, props );
     writeAttributes( ds, data );
 
     std::string cols = "scaled value";
@@ -225,8 +225,8 @@ namespace FormatConverter {
 
     const size_t rows = data->size( );
     const hsize_t maxslabcnt = ( rows > 125000
-            ? 125000
-            : rows );
+        ? 125000
+        : rows );
     hsize_t offset[] = { 0, 0 };
     hsize_t count[] = { 0, exc + 1 };
 
@@ -333,7 +333,7 @@ namespace FormatConverter {
     }
 
     H5::DataSet ds = group.createDataSet( "data",
-            ( useInts ? H5::PredType::STD_I32LE : H5::PredType::STD_I16LE ), space, props );
+        ( useInts ? H5::PredType::STD_I32LE : H5::PredType::STD_I16LE ), space, props );
     writeAttributes( ds, data );
     writeAttribute( ds, "Columns", "scaled value" );
 
@@ -479,7 +479,7 @@ namespace FormatConverter {
       H5::DataSpace space( 2, dims );
 
       H5::DataSet ds = events.createDataSet( "Segment_Offsets",
-              H5::PredType::STD_I64LE, space );
+          H5::PredType::STD_I64LE, space );
       long long indexes[segmentsizes.size( ) * 2] = { 0 };
       int row = 0;
       for ( const auto& e : segmentsizes ) {
@@ -552,11 +552,11 @@ namespace FormatConverter {
 
     if ( 0 != data->metadata( ).count( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
       writeAttribute( ds, TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metadata( )
-              .at( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
+          .at( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
     }
     if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
       writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET, std::stoi( data->metadata( )
-              .at( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) );
+          .at( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) );
     }
   }
 
@@ -646,18 +646,26 @@ namespace FormatConverter {
     return ret;
   }
 
+  void Hdf5Writer::drain( H5::Group& g, std::unique_ptr<SignalData>& data ) {
+    if ( data->wave( ) ) {
+      writeWaveGroup( g, data );
+    }
+    else {
+      writeVitalGroup( g, data );
+    }
+  }
+
   void Hdf5Writer::writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data ) {
     writeTimesAndDurationAttributes( group, data->startTime( ), data->endTime( ) );
     writeAttribute( group, SignalData::LABEL, data->name( ) );
     writeAttribute( group, SignalData::TIMEZONE, data->metas( ).at( SignalData::TIMEZONE ) );
-    writeAttribute( group, SignalData::CHUNK_INTERVAL_MS, data->metai( ).at( SignalData::CHUNK_INTERVAL_MS ) );
-    writeAttribute( group, SignalData::READINGS_PER_CHUNK, data->metai( ).at( SignalData::READINGS_PER_CHUNK ) );
+    if ( 0 != data->metai( ).count( SignalData::CHUNK_INTERVAL_MS ) ) {
+      writeAttribute( group, SignalData::CHUNK_INTERVAL_MS, data->metai( ).at( SignalData::CHUNK_INTERVAL_MS ) );
+    }
+    if ( 0 != data->metai( ).count( SignalData::READINGS_PER_CHUNK ) ) {
+      writeAttribute( group, SignalData::READINGS_PER_CHUNK, data->metai( ).at( SignalData::READINGS_PER_CHUNK ) );
+    }
     writeAttribute( group, SignalData::UOM, data->uom( ) );
-
-    //data->erases( SignalData::TIMEZONE );
-    //data->erased( SignalData::CHUNK_INTERVAL_MS );
-    //data->erased( SignalData::READINGS_PER_CHUNK );
-    //data->erases( SignalData::UOM );
   }
 
   void Hdf5Writer::writeVitalGroup( H5::Group& group, std::unique_ptr<SignalData>& data ) {
@@ -670,7 +678,7 @@ namespace FormatConverter {
   }
 
   bool Hdf5Writer::rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data,
-          bool& useIntsNotShorts ) const {
+      bool& useIntsNotShorts ) const {
     bool rescaled = false;
     useIntsNotShorts = false;
 
@@ -681,8 +689,8 @@ namespace FormatConverter {
     int powscale = std::pow( 10, data->scale( ) );
     int hi = powscale * data->highwater( );
     int low = ( data->lowwater( ) == SignalData::MISSING_VALUE
-            ? data->lowwater( )
-            : powscale * data->lowwater( ) );
+        ? data->lowwater( )
+        : powscale * data->lowwater( ) );
     //std::cerr << " high/low water marks: " << data.highwater( ) << "/" << data.lowwater( ) << "(scale: " << data.scale( ) << ")" << std::endl;
     //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
 
@@ -693,8 +701,8 @@ namespace FormatConverter {
       powscale = std::pow( 10, data->scale( ) );
       hi = powscale * data->highwater( );
       low = ( data->lowwater( ) == SignalData::MISSING_VALUE
-              ? data->lowwater( )
-              : powscale * data->lowwater( ) );
+          ? data->lowwater( )
+          : powscale * data->lowwater( ) );
       rescaled = true;
       //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
     }
@@ -710,8 +718,8 @@ namespace FormatConverter {
       int powscale = std::pow( 10, data->scale( ) );
       int hi = powscale * data->highwater( );
       int low = ( data->lowwater( ) == SignalData::MISSING_VALUE
-              ? data->lowwater( )
-              : powscale * data->lowwater( ) );
+          ? data->lowwater( )
+          : powscale * data->lowwater( ) );
       //std::cerr << " high/low water marks: " << data.highwater( ) << "/" << data.lowwater( ) << "(scale: " << data.scale( ) << ")" << std::endl;
       //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
 
@@ -722,8 +730,8 @@ namespace FormatConverter {
         powscale = std::pow( 10, data->scale( ) );
         hi = powscale * data->highwater( );
         low = ( data->lowwater( ) == SignalData::MISSING_VALUE
-                ? data->lowwater( )
-                : powscale * data->lowwater( ) );
+            ? data->lowwater( )
+            : powscale * data->lowwater( ) );
         rescaled = true;
         //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
       }
@@ -791,18 +799,18 @@ namespace FormatConverter {
     ds.write( &times[0], H5::PredType::STD_I64LE );
     writeAttribute( ds, "Time Source", "raw" );
     writeAttribute( ds, "Columns", FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
-            ? "index to Global_Times"
-            : "timestamp (ms)" );
+        ? "index to Global_Times"
+        : "timestamp (ms)" );
 
     writeAttribute( ds, SignalData::TIMEZONE, data->metas( ).at( SignalData::TIMEZONE ) );
     // writeAttribute( ds, SignalData::VALS_PER_DR, data.valuesPerDataRow( ) );
     if ( 0 != data->metas( ).count( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
       writeAttribute( ds, TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metas( )
-              .at( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
+          .at( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
     }
     if ( 0 != data->metai( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
       writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET,
-              data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
+          data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
     }
   }
 
@@ -830,7 +838,7 @@ namespace FormatConverter {
       }
 
       H5::DataSet ds = eventgroup.createDataSet( getDatasetName( type ),
-              H5::PredType::STD_I64LE, space, props );
+          H5::PredType::STD_I64LE, space, props );
       ds.write( &times[0], H5::PredType::STD_I64LE );
       writeAttribute( ds, SignalData::LABEL, type );
       writeAttribute( ds, "Time Source", "raw" );
@@ -839,11 +847,11 @@ namespace FormatConverter {
       // writeAttribute( ds, SignalData::VALS_PER_DR, data.valuesPerDataRow( ) );
       if ( 0 != data->metas( ).count( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) ) {
         writeAttribute( ds, TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE, data->metas( )
-                .at( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
+            .at( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
       }
       if ( 0 != data->metai( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
         writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET,
-                data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
+            data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
       }
     }
   }

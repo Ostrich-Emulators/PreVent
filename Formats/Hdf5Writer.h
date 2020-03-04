@@ -43,6 +43,15 @@ namespace FormatConverter {
     static void autochunk( hsize_t* dims, int rank, int bytesperdim, hsize_t* rslts );
     static void writeAttributes( H5::H5Object& ds, const std::unique_ptr<SignalData>& data );
 
+    /**
+     * Drains a single dataset into the given group. This is useful for
+     * appending data to an existing file
+     * @param g
+     * @param
+     * @return
+     */
+    void drain( H5::Group& g, std::unique_ptr<SignalData>& );
+
   protected:
     std::vector<std::string> closeDataSet( );
     int drain( std::unique_ptr<SignalSet>& );
