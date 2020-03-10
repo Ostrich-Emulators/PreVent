@@ -23,6 +23,7 @@
 #include <ctime>
 #include "Writer.h"
 #include "dr_time.h"
+#include "SignalSet.h"
 
 namespace FormatConverter {
   class SignalSet;
@@ -69,6 +70,7 @@ namespace FormatConverter {
     void writeWaveGroup( H5::Group& group, std::unique_ptr<SignalData>& data );
     void writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data );
     void writeEvents( H5::Group& group, std::unique_ptr<SignalData>& data );
+    void writeAuxData( H5::Group& group, const std::string& name, std::vector<FormatConverter::SignalSet::AuxData>& data );
     void writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data );
     void createEventsAndTimes( H5::H5File, const std::unique_ptr<SignalSet>& data );
 

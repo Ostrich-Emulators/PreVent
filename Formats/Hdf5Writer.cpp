@@ -28,17 +28,14 @@
 #include "TimezoneOffsetTimeSignalSet.h"
 #include "Options.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
   const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.1";
 
-  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
-  }
+  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) { }
 
-  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) {
-  }
+  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) { }
 
-  Hdf5Writer::~Hdf5Writer( ) {
-  }
+  Hdf5Writer::~Hdf5Writer( ) { }
 
   void Hdf5Writer::writeAttribute( H5::H5Object& loc,
       const std::string& attr, const std::string& val ) {
@@ -812,6 +809,32 @@ namespace FormatConverter {
       writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET,
           data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
     }
+  }
+
+  void Hdf5Writer::writeAuxData( H5::Group& group, const std::string& name,
+      std::vector<FormatConverter::SignalSet::AuxData>& data ) {
+    if ( data.empty( ) ) {
+      return;
+    }
+
+    H5::Group auxg = group.createGroup( getDatasetName( name ) );
+
+    hsize_t dims[] = { data.size( ), 1 };
+    H5::DataSpace space( 2, dims );
+
+    std::vector<dr_time> times;
+    std::vector<std::string> vals;
+    times.reserve( data.size( ) );
+    for ( const auto& t : data ) {
+      times.push_back( t.ms );
+      vals.push_back( t.val );
+    }
+
+    H5::DataSet dst = auxg.createDataSet( "times", H5::PredType::STD_I64LE, space );
+    dst.write( &times[0], H5::PredType::STD_I64LE );
+
+    H5::DataSet dsv = auxg.createDataSet( "data", H5::PredType::C_S1, space );
+    dsv.write( &vals[0], H5::PredType::C_S1 );
   }
 
   void Hdf5Writer::writeEvents( H5::Group& group, std::unique_ptr<SignalData>& data ) {

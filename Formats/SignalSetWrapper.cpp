@@ -7,14 +7,12 @@
 #include "SignalSetWrapper.h"
 #include <iostream>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   SignalSetWrapper::SignalSetWrapper( const std::unique_ptr<SignalSet>& model )
-  : set( model.get( ) ), iOwnThisPointer( false ) {
-  }
+      : set( model.get( ) ), iOwnThisPointer( false ) { }
 
-  SignalSetWrapper::SignalSetWrapper( SignalSet * model ) : set( model ), iOwnThisPointer( true ) {
-  }
+  SignalSetWrapper::SignalSetWrapper( SignalSet * model ) : set( model ), iOwnThisPointer( true ) { }
 
   SignalSetWrapper::~SignalSetWrapper( ) {
     if ( iOwnThisPointer ) {
@@ -31,12 +29,12 @@ namespace FormatConverter {
   }
 
   std::unique_ptr<SignalData>& SignalSetWrapper::addVital( const std::string& name,
-          bool * added ) {
+      bool * added ) {
     return set->addVital( name, added );
   }
 
   std::unique_ptr<SignalData>& SignalSetWrapper::addWave( const std::string& name,
-          bool * added ) {
+      bool * added ) {
     return set->addWave( name, added );
   }
 
@@ -95,5 +93,13 @@ namespace FormatConverter {
 
   void SignalSetWrapper::complete( ) {
     set->complete( );
+  }
+
+  void SignalSetWrapper::addAuxillaryData( const std::string& name, const FormatConverter::SignalSet::AuxData& data  ) {
+    set->addAuxillaryData( name, data );
+  }
+
+  std::map<std::string, std::vector<FormatConverter::SignalSet::AuxData>> SignalSetWrapper::auxdata( ) {
+    return set->auxdata();
   }
 }

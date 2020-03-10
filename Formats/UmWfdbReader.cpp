@@ -12,16 +12,14 @@
 #include <iostream>
 #include <iterator>
 
-namespace FormatConverter {
+namespace FormatConverter{
   const size_t UmWfdbReader::FIRST_VITAL_COL = 4;
   const size_t UmWfdbReader::TIME_COL = 1;
   const size_t UmWfdbReader::DATE_COL = 0;
 
-  UmWfdbReader::UmWfdbReader( ) : WfdbReader( "UM WFDB" ) {
-  }
+  UmWfdbReader::UmWfdbReader( ) : WfdbReader( "UM WFDB" ) { }
 
-  UmWfdbReader::~UmWfdbReader( ) {
-  }
+  UmWfdbReader::~UmWfdbReader( ) { }
 
   int UmWfdbReader::prepare( const std::string& headerfile, std::unique_ptr<SignalSet>& info ) {
     int rslt = WfdbReader::prepare( headerfile, info );
@@ -90,16 +88,11 @@ namespace FormatConverter {
             else if ( "anno_file" == key ) {
               std::ifstream annofile( val );
               std::string line;
-              std::vector<AnnoData> annos;
               if ( annofile.is_open( ) ) {
                 while ( std::getline( annofile, line ) ) {
                   std::vector<std::string> anns = UmWfdbReader::splitcsv( line, ' ' );
-                  AnnoData ad;
-                  ad.ms = std::stol( anns[0] );
-                  ad.val = SignalUtils::trim( anns[1] );
-                  annos.push_back( ad );
+                  info->addAuxillaryData( val, FormatConverter::SignalSet::AuxData( std::stol( anns[0] ), SignalUtils::trim( anns[1] ) ) );
                 }
-                annomap[name] = annos;
               }
             }
           }
@@ -149,12 +142,6 @@ namespace FormatConverter {
     ReadResult rr = ( numerics.eof( ) || ReadResult::END_OF_DAY == rslt || ReadResult::NORMAL == rslt
         ? WfdbReader::fill( info, lastrr )
         : ReadResult::ERROR );
-
-    if ( rr == ReadResult::END_OF_DAY ) {
-      // at the end of the day, write all the annotation information for that day
-      for ( auto& aux : annomap ) {
-      }
-    }
     return rr;
   }
 

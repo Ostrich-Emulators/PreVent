@@ -12,7 +12,7 @@
 #include <iostream>
 #include "config.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   BasicSignalSet::BasicSignalSet( ) {
     setMeta( SignalData::TIMEZONE, "UTC" );
@@ -24,8 +24,7 @@ namespace FormatConverter {
     setMeta( SignalData::BUILD_NUM, GIT_BUILD );
   }
 
-  BasicSignalSet::~BasicSignalSet( ) {
-  }
+  BasicSignalSet::~BasicSignalSet( ) { }
 
   BasicSignalSet BasicSignalSet::operator=(const BasicSignalSet&) {
     return *this;
@@ -192,7 +191,14 @@ namespace FormatConverter {
     for ( auto& data : vitals( ) ) {
       data->setMeta( "Min Value", data->lowwater( ) );
       data->setMeta( "Max Value", data->highwater( ) );
-      data->setMeta( "Note on Min/Max", "Min and Max are raw values (not scaled)");
+      data->setMeta( "Note on Min/Max", "Min and Max are raw values (not scaled)" );
     }
+  }
+  void BasicSignalSet::addAuxillaryData( const std::string& name, const SignalSet::AuxData& data  ) {
+    aux[name].push_back(data);
+  }
+
+  std::map<std::string, std::vector<SignalSet::AuxData>> BasicSignalSet::auxdata( ) {
+    return aux;
   }
 }
