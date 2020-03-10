@@ -34,6 +34,7 @@ namespace FormatConverter {
     virtual int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
     virtual void finish( ) override;
     void setBaseTime( const dr_time& time );
+    int base_ms() const;
 
     virtual ReadResult fill( std::unique_ptr<SignalSet>& data, const ReadResult& lastfill ) override;
 
@@ -44,6 +45,7 @@ namespace FormatConverter {
     unsigned int freqhz;
     dr_time curtime;
     dr_time _basetime;
+    int extra_ms;
   };
 }
 #endif /* WFDBREADER_H */

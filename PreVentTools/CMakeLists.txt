@@ -18,8 +18,9 @@ target_include_directories(preventtools
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 		PRIVATE
         $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../Formats ${CMAKE_CURRENT_SOURCE_DIR}/../Formats/generated>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../Formats ${CMAKE_CURRENT_SOURCE_DIR}/../Formats/generated ${HDF5_INCLUDE_DIRS}>
 )
+
 
 install (TARGETS preventtools DESTINATION bin)
 

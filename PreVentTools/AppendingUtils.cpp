@@ -121,7 +121,7 @@ namespace FormatConverter {
         // first line has to be NAME, which we'll use to create our SignalData
         split( line, key, val );
         if ( "NAME" != key ) {
-          return std::move( signal );
+          return signal;
         }
 
         signal.reset( new BasicSignalData( val ) );
@@ -134,7 +134,7 @@ namespace FormatConverter {
       }
     }
 
-    return std::move( signal );
+    return signal;
   }
 
   int AppendingUtils::writeSignal( std::unique_ptr<SignalData>& data ) {

@@ -13,16 +13,13 @@
 #include <sys/stat.h>
 #include <math.h>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
-  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
-  }
+  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) { }
 
-  WfdbReader::WfdbReader( const std::string& name ) : Reader( name ) {
-  }
+  WfdbReader::WfdbReader( const std::string& name ) : Reader( name ), extra_ms( 0 ) { }
 
-  WfdbReader::~WfdbReader( ) {
-  }
+  WfdbReader::~WfdbReader( ) { }
 
   void WfdbReader::setBaseTime( const dr_time& basetime ) {
     _basetime = basetime;
@@ -34,7 +31,7 @@ namespace FormatConverter {
     struct tm * timeinfo = localtime( &raw );
 
     // NOTE: WFDB's setbasetime does NOT seem to handle ms, so we skip it, too
-    // int ms = ( modded % 1000 );
+    extra_ms = ( modded % 1000 );
     strftime( timepart, 80, "%H:%M:%S", timeinfo );
     strftime( datepart, 80, " %d/%m/%Y", timeinfo );
 
@@ -101,6 +98,10 @@ namespace FormatConverter {
   dr_time WfdbReader::basetime( ) const {
     return _basetime;
   }
+
+  int WfdbReader::base_ms( ) const {
+    return extra_ms;
+ }
 
   int WfdbReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
     int rslt = Reader::prepare( recordset, info );
