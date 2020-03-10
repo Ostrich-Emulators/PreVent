@@ -74,6 +74,7 @@ namespace FormatConverter {
     void writeAuxData( H5::Group& group, const std::string& name, std::vector<TimedData>& data );
     void writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data );
     void createEventsAndTimes( H5::H5File, const std::unique_ptr<SignalSet>& data );
+    H5::Group ensureGroupExists( H5::H5Object& obj, const std::string& s ) const;
 
     /**
      * Rescale the data to fit in shorts

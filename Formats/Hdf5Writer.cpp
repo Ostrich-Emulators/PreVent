@@ -468,7 +468,7 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<SignalSet>& data ) {
-    H5::Group events = file.createGroup( "Events" );
+    H5::Group events = ensureGroupExists( file, "Events" );
 
     std::map<long, dr_time> segmentsizes = data->offsets( );
     if ( !segmentsizes.empty( ) ) {
@@ -557,6 +557,12 @@ namespace FormatConverter{
     }
   }
 
+  H5::Group Hdf5Writer::ensureGroupExists( H5::H5Object& obj, const std::string& s ) const {
+    return ( obj.exists( s )
+        ? obj.openGroup( s )
+        : obj.createGroup( s ) );
+  }
+
   int Hdf5Writer::drain( std::unique_ptr<SignalSet>& info ) {
     // WARNING: we're stripping the pointer of it's uniqueness here
     dataptr = info.get( );
@@ -596,26 +602,26 @@ namespace FormatConverter{
 
       writeFileAttributes( file, data->metadata( ), firstTime, lastTime );
 
-      H5::Group grp = file.createGroup( "VitalSigns" );
+      H5::Group grp = ensureGroupExists( file, "VitalSigns" );
       output( ) << "Writing " << data->vitals( ).size( ) << " Vitals" << std::endl;
       for ( auto& vits : data->vitals( ) ) {
         if ( vits.get( )->empty( ) ) {
           output( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
         }
         else {
-          H5::Group g = grp.createGroup( getDatasetName( vits ) );
+          H5::Group g = ensureGroupExists( grp, getDatasetName( vits ) );
           writeVitalGroup( g, vits );
         }
       }
 
-      grp = file.createGroup( "Waveforms" );
+      grp = ensureGroupExists( file, "Waveforms" );
       output( ) << "Writing " << data->waves( ).size( ) << " Waveforms" << std::endl;
       for ( auto& wavs : data->waves( ) ) {
         if ( wavs->empty( ) ) {
           output( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
         }
         else {
-          H5::Group g = grp.createGroup( getDatasetName( wavs ) );
+          H5::Group g = ensureGroupExists( grp, getDatasetName( wavs ) );
           writeWaveGroup( g, wavs );
         }
       }
@@ -648,6 +654,7 @@ namespace FormatConverter{
       writeWaveGroup( g, data );
     }
     else {
+
       writeVitalGroup( g, data );
     }
   }
@@ -660,12 +667,14 @@ namespace FormatConverter{
       writeAttribute( group, SignalData::CHUNK_INTERVAL_MS, data->metai( ).at( SignalData::CHUNK_INTERVAL_MS ) );
     }
     if ( 0 != data->metai( ).count( SignalData::READINGS_PER_CHUNK ) ) {
+
       writeAttribute( group, SignalData::READINGS_PER_CHUNK, data->metai( ).at( SignalData::READINGS_PER_CHUNK ) );
     }
     writeAttribute( group, SignalData::UOM, data->uom( ) );
   }
 
   void Hdf5Writer::writeVitalGroup( H5::Group& group, std::unique_ptr<SignalData>& data ) {
+
     output( ) << "Writing Vital: " << data->name( ) << std::endl;
 
     writeGroupAttrs( group, data );
@@ -744,6 +753,7 @@ namespace FormatConverter{
     }
 
     if ( rescaled ) {
+
       data->scale( scale );
     }
 
@@ -751,6 +761,7 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::writeWaveGroup( H5::Group& group, std::unique_ptr<SignalData>& data ) {
+
     output( ) << "Writing Wave: " << data->name( );
     auto st = std::chrono::high_resolution_clock::now( );
 
@@ -779,6 +790,7 @@ namespace FormatConverter{
 
     H5::DataSet ds = group.createDataSet( "time", H5::PredType::STD_I64LE, space, props );
     ds.write( &times[0], H5::PredType::STD_I64LE );
+
     return ds;
   }
 
@@ -811,6 +823,7 @@ namespace FormatConverter{
           .at( TimezoneOffsetTimeSignalSet::COLLECTION_TIMEZONE ) );
     }
     if ( 0 != data->metai( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
+
       writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET,
           data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
     }
@@ -822,11 +835,8 @@ namespace FormatConverter{
       return;
     }
 
-    const size_t sz = data.size();
-    std::string gname = getDatasetName( name );
-    H5::Group auxg = ( group.exists( gname )
-        ? group.openGroup(gname )
-        : group.createGroup( gname ));
+    const size_t sz = data.size( );
+    H5::Group auxg = ensureGroupExists( group, getDatasetName( name ) );
 
     std::vector<dr_time> times;
     std::vector<std::string> vals;
@@ -836,7 +846,7 @@ namespace FormatConverter{
       times.push_back( t.time );
       vals.push_back( t.data );
     }
-    H5::DataSet timeds = writeTimes( auxg, times);
+    H5::DataSet timeds = writeTimes( auxg, times );
 
     hsize_t dims[] = { sz, 1 };
     H5::DataSpace space( 2, dims );
@@ -846,6 +856,7 @@ namespace FormatConverter{
 
     H5::DSetCreatPropList props;
     if ( compression( ) > 0 ) {
+
       hsize_t chunkdims[] = { sz, 1 };
       props.setChunk( 2, chunkdims );
       props.setShuffle( );
@@ -862,8 +873,7 @@ namespace FormatConverter{
       return;
     }
 
-    H5::Group eventgroup = group.createGroup( "events" );
-
+    H5::Group eventgroup = ensureGroupExists( group, "events" );
     for ( auto& type : types ) {
       auto times = data->events( type );
 
