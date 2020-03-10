@@ -15,7 +15,7 @@
 #include "BasicSignalData.h"
 #include "OffsetTimeSignalSet.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
   const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
     "Start Date/Time", SignalData::ENDTIME, SignalData::STARTTIME, SignalData::SCALE, SignalData::MSM,
     "Layout Version", "HDF5 Version", "HDF5 Version", "Layout Version",
@@ -23,15 +23,12 @@ namespace FormatConverter {
     "Note on Scale", "Note on Min/Max", "Min Value", "Max Value" } );
 
   Hdf5Reader::Hdf5Reader( ) : Reader( "HDF5" ) {
-
-  }
+ }
 
   Hdf5Reader::Hdf5Reader( const Hdf5Reader& ) : Reader( "HDF5" ) {
+ }
 
-  }
-
-  Hdf5Reader::~Hdf5Reader( ) {
-  }
+  Hdf5Reader::~Hdf5Reader( ) { }
 
   int Hdf5Reader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& info ) {
     H5::Exception::dontPrint( );
@@ -266,6 +263,9 @@ namespace FormatConverter {
     else {
       fillVital( signal, dataset, times, timeinterval, valsPerChunk, scale );
     }
+
+    std::cerr << "auxillary data read not yet implemented" << std::endl;
+
     dataset.close( );
   }
 
@@ -277,7 +277,6 @@ namespace FormatConverter {
     const hsize_t ROWS = DIMS[0];
     const hsize_t COLS = DIMS[1];
 
-    // FIXME: get "Columns" value so we can parse out any extra fields
     //std::cout << dataset.getObjName()<<" dimensions: " << DIMS[0] << " " << DIMS[1] << std::endl;
     std::map<int, std::string> attrmap;
     if ( COLS > 1 && dataset.attrExists( "Columns" ) ) {
@@ -294,6 +293,9 @@ namespace FormatConverter {
     double powscale = std::pow( 10, scale );
     // just read everything all at once...in the future, we probably want to
     // worry about using hyperslabs
+
+    // FIXME: use hyperslabs (slabreadi/slabreads is fine when we only have 1 column)
+
     if ( dataset.getDataType( ) == H5::PredType::STD_I16LE ) {
       short read[ROWS][COLS] = { };
       dataset.read( read, dataset.getDataType( ) );
