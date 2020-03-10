@@ -194,11 +194,11 @@ namespace FormatConverter{
       data->setMeta( "Note on Min/Max", "Min and Max are raw values (not scaled)" );
     }
   }
-  void BasicSignalSet::addAuxillaryData( const std::string& name, const SignalSet::AuxData& data  ) {
+  void BasicSignalSet::addAuxillaryData( const std::string& name, const TimedData& data  ) {
     aux[name].push_back(data);
   }
 
-  std::map<std::string, std::vector<SignalSet::AuxData>> BasicSignalSet::auxdata( ) {
+  std::map<std::string, std::vector<TimedData>> BasicSignalSet::auxdata( ) {
     return aux;
   }
 }

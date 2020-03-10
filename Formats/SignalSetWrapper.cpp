@@ -95,11 +95,11 @@ namespace FormatConverter{
     set->complete( );
   }
 
-  void SignalSetWrapper::addAuxillaryData( const std::string& name, const FormatConverter::SignalSet::AuxData& data  ) {
+  void SignalSetWrapper::addAuxillaryData( const std::string& name, const TimedData& data  ) {
     set->addAuxillaryData( name, data );
   }
 
-  std::map<std::string, std::vector<FormatConverter::SignalSet::AuxData>> SignalSetWrapper::auxdata( ) {
+  std::map<std::string, std::vector<TimedData>> SignalSetWrapper::auxdata( ) {
     return set->auxdata();
   }
 }

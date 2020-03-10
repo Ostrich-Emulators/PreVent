@@ -31,17 +31,6 @@ namespace FormatConverter {
 
   class SignalSet {
   public:
-
-    class AuxData {
-    public:
-      const dr_time ms;
-      const std::string val;
-
-      AuxData( dr_time m, const std::string& v);
-      virtual ~AuxData();
-    };
-
-
     SignalSet( );
     virtual ~SignalSet( );
     virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) = 0;
@@ -82,8 +71,8 @@ namespace FormatConverter {
     virtual void addOffset( long seg, dr_time time ) = 0;
     virtual void clearOffsets( ) = 0;
     virtual void complete( ) = 0;
-    virtual void addAuxillaryData( const std::string& name, const FormatConverter::SignalSet::AuxData& data ) = 0;
-    virtual std::map<std::string, std::vector<FormatConverter::SignalSet::AuxData>> auxdata( ) = 0;
+    virtual void addAuxillaryData( const std::string& name, const TimedData& data ) = 0;
+    virtual std::map<std::string, std::vector<TimedData>> auxdata( ) = 0;
   };
 }
 #endif /* SIGNALSET_H */

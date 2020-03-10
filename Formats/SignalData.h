@@ -26,6 +26,7 @@
 
 namespace FormatConverter {
   class DataRow;
+  class TimedData;
 
   class SignalData {
   public:
@@ -59,8 +60,8 @@ namespace FormatConverter {
      * Some formats (WFDB, UM) can specify auxillary files for a signal
      * @return
      */
-    virtual void auxfile( const std::string& file ) = 0;
-    virtual std::string auxfile( ) = 0;
+    virtual void addAuxillaryData( const std::string& name, const TimedData& data ) = 0;
+    virtual std::map<std::string, std::vector<TimedData>> auxdata( ) = 0;
 
     /**
      * Gets the dr_times for this dataset.

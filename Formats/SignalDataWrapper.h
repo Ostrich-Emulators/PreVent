@@ -82,8 +82,8 @@ namespace FormatConverter {
 
     virtual size_t inmemsize() const override;
 
-    virtual void auxfile( const std::string& file ) override;
-    virtual std::string auxfile( ) override;
+    virtual void addAuxillaryData( const std::string& name, const TimedData& data ) override;
+    virtual std::map<std::string, std::vector<TimedData>> auxdata( ) override;
 
   private:
     SignalData * signal;

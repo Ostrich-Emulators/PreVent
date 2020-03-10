@@ -71,8 +71,8 @@ namespace FormatConverter {
 
     virtual void complete( ) override;
 
-    virtual void addAuxillaryData( const std::string& name, const FormatConverter::SignalSet::AuxData& data ) override;
-    virtual std::map<std::string, std::vector<FormatConverter::SignalSet::AuxData>> auxdata( ) override;
+    virtual void addAuxillaryData( const std::string& name, const TimedData& data ) override;
+    virtual std::map<std::string, std::vector<TimedData>> auxdata( ) override;
 
 
   protected:
@@ -94,7 +94,7 @@ namespace FormatConverter {
 
     std::map<std::string, std::string> metamap;
     std::map<long, dr_time> segs;
-    std::map<std::string, std::vector<SignalSet::AuxData>> aux;
+    std::map<std::string, std::vector<TimedData>> aux;
   };
 }
 #endif /* BASICSIGNALSET_H */

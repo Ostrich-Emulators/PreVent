@@ -8,15 +8,13 @@
 #include "SignalDataWrapper.h"
 #include <iostream>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   SignalDataWrapper::SignalDataWrapper( const std::unique_ptr<SignalData>& data )
-      : signal( data.get( ) ), iOwnThisPtr( false ) {
-  }
+      : signal( data.get( ) ), iOwnThisPtr( false ) { }
 
   SignalDataWrapper::SignalDataWrapper( SignalData * data )
-      : signal( data ), iOwnThisPtr( true ) {
-  }
+      : signal( data ), iOwnThisPtr( true ) { }
 
   SignalDataWrapper::~SignalDataWrapper( ) {
     if ( iOwnThisPtr ) {
@@ -172,11 +170,11 @@ namespace FormatConverter {
     return signal->events( type );
   }
 
-  void SignalDataWrapper::auxfile( const std::string& file ) {
-    signal->auxfile( file );
+  void SignalDataWrapper::addAuxillaryData( const std::string& name, const TimedData& data ) {
+    signal->addAuxillaryData( name, data );
   }
 
-  std::string SignalDataWrapper::auxfile( ) {
-    return signal->auxfile( );
+  std::map<std::string, std::vector<TimedData>> SignalDataWrapper::auxdata( ) {
+    return signal->auxdata( );
   }
 }

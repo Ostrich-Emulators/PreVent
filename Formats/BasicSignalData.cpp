@@ -364,11 +364,11 @@ namespace FormatConverter {
         : namedevents.at( type ) );
   }
 
-  void BasicSignalData::auxfile( const std::string& file ) {
-    auxf = file;
+  void BasicSignalData::addAuxillaryData( const std::string& name, const TimedData& data ){
+    aux[name].push_back(data);
   }
 
-  std::string BasicSignalData::auxfile( ) {
-    return auxf;
+  std::map<std::string, std::vector<TimedData>> BasicSignalData::auxdata( ){
+    return aux;
   }
 }

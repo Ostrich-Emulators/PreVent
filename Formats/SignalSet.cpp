@@ -16,8 +16,4 @@ namespace FormatConverter{
   SignalSet::SignalSet( ) { }
 
   SignalSet::~SignalSet( ) { }
-
-  SignalSet::AuxData::AuxData( dr_time t, const std::string& v ) : ms( t ), val( v ) { }
-
-  SignalSet::AuxData::~AuxData( ) { }
 }

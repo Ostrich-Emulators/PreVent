@@ -21,17 +21,24 @@
 #include <limits>
 namespace FormatConverter{
 
+  TimedData::TimedData( dr_time t, const std::string& v ) : time( t ), data( v ) { }
+
+  TimedData::TimedData( const TimedData& orig ) : time( orig.time ), data( orig.data ) { }
+
+  TimedData& TimedData::operator=(const TimedData& orig ) {
+    if ( &orig != this ) {
+      this->time = orig.time;
+      this->data = orig.data;
+    }
+    return *this;
+  }
+
+  TimedData::~TimedData( ) { }
+
   DataRow::DataRow( const dr_time& t, const std::string& d,
-      std::map<std::string, std::string> exts ) : data( d ), extras( exts ), time( t ) {
-  }
+      std::map<std::string, std::string> exts ) : TimedData( t, d ), extras( exts ) { }
 
-  DataRow::DataRow( ) : data( "" ), time( 0 ) {
-  }
-
-  DataRow::DataRow( const DataRow& orig )
-  : data( orig.data ), extras( orig.extras ),
-  time( orig.time ) {
-  }
+  DataRow::DataRow( const DataRow& orig ) : TimedData( orig ), extras( orig.extras ) { }
 
   DataRow& DataRow::operator=(const DataRow& orig ) {
     if ( &orig != this ) {
@@ -43,8 +50,7 @@ namespace FormatConverter{
     return *this;
   }
 
-  DataRow::~DataRow( ) {
-  }
+  DataRow::~DataRow( ) { }
 
   void DataRow::clear( ) {
     time = 0;

@@ -764,6 +764,24 @@ namespace FormatConverter{
     output( ) << " (complete in " << dur.count( ) << "s)" << std::endl;
   }
 
+  H5::DataSet Hdf5Writer::writeTimes( H5::Group& group, std::vector<dr_time>& times ) {
+    hsize_t dims[] = { times.size( ), 1 };
+    H5::DataSpace space( 2, dims );
+
+    H5::DSetCreatPropList props;
+    if ( compression( ) > 0 ) {
+      hsize_t chunkdims[] = { 0, 0 };
+      autochunk( dims, 2, sizeof (long ), chunkdims );
+      props.setChunk( 2, chunkdims );
+      props.setShuffle( );
+      props.setDeflate( compression( ) );
+    }
+
+    H5::DataSet ds = group.createDataSet( "time", H5::PredType::STD_I64LE, space, props );
+    ds.write( &times[0], H5::PredType::STD_I64LE );
+    return ds;
+  }
+
   void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data ) {
     std::deque<dr_time> vec = data->times( );
     // SignalData stores times from latest to earliest, so we need to reverse them
@@ -779,21 +797,8 @@ namespace FormatConverter{
     else {
       times.insert( times.end( ), vec.rbegin( ), vec.rend( ) );
     }
+    H5::DataSet ds = writeTimes( group, times );
 
-    hsize_t dims[] = { times.size( ), 1 };
-    H5::DataSpace space( 2, dims );
-
-    H5::DSetCreatPropList props;
-    if ( compression( ) > 0 ) {
-      hsize_t chunkdims[] = { 0, 0 };
-      autochunk( dims, 2, sizeof (long ), chunkdims );
-      props.setChunk( 2, chunkdims );
-      props.setShuffle( );
-      props.setDeflate( compression( ) );
-    }
-
-    H5::DataSet ds = group.createDataSet( "time", H5::PredType::STD_I64LE, space, props );
-    ds.write( &times[0], H5::PredType::STD_I64LE );
     writeAttribute( ds, "Time Source", "raw" );
     writeAttribute( ds, "Columns", FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
         ? "index to Global_Times"
@@ -812,29 +817,43 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::writeAuxData( H5::Group& group, const std::string& name,
-      std::vector<FormatConverter::SignalSet::AuxData>& data ) {
+      std::vector<TimedData>& data ) {
     if ( data.empty( ) ) {
       return;
     }
 
-    H5::Group auxg = group.createGroup( getDatasetName( name ) );
-
-    hsize_t dims[] = { data.size( ), 1 };
-    H5::DataSpace space( 2, dims );
+    const size_t sz = data.size();
+    std::string gname = getDatasetName( name );
+    H5::Group auxg = ( group.exists( gname )
+        ? group.openGroup(gname )
+        : group.createGroup( gname ));
 
     std::vector<dr_time> times;
     std::vector<std::string> vals;
-    times.reserve( data.size( ) );
+    times.reserve( sz );
+    vals.reserve( sz );
     for ( const auto& t : data ) {
-      times.push_back( t.ms );
-      vals.push_back( t.val );
+      times.push_back( t.time );
+      vals.push_back( t.data );
+    }
+    H5::DataSet timeds = writeTimes( auxg, times);
+
+    hsize_t dims[] = { sz, 1 };
+    H5::DataSpace space( 2, dims );
+
+    H5::StrType st( H5::PredType::C_S1, H5T_VARIABLE );
+    st.setCset( H5T_CSET_UTF8 );
+
+    H5::DSetCreatPropList props;
+    if ( compression( ) > 0 ) {
+      hsize_t chunkdims[] = { sz, 1 };
+      props.setChunk( 2, chunkdims );
+      props.setShuffle( );
+      props.setDeflate( compression( ) );
     }
 
-    H5::DataSet dst = auxg.createDataSet( "times", H5::PredType::STD_I64LE, space );
-    dst.write( &times[0], H5::PredType::STD_I64LE );
-
-    H5::DataSet dsv = auxg.createDataSet( "data", H5::PredType::C_S1, space );
-    dsv.write( &vals[0], H5::PredType::C_S1 );
+    H5::DataSet dsv = auxg.createDataSet( "data", st, space );
+    dsv.write( &vals[0], st );
   }
 
   void Hdf5Writer::writeEvents( H5::Group& group, std::unique_ptr<SignalData>& data ) {

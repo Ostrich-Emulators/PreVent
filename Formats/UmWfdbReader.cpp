@@ -65,13 +65,13 @@ namespace FormatConverter{
 
     std::string firstline;
     std::getline( numerics, firstline );
-    headings = UmWfdbReader::splitcsv( firstline );
+    headings = SignalUtils::splitcsv( firstline );
 
     std::ifstream infofile( recordset + ".info" );
     // if we have an info file, parse it and set the metadata in the SignalData
     while ( infofile.good( ) ) {
       std::getline( infofile, firstline );
-      std::vector<std::string> parts = UmWfdbReader::splitcsv( firstline, ' ' );
+      std::vector<std::string> parts = SignalUtils::splitcsv( firstline, ' ' );
       if ( !( parts.empty( ) || "#" == parts[0] || "dummy" == parts[0] ) ) {
         auto name = parts[4].substr( 1, parts[4].length( ) - 2 );
         auto& signal = info->addWave( name );
@@ -86,13 +86,9 @@ namespace FormatConverter{
               signal->setMeta( "offset", std::stod( val ) );
             }
             else if ( "anno_file" == key ) {
-              std::ifstream annofile( val );
-              std::string line;
-              if ( annofile.is_open( ) ) {
-                while ( std::getline( annofile, line ) ) {
-                  std::vector<std::string> anns = UmWfdbReader::splitcsv( line, ' ' );
-                  info->addAuxillaryData( val, FormatConverter::SignalSet::AuxData( std::stol( anns[0] ), SignalUtils::trim( anns[1] ) ) );
-                }
+              for ( auto& a : SignalUtils::loadAuxData( val ) ) {
+                a.time += basetime( );
+                info->addAuxillaryData( val, a );
               }
             }
           }
@@ -145,20 +141,8 @@ namespace FormatConverter{
     return rr;
   }
 
-  std::vector<std::string> UmWfdbReader::splitcsv( const std::string& csvline, char delim ) {
-    std::vector<std::string> rslt;
-    std::stringstream ss( csvline );
-    std::string cellvalue;
-
-    while ( std::getline( ss, cellvalue, delim ) ) {
-      cellvalue.erase( std::remove( cellvalue.begin( ), cellvalue.end( ), '\r' ), cellvalue.end( ) );
-      rslt.push_back( SignalUtils::trim( cellvalue ) );
-    }
-    return rslt;
-  }
-
   std::map<std::string, std::string> UmWfdbReader::linevalues( const std::string& csvline, dr_time& timer ) {
-    std::vector<std::string> strings = splitcsv( csvline );
+    std::vector<std::string> strings = SignalUtils::splitcsv( csvline );
     std::map<std::string, std::string> values;
 
     struct tm timeinfo = { 0 };

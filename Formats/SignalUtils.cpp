@@ -15,32 +15,30 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
-  SignalUtils::SignalUtils( ) {
-  }
+  SignalUtils::SignalUtils( ) { }
 
-  SignalUtils::SignalUtils( const SignalUtils& ) {
-  }
+  SignalUtils::SignalUtils( const SignalUtils& ) { }
 
-  SignalUtils::~SignalUtils( ) {
-  }
+  SignalUtils::~SignalUtils( ) { }
 
   std::string SignalUtils::trim( std::string & totrim ) {
     // ltrim
     totrim.erase( totrim.begin( ), std::find_if( totrim.begin( ), totrim.end( ),
-            std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
+        std::not1( std::ptr_fun<int, int>( std::isspace ) ) ) );
 
     // rtrim
     totrim.erase( std::find_if( totrim.rbegin( ), totrim.rend( ),
-            std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
+        std::not1( std::ptr_fun<int, int>( std::isspace ) ) ).base( ), totrim.end( ) );
 
     return totrim;
   }
 
   dr_time SignalUtils::firstlast( const std::map<std::string, std::unique_ptr<SignalData>>&map,
-          dr_time * first, dr_time * last ) {
+      dr_time * first, dr_time * last ) {
 
     dr_time earliest = std::numeric_limits<dr_time>::max( );
 
@@ -69,7 +67,7 @@ namespace FormatConverter {
   }
 
   dr_time SignalUtils::firstlast( const std::vector<std::unique_ptr<SignalData>>&signals,
-          dr_time * first, dr_time * last ) {
+      dr_time * first, dr_time * last ) {
 
     dr_time earliest = std::numeric_limits<dr_time>::max( );
 
@@ -111,8 +109,8 @@ namespace FormatConverter {
       // check that every signal has the same start time, end time, and # datapoints
       // if not, we need to sync them
       if ( !( m->startTime( ) == earliest
-              && m->endTime( ) == latest
-              && m->size( ) == size ) ) {
+          && m->endTime( ) == latest
+          && m->size( ) == size ) ) {
         //std::cout << "syncing signals" << std::endl;
         tmp = sync( signals );
         working = &tmp;
@@ -151,7 +149,7 @@ namespace FormatConverter {
   }
 
   std::map<std::string, std::unique_ptr<SignalData>> SignalUtils::mapify(
-          std::vector<std::unique_ptr<SignalData>>&data ) {
+      std::vector<std::unique_ptr<SignalData>>&data ) {
     std::map<std::string, std::unique_ptr < SignalData>> map;
     for ( auto& s : data ) {
       map[s->name( )] = std::move( s );
@@ -162,7 +160,7 @@ namespace FormatConverter {
   }
 
   std::vector<std::unique_ptr<SignalData>> SignalUtils::vectorize(
-          std::map<std::string, std::unique_ptr<SignalData>>&data ) {
+      std::map<std::string, std::unique_ptr<SignalData>>&data ) {
     std::vector<std::unique_ptr < SignalData>> vec;
     for ( auto& m : data ) {
       vec.push_back( std::move( m.second ) );
@@ -172,7 +170,7 @@ namespace FormatConverter {
   }
 
   std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
-          std::vector<std::unique_ptr<SignalData> >& data ) {
+      std::vector<std::unique_ptr<SignalData> >& data ) {
 
     std::vector<std::unique_ptr < SignalData>> ret;
 
@@ -244,7 +242,7 @@ namespace FormatConverter {
   }
 
   void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<FormatConverter::DataRow>& row,
-          dr_time& nexttime, const int& timestep ) {
+      dr_time& nexttime, const int& timestep ) {
     if ( row->time == nexttime ) {
       return;
     }
@@ -257,7 +255,7 @@ namespace FormatConverter {
     // easy case: 1 second time drift
     if ( 2 == timestep && row->time == nexttime + 1 ) {
       std::cout << signal->name( ) << " correcting time drift "
-              << row->time << " to " << nexttime << std::endl;
+          << row->time << " to " << nexttime << std::endl;
       row->time = nexttime;
       return;
     }
@@ -270,12 +268,12 @@ namespace FormatConverter {
 
     if ( nexttime != fillstart ) {
       std::cout << signal->name( ) << " added filler rows from " << fillstart
-              << " to " << nexttime << std::endl;
+          << " to " << nexttime << std::endl;
     }
 
     if ( 2 == timestep && row->time == nexttime + 1 ) {
       std::cout << signal->name( ) << " correcting time drift after filling data "
-              << row->time << " to " << ( row->time - 1 ) << std::endl;
+          << row->time << " to " << ( row->time - 1 ) << std::endl;
       row->time -= 1;
     }
     else {
@@ -312,7 +310,7 @@ namespace FormatConverter {
   }
 
   std::vector<size_t> SignalUtils::index( const std::vector<dr_time>& alltimes,
-          const SignalData& signal ) {
+      const SignalData& signal ) {
 
     std::cout << "signaltimes values: " << signal.times( ).size( ) << std::endl;
     std::deque<dr_time> signaltimes( signal.times( ).begin( ), signal.times( ).end( ) );
@@ -356,5 +354,30 @@ namespace FormatConverter {
       valstr.erase( lastNotZeroPosition + 1, std::string::npos );
     }
     return valstr;
+  }
+
+  std::vector<TimedData> SignalUtils::loadAuxData( const std::string& file ) {
+    std::ifstream annofile( file );
+    std::string line;
+    std::vector<TimedData> data;
+    if ( annofile.is_open( ) ) {
+      while ( std::getline( annofile, line ) ) {
+        std::vector<std::string> anns = SignalUtils::splitcsv( line, ' ' );
+        data.push_back( TimedData( std::stol( anns[0] ), SignalUtils::trim( anns[1] ) ) );
+      }
+    }
+    return data;
+  }
+
+  std::vector<std::string> SignalUtils::splitcsv( const std::string& csvline, char delim ) {
+    std::vector<std::string> rslt;
+    std::stringstream ss( csvline );
+    std::string cellvalue;
+
+    while ( std::getline( ss, cellvalue, delim ) ) {
+      cellvalue.erase( std::remove( cellvalue.begin( ), cellvalue.end( ), '\r' ), cellvalue.end( ) );
+      rslt.push_back( SignalUtils::trim( cellvalue ) );
+    }
+    return rslt;
   }
 }

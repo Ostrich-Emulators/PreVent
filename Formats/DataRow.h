@@ -22,10 +22,20 @@
 #include "dr_time.h"
 namespace FormatConverter {
 
-  class DataRow {
+  class TimedData {
   public:
-    DataRow( );
-    DataRow( const dr_time& time, const std::string& data,
+    dr_time time;
+    std::string data;
+
+    TimedData( dr_time m, const std::string& v );
+    TimedData( const TimedData& orig );
+    TimedData& operator=(const TimedData& orig );
+    virtual ~TimedData( );
+  };
+
+  class DataRow : public TimedData {
+  public:
+    DataRow( const dr_time& time = 0, const std::string& data = "",
         std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
     DataRow( const DataRow& orig );
     DataRow& operator=(const DataRow& orig );
@@ -65,9 +75,7 @@ namespace FormatConverter {
      */
     static int scale( const std::string& val, bool iswave );
 
-    std::string data;
     std::map<std::string, std::string> extras;
-    dr_time time;
   };
 }
 #endif /* DATAROW_H */

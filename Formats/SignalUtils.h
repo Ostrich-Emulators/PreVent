@@ -25,6 +25,7 @@ namespace FormatConverter {
   class SignalSet;
   class SignalData;
   class DataRow;
+  class TimedData;
 
   class SignalUtils {
   public:
@@ -103,6 +104,14 @@ namespace FormatConverter {
      */
     static std::string tosmallstring( double val, double scalefactor = 1.0 );
 
+    static std::vector<TimedData> loadAuxData( const std::string& file );
+
+    /**
+     * Splits the CSV line into component strings
+     * @param csvline
+     * @return
+     */
+    static std::vector<std::string> splitcsv( const std::string& csvline, char = ',' );
   private:
     SignalUtils( );
     SignalUtils( const SignalUtils& );

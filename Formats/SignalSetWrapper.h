@@ -68,8 +68,8 @@ namespace FormatConverter {
 
     virtual void complete( ) override;
 
-    virtual void addAuxillaryData( const std::string& name, const FormatConverter::SignalSet::AuxData& data ) override;
-    virtual std::map<std::string, std::vector<FormatConverter::SignalSet::AuxData>> auxdata( ) override;
+    virtual void addAuxillaryData( const std::string& name, const TimedData& data ) override;
+    virtual std::map<std::string, std::vector<TimedData>> auxdata( ) override;
 
 
   private:

@@ -29,19 +29,13 @@ namespace FormatConverter {
   protected:
     int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
     ReadResult fill( std::unique_ptr<SignalSet>& data, const ReadResult& lastfill ) override;
+
   private:
     static const size_t FIRST_VITAL_COL;
     static const size_t DATE_COL;
     static const size_t TIME_COL;
     std::ifstream numerics;
     std::vector<std::string> headings;
-
-    /**
-     * Splits the CSV line into component strings
-     * @param csvline
-     * @return
-     */
-    static std::vector<std::string> splitcsv( const std::string& csvline, char = ',' );
 
     /**
      * Gets a mapping of vital name to value. The value is in all cases expected
