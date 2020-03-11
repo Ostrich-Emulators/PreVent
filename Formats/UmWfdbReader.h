@@ -36,6 +36,8 @@ namespace FormatConverter {
     static const size_t TIME_COL;
     std::ifstream numerics;
     std::vector<std::string> headings;
+    std::map<std::string, std::map<std::string, std::vector<TimedData>>> annomap;
+    std::vector<TimedData> clocktimes;
 
     /**
      * Gets a mapping of vital name to value. The value is in all cases expected
@@ -44,6 +46,8 @@ namespace FormatConverter {
      * @return
      */
     std::map<std::string, std::string> linevalues( const std::string& csvline, dr_time& time );
+
+    static dr_time converttime( const std::string& timeline );
   };
 }
 #endif /* UMWFDBREADER_H */

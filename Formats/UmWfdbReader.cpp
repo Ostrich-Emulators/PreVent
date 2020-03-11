@@ -12,14 +12,50 @@
 #include <iostream>
 #include <iterator>
 
-namespace FormatConverter{
+namespace FormatConverter {
   const size_t UmWfdbReader::FIRST_VITAL_COL = 4;
   const size_t UmWfdbReader::TIME_COL = 1;
   const size_t UmWfdbReader::DATE_COL = 0;
 
-  UmWfdbReader::UmWfdbReader( ) : WfdbReader( "UM WFDB" ) { }
+  UmWfdbReader::UmWfdbReader( ) : WfdbReader( "UM WFDB" ) {
+  }
 
-  UmWfdbReader::~UmWfdbReader( ) { }
+  UmWfdbReader::~UmWfdbReader( ) {
+  }
+
+  dr_time UmWfdbReader::converttime( const std::string& timeline ) {
+    struct tm timeinfo;
+    std::vector<std::string> parts = SignalUtils::splitcsv( timeline, ' ' );
+
+    std::string datepart( parts[0] );
+    std::string timepart( parts[1] );
+    std::string tzpart( parts[2] );
+
+    if ( '/' == datepart[1] ) {
+      // need a leading 0 for the month
+      datepart.insert( datepart.begin( ), '0' );
+    }
+    // do we need a leading zero for the day, too?
+    if ( '/' == datepart[4] ) {
+      datepart.insert( datepart.begin( ) + 3, '0' );
+    }
+
+    std::vector<std::string> timepieces = SignalUtils::splitcsv( timepart, '.' );
+    timepart = timepieces[0];
+    int ms = std::stoi( timepieces[1] );
+
+
+    Reader::strptime2( datepart + " " + timepart, "%m/%d/%Y %T %z", &timeinfo );
+
+    int tzoff = std::stoi( tzpart.substr( 0, 3 ) );
+    timeinfo.tm_gmtoff = tzoff * 3600;
+    // FIXME: we still need to handle DST properly
+    if ( timeinfo.tm_mon > 2 && timeinfo.tm_mon < 10 ) {
+      timeinfo.tm_isdst = true;
+    }
+    time_t tt = std::mktime( &timeinfo );
+    return (tt * 1000 + ms );
+  }
 
   int UmWfdbReader::prepare( const std::string& headerfile, std::unique_ptr<SignalSet>& info ) {
     int rslt = WfdbReader::prepare( headerfile, info );
@@ -30,28 +66,17 @@ namespace FormatConverter{
     std::string recordset( headerfile.substr( 0, headerfile.size( ) - 4 ) );
     // recordset should be a directory containing a .hea file, a .numerics.csv
     // file, and optionally a .clock.txt file
-    std::string clockfile( recordset );
-    clockfile.append( ".clock.txt" );
-    std::ifstream clock( clockfile );
-    if ( clock.good( ) ) {
-      std::string firstline;
-      std::getline( clock, firstline );
+    std::string clockfile( recordset + ".clock.txt" );
+    clocktimes = SignalUtils::loadAuxData( clockfile );
+    if ( !clocktimes.empty( ) ) {
+      dr_time basetime = converttime( clocktimes[0].data );
+      setBaseTime( basetime );
 
-      std::string timepart( firstline.substr( 2, 19 ) );
-      struct tm timeinfo;
-      Reader::strptime2( timepart, "%m/%d/%Y %T %z", &timeinfo );
+      clocktimes.erase( clocktimes.begin( ) );
 
-      std::string mspart( firstline.substr( 22, 3 ) );
-      int ms = std::stoi( mspart );
-
-      int tzoff = std::stoi( firstline.substr( 26, 3 ) );
-      timeinfo.tm_gmtoff = tzoff * 3600;
-      // FIXME: we still need to handle DST properly
-      if ( timeinfo.tm_mon > 2 && timeinfo.tm_mon < 10 ) {
-        timeinfo.tm_isdst = true;
-      }
-      time_t tt = std::mktime( &timeinfo );
-      setBaseTime( tt * 1000 + ms );
+      std::for_each( clocktimes.begin( ), clocktimes.end( ), [&basetime]( TimedData & td ) {
+        td.time += basetime;
+      } );
     }
 
     // read the vitals out of the CSV, too
@@ -86,9 +111,10 @@ namespace FormatConverter{
               signal->setMeta( "offset", std::stod( val ) );
             }
             else if ( "anno_file" == key ) {
+              dr_time offsetter = basetime( );
               for ( auto& a : SignalUtils::loadAuxData( val ) ) {
-                a.time += basetime( );
-                info->addAuxillaryData( val, a );
+                a.time += offsetter;
+                annomap[name][val].push_back( a );
               }
             }
           }
@@ -99,7 +125,7 @@ namespace FormatConverter{
     return rslt;
   }
 
-  ReadResult UmWfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
+  ReadResult UmWfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult & lastrr ) {
     dr_time lastcsvtime = 0;
     ReadResult rslt = ReadResult::NORMAL;
     std::string csvline;
@@ -135,37 +161,49 @@ namespace FormatConverter{
       }
     }
 
-    ReadResult rr = ( numerics.eof( ) || ReadResult::END_OF_DAY == rslt || ReadResult::NORMAL == rslt
+    ReadResult rr = ( numerics.eof( ) || ReadResult::ERROR != rslt
         ? WfdbReader::fill( info, lastrr )
         : ReadResult::ERROR );
+
+    dr_time last = ( ReadResult::END_OF_FILE == rr
+        ? std::numeric_limits<long>::max( )
+        : info->latest( ) );
+    output( ) << "last: " << last << std::endl;
+    if ( ReadResult::ERROR != rr ) {
+      size_t cnt = 0;
+      for ( auto& td : clocktimes ) {
+        if ( td.time <= last ) {
+          cnt++;
+          info->addAuxillaryData( "Wall Times", td );
+        }
+      }
+      clocktimes.erase( clocktimes.begin( ), clocktimes.begin( ) + cnt );
+
+      for ( auto& map : annomap ) {
+        const auto name = map.first;
+        auto& wave = info->addWave( name );
+        for ( auto& map : map.second ) {
+          size_t cnt = 0;
+          for ( auto& td : map.second ) {
+            if ( td.time <= last ) {
+              cnt++;
+              wave->addAuxillaryData( map.first, td );
+            }
+          }
+          map.second.erase( map.second.begin( ), map.second.begin( ) + cnt );
+        }
+      }
+    }
+
     return rr;
   }
 
-  std::map<std::string, std::string> UmWfdbReader::linevalues( const std::string& csvline, dr_time& timer ) {
+  std::map<std::string, std::string> UmWfdbReader::linevalues( const std::string& csvline, dr_time & timer ) {
     std::vector<std::string> strings = SignalUtils::splitcsv( csvline );
     std::map<std::string, std::string> values;
 
-    struct tm timeinfo = { 0 };
-    std::string date = strings[DATE_COL];
-    std::string time = strings[TIME_COL];
-
-    // fix the date string by adding leading zeros to the month, day
-    if ( '/' == date[1] ) {
-      // need a leading 0 for the month
-      date.insert( date.begin( ), '0' );
-    }
-    // do we need a leading zero for the day, too?
-    if ( '/' == date[4] ) {
-      date.insert( date.begin( ) + 3, '0' );
-    }
-    Reader::strptime2( date, "%m/%d/%Y", &timeinfo );
-    Reader::strptime2( time, "%H:%M:%S", &timeinfo );
-
-    // FIXME: get ms, too
-    int ms = std::stoi( time.substr( 9, 3 ) );
-
-    timer = modtime( timegm( &timeinfo ) * 1000 + ms );
-
+    std::string timestr = strings[DATE_COL] + " " + strings[TIME_COL];
+    timer = modtime( converttime( timestr ) );
     for ( size_t i = FIRST_VITAL_COL; i < headings.size( ); i++ ) {
       const auto& h = headings[i];
       const auto& v = strings[i];

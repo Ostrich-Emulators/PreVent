@@ -17,13 +17,16 @@
 #include <iostream>
 #include <fstream>
 
-namespace FormatConverter{
+namespace FormatConverter {
 
-  SignalUtils::SignalUtils( ) { }
+  SignalUtils::SignalUtils( ) {
+  }
 
-  SignalUtils::SignalUtils( const SignalUtils& ) { }
+  SignalUtils::SignalUtils( const SignalUtils& ) {
+  }
 
-  SignalUtils::~SignalUtils( ) { }
+  SignalUtils::~SignalUtils( ) {
+  }
 
   std::string SignalUtils::trim( std::string & totrim ) {
     // ltrim
@@ -362,8 +365,16 @@ namespace FormatConverter{
     std::vector<TimedData> data;
     if ( annofile.is_open( ) ) {
       while ( std::getline( annofile, line ) ) {
-        std::vector<std::string> anns = SignalUtils::splitcsv( line, ' ' );
-        data.push_back( TimedData( std::stol( anns[0] ), SignalUtils::trim( anns[1] ) ) );
+        size_t spaceidx = line.find( ' ' );
+        std::string text( "" );
+        dr_time time = 0;
+        if ( spaceidx != std::string::npos ) {
+          text = line.substr( spaceidx + 1 );
+          text = SignalUtils::trim( text );
+          time = std::stol( line.substr( 0, spaceidx ) );
+        }
+
+        data.push_back( TimedData( time, text ) );
       }
     }
     return data;

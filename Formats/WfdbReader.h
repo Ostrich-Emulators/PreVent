@@ -46,6 +46,7 @@ namespace FormatConverter {
     dr_time curtime;
     dr_time _basetime;
     int extra_ms;
+    bool basetimeset;
   };
 }
 #endif /* WFDBREADER_H */

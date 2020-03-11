@@ -13,13 +13,17 @@
 #include <sys/stat.h>
 #include <math.h>
 
-namespace FormatConverter{
+namespace FormatConverter {
 
-  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) { }
+  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
+  }
 
-  WfdbReader::WfdbReader( const std::string& name ) : Reader( name ), extra_ms( 0 ) { }
+  WfdbReader::WfdbReader( const std::string& name ) : Reader( name ), extra_ms( 0 ),
+      basetimeset( false ) {
+  }
 
-  WfdbReader::~WfdbReader( ) { }
+  WfdbReader::~WfdbReader( ) {
+  }
 
   void WfdbReader::setBaseTime( const dr_time& basetime ) {
     _basetime = basetime;
@@ -46,6 +50,8 @@ namespace FormatConverter{
     delete [] timepart;
     delete [] datepart;
     delete [] buffer;
+
+    basetimeset = true;
   }
 
   dr_time WfdbReader::convert( const char * mstimestr ) {
@@ -101,7 +107,7 @@ namespace FormatConverter{
 
   int WfdbReader::base_ms( ) const {
     return extra_ms;
- }
+  }
 
   int WfdbReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
     int rslt = Reader::prepare( recordset, info );
@@ -164,8 +170,9 @@ namespace FormatConverter{
     if ( ReadResult::FIRST_READ == lastrr ) {
       // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
       // for what timer is
-      char * timer = mstimstr( 0 );
-      curtime = convert( timer );
+      curtime = ( basetimeset
+          ? basetime( )
+          : convert( mstimstr( 0 ) ) );
     }
 
     int retcode = 0;

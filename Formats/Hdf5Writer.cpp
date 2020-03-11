@@ -28,14 +28,17 @@
 #include "TimezoneOffsetTimeSignalSet.h"
 #include "Options.h"
 
-namespace FormatConverter{
+namespace FormatConverter {
   const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.1";
 
-  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) { }
+  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
+  }
 
-  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) { }
+  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) {
+  }
 
-  Hdf5Writer::~Hdf5Writer( ) { }
+  Hdf5Writer::~Hdf5Writer( ) {
+  }
 
   void Hdf5Writer::writeAttribute( H5::H5Object& loc,
       const std::string& attr, const std::string& val ) {
@@ -600,6 +603,14 @@ namespace FormatConverter{
 
       createEventsAndTimes( file, data ); // also creates the timesteplkp
 
+      auto auxdata = data->auxdata( );
+      if ( !auxdata.empty( ) ) {
+        H5::Group auxgroup = ensureGroupExists( file, "Auxillary Data" );
+        for ( auto& fileaux : auxdata ) {
+          writeAuxData( auxgroup, fileaux.first, fileaux.second );
+        }
+      }
+
       writeFileAttributes( file, data->metadata( ), firstTime, lastTime );
 
       H5::Group grp = ensureGroupExists( file, "VitalSigns" );
@@ -681,6 +692,9 @@ namespace FormatConverter{
     writeTimes( group, data );
     writeVital( group, data );
     writeEvents( group, data );
+    for ( const auto& aux : data->auxdata( ) ) {
+      writeAuxData( group, aux.first, aux.second );
+    }
   }
 
   bool Hdf5Writer::rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data,
@@ -769,6 +783,9 @@ namespace FormatConverter{
     writeWave( group, data );
     writeEvents( group, data );
     writeGroupAttrs( group, data );
+    for ( const auto& aux : data->auxdata( ) ) {
+      writeAuxData( group, aux.first, aux.second );
+    }
 
     auto en = std::chrono::high_resolution_clock::now( );
     std::chrono::duration<float> dur = en - st;
@@ -830,7 +847,7 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::writeAuxData( H5::Group& group, const std::string& name,
-      std::vector<TimedData>& data ) {
+      const std::vector<TimedData>& data ) {
     if ( data.empty( ) ) {
       return;
     }

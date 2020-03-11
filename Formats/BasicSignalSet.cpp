@@ -125,6 +125,7 @@ namespace FormatConverter{
   void BasicSignalSet::reset( bool signalDataOnly ) {
     vits.clear( );
     wavs.clear( );
+    aux.clear( );
     if ( !signalDataOnly ) {
       metamap.clear( );
       metamap[SignalData::TIMEZONE] = "UTC";
