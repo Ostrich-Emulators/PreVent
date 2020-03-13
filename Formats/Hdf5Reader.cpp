@@ -160,10 +160,11 @@ namespace FormatConverter{
       egroup.close( );
 
       auto auxdata = readAuxData( file );
-      if ( !auxdata.empty( ) ) {
-        std::cerr << "aux data read not yet implemented" << std::endl;
+      for ( auto map : auxdata ) {
+        for ( auto& td : map.second ) {
+          info->addAuxillaryData( map.first, td );
+        }
       }
-
     }
     catch ( H5::FileIException& error ) {
       output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
@@ -269,16 +270,56 @@ namespace FormatConverter{
     }
 
     auto auxdata = readAuxData( dataAndTimeGroup );
-    if ( !auxdata.empty( ) ) {
-      std::cerr << "auxillary data read not yet implemented" << std::endl;
+    for ( auto map : auxdata ) {
+      for ( auto& td : map.second ) {
+        signal->addAuxillaryData( map.first, td );
+      }
     }
+
     dataset.close( );
   }
 
-  std::map<std::string, std::map<std::string, std::vector<TimedData>>> Hdf5Reader::readAuxData( H5::Group& auxparent ) const {
-    std::map<std::string, std::map<std::string, std::vector < TimedData>>> datamap;
+  std::map<std::string, std::vector<TimedData>> Hdf5Reader::readAuxData( H5::Group& auxparent ) {
+    std::map<std::string, std::vector < TimedData>> datamap;
     if ( auxparent.exists( "Auxillary_Data" ) ) {
-      std::cerr << "has auxillary data (not yet read)" << std::endl;
+      H5::Group auxdata = auxparent.openGroup( "Auxillary_Data" );
+
+
+      H5::StrType st( H5::PredType::C_S1, H5T_VARIABLE );
+      st.setCset( H5T_CSET_UTF8 );
+
+      for ( size_t i = 0; i < auxdata.getNumObjs( ); i++ ) {
+        if ( H5G_GROUP == auxdata.getObjTypeByIdx( i ) ) {
+          std::string auxname = auxdata.getObjnameByIdx( i );
+          H5::Group dataAndTime = auxdata.openGroup( auxname );
+
+          if ( dataAndTime.exists( "time" ) && dataAndTime.exists( "data" ) ) {
+            H5::DataSet timeds = dataAndTime.openDataSet( "time" );
+            H5::DataSet dataset = dataAndTime.openDataSet( "data" );
+
+            std::vector<dr_time> times = readTimes( timeds );
+
+            hsize_t DIMS[2] = { };
+            dataset.getSpace( ).getSimpleExtentDims( DIMS );
+            const hsize_t ROWS = DIMS[0];
+            if ( ROWS == times.size( ) ) {
+              char ** readdata = (char **) malloc( ROWS * sizeof (char * ) );
+
+              dataset.read( readdata, dataset.getDataType( ) );
+              for ( size_t i = 0; i < ROWS; i++ ) {
+                datamap[auxname].push_back( TimedData( times[i], std::string( readdata[i] ) ) );
+              }
+              free( readdata );
+            }
+            else {
+              std::cerr << "\"time\" and \"data\" datasets must have the same number of data points...ignoring" << std::endl;
+            }
+          }
+          else {
+            std::cerr << "auxillary data group must have a \"time\" and \"data\" dataset" << std::endl;
+          }
+        }
+      }
     }
 
     return datamap;
