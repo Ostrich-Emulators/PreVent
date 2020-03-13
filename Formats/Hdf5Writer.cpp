@@ -602,9 +602,8 @@ namespace FormatConverter{
 
       auto auxdata = data->auxdata( );
       if ( !auxdata.empty( ) ) {
-        H5::Group auxgroup = ensureGroupExists( file, "Auxillary_Data" );
         for ( auto& fileaux : auxdata ) {
-          writeAuxData( auxgroup, fileaux.first, fileaux.second );
+          writeAuxData( file, fileaux.first, fileaux.second );
         }
       }
 
@@ -690,7 +689,7 @@ namespace FormatConverter{
     writeVital( group, data );
     writeEvents( group, data );
     for ( const auto& aux : data->auxdata( ) ) {
-      writeAuxData( group, "Auxillary_Data/" + aux.first, aux.second );
+      writeAuxData( group, aux.first, aux.second );
     }
   }
 
@@ -781,7 +780,7 @@ namespace FormatConverter{
     writeEvents( group, data );
     writeGroupAttrs( group, data );
     for ( const auto& aux : data->auxdata( ) ) {
-      writeAuxData( group, "Auxillary_Data/" + aux.first, aux.second );
+      writeAuxData( group, aux.first, aux.second );
     }
 
     auto en = std::chrono::high_resolution_clock::now( );
@@ -850,7 +849,8 @@ namespace FormatConverter{
     }
 
     const size_t sz = data.size( );
-    H5::Group auxg = ensureGroupExists( group, getDatasetName( name ) );
+    H5::Group parent = ensureGroupExists( group, "Auxillary_Data" );
+    H5::Group auxg = ensureGroupExists( parent, getDatasetName( name ) );
 
     std::vector<dr_time> times;
     std::vector<std::string> vals;
