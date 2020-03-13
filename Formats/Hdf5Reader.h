@@ -68,6 +68,7 @@ namespace FormatConverter {
 				const std::vector<dr_time>& times, int valsPerTime, int timeinterval, int scale ) const;
 		void fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
 				const std::vector<dr_time>& tmes, int valsPerTime, int scale ) const;
+    std::map<std::string, std::map<std::string, std::vector<TimedData>>> readAuxData( H5::Group& auxparent) const;
 		void readDataSet( H5::Group& dataAndTimeGroup, const bool& iswave,
 				std::unique_ptr<SignalSet>& info );
 		std::vector<dr_time> readTimes( H5::DataSet& times );

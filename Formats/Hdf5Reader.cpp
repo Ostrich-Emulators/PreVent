@@ -22,11 +22,9 @@ namespace FormatConverter{
     "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader",
     "Note on Scale", "Note on Min/Max", "Min Value", "Max Value" } );
 
-  Hdf5Reader::Hdf5Reader( ) : Reader( "HDF5" ) {
- }
+  Hdf5Reader::Hdf5Reader( ) : Reader( "HDF5" ) { }
 
-  Hdf5Reader::Hdf5Reader( const Hdf5Reader& ) : Reader( "HDF5" ) {
- }
+  Hdf5Reader::Hdf5Reader( const Hdf5Reader& ) : Reader( "HDF5" ) { }
 
   Hdf5Reader::~Hdf5Reader( ) { }
 
@@ -160,6 +158,12 @@ namespace FormatConverter{
         }
       }
       egroup.close( );
+
+      auto auxdata = readAuxData( file );
+      if ( !auxdata.empty( ) ) {
+        std::cerr << "aux data read not yet implemented" << std::endl;
+      }
+
     }
     catch ( H5::FileIException& error ) {
       output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
@@ -264,9 +268,20 @@ namespace FormatConverter{
       fillVital( signal, dataset, times, timeinterval, valsPerChunk, scale );
     }
 
-    std::cerr << "auxillary data read not yet implemented" << std::endl;
-
+    auto auxdata = readAuxData( dataAndTimeGroup );
+    if ( !auxdata.empty( ) ) {
+      std::cerr << "auxillary data read not yet implemented" << std::endl;
+    }
     dataset.close( );
+  }
+
+  std::map<std::string, std::map<std::string, std::vector<TimedData>>> Hdf5Reader::readAuxData( H5::Group& auxparent ) const {
+    std::map<std::string, std::map<std::string, std::vector < TimedData>>> datamap;
+    if ( auxparent.exists( "Auxillary_Data" ) ) {
+      std::cerr << "has auxillary data (not yet read)" << std::endl;
+    }
+
+    return datamap;
   }
 
   void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,

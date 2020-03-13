@@ -174,7 +174,7 @@ namespace FormatConverter {
       for ( auto& td : clocktimes ) {
         if ( td.time <= last ) {
           cnt++;
-          info->addAuxillaryData( "Wall Times", td );
+          info->addAuxillaryData( "Wall_Times", td );
         }
       }
       clocktimes.erase( clocktimes.begin( ), clocktimes.begin( ) + cnt );
