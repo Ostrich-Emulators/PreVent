@@ -1,4 +1,6 @@
 4.2.1
+	* Added support for UM composite data files
+  * Added "Auxillary_Data" groups within datasets, as needed
   * Updated HDF5 "Layout Version" to 4.1.1 (added Max/Min values to dataset metadata)
   * (Tools) Added --statistics option to generate descriptive statistics
 

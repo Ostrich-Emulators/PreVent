@@ -28,17 +28,14 @@
 #include "TimezoneOffsetTimeSignalSet.h"
 #include "Options.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
   const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.1";
 
-  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
-  }
+  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) { }
 
-  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) {
-  }
+  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) { }
 
-  Hdf5Writer::~Hdf5Writer( ) {
-  }
+  Hdf5Writer::~Hdf5Writer( ) { }
 
   void Hdf5Writer::writeAttribute( H5::H5Object& loc,
       const std::string& attr, const std::string& val ) {
@@ -605,7 +602,7 @@ namespace FormatConverter {
 
       auto auxdata = data->auxdata( );
       if ( !auxdata.empty( ) ) {
-        H5::Group auxgroup = ensureGroupExists( file, "Auxillary Data" );
+        H5::Group auxgroup = ensureGroupExists( file, "Auxillary_Data" );
         for ( auto& fileaux : auxdata ) {
           writeAuxData( auxgroup, fileaux.first, fileaux.second );
         }
@@ -693,7 +690,7 @@ namespace FormatConverter {
     writeVital( group, data );
     writeEvents( group, data );
     for ( const auto& aux : data->auxdata( ) ) {
-      writeAuxData( group, aux.first, aux.second );
+      writeAuxData( group, "Auxillary_Data/" + aux.first, aux.second );
     }
   }
 
@@ -784,7 +781,7 @@ namespace FormatConverter {
     writeEvents( group, data );
     writeGroupAttrs( group, data );
     for ( const auto& aux : data->auxdata( ) ) {
-      writeAuxData( group, aux.first, aux.second );
+      writeAuxData( group, "Auxillary_Data/" + aux.first, aux.second );
     }
 
     auto en = std::chrono::high_resolution_clock::now( );
