@@ -47,6 +47,7 @@ namespace FormatConverter {
     dr_time _basetime;
     int extra_ms;
     bool basetimeset;
+    size_t framecount;
   };
 }
 #endif /* WFDBREADER_H */

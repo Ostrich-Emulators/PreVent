@@ -13,17 +13,14 @@
 #include <sys/stat.h>
 #include <math.h>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
-  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
-  }
+  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) { }
 
   WfdbReader::WfdbReader( const std::string& name ) : Reader( name ), extra_ms( 0 ),
-      basetimeset( false ) {
-  }
+      basetimeset( false ), framecount( 0 ) { }
 
-  WfdbReader::~WfdbReader( ) {
-  }
+  WfdbReader::~WfdbReader( ) { }
 
   void WfdbReader::setBaseTime( const dr_time& basetime ) {
     _basetime = basetime;
@@ -120,6 +117,7 @@ namespace FormatConverter {
       WFDB_Frequency wffreqhz = getifreq( );
       bool iswave = ( wffreqhz > 1 );
       siginfo = new WFDB_Siginfo[sigcount];
+      framecount = 0;
 
       double intpart;
       double fraction = std::modf( wffreqhz, &intpart );
@@ -140,7 +138,7 @@ namespace FormatConverter {
             ? info->addWave( siginfo[signalidx].desc )
             : info->addVital( siginfo[signalidx].desc ) );
 
-        dataset->setChunkIntervalAndSampleRate( interval, freqhz );
+        dataset->setChunkIntervalAndSampleRate( interval, freqhz * siginfo[signalidx].spf );
         if ( 1024 == interval ) {
           dataset->setMeta( "Notes", "The frequency from the input file was multiplied by 1.024" );
         }
@@ -152,6 +150,7 @@ namespace FormatConverter {
         dataset->setMeta( "wfdb-gain", siginfo[signalidx].gain );
         dataset->setMeta( "wfdb-spf", siginfo[signalidx].spf );
         dataset->setMeta( "wfdb-adcres", siginfo[signalidx].adcres );
+        framecount += siginfo[signalidx].spf;
       }
     }
 
@@ -164,7 +163,7 @@ namespace FormatConverter {
   }
 
   ReadResult WfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
-    WFDB_Sample v[sigcount];
+    WFDB_Sample v[framecount];
     bool iswave = ( freqhz > 1 );
 
     if ( ReadResult::FIRST_READ == lastrr ) {
@@ -177,14 +176,27 @@ namespace FormatConverter {
 
     int retcode = 0;
     ReadResult rslt = ReadResult::NORMAL;
+
+    size_t framesignal[framecount];
+    int sigidx = 0;
+    int sigcounter = 0;
+    for ( size_t f = 0; f < framecount; f++ ) {
+      framesignal[f] = sigidx;
+      sigcounter++;
+      if ( sigcounter >= siginfo[sigidx].spf ) {
+        sigcounter = 0;
+        sigidx++;
+      }
+    }
+
     while ( true ) {
       std::map<int, std::vector<int>> currents;
       for ( int i = 0; i < sigcount; i++ ) {
-        currents[i].reserve( freqhz );
+        currents[i].reserve( freqhz * siginfo[sigcount].spf );
       }
 
       for ( size_t i = 0; i < freqhz; i++ ) {
-        retcode = getvec( v );
+        retcode = getframe( v );
         if ( retcode < 0 ) {
           if ( -3 == retcode ) {
             std::cerr << "unexpected end of file" << std::endl;
@@ -193,7 +205,9 @@ namespace FormatConverter {
           else if ( -4 == retcode ) {
             std::cerr << "invalid checksums discovered...continuing, but using missing data value" << std::endl;
             for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
-              currents[signalidx].push_back( SignalData::MISSING_VALUE );
+              for ( int j = 0; j < siginfo[signalidx].spf; j++ ) {
+                currents[signalidx].push_back( SignalData::MISSING_VALUE );
+              }
             }
             // return ReadResult::END_OF_FILE;
           }
@@ -203,13 +217,14 @@ namespace FormatConverter {
           }
         }
         else {
-          for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
-            currents[signalidx].push_back( v[signalidx] );
+          for ( size_t j = 0; j < framecount; j++ ) {
+            currents[framesignal[j]].push_back( v[j] );
           }
         }
       }
 
       for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
+        size_t expected = freqhz * siginfo[signalidx].spf;
         if ( !currents[signalidx].empty( ) ) {
           bool added = false;
           std::unique_ptr<SignalData>& dataset = ( iswave
@@ -217,7 +232,7 @@ namespace FormatConverter {
               : info->addVital( siginfo[signalidx].desc, &added ) );
 
           if ( added ) {
-            dataset->setChunkIntervalAndSampleRate( interval, freqhz );
+            dataset->setChunkIntervalAndSampleRate( interval, expected );
             if ( 1024 == interval ) {
               dataset->setMeta( "Notes", "The frequency from the input file was multiplied by 1.024" );
             }
@@ -227,10 +242,10 @@ namespace FormatConverter {
             }
           }
 
-          if ( currents[signalidx].size( ) < freqhz ) {
-            output( ) << "filling in " << ( freqhz - currents[signalidx].size( ) )
+          if ( currents[signalidx].size( ) < expected ) {
+            output( ) << "filling in " << ( expected - currents[signalidx].size( ) )
                 << " values for wave " << siginfo[signalidx].desc << std::endl;
-            currents[signalidx].resize( freqhz, SignalData::MISSING_VALUE );
+            currents[signalidx].resize( expected, SignalData::MISSING_VALUE );
           }
 
           std::ostringstream ss;
