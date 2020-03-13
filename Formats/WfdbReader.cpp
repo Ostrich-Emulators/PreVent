@@ -191,11 +191,13 @@ namespace FormatConverter {
             return ReadResult::ERROR;
           }
           else if ( -4 == retcode ) {
-            std::cerr << "invalid checksum" << std::endl;
-            return ReadResult::ERROR;
+            std::cerr << "invalid checksums discovered...continuing, but using missing data value" << std::endl;
+            for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
+              currents[signalidx].push_back( SignalData::MISSING_VALUE );
+            }
+            // return ReadResult::END_OF_FILE;
           }
-
-          if ( -1 == retcode ) {
+          else if ( -1 == retcode ) {
             rslt = ReadResult::END_OF_FILE;
             break;
           }

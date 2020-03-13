@@ -860,7 +860,8 @@ namespace FormatConverter{
       times.push_back( t.time );
       vals.push_back( t.data );
     }
-    H5::DataSet timeds = writeTimes( auxg, times );
+
+    writeTimes( auxg, times );
 
     hsize_t dims[] = { sz, 1 };
     H5::DataSpace space( 2, dims );
@@ -870,14 +871,13 @@ namespace FormatConverter{
 
     H5::DSetCreatPropList props;
     if ( compression( ) > 0 ) {
-
       hsize_t chunkdims[] = { sz, 1 };
       props.setChunk( 2, chunkdims );
       props.setShuffle( );
       props.setDeflate( compression( ) );
     }
 
-    H5::DataSet dsv = auxg.createDataSet( "data", st, space );
+    H5::DataSet dsv = auxg.createDataSet( "data", st, space, props );
     dsv.write( &vals[0], st );
   }
 
