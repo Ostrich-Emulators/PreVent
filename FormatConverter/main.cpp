@@ -237,8 +237,8 @@ int main( int argc, char** argv ) {
       case FormatConverter::CPCXML:
         fromstr = "cpcxml";
         break;
-      case FormatConverter::UM:
-        fromstr = "um";
+      case FormatConverter::DWC:
+        fromstr = "dwc";
         break;
       case FormatConverter::UNRECOGNIZED:
         fromstr = "";
