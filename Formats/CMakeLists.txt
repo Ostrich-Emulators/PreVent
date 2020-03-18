@@ -142,7 +142,7 @@ XmlReaderBase.h
 ZlReader2.h
 ZlReader.h
 StpReader.h
-UmWfdbReader.h
+DwcReader.h
 zstr.hpp
 strict_fstream.hpp
 CircularBuffer.h
