@@ -106,13 +106,13 @@ namespace FormatConverter{
     return extra_ms;
   }
 
-  int WfdbReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
-    int rslt = Reader::prepare( recordset, info );
+  int WfdbReader::prepare( const std::string& headername, std::unique_ptr<SignalSet>& info ) {
+    int rslt = Reader::prepare( headername, info );
     if ( 0 != rslt ) {
       return rslt;
     }
 
-    sigcount = isigopen( (char *) ( recordset.c_str( ) ), NULL, 0 );
+    sigcount = isigopen( (char *) ( headername.c_str( ) ), NULL, 0 );
     if ( sigcount > 0 ) {
       WFDB_Frequency wffreqhz = getifreq( );
       bool iswave = ( wffreqhz > 1 );
@@ -131,7 +131,7 @@ namespace FormatConverter{
         output( ) << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
       }
 
-      sigcount = isigopen( (char *) ( recordset.c_str( ) ), siginfo, sigcount );
+      sigcount = isigopen( (char *) ( headername.c_str( ) ), siginfo, sigcount );
 
       for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
         std::unique_ptr<SignalData>& dataset = ( iswave
@@ -154,7 +154,11 @@ namespace FormatConverter{
       }
     }
 
-    return ( sigcount > 0 ? 0 : -1 );
+    if ( 0 == sigcount ) {
+      std::cerr << "could not open/read .hea file: " << headername << std::endl;
+      return -1;
+    }
+    return 0;
   }
 
   void WfdbReader::finish( ) {

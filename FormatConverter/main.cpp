@@ -48,7 +48,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
           << std::endl << "\t-T or --time-step (store timing information as offset from start of file"
           << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
           << std::endl << "\t-R or --release (show release information and exit)"
-          << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, cpcxml, stpjson, tdms, medi, zl"
+          << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, cpcxml, stpjson, tdms, medi, dwc, zl"
           << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
           << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
           << std::endl << "\tthe --pattern option recognizes these format specifiers:"

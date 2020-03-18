@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-#include "UmWfdbReader.h"
+#include "DwcReader.h"
 #include "DataRow.h"
 #include "SignalData.h"
 #include "SignalUtils.h"
@@ -12,18 +12,16 @@
 #include <iostream>
 #include <iterator>
 
-namespace FormatConverter {
-  const size_t UmWfdbReader::FIRST_VITAL_COL = 4;
-  const size_t UmWfdbReader::TIME_COL = 1;
-  const size_t UmWfdbReader::DATE_COL = 0;
+namespace FormatConverter{
+  const size_t DwcReader::FIRST_VITAL_COL = 4;
+  const size_t DwcReader::TIME_COL = 1;
+  const size_t DwcReader::DATE_COL = 0;
 
-  UmWfdbReader::UmWfdbReader( ) : WfdbReader( "UM WFDB" ) {
-  }
+  DwcReader::DwcReader( ) : WfdbReader( "UM WFDB" ) { }
 
-  UmWfdbReader::~UmWfdbReader( ) {
-  }
+  DwcReader::~DwcReader( ) { }
 
-  dr_time UmWfdbReader::converttime( const std::string& timeline ) {
+  dr_time DwcReader::converttime( const std::string& timeline ) {
     struct tm timeinfo;
     std::vector<std::string> parts = SignalUtils::splitcsv( timeline, ' ' );
 
@@ -57,13 +55,13 @@ namespace FormatConverter {
     return (tt * 1000 + ms );
   }
 
-  int UmWfdbReader::prepare( const std::string& headerfile, std::unique_ptr<SignalSet>& info ) {
-    int rslt = WfdbReader::prepare( headerfile, info );
+  int DwcReader::prepare( const std::string& infoname, std::unique_ptr<SignalSet>& info ) {
+    std::string recordset( infoname.substr( 0, infoname.size( ) - 5 ) );
+    int rslt = WfdbReader::prepare( recordset + ".hea", info );
     if ( 0 != rslt ) {
       return rslt;
     }
 
-    std::string recordset( headerfile.substr( 0, headerfile.size( ) - 4 ) );
     // recordset should be a directory containing a .hea file, a .numerics.csv
     // file, and optionally a .clock.txt file
     std::string clockfile( recordset + ".clock.txt" );
@@ -92,7 +90,7 @@ namespace FormatConverter {
     std::getline( numerics, firstline );
     headings = SignalUtils::splitcsv( firstline );
 
-    std::ifstream infofile( recordset + ".info" );
+    std::ifstream infofile( infoname );
     // if we have an info file, parse it and set the metadata in the SignalData
     while ( infofile.good( ) ) {
       std::getline( infofile, firstline );
@@ -125,7 +123,7 @@ namespace FormatConverter {
     return rslt;
   }
 
-  ReadResult UmWfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult & lastrr ) {
+  ReadResult DwcReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult & lastrr ) {
     dr_time lastcsvtime = 0;
     ReadResult rslt = ReadResult::NORMAL;
     std::string csvline;
@@ -198,7 +196,7 @@ namespace FormatConverter {
     return rr;
   }
 
-  std::map<std::string, std::string> UmWfdbReader::linevalues( const std::string& csvline, dr_time & timer ) {
+  std::map<std::string, std::string> DwcReader::linevalues( const std::string& csvline, dr_time & timer ) {
     std::vector<std::string> strings = SignalUtils::splitcsv( csvline );
     std::map<std::string, std::string> values;
 

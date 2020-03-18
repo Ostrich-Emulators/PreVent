@@ -54,8 +54,8 @@ namespace FormatConverter{
     if ( "tdms" == fmt || "medi" == fmt ) {
       return MEDI;
     }
-    if( "um" == fmt ){
-      return UM;
+    if( "dwc" == fmt ){
+      return DWC;
     }
 
     return UNRECOGNIZED;
@@ -97,6 +97,9 @@ namespace FormatConverter{
       }
       else if ( "tdms" == suffix || "medi" == suffix ) {
         return Format::MEDI;
+      }
+      else if( "info" == suffix ){
+        return Format::DWC;
       }
     }
     return Format::UNRECOGNIZED;

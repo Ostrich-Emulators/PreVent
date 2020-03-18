@@ -74,7 +74,7 @@ ZlReader.cpp
 TimeModifier.cpp
 TimeParser.cpp
 StpReader.cpp
-UmWfdbReader.cpp
+DwcReader.cpp
 generated/config.h
 generated/releases.h
 )

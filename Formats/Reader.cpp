@@ -9,7 +9,7 @@
 #include "CpcXmlReader.h"
 #include "TdmsReader.h"
 #include "StpReader.h"
-#include "UmWfdbReader.h"
+#include "DwcReader.h"
 
 #include <iostream>       // std::cout, std::ios
 #include <sstream>        // std::istringstream
@@ -52,8 +52,8 @@ namespace FormatConverter {
         return std::unique_ptr<Reader>( new StpJsonReader( ) );
       case FormatConverter::MEDI:
         return std::unique_ptr<Reader>( new TdmsReader( ) );
-      case FormatConverter::UM:
-        return std::unique_ptr<Reader>( new UmWfdbReader( ) );
+      case FormatConverter::DWC:
+        return std::unique_ptr<Reader>( new DwcReader( ) );
       default:
         throw "reader not yet implemented";
     }

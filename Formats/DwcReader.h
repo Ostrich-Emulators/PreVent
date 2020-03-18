@@ -20,11 +20,15 @@
 
 namespace FormatConverter {
 
-  class UmWfdbReader : public WfdbReader {
+  /**
+   * DWC (Data Warehouse Connect) format uses a WFDB dataset for waveforms
+   * and a CSV file for vitals/calculated values
+   */
+  class DwcReader : public WfdbReader {
   public:
-    UmWfdbReader( );
+    DwcReader( );
 
-    virtual ~UmWfdbReader( );
+    virtual ~DwcReader( );
 
   protected:
     int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
