@@ -1,0 +1,6 @@
+FROM ry99/prevent:latest
+
+COPY directory-converter.sh /opt
+VOLUME /conversion
+
+ENTRYPOINT ["/opt/directory-converter.sh"]
