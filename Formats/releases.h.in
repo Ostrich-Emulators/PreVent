@@ -1,5 +1,5 @@
 4.2.1
-	* Added support for UM composite data files
+	* Added support for DWC composite data files
   * Added "Auxillary_Data" groups within datasets, as needed
   * Added support for WFDB data frames
   * Updated HDF5 "Layout Version" to 4.1.1 (added Max/Min values to dataset metadata)
