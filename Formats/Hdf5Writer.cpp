@@ -853,12 +853,16 @@ namespace FormatConverter{
     H5::Group auxg = ensureGroupExists( parent, getDatasetName( name ) );
 
     std::vector<dr_time> times;
-    std::vector<std::string> vals;
     times.reserve( sz );
-    vals.reserve( sz );
+
+    // HDF5 seems to have trouble writing a vector of strings, so
+    // we'll just load the data into an array of char *s.
+    const char * vdata[sz] = { };
+
+    size_t c = 0;
     for ( const auto& t : data ) {
       times.push_back( t.time );
-      vals.push_back( t.data );
+      vdata[c++] = t.data.c_str( );
     }
 
     writeTimes( auxg, times );
@@ -878,7 +882,8 @@ namespace FormatConverter{
     }
 
     H5::DataSet dsv = auxg.createDataSet( "data", st, space, props );
-    dsv.write( &vals[0], st );
+    dsv.write( vdata, st );
+    dsv.close( );
   }
 
   void Hdf5Writer::writeEvents( H5::Group& group, std::unique_ptr<SignalData>& data ) {

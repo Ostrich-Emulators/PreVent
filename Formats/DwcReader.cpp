@@ -78,11 +78,11 @@ namespace FormatConverter{
     }
 
     // read the vitals out of the CSV, too
-    std::string numsfile( recordset );
-    numsfile.append( ".numerics.csv" );
+    std::string numsfile( recordset + ".numerics.csv" );
 
     numerics.open( numsfile );
     if ( !numerics.good( ) ) {
+      std::cerr << "no numerics file found" << std::endl;
       return -1;
     }
 
@@ -166,7 +166,6 @@ namespace FormatConverter{
     dr_time last = ( ReadResult::END_OF_FILE == rr
         ? std::numeric_limits<long>::max( )
         : info->latest( ) );
-    output( ) << "last: " << last << std::endl;
     if ( ReadResult::ERROR != rr ) {
       size_t cnt = 0;
       for ( auto& td : clocktimes ) {
