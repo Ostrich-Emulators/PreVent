@@ -4,7 +4,7 @@ cd /conversion
 
 # first things first: there are three conversion types that use a directory structure:
 # 1) WFDB -- contains a .hea file
-# 2) DWC  -- contains a .info file
+# 2) DWC  -- contains a .info file (and also a .hea file, so check this first)
 # 3) UVA  -- contains .gzip files
 # Check any subdirectories in /conversion to see if we have one of those types 
 for dir in $(ls -d */); do
