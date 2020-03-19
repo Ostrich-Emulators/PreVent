@@ -7,25 +7,27 @@ cd /conversion
 # 2) DWC  -- contains a .info file (and also a .hea file, so check this first)
 # 3) UVA  -- contains .gzip files
 # Check any subdirectories in /conversion to see if we have one of those types 
-for dir in $(ls -d */); do
+
+for tmpdir in $(ls -d */); do
+    dir=$(echo $tmpdir|cut -d/ -f1)
 	echo "converting directory: $dir"
-	if [ $(ls ${dir}*.info 2>/dev/null|wc -l) -gt 0 ]; then
+	if [ $(ls ${dir}/*.info 2>/dev/null|wc -l) -gt 0 ]; then
 	  cd $dir
 	  echo $dir is a DWC dataset
 	  for info in $(ls *.info); do
 		  formatconverter --to hdf5 --from dwc --localtime $info
 	  done
 	  cd ..
-	elif [ $(ls ${dir}*.hea 2>/dev/null|wc -l) -gt 0 ]; then
-	  echo $dir is a WDFB dataset
+	elif [ $(ls ${dir}/*.hea 2>/dev/null|wc -l) -gt 0 ]; then
 	  cd $dir
+	  echo $dir is a WDFB dataset
 	  for hea in $(ls *.hea); do
 		  formatconverter --to hdf5 --from wfdb --localtime $hea
 	  done
 	  cd ..
-	elif [ $(ls ${dir}*.gzip 2>/dev/null| wc -l) -gt 0 ]; then
+	elif [ $(ls ${dir}/*.gzip 2>/dev/null| wc -l) -gt 0 ]; then
 	  echo $dir is a UVA dataset
-	  formatconverter --to hdf5 --from zl --localtime $dir
+	  formatconverter --to hdf5 --from zl --localtime ${dir}
 	fi 
 done 
 
