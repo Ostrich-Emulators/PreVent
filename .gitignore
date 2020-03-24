@@ -8,3 +8,7 @@ nbproject
 *.dll*
 *.exe
 /Formats/generated/
+4100
+*.pdf
+stp-work
+testfiles
