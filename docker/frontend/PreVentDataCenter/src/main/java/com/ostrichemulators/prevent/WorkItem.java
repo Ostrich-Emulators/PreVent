@@ -8,6 +8,7 @@ package com.ostrichemulators.prevent;
 
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,5 +18,8 @@ import org.slf4j.LoggerFactory;
  */
 public class WorkItem {
 	private static final Logger LOG = LoggerFactory.getLogger( WorkItem.class );
-	public Path dir;
+	private Path dir;
+	private String containerId;
+	private LocalDateTime started;
+	private LocalDateTime finished;
 }

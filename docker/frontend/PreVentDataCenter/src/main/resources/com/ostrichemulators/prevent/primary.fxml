@@ -25,16 +25,14 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <BorderPane layoutX="87.0" layoutY="-11.0" prefHeight="178.0" prefWidth="374.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                           <center>
-                              <TableView prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-                                <columns>
-                                  <TableColumn prefWidth="75.0" text="Selected" />
-                                  <TableColumn prefWidth="75.0" text="File" />
-                                </columns>
-                              </TableView>
-                           </center>
-                        </BorderPane>
+                        <TableView fx:id="table" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                          <columns>
+                            <TableColumn fx:id="statuscol" minWidth="75.0" prefWidth="-1.0" text="Status" />
+                            <TableColumn fx:id="filecol" minWidth="75.0" prefWidth="-1.0" text="File" />
+                              <TableColumn fx:id="startedcol" minWidth="75.0" prefWidth="-1.0" text="Started" />
+                              <TableColumn fx:id="endedcol" minWidth="75.0" prefWidth="-1.0" text="Ended" />
+                          </columns>
+                        </TableView>
                      </children>
                   </AnchorPane>
             </content>
