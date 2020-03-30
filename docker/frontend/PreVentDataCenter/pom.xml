@@ -9,6 +9,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.target>11</maven.compiler.target>
+		<log4j.version>2.13.0</log4j.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -21,6 +22,28 @@
 			<artifactId>javafx-fxml</artifactId>
 			<version>13</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>${log4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
+			<version>${log4j.version}</version>
+		</dependency>
+	 <dependency>
+	  <groupId>org.slf4j</groupId>
+	  <artifactId>slf4j-api</artifactId>
+	  <version>1.7.30</version>
+	 </dependency>
+	 <dependency>
+	  <groupId>com.fasterxml.jackson.core</groupId>
+	  <artifactId>jackson-core</artifactId>
+	  <version>2.10.2</version>
+	  <type>pom</type>
+	 </dependency>
 	</dependencies>
 	<build>
 		<plugins>
@@ -48,6 +71,16 @@
 					<execution>
 						<!-- Configuration for debugging -->
 						<id>debug</id>
+						<configuration>
+							<options>
+								<option>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</option>
+							</options>
+							<mainClass>com.ostrichemulators.prevent.App</mainClass>
+						</configuration>
+					</execution>
+					<execution>
+						<!-- Configuration for profiling -->
+						<id>profile</id>
 						<configuration>
 							<options>
 								<option>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</option>
