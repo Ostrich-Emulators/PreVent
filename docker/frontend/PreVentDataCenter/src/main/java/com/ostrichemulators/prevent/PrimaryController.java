@@ -40,7 +40,8 @@ public class PrimaryController implements Initializable {
 	@FXML
 	private TableColumn<WorkItem, LocalDateTime> endedcol;
 
-	//private final List<WorkItem> items = new ArrayList<>();
+	private Worklist worklist;
+
 	@Override
 	public void initialize( URL url, ResourceBundle rb ) {
 		double sum = 0d;
@@ -56,15 +57,11 @@ public class PrimaryController implements Initializable {
 		}
 
 		ObservableList<WorkItem> titems = table.getItems();
-		Random r = new Random();
-		for ( int i = 0; i < 30; i++ ) {
-			WorkItem wi = new WorkItem( Paths.get( "c:\\", "more", Integer.toString( i ) ),
-					Integer.toHexString( r.nextInt() ),
-					LocalDateTime.now(), LocalDateTime.now() );
-			titems.add( wi );
-		}
 
-		filecol.setCellValueFactory( new PropertyValueFactory<>( "dir" ) );
+		worklist = Worklist.open( App.getConfigLocation() );
+		titems.addAll( worklist.getItems() );
+
+		filecol.setCellValueFactory( new PropertyValueFactory<>( "file" ) );
 
 		startedcol.setCellValueFactory( new PropertyValueFactory<>( "started" ) );
 		startedcol.setCellFactory( column -> new LocalDateTableCell() );
@@ -80,8 +77,7 @@ public class PrimaryController implements Initializable {
 
 	@FXML
 	private void addDir() throws IOException {
-		FXMLLoader fxmlLoader = new FXMLLoader( getClass().getResource( "workitementry.fxml" ) );
-		Parent root1 = (Parent) fxmlLoader.load();
+		Parent root1 = App.loadFXML( "workitementry" );
 		Stage stage = new Stage();
 		stage.initModality( Modality.APPLICATION_MODAL );
 		stage.initStyle( StageStyle.DECORATED );

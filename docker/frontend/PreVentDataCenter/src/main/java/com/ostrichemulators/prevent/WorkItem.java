@@ -7,6 +7,7 @@ package com.ostrichemulators.prevent;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,31 +18,32 @@ import org.slf4j.LoggerFactory;
 public class WorkItem {
 
 	private static final Logger LOG = LoggerFactory.getLogger( WorkItem.class );
-	private Path dir;
+	private Path file;
 	private String containerId;
 	private LocalDateTime started;
 	private LocalDateTime finished;
+	private String checksum; // this is really the ID of this item
 
 	public WorkItem() {
 	}
 
-	public WorkItem( Path dir ) {
-		this.dir = dir;
+	public WorkItem( Path file ) {
+		this.file = file;
 	}
 
-	public WorkItem( Path dir, String containerId, LocalDateTime started, LocalDateTime finished ) {
-		this.dir = dir;
+	public WorkItem( Path file, String containerId, LocalDateTime started, LocalDateTime finished ) {
+		this.file = file;
 		this.containerId = containerId;
 		this.started = started;
 		this.finished = finished;
 	}
 
-	public Path getDir() {
-		return dir;
+	public Path getFile() {
+		return file;
 	}
 
-	public void setDir( Path dir ) {
-		this.dir = dir;
+	public void setFile( Path file ) {
+		this.file = file;
 	}
 
 	public String getContainerId() {

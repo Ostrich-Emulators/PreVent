@@ -15,7 +15,7 @@ import javafx.stage.Stage;
  *
  * @author ryan
  */
-public class WorkitementryController {
+public class WorkItemEntryController {
 
 	@FXML
 	private Button cancelbtn;
@@ -33,8 +33,7 @@ public class WorkitementryController {
 	@FXML
 	private void cancel() throws IOException {
 		System.out.println( "cancel" );
-		Stage stage = (Stage) savebtn.getScene().getWindow();
+		Stage stage = (Stage) cancelbtn.getScene().getWindow();
 		stage.close();
 	}
-
 }
