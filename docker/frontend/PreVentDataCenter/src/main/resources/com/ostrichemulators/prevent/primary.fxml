@@ -15,7 +15,7 @@
         <items>
             <Button fx:id="primaryButton" onAction="#switchToSecondary" text="Switch to Secondary View" />
             <Button mnemonicParsing="false" onAction="#addDir" text="Add Directory to Worklist" />
-            <Button mnemonicParsing="false" onAction="#addFiles" text="Add Files to Worklist" />
+            <Button mnemonicParsing="false" onAction="#addFiles" text="Add File(s) to Worklist" />
         </items>
       </ToolBar>
    </top>

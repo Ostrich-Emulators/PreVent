@@ -18,9 +18,12 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PrimaryController implements Initializable {
 
+	private static final Logger LOG = LoggerFactory.getLogger( PrimaryController.class );
 	private static final int COLWIDTHS[] = { 15, 50, 15, 15 };
 	@FXML
 	private TableView<WorkItem> table;
@@ -37,7 +40,7 @@ public class PrimaryController implements Initializable {
 	@FXML
 	private TableColumn<WorkItem, LocalDateTime> endedcol;
 
-	private Worklist worklist;
+	private Path savelocation;
 
 	@Override
 	public void initialize( URL url, ResourceBundle rb ) {
@@ -53,8 +56,13 @@ public class PrimaryController implements Initializable {
 					table.widthProperty().multiply( pct ) );
 		}
 
-		worklist = Worklist.open( App.getConfigLocation() );
-		table.getItems().addAll( worklist.getItems() );
+		savelocation = App.getConfigLocation();
+		try {
+			table.getItems().addAll( Worklist.open( savelocation ) );
+		}
+		catch ( IOException x ) {
+			LOG.error( "{}", x );
+		}
 
 		statuscol.setCellValueFactory( new PropertyValueFactory<>( "status" ) );
 
@@ -69,12 +77,12 @@ public class PrimaryController implements Initializable {
 	}
 
 	@FXML
-	private void switchToSecondary() throws IOException {
+	void switchToSecondary() throws IOException {
 		App.setRoot( "secondary" );
 	}
 
 	@FXML
-	private void addFiles() throws IOException {
+	void addFiles() throws IOException {
 		FileChooser chsr = new FileChooser();
 		chsr.setTitle( "Create New Worklist Items" );
 		Window window = table.getScene().getWindow();
@@ -83,11 +91,8 @@ public class PrimaryController implements Initializable {
 				.map( file -> WorkItem.from( file.toPath() ) )
 				.filter( wi -> wi.isPresent() )
 				.map( wi -> wi.get() )
-				.forEach( wi -> {
-					if ( worklist.add( wi ) ) {
-						table.getItems().add( wi );
-					}
-				} );
+				.forEach( wi -> table.getItems().add( wi ) );
+		Worklist.save( table.getItems(), savelocation );
 
 //		Parent dialog = App.loadFXML( "workitementry" );
 //		Stage stage = new Stage();
@@ -99,25 +104,14 @@ public class PrimaryController implements Initializable {
 	}
 
 	@FXML
-	private void addDir() throws IOException {
+	void addDir() throws IOException {
 		DirectoryChooser chsr = new DirectoryChooser();
 		chsr.setTitle( "Create New Worklist Items from Directory" );
 		Window window = table.getScene().getWindow();
 
 		File dir = chsr.showDialog( window );
-		WorkItem.from( dir.toPath() ).ifPresent( wi -> {
-			if ( worklist.add( wi ) ) {
-				table.getItems().add( wi );
-			}
-		} );
-
-//		Parent dialog = App.loadFXML( "workitementry" );
-//		Stage stage = new Stage();
-//		stage.initModality( Modality.APPLICATION_MODAL );
-//		stage.initStyle( StageStyle.DECORATED );
-//		stage.setTitle( "Create New Worklist Item" );
-//		stage.setScene( new Scene( dialog ) );
-//		stage.show();
+		WorkItem.recursively( dir.toPath() ).forEach( wi -> table.getItems().add( wi ) );
+		Worklist.save( table.getItems(), savelocation );
 	}
 
 	private static class LocalDateTableCell extends TableCell<WorkItem, LocalDateTime> {

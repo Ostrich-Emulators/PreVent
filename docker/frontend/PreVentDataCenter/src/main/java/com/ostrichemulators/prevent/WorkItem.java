@@ -14,9 +14,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +61,25 @@ public final class WorkItem {
 
 		if ( f.canRead() ) {
 			if ( f.isDirectory() ) {
-				return Optional.of( new WorkItem( p, DigestUtils.md5Hex( p.toAbsolutePath().toString() ), null, null, null ) );
+				// check if this directory is WFDB, DWC, or ZL
+
+				// DWC
+				File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "info" ) );
+				if ( inners.length > 0 ) {
+					return from( inners[0].toPath() );
+				}
+
+				// WFDB
+				inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "hea" ) );
+				if ( inners.length > 0 ) {
+					return from( inners[0].toPath() );
+				}
+
+				// ZL
+				inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "gzip" ) );
+				if ( inners.length > 0 ) {
+					return Optional.of( new WorkItem( p, DigestUtils.md5Hex( p.toAbsolutePath().toString() ), null, null, null ) );
+				}
 			}
 			else {
 				try ( InputStream is = new BufferedInputStream( new FileInputStream( p.toFile() ) ) ) {
@@ -70,6 +91,54 @@ public final class WorkItem {
 			}
 		}
 		return Optional.empty();
+	}
+
+	public static List<WorkItem> recursively( Path p ) {
+		List<WorkItem> items = new ArrayList<>();
+		File f = p.toFile();
+		if ( f.canRead() ) {
+			if ( f.isDirectory() ) {
+				// if we have a DWC, WFDB, or ZL directory, we can't recurse...
+				// but if we have anything else, then recurse and add whatever we find.
+
+				// DWC
+				File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "info" ) );
+				if ( inners.length > 0 ) {
+					from( inners[0].toPath() ).ifPresent( wi -> items.add( wi ) );
+				}
+				else {
+					// WFDB
+					inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "hea" ) );
+					if ( inners.length > 0 ) {
+						from( inners[0].toPath() ).ifPresent( wi -> items.add( wi ) );
+					}
+					else {
+						// ZL
+						inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "gzip" ) );
+						if ( inners.length > 0 ) {
+							from( p ).ifPresent( wi -> items.add( wi ) );
+						}
+						else {
+							// f is a directory, so add all files we find there, and recurse
+							// into all subdirectories
+							for ( File sub : f.listFiles() ) {
+								if ( sub.isDirectory() ) {
+									items.addAll( recursively( sub.toPath() ) );
+								}
+								else {
+									from( sub.toPath() ).ifPresent( wi -> items.add( wi ) );
+								}
+							}
+						}
+					}
+				}
+			}
+			else {
+				from( p ).ifPresent( wi -> items.add( wi ) );
+			}
+		}
+
+		return items;
 	}
 
 	public Path getFile() {

@@ -13,10 +13,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -24,65 +21,25 @@ import org.slf4j.LoggerFactory;
  */
 public class Worklist {
 
-	private static final Logger LOG = LoggerFactory.getLogger( Worklist.class );
+	private static ObjectMapper objmap;
 
-	private static Worklist list;
-	private final List<WorkItem> items = new ArrayList<>();
-	private final Path saveloc;
-	private static final ObjectMapper objmap = new ObjectMapper();
-
-	private Worklist( Path saver ) {
-		saveloc = saver;
-		File file = saveloc.toFile();
-		if ( file.exists() ) {
-			try {
-				WorkItem[] reads = objmap.readValue( saveloc.toFile(), WorkItem[].class );
-				items.addAll( Arrays.asList( reads ) );
-			}
-			catch ( IOException x ) {
-				throw new RuntimeException( x );
-			}
-		}
-	}
-
-	public static Worklist open( Path saveloc ) {
-		if ( null == list ) {
+	public static List<WorkItem> open( Path saveloc ) throws IOException {
+		List<WorkItem> list = new ArrayList<>();
+		if ( null == objmap ) {
+			objmap = new ObjectMapper();
 			objmap.registerModule( new JavaTimeModule() );
 			objmap.configure( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false );
-			list = new Worklist( saveloc );
+		}
+
+		File file = saveloc.toFile();
+		if ( file.exists() ) {
+			WorkItem[] reads = objmap.readValue( saveloc.toFile(), WorkItem[].class );
+			list.addAll( Arrays.asList( reads ) );
 		}
 		return list;
 	}
 
-	public List<WorkItem> getItems() {
-		return Collections.unmodifiableList( items );
-	}
-
-	public boolean add( WorkItem i ) {
-		if ( items.add( i ) ) {
-			try {
-				save();
-				return true;
-			}
-			catch ( IOException x ) {
-				items.remove( i );
-				LOG.error( "{}", x );
-			}
-		}
-		return false;
-	}
-
-	public void update( WorkItem i ) {
-		LOG.warn( "not yet implemented" );
-		try {
-			save();
-		}
-		catch ( IOException x ) {
-			LOG.error( "{}", x );
-		}
-	}
-
-	private void save() throws IOException {
-		objmap.writeValue( saveloc.toFile(), items );
+	public static void save( List<WorkItem> items, Path savedloc ) throws IOException {
+		objmap.writeValue( savedloc.toFile(), items );
 	}
 }
