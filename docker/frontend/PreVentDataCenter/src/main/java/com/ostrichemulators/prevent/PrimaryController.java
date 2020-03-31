@@ -1,26 +1,23 @@
 package com.ostrichemulators.prevent;
 
+import com.ostrichemulators.prevent.WorkItem.Status;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Random;
 import java.util.ResourceBundle;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.Window;
 
 public class PrimaryController implements Initializable {
 
@@ -29,7 +26,7 @@ public class PrimaryController implements Initializable {
 	private TableView<WorkItem> table;
 
 	@FXML
-	private TableColumn<WorkItem, ?> statuscol;
+	private TableColumn<WorkItem, Status> statuscol;
 
 	@FXML
 	private TableColumn<WorkItem, Path> filecol;
@@ -56,12 +53,13 @@ public class PrimaryController implements Initializable {
 					table.widthProperty().multiply( pct ) );
 		}
 
-		ObservableList<WorkItem> titems = table.getItems();
-
 		worklist = Worklist.open( App.getConfigLocation() );
-		titems.addAll( worklist.getItems() );
+		table.getItems().addAll( worklist.getItems() );
+
+		statuscol.setCellValueFactory( new PropertyValueFactory<>( "status" ) );
 
 		filecol.setCellValueFactory( new PropertyValueFactory<>( "file" ) );
+		filecol.setCellFactory( column -> new LeadingEllipsisTableCell() );
 
 		startedcol.setCellValueFactory( new PropertyValueFactory<>( "started" ) );
 		startedcol.setCellFactory( column -> new LocalDateTableCell() );
@@ -76,14 +74,50 @@ public class PrimaryController implements Initializable {
 	}
 
 	@FXML
+	private void addFiles() throws IOException {
+		FileChooser chsr = new FileChooser();
+		chsr.setTitle( "Create New Worklist Items" );
+		Window window = table.getScene().getWindow();
+
+		chsr.showOpenMultipleDialog( window ).stream()
+				.map( file -> WorkItem.from( file.toPath() ) )
+				.filter( wi -> wi.isPresent() )
+				.map( wi -> wi.get() )
+				.forEach( wi -> {
+					if ( worklist.add( wi ) ) {
+						table.getItems().add( wi );
+					}
+				} );
+
+//		Parent dialog = App.loadFXML( "workitementry" );
+//		Stage stage = new Stage();
+//		stage.initModality( Modality.APPLICATION_MODAL );
+//		stage.initStyle( StageStyle.DECORATED );
+//		stage.setTitle( "Create New Worklist Item" );
+//		stage.setScene( new Scene( dialog ) );
+//		stage.show();
+	}
+
+	@FXML
 	private void addDir() throws IOException {
-		Parent root1 = App.loadFXML( "workitementry" );
-		Stage stage = new Stage();
-		stage.initModality( Modality.APPLICATION_MODAL );
-		stage.initStyle( StageStyle.DECORATED );
-		stage.setTitle( "Create New Worklist Item" );
-		stage.setScene( new Scene( root1 ) );
-		stage.show();
+		DirectoryChooser chsr = new DirectoryChooser();
+		chsr.setTitle( "Create New Worklist Items from Directory" );
+		Window window = table.getScene().getWindow();
+
+		File dir = chsr.showDialog( window );
+		WorkItem.from( dir.toPath() ).ifPresent( wi -> {
+			if ( worklist.add( wi ) ) {
+				table.getItems().add( wi );
+			}
+		} );
+
+//		Parent dialog = App.loadFXML( "workitementry" );
+//		Stage stage = new Stage();
+//		stage.initModality( Modality.APPLICATION_MODAL );
+//		stage.initStyle( StageStyle.DECORATED );
+//		stage.setTitle( "Create New Worklist Item" );
+//		stage.setScene( new Scene( dialog ) );
+//		stage.show();
 	}
 
 	private static class LocalDateTableCell extends TableCell<WorkItem, LocalDateTime> {
@@ -92,11 +126,28 @@ public class PrimaryController implements Initializable {
 		protected void updateItem( LocalDateTime item, boolean empty ) {
 			super.updateItem( item, empty );
 			if ( empty || null == item ) {
-				setText( "empty" );
+				setText( null );
 			}
 			else {
-				setText( item.format( DateTimeFormatter.ISO_DATE_TIME ) );
+				setText( item.format( DateTimeFormatter.ofPattern( "dd-MM-yyyy hh:mm:ss.SSS" ) ) );
 			}
 		}
 	}
+
+	private static class LeadingEllipsisTableCell extends TableCell<WorkItem, Path> {
+
+		@Override
+		protected void updateItem( Path item, boolean empty ) {
+			super.updateItem( item, empty );
+
+			setTextOverrun( OverrunStyle.LEADING_ELLIPSIS );
+			if ( empty || null == item ) {
+				setText( null );
+			}
+			else {
+				setText( item.toString() );
+			}
+		}
+	}
+
 }

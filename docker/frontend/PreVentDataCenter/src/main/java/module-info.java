@@ -6,8 +6,10 @@ module com.ostrichemulators.prevent {
 	requires com.fasterxml.jackson.annotation;
 	requires com.fasterxml.jackson.core;
 	requires com.fasterxml.jackson.databind;
+	requires com.fasterxml.jackson.datatype.jsr310;
 	requires org.apache.commons.lang3;
+	requires org.apache.commons.codec;
 
-	opens com.ostrichemulators.prevent to javafx.fxml;
+	opens com.ostrichemulators.prevent to javafx.fxml, com.fasterxml.jackson.databind;
 	exports com.ostrichemulators.prevent;
 }

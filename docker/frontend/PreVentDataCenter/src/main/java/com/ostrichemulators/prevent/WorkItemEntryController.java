@@ -25,14 +25,12 @@ public class WorkItemEntryController {
 
 	@FXML
 	private void save() throws IOException {
-		System.out.println( "save" );
 		Stage stage = (Stage) savebtn.getScene().getWindow();
 		stage.close();
 	}
 
 	@FXML
 	private void cancel() throws IOException {
-		System.out.println( "cancel" );
 		Stage stage = (Stage) cancelbtn.getScene().getWindow();
 		stage.close();
 	}

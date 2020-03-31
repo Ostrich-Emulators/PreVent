@@ -14,7 +14,8 @@
       <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
         <items>
             <Button fx:id="primaryButton" onAction="#switchToSecondary" text="Switch to Secondary View" />
-            <Button fx:id="adddir" mnemonicParsing="false" onAction="#addDir" text="Add to Worklist" />
+            <Button mnemonicParsing="false" onAction="#addDir" text="Add Directory to Worklist" />
+            <Button mnemonicParsing="false" onAction="#addFiles" text="Add Files to Worklist" />
         </items>
       </ToolBar>
    </top>
