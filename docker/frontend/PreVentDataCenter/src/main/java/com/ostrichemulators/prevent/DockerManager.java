@@ -9,7 +9,7 @@ import com.amihaiemil.docker.Container;
 import com.amihaiemil.docker.Docker;
 import com.amihaiemil.docker.Image;
 import com.amihaiemil.docker.Images;
-import com.amihaiemil.docker.LocalDocker;
+import com.amihaiemil.docker.UnixDocker;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -49,8 +49,8 @@ public class DockerManager {
 
 	public static DockerManager connect() {
 		return new DockerManager( SystemUtils.IS_OS_WINDOWS
-				? new LocalDocker( new File( "/var/run/docker.sock" ) ) // don't know what the Windows equivalent is yet
-				: new LocalDocker( new File( "/var/run/docker.sock" ) ) );
+				? new UnixDocker( new File( "/var/run/docker.sock" ) ) // don't know what the Windows equivalent is yet
+				: new UnixDocker( new File( "/var/run/docker.sock" ) ) );
 	}
 
 	public boolean verifyOrPrepare() {
@@ -75,6 +75,10 @@ public class DockerManager {
 			LOG.error( "Is the Docker service running?", x );
 		}
 		return ( null != image );
+	}
+
+	public boolean isRunning( Container c ) {
+		return "running".equals( getContainerStates().getOrDefault( c, "missing" ) );
 	}
 
 	public Map<Container, String> getContainerStates() {
@@ -109,7 +113,7 @@ public class DockerManager {
 		}
 	}
 
-	public synchronized void convert( Collection<WorkItem> work ) throws IOException {
+	public void convert( Collection<WorkItem> work ) throws IOException {
 		todo.addAll( work );
 
 		for ( WorkItem item : work ) {
@@ -118,12 +122,16 @@ public class DockerManager {
 					Container c = createContainer( item );
 					item.started( c.containerId() );
 					c.start();
-					LOG.debug( "container {} has been started for {}", c.containerId(), item.getFile() );
+					LOG.debug( "container {} has been started for {}", c.containerId().substring( 0, 12 ), item.getFile() );
+					int retcode = c.waitOn( null );
+					LOG.debug( "done waiting! retcode: {}", retcode );
+					// FIXME: do housekeeping for this WorkItem now
 				}
 				catch ( IOException x ) {
 					LOG.error( "{}", x );
 				}
-			} );
+			}
+			);
 		}
 	}
 
