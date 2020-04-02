@@ -41,9 +41,37 @@ public class PrimaryController implements Initializable {
 	private TableColumn<WorkItem, LocalDateTime> endedcol;
 
 	private Path savelocation;
+	private DockerManager docker;
 
 	@Override
 	public void initialize( URL url, ResourceBundle rb ) {
+		savelocation = App.getConfigLocation();
+		fixTableLayout();
+
+		try {
+			table.getItems().addAll( Worklist.open( savelocation ) );
+		}
+		catch ( IOException x ) {
+			LOG.error( "{}", x );
+		}
+
+		docker = DockerManager.connect();
+		if ( docker.verifyOrPrepare() ) {
+			LOG.debug( "Docker is ready!" );
+
+			try {
+				docker.run( table.getItems() );
+			}
+			catch ( IOException x ) {
+				LOG.error( "{}", x );
+			}
+		}
+		else {
+			LOG.error( "Docker does not have the required images pulled" );
+		}
+	}
+
+	private void fixTableLayout() {
 		double sum = 0d;
 		for ( int i : COLWIDTHS ) {
 			sum += i;
@@ -54,14 +82,6 @@ public class PrimaryController implements Initializable {
 			double pct = COLWIDTHS[i] / sum;
 			cols[i].prefWidthProperty().bind(
 					table.widthProperty().multiply( pct ) );
-		}
-
-		savelocation = App.getConfigLocation();
-		try {
-			table.getItems().addAll( Worklist.open( savelocation ) );
-		}
-		catch ( IOException x ) {
-			LOG.error( "{}", x );
 		}
 
 		statuscol.setCellValueFactory( new PropertyValueFactory<>( "status" ) );
