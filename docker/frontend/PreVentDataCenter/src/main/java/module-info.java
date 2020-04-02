@@ -2,7 +2,9 @@ module com.ostrichemulators.prevent {
 	requires javafx.controls;
 	requires javafx.fxml;
 	requires java.base;
+	requires java.json;
 	requires org.slf4j;
+	requires com.amihaiemil.docker;
 	requires com.fasterxml.jackson.annotation;
 	requires com.fasterxml.jackson.core;
 	requires com.fasterxml.jackson.databind;

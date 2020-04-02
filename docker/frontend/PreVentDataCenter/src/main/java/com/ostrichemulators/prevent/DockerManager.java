@@ -6,20 +6,21 @@
 package com.ostrichemulators.prevent;
 
 import com.amihaiemil.docker.Container;
-import com.amihaiemil.docker.Containers;
 import com.amihaiemil.docker.Docker;
 import com.amihaiemil.docker.Image;
 import com.amihaiemil.docker.Images;
 import com.amihaiemil.docker.LocalDocker;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
@@ -35,10 +36,12 @@ import org.slf4j.LoggerFactory;
 public class DockerManager {
 
 	private static final Logger LOG = LoggerFactory.getLogger( DockerManager.class );
+	private static final int MAX_RUNNING_CONTAINERS = 1;
 
 	final Docker docker;
 	private Image image;
-	private final List<Container> runningContainers = new ArrayList<>();
+	private final Deque<WorkItem> todo = new ArrayDeque<>();
+	private final ExecutorService executor = Executors.newFixedThreadPool( MAX_RUNNING_CONTAINERS );
 
 	private DockerManager( Docker d ) {
 		docker = d;
@@ -66,13 +69,6 @@ public class DockerManager {
 					LOG.debug( "PreVent image not found...fetching latest" );
 					image = images.pull( "ry99/prevent", "latest" );
 				}
-
-				runningContainers.clear();
-				getContainerStates().forEach( ( c, s ) -> {
-					if ( "running".equals( s ) ) {
-						runningContainers.add( c );
-					}
-				} );
 			}
 		}
 		catch ( IOException x ) {
@@ -81,7 +77,7 @@ public class DockerManager {
 		return ( null != image );
 	}
 
-	private Map<Container, String> getContainerStates() {
+	public Map<Container, String> getContainerStates() {
 		Map<Container, String> containers = new HashMap<>();
 
 		Map<String, Iterable<String>> f = new HashMap<>();
@@ -89,7 +85,7 @@ public class DockerManager {
 		//f.put( "status", List.of( "running" ) );
 		docker.containers().all().forEachRemaining( c -> {
 			try {
-				JsonObject data = c.inspect().getJsonObject("State");
+				JsonObject data = c.inspect().getJsonObject( "State" );
 				String status = data.getString( "Status" );
 				containers.put( c, status );
 			}
@@ -101,37 +97,58 @@ public class DockerManager {
 		return containers;
 	}
 
-	public String run( Collection<WorkItem> work ) throws IOException {
-		Map<String, Path> neededDirs = new HashMap<>();
+	public void shutdown() {
+		executor.shutdown();
+		try {
+			if ( !executor.awaitTermination( 5, TimeUnit.SECONDS ) ) {
+				executor.shutdownNow();
+			}
+		}
+		catch ( InterruptedException e ) {
+			executor.shutdownNow();
+		}
+	}
 
-		work.stream()
-				.map( wi -> wi.getFile().getParent() )
-				.distinct()
-				.forEach( path -> neededDirs.put( String.format( "/opt/converter-%d", neededDirs.size() ), path ) );
+	public synchronized void convert( Collection<WorkItem> work ) throws IOException {
+		todo.addAll( work );
 
+		for ( WorkItem item : work ) {
+			executor.submit( () -> {
+				try {
+					Container c = createContainer( item );
+					item.started( c.containerId() );
+					c.start();
+					LOG.debug( "container {} has been started for {}", c.containerId(), item.getFile() );
+				}
+				catch ( IOException x ) {
+					LOG.error( "{}", x );
+				}
+			} );
+		}
+	}
+
+	private Container createContainer( WorkItem item ) throws IOException {
 		JsonArrayBuilder mounts = Json.createArrayBuilder();
 		JsonObjectBuilder volumes = Json.createObjectBuilder();
-		neededDirs.forEach( ( mount, path ) -> {
-			volumes.add( mount, Json.createObjectBuilder() );
-			mounts.add( String.format( "%s:%s", path, mount ) );
-		} );
+		mounts.add( String.format( "%s:/opt/todo", item.getFile().getParent().toString() ) );
+		volumes.add( "/opt/todo", Json.createObjectBuilder() );
 
 		JsonObjectBuilder hostconfig = Json.createObjectBuilder();
 		hostconfig.add( "Binds", mounts );
 
-		Containers containers = docker.containers();
 		JsonObjectBuilder config = Json.createObjectBuilder();
-
 		config.add( "Image", "ry99/prevent" );
 		//config.add( "Volumes", volumes );
 		config.add( "HostConfig", hostconfig );
+		config.add( "Cmd", Json.createArrayBuilder( List.of(
+				"--to",
+				"hdf5",
+				"--localtime",
+				String.format( "/opt/todo/%s", item.getFile().getFileName() ) ) ) );
 
 		JsonObject json = config.build();
 		LOG.debug( "{}", json );
-
-		Container cc = containers.create( json );
-
-		// make a new thread to feed this container all the files from work
-		return cc.containerId();
+		Container cc = docker.containers().create( json );
+		return cc;
 	}
 }

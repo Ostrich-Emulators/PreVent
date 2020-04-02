@@ -41,7 +41,6 @@ public class PrimaryController implements Initializable {
 	private TableColumn<WorkItem, LocalDateTime> endedcol;
 
 	private Path savelocation;
-	private DockerManager docker;
 
 	@Override
 	public void initialize( URL url, ResourceBundle rb ) {
@@ -55,12 +54,11 @@ public class PrimaryController implements Initializable {
 			LOG.error( "{}", x );
 		}
 
-		docker = DockerManager.connect();
-		if ( docker.verifyOrPrepare() ) {
+		if ( App.docker.verifyOrPrepare() ) {
 			LOG.debug( "Docker is ready!" );
 
 			try {
-				docker.run( table.getItems() );
+				App.docker.convert( table.getItems() );
 			}
 			catch ( IOException x ) {
 				LOG.error( "{}", x );

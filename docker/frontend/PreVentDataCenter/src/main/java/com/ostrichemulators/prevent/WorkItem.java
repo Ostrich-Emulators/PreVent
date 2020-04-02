@@ -161,7 +161,7 @@ public final class WorkItem {
 		return started;
 	}
 
-	public void start( String containerid ) {
+	public void started( String containerid ) {
 		this.started = LocalDateTime.now();
 		this.containerId = containerid;
 	}
@@ -192,7 +192,7 @@ public final class WorkItem {
 			return Status.STARTED;
 		}
 		if ( null == started ) {
-			// ugly, but let's see how it goes...remember to null start time if error occurs
+			// ugly, but let's see how it goes...remember to null started time if error occurs
 			return Status.ERROR;
 		}
 

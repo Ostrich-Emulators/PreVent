@@ -17,9 +17,12 @@ import org.apache.commons.lang3.SystemUtils;
 public class App extends Application {
 
 	private static Scene scene;
+	static DockerManager docker;
 
 	@Override
 	public void start( Stage stage ) throws IOException {
+		docker = DockerManager.connect();
+
 		scene = new Scene( loadFXML( "primary" ) );
 		stage.setScene( scene );
 		stage.setTitle( "PreVent Data Center" );
@@ -44,5 +47,11 @@ public class App extends Application {
 
 	public static void main( String[] args ) {
 		launch();
+	}
+
+	@Override
+	public void stop() throws Exception {
+		super.stop();
+		docker.shutdown();
 	}
 }
