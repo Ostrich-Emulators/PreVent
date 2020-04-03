@@ -9,13 +9,14 @@ import com.amihaiemil.docker.Container;
 import com.amihaiemil.docker.Docker;
 import com.amihaiemil.docker.Image;
 import com.amihaiemil.docker.Images;
+import com.amihaiemil.docker.UnexpectedResponseException;
 import com.amihaiemil.docker.UnixDocker;
+import com.ostrichemulators.prevent.WorkItem.Status;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayDeque;
+import java.time.ZonedDateTime;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,6 @@ public class DockerManager {
 
 	final Docker docker;
 	private Image image;
-	private final Deque<WorkItem> todo = new ArrayDeque<>();
 	private final ExecutorService executor = Executors.newFixedThreadPool( MAX_RUNNING_CONTAINERS );
 
 	private DockerManager( Docker d ) {
@@ -54,7 +54,7 @@ public class DockerManager {
 				: new UnixDocker( new File( "/var/run/docker.sock" ) ) );
 	}
 
-	public boolean verifyOrPrepare() {
+	public boolean verifyAndPrepare() {
 		try {
 			if ( docker.ping() ) {
 				image = null;
@@ -79,19 +79,21 @@ public class DockerManager {
 	}
 
 	public boolean isRunning( Container c ) {
-		return "running".equals( getContainerStates().getOrDefault( c, "missing" ) );
+		JsonObject obj = getContainerStates().get( c );
+		return ( null == obj
+				? false
+				: "running".equals( obj.getString( "Status" ) ) );
 	}
 
-	public Map<Container, String> getContainerStates() {
-		Map<Container, String> containers = new HashMap<>();
+	public Map<Container, JsonObject> getContainerStates() {
+		Map<Container, JsonObject> containers = new HashMap<>();
 
 		Map<String, Iterable<String>> f = new HashMap<>();
 		f.put( "ancestor", List.of( "ry99/prevent" ) );
 		docker.containers().all().forEachRemaining( c -> {
 			try {
 				JsonObject data = c.inspect().getJsonObject( "State" );
-				String status = data.getString( "Status" );
-				containers.put( c, status );
+				containers.put( c, data );
 			}
 			catch ( IOException x ) {
 				LOG.warn( "Unable to inspect container: {}", c.containerId(), x );
@@ -114,9 +116,10 @@ public class DockerManager {
 	}
 
 	public void convert( Collection<WorkItem> work, WorkItemStateChangeListener l ) throws IOException {
-		todo.addAll( work );
-
 		for ( WorkItem item : work ) {
+			item.queued();
+			l.itemChanged( item );
+
 			executor.submit( () -> {
 				try {
 					Container c = createContainer( item );
@@ -130,6 +133,7 @@ public class DockerManager {
 					}
 					else {
 						item.finished( LocalDateTime.now() );
+						c.remove();
 					}
 					l.itemChanged( item );
 
@@ -172,5 +176,80 @@ public class DockerManager {
 		//LOG.debug( "{}", json );
 		Container cc = docker.containers().create( json );
 		return cc;
+	}
+
+	public void reinitializeItems( Collection<WorkItem> items, WorkItemStateChangeListener l ) throws IOException {
+		Map<String, JsonObject> statusmap = new HashMap<>();
+		Map<String, Container> containermap = new HashMap<>();
+		getContainerStates().forEach( ( c, o ) -> {
+			statusmap.put( c.containerId(), o );
+			containermap.put( c.containerId(), c );
+		} );
+
+		// anything that was queued on the last run should be reset since
+		// that executor is no longer running
+		items.stream()
+				.filter( wi -> Status.QUEUED == wi.getStatus() )
+				.forEach( wi -> wi.reinit() );
+
+		// we only need to update items that are in the running state, in case
+		// they finished running while the app wasn't running
+		items.stream()
+				.filter( wi -> Status.STARTED == wi.getStatus() )
+				.forEach( wi -> {
+					JsonObject obj = statusmap.get( wi.getContainerId() );
+					if ( null == obj ) {
+						// we don't have this container anymore, so we can't tell what happened.
+						// we need to re-convert this item
+						wi.reinit();
+					}
+					else {
+						switch ( obj.getString( "Status" ) ) {
+							case "exited": {
+								int retval = obj.getInt( "ExitCode" );
+								if ( 0 == retval ) {
+									String endtime = obj.getString( "FinishedAt" );
+									try {
+										ZonedDateTime zdt = ZonedDateTime.parse( endtime );
+										wi.finished( zdt.toLocalDateTime() );
+										containermap.get( wi.getContainerId() ).remove();
+									}
+									catch ( UnexpectedResponseException | IOException x ) {
+										LOG.warn( "{}", x );
+									}
+								}
+								else {
+									wi.error( "unknown error at restart" );
+								}
+							}
+							break;
+							case "dead":
+								wi.reinit();
+								break;
+							case "running":
+								// if the item is still running, we need to listen for when
+								// it's done, and update our table appropriately
+								executor.submit( () -> {
+									try {
+										int retcode = containermap.get( wi.getContainerId() ).waitOn( null );
+										if ( retcode != 0 ) {
+											wi.error( "unknown error" );
+										}
+										else {
+											wi.finished( LocalDateTime.now() );
+											containermap.get( wi.getContainerId() ).remove();
+										}
+										l.itemChanged( wi );
+									}
+									catch ( IOException x ) {
+										LOG.error( "{}", x );
+									}
+								} );
+								break;
+							default:
+							// nothing to do here
+						}
+					}
+				} );
 	}
 }

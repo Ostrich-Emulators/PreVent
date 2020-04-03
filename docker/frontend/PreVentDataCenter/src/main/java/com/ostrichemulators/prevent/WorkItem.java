@@ -5,7 +5,6 @@
  */
 package com.ostrichemulators.prevent;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -18,6 +17,7 @@ public final class WorkItem {
 
 	public enum Status {
 		ADDED,
+		QUEUED,
 		STARTED,
 		FINISHED,
 		ERROR
@@ -25,9 +25,7 @@ public final class WorkItem {
 
 	private Path file;
 	private String containerId;
-	@JsonFormat( shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss.SSS" )
 	private LocalDateTime started;
-	@JsonFormat( shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss.SSS" )
 	private LocalDateTime finished;
 	private String checksum; // this is really the ID of this item
 	private String type;
@@ -70,8 +68,16 @@ public final class WorkItem {
 		return started;
 	}
 
+	public void queued() {
+		this.started = null;
+		this.finished = null;
+		this.containerId = null;
+		this.status = Status.QUEUED;
+	}
+
 	public void started( String containerid ) {
 		this.started = LocalDateTime.now();
+		this.finished = null;
 		this.containerId = containerid;
 		this.status = Status.STARTED;
 	}
@@ -88,6 +94,13 @@ public final class WorkItem {
 	public void error( String err ) {
 		this.finished = LocalDateTime.now();
 		this.status = Status.ERROR;
+	}
+
+	public void reinit() {
+		this.started = null;
+		this.finished = null;
+		this.containerId = null;
+		this.status = Status.ADDED;
 	}
 
 	public String getChecksum() {

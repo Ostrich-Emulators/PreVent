@@ -7,7 +7,11 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.OverrunStyle;
@@ -21,7 +25,7 @@ import javafx.stage.Window;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PrimaryController implements Initializable {
+public class PrimaryController implements Initializable, WorkItemStateChangeListener {
 
 	private static final Logger LOG = LoggerFactory.getLogger( PrimaryController.class );
 	private static final int COLWIDTHS[] = { 15, 50, 15, 15 };
@@ -47,18 +51,21 @@ public class PrimaryController implements Initializable {
 		savelocation = App.getConfigLocation();
 		fixTableLayout();
 
-		try {
-			table.getItems().addAll( Worklist.open( savelocation ) );
-		}
-		catch ( IOException x ) {
-			LOG.error( "{}", x );
-		}
-
-		if ( App.docker.verifyOrPrepare() ) {
+		if ( App.docker.verifyAndPrepare() ) {
 			LOG.debug( "Docker is ready!" );
 		}
 		else {
 			LOG.error( "Docker does not have the required images pulled" );
+		}
+
+		try {
+			List<WorkItem> allitems = Worklist.open( savelocation );
+			App.docker.reinitializeItems( allitems, this );
+
+			table.getItems().addAll( allitems );
+		}
+		catch ( IOException x ) {
+			LOG.error( "{}", x );
 		}
 	}
 
@@ -95,7 +102,12 @@ public class PrimaryController implements Initializable {
 	@FXML
 	void convert() throws IOException {
 		try {
-			App.docker.convert( table.getItems(), item -> table.refresh() );
+			// ignore items that are already running, already finished, or already queued
+			Set<Status> workable = new HashSet<>( List.of( Status.ERROR, Status.ADDED ) );
+			List<WorkItem> todo = table.getItems().stream()
+					.filter( wi -> workable.contains( wi.getStatus() ) )
+					.collect( Collectors.toList() );
+			App.docker.convert( todo, this );
 		}
 		catch ( IOException x ) {
 			LOG.error( "{}", x );
@@ -135,6 +147,17 @@ public class PrimaryController implements Initializable {
 		Worklist.save( table.getItems(), savelocation );
 	}
 
+	@Override
+	public void itemChanged( WorkItem item ) {
+		table.refresh();
+		try {
+			Worklist.save( table.getItems(), savelocation );
+		}
+		catch ( IOException xx ) {
+			LOG.warn( "Could not save WorkItem update", xx );
+		}
+	}
+
 	private static class LocalDateTableCell extends TableCell<WorkItem, LocalDateTime> {
 
 		@Override
@@ -164,5 +187,4 @@ public class PrimaryController implements Initializable {
 			}
 		}
 	}
-
 }

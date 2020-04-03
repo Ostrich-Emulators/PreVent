@@ -38,6 +38,7 @@ public class Worklist {
 			objmap = new ObjectMapper();
 			objmap.registerModule( new JavaTimeModule() );
 			objmap.configure( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false );
+			objmap.enable( SerializationFeature.INDENT_OUTPUT );
 		}
 
 		File file = saveloc.toFile();
@@ -81,7 +82,9 @@ public class Worklist {
 			}
 			else if ( !FilenameUtils.isExtension( p.getFileName().toString(), "hdf5" ) ) {
 				try ( InputStream is = new BufferedInputStream( new FileInputStream( p.toFile() ) ) ) {
-					return Optional.of( new WorkItem( p, DigestUtils.md5Hex( is ), null, null, null, null ) );
+					// ignore checksums for now
+					//return Optional.of( new WorkItem( p, DigestUtils.md5Hex( is ), null, null, null, null ) );
+					return Optional.of( new WorkItem( p, "", null, null, null, null ) );
 				}
 				catch ( IOException x ) {
 					LOG.error( "{}", x );
