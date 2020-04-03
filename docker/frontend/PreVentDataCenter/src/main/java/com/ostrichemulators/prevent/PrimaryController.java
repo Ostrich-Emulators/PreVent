@@ -56,13 +56,6 @@ public class PrimaryController implements Initializable {
 
 		if ( App.docker.verifyOrPrepare() ) {
 			LOG.debug( "Docker is ready!" );
-
-			try {
-				App.docker.convert( table.getItems() );
-			}
-			catch ( IOException x ) {
-				LOG.error( "{}", x );
-			}
 		}
 		else {
 			LOG.error( "Docker does not have the required images pulled" );
@@ -84,7 +77,7 @@ public class PrimaryController implements Initializable {
 
 		statuscol.setCellValueFactory( new PropertyValueFactory<>( "status" ) );
 
-		filecol.setCellValueFactory( new PropertyValueFactory<>( "file" ) );
+		filecol.setCellValueFactory( new PropertyValueFactory<>( "path" ) );
 		filecol.setCellFactory( column -> new LeadingEllipsisTableCell() );
 
 		startedcol.setCellValueFactory( new PropertyValueFactory<>( "started" ) );
@@ -100,13 +93,23 @@ public class PrimaryController implements Initializable {
 	}
 
 	@FXML
+	void convert() throws IOException {
+		try {
+			App.docker.convert( table.getItems(), item -> table.refresh() );
+		}
+		catch ( IOException x ) {
+			LOG.error( "{}", x );
+		}
+	}
+
+	@FXML
 	void addFiles() throws IOException {
 		FileChooser chsr = new FileChooser();
 		chsr.setTitle( "Create New Worklist Items" );
 		Window window = table.getScene().getWindow();
 
 		chsr.showOpenMultipleDialog( window ).stream()
-				.map( file -> WorkItem.from( file.toPath() ) )
+				.map( file -> Worklist.from( file.toPath() ) )
 				.filter( wi -> wi.isPresent() )
 				.map( wi -> wi.get() )
 				.forEach( wi -> table.getItems().add( wi ) );
@@ -128,7 +131,7 @@ public class PrimaryController implements Initializable {
 		Window window = table.getScene().getWindow();
 
 		File dir = chsr.showDialog( window );
-		WorkItem.recursively( dir.toPath() ).forEach( wi -> table.getItems().add( wi ) );
+		Worklist.recursively( dir.toPath() ).forEach( wi -> table.getItems().add( wi ) );
 		Worklist.save( table.getItems(), savelocation );
 	}
 

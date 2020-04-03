@@ -12,6 +12,7 @@ import com.amihaiemil.docker.Images;
 import com.amihaiemil.docker.UnixDocker;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
@@ -36,7 +37,7 @@ import org.slf4j.LoggerFactory;
 public class DockerManager {
 
 	private static final Logger LOG = LoggerFactory.getLogger( DockerManager.class );
-	private static final int MAX_RUNNING_CONTAINERS = 1;
+	private static final int MAX_RUNNING_CONTAINERS = 3;
 
 	final Docker docker;
 	private Image image;
@@ -86,7 +87,6 @@ public class DockerManager {
 
 		Map<String, Iterable<String>> f = new HashMap<>();
 		f.put( "ancestor", List.of( "ry99/prevent" ) );
-		//f.put( "status", List.of( "running" ) );
 		docker.containers().all().forEachRemaining( c -> {
 			try {
 				JsonObject data = c.inspect().getJsonObject( "State" );
@@ -113,7 +113,7 @@ public class DockerManager {
 		}
 	}
 
-	public void convert( Collection<WorkItem> work ) throws IOException {
+	public void convert( Collection<WorkItem> work, WorkItemStateChangeListener l ) throws IOException {
 		todo.addAll( work );
 
 		for ( WorkItem item : work ) {
@@ -121,9 +121,18 @@ public class DockerManager {
 				try {
 					Container c = createContainer( item );
 					item.started( c.containerId() );
+					l.itemChanged( item );
 					c.start();
-					LOG.debug( "container {} has been started for {}", c.containerId().substring( 0, 12 ), item.getFile() );
+					LOG.debug( "container {} has been started for {}", c.containerId().substring( 0, 12 ), item.getPath() );
 					int retcode = c.waitOn( null );
+					if ( retcode != 0 ) {
+						item.error( "unknown error" );
+					}
+					else {
+						item.finished( LocalDateTime.now() );
+					}
+					l.itemChanged( item );
+
 					LOG.debug( "done waiting! retcode: {}", retcode );
 					// FIXME: do housekeeping for this WorkItem now
 				}
@@ -138,24 +147,29 @@ public class DockerManager {
 	private Container createContainer( WorkItem item ) throws IOException {
 		JsonArrayBuilder mounts = Json.createArrayBuilder();
 		JsonObjectBuilder volumes = Json.createObjectBuilder();
-		mounts.add( String.format( "%s:/opt/todo", item.getFile().getParent().toString() ) );
+		mounts.add( String.format( "%s:/opt/todo", item.getPath().getParent().toString() ) );
 		volumes.add( "/opt/todo", Json.createObjectBuilder() );
 
 		JsonObjectBuilder hostconfig = Json.createObjectBuilder();
 		hostconfig.add( "Binds", mounts );
 
+		JsonArrayBuilder cmds = Json.createArrayBuilder( List.of(
+				"--to",
+				"hdf5",
+				"--localtime",
+				String.format( "/opt/todo/%s", item.getPath().getFileName() ) ) );
+		if ( null != item.getType() ) {
+			cmds.add( "--from" ).add( item.getType() );
+		}
+
 		JsonObjectBuilder config = Json.createObjectBuilder();
 		config.add( "Image", "ry99/prevent" );
 		//config.add( "Volumes", volumes );
 		config.add( "HostConfig", hostconfig );
-		config.add( "Cmd", Json.createArrayBuilder( List.of(
-				"--to",
-				"hdf5",
-				"--localtime",
-				String.format( "/opt/todo/%s", item.getFile().getFileName() ) ) ) );
+		config.add( "Cmd", cmds );
 
 		JsonObject json = config.build();
-		LOG.debug( "{}", json );
+		//LOG.debug( "{}", json );
 		Container cc = docker.containers().create( json );
 		return cc;
 	}

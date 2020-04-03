@@ -6,22 +6,9 @@
 package com.ostrichemulators.prevent;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -36,7 +23,6 @@ public final class WorkItem {
 		ERROR
 	}
 
-	private static final Logger LOG = LoggerFactory.getLogger( WorkItem.class );
 	private Path file;
 	private String containerId;
 	@JsonFormat( shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss.SSS" )
@@ -44,108 +30,31 @@ public final class WorkItem {
 	@JsonFormat( shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss.SSS" )
 	private LocalDateTime finished;
 	private String checksum; // this is really the ID of this item
+	private String type;
+	private Status status = Status.ADDED;
 
 	private WorkItem() {
 	}
 
-	private WorkItem( Path file, String checksum, String containerId, LocalDateTime started, LocalDateTime finished ) {
-		setFile( file );
+	WorkItem( Path file, String checksum, String containerId, LocalDateTime started,
+			LocalDateTime finished, String type ) {
+		setPath( file );
 		this.containerId = containerId;
 		this.started = started;
 		this.finished = finished;
 		this.checksum = checksum;
+		this.type = type;
 	}
 
-	public static Optional<WorkItem> from( Path p ) {
-		File f = p.toFile();
-
-		if ( f.canRead() ) {
-			if ( f.isDirectory() ) {
-				// check if this directory is WFDB, DWC, or ZL
-
-				// DWC
-				File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "info" ) );
-				if ( inners.length > 0 ) {
-					return from( inners[0].toPath() );
-				}
-
-				// WFDB
-				inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "hea" ) );
-				if ( inners.length > 0 ) {
-					return from( inners[0].toPath() );
-				}
-
-				// ZL
-				inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "gzip" ) );
-				if ( inners.length > 0 ) {
-					return Optional.of( new WorkItem( p, DigestUtils.md5Hex( p.toAbsolutePath().toString() ), null, null, null ) );
-				}
-			}
-			else {
-				try ( InputStream is = new BufferedInputStream( new FileInputStream( p.toFile() ) ) ) {
-					return Optional.of( new WorkItem( p, DigestUtils.md5Hex( is ), null, null, null ) );
-				}
-				catch ( IOException x ) {
-					LOG.error( "{}", x );
-				}
-			}
-		}
-		return Optional.empty();
+	public String getType() {
+		return type;
 	}
 
-	public static List<WorkItem> recursively( Path p ) {
-		List<WorkItem> items = new ArrayList<>();
-		File f = p.toFile();
-		if ( f.canRead() ) {
-			if ( f.isDirectory() ) {
-				// if we have a DWC, WFDB, or ZL directory, we can't recurse...
-				// but if we have anything else, then recurse and add whatever we find.
-
-				// DWC
-				File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "info" ) );
-				if ( inners.length > 0 ) {
-					from( inners[0].toPath() ).ifPresent( wi -> items.add( wi ) );
-				}
-				else {
-					// WFDB
-					inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "hea" ) );
-					if ( inners.length > 0 ) {
-						from( inners[0].toPath() ).ifPresent( wi -> items.add( wi ) );
-					}
-					else {
-						// ZL
-						inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "gzip" ) );
-						if ( inners.length > 0 ) {
-							from( p ).ifPresent( wi -> items.add( wi ) );
-						}
-						else {
-							// f is a directory, so add all files we find there, and recurse
-							// into all subdirectories
-							for ( File sub : f.listFiles() ) {
-								if ( sub.isDirectory() ) {
-									items.addAll( recursively( sub.toPath() ) );
-								}
-								else {
-									from( sub.toPath() ).ifPresent( wi -> items.add( wi ) );
-								}
-							}
-						}
-					}
-				}
-			}
-			else {
-				from( p ).ifPresent( wi -> items.add( wi ) );
-			}
-		}
-
-		return items;
-	}
-
-	public Path getFile() {
+	public Path getPath() {
 		return file;
 	}
 
-	public void setFile( Path file ) {
+	public void setPath( Path file ) {
 		this.file = file;
 	}
 
@@ -164,45 +73,37 @@ public final class WorkItem {
 	public void started( String containerid ) {
 		this.started = LocalDateTime.now();
 		this.containerId = containerid;
+		this.status = Status.STARTED;
 	}
 
 	public LocalDateTime getFinished() {
 		return finished;
 	}
 
-	public void finish( LocalDateTime finished ) {
+	public void finished( LocalDateTime finished ) {
 		this.finished = finished;
+		this.status = Status.FINISHED;
 	}
 
 	public void error( String err ) {
 		this.finished = LocalDateTime.now();
-		this.started = null; // to force "error" status
+		this.status = Status.ERROR;
 	}
 
 	public String getChecksum() {
 		return checksum;
 	}
 
-	@JsonIgnore
 	public Status getStatus() {
-		if ( null == started && null == finished ) {
-			return Status.ADDED;
-		}
-		if ( null == finished ) {
-			return Status.STARTED;
-		}
-		if ( null == started ) {
-			// ugly, but let's see how it goes...remember to null started time if error occurs
-			return Status.ERROR;
-		}
-
-		return Status.FINISHED;
+		return status;
 	}
 
 	@Override
 	public int hashCode() {
-		int hash = 3;
-		hash = 13 * hash + Objects.hashCode( this.checksum );
+		int hash = 5;
+		hash = 23 * hash + Objects.hashCode( this.file );
+		hash = 23 * hash + Objects.hashCode( this.containerId );
+		hash = 23 * hash + Objects.hashCode( this.status );
 		return hash;
 	}
 
@@ -218,6 +119,15 @@ public final class WorkItem {
 			return false;
 		}
 		final WorkItem other = (WorkItem) obj;
-		return Objects.equals( this.checksum, other.checksum );
+		if ( !Objects.equals( this.containerId, other.containerId ) ) {
+			return false;
+		}
+		if ( !Objects.equals( this.file, other.file ) ) {
+			return false;
+		}
+		if ( this.status != other.status ) {
+			return false;
+		}
+		return true;
 	}
 }
