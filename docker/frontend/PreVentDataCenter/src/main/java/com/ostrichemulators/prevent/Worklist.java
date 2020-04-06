@@ -53,7 +53,7 @@ public class Worklist {
 		objmap.writeValue( savedloc.toFile(), items );
 	}
 
-	public static Optional<WorkItem> from( Path p ) {
+	public static Optional<WorkItem> from( Path p, boolean nativestp ) {
 		File f = p.toFile();
 
 		if ( f.canRead() ) {
@@ -63,13 +63,13 @@ public class Worklist {
 				// DWC
 				File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "info" ) );
 				if ( inners.length > 0 ) {
-					return from( inners[0].toPath() );
+					return from( inners[0].toPath(), nativestp );
 				}
 
 				// WFDB
 				inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "hea" ) );
 				if ( inners.length > 0 ) {
-					return from( inners[0].toPath() );
+					return from( inners[0].toPath(), nativestp );
 				}
 
 				// ZL
@@ -81,20 +81,24 @@ public class Worklist {
 				}
 			}
 			else if ( !FilenameUtils.isExtension( p.getFileName().toString(), "hdf5" ) ) {
-				try ( InputStream is = new BufferedInputStream( new FileInputStream( p.toFile() ) ) ) {
-					// ignore checksums for now
-					//return Optional.of( new WorkItem( p, DigestUtils.md5Hex( is ), null, null, null, null ) );
-					return Optional.of( new WorkItem( p, "", null, null, null, null ) );
+				if ( FilenameUtils.isExtension( p.getFileName().toString(), "stp" ) && !nativestp ) {
+					return Optional.of( new WorkItem( p, "", null, null, null, "stpxml" ) );
 				}
-				catch ( IOException x ) {
-					LOG.error( "{}", x );
-				}
+
+				//try ( InputStream is = new BufferedInputStream( new FileInputStream( p.toFile() ) ) ) {
+				// ignore checksums for now
+				//return Optional.of( new WorkItem( p, DigestUtils.md5Hex( is ), null, null, null, null ) );
+				return Optional.of( new WorkItem( p, "", null, null, null, null ) );
+				//}
+				//catch ( IOException x ) {
+				//	LOG.error( "{}", x );
+				//}
 			}
 		}
 		return Optional.empty();
 	}
 
-	public static List<WorkItem> recursively( Path p ) {
+	public static List<WorkItem> recursively( Path p, boolean nativestp ) {
 		List<WorkItem> items = new ArrayList<>();
 		File f = p.toFile();
 		if ( f.canRead() ) {
@@ -105,29 +109,29 @@ public class Worklist {
 				// DWC
 				File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "info" ) );
 				if ( inners.length > 0 ) {
-					from( inners[0].toPath() ).ifPresent( wi -> items.add( wi ) );
+					from( inners[0].toPath(), nativestp ).ifPresent( wi -> items.add( wi ) );
 				}
 				else {
 					// WFDB
 					inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "hea" ) );
 					if ( inners.length > 0 ) {
-						from( inners[0].toPath() ).ifPresent( wi -> items.add( wi ) );
+						from( inners[0].toPath(), nativestp ).ifPresent( wi -> items.add( wi ) );
 					}
 					else {
 						// ZL
 						inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "gzip" ) );
 						if ( inners.length > 0 ) {
-							from( p ).ifPresent( wi -> items.add( wi ) );
+							from( p, nativestp ).ifPresent( wi -> items.add( wi ) );
 						}
 						else {
 							// f is a directory, so add all files we find there, and recurse
 							// into all subdirectories
 							for ( File sub : f.listFiles() ) {
 								if ( sub.isDirectory() ) {
-									items.addAll( recursively( sub.toPath() ) );
+									items.addAll( recursively( sub.toPath(), nativestp ) );
 								}
 								else {
-									from( sub.toPath() ).ifPresent( wi -> items.add( wi ) );
+									from( sub.toPath(), nativestp ).ifPresent( wi -> items.add( wi ) );
 								}
 							}
 						}
@@ -135,7 +139,7 @@ public class Worklist {
 				}
 			}
 			else {
-				from( p ).ifPresent( wi -> items.add( wi ) );
+				from( p, nativestp ).ifPresent( wi -> items.add( wi ) );
 			}
 		}
 

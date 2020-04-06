@@ -14,6 +14,7 @@ import com.amihaiemil.docker.UnixDocker;
 import com.ostrichemulators.prevent.WorkItem.Status;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Collection;
@@ -27,6 +28,7 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,6 +130,17 @@ public class DockerManager {
 		}
 	}
 
+	private static Path xmlPathForStp( WorkItem item ) {
+		// FIXME: this isn't right
+		return item.getPath();
+	}
+
+	private static boolean needsStpToXmlConversion( WorkItem item ) {
+		return ( "stp".equalsIgnoreCase( FilenameUtils.getExtension( item.getPath().toString() ) )
+				&& "stpxml".equalsIgnoreCase( item.getType() ) );
+
+	}
+
 	public void convert( Collection<WorkItem> work, WorkItemStateChangeListener l ) throws IOException {
 		for ( WorkItem item : work ) {
 			item.queued();
@@ -135,6 +148,12 @@ public class DockerManager {
 
 			executor.submit( () -> {
 				try {
+					// if the extension is stp, but the type is stpxml, we need to do
+					// the STPtoXML conversion before we can convert (and remove XML afterwards)
+					if ( needsStpToXmlConversion( item ) ) {
+
+					}
+
 					Container c = createContainer( item );
 					item.started( c.containerId() );
 					l.itemChanged( item );
@@ -174,7 +193,9 @@ public class DockerManager {
 				"--to",
 				"hdf5",
 				"--localtime",
-				String.format( "/opt/todo/%s", item.getPath().getFileName() ) ) );
+				String.format( "/opt/todo/%s", ( needsStpToXmlConversion( item )
+						? xmlPathForStp( item )
+						: item.getPath() ).getFileName() ) ) );
 		if ( null != item.getType() ) {
 			cmds.add( "--from" ).add( item.getType() );
 		}

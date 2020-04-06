@@ -9,6 +9,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.prefs.Preferences;
 import org.apache.commons.lang3.SystemUtils;
 
 /**
@@ -17,12 +18,11 @@ import org.apache.commons.lang3.SystemUtils;
 public class App extends Application {
 
 	private static Scene scene;
-	static DockerManager docker;
+	static final DockerManager docker = DockerManager.connect();
+	static final Preferences prefs = Preferences.userRoot().node( "com/ostrichemulators/prevent" );
 
 	@Override
 	public void start( Stage stage ) throws IOException {
-		docker = DockerManager.connect();
-
 		scene = new Scene( loadFXML( "primary" ) );
 		stage.setScene( scene );
 		stage.setTitle( "PreVent Data Center" );
