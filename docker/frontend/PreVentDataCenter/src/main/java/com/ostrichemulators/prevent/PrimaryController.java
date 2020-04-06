@@ -11,10 +11,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.OverrunStyle;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -44,12 +48,38 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 	@FXML
 	private TableColumn<WorkItem, LocalDateTime> endedcol;
 
+	@FXML
+	private CheckBox nativestp;
+
+	@FXML
+	private Spinner<Integer> dockercnt;
+	private final Preferences prefs = Preferences.userRoot().node( "com/ostrichemulators/prevent" );
+
+	@FXML
+	void saveconfig() {
+		App.docker.setMaxContainers( dockercnt.getValue() );
+		dockercnt.setValueFactory( new SpinnerValueFactory.IntegerSpinnerValueFactory( 1,
+				10, dockercnt.getValue() ) );
+		prefs.putBoolean( "parser.stp.native", nativestp.isSelected() );
+		prefs.putInt( "docker.containers.max", dockercnt.getValue() );
+	}
+
 	private Path savelocation;
+
+	private void loadPrefs() {
+		nativestp.setSelected( prefs.getBoolean( "parser.stp.native", false ) );
+		App.docker.setMaxContainers( prefs.getInt( "docker.containers.max",
+				DockerManager.DEFAULT_MAX_RUNNING_CONTAINERS ) );
+		dockercnt.setValueFactory( new SpinnerValueFactory.IntegerSpinnerValueFactory( 1,
+				10, App.docker.getMaxContainers() ) );
+	}
 
 	@Override
 	public void initialize( URL url, ResourceBundle rb ) {
 		savelocation = App.getConfigLocation();
 		fixTableLayout();
+
+		loadPrefs();
 
 		if ( App.docker.verifyAndPrepare() ) {
 			LOG.debug( "Docker is ready!" );

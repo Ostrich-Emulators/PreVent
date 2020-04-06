@@ -38,11 +38,12 @@ import org.slf4j.LoggerFactory;
 public class DockerManager {
 
 	private static final Logger LOG = LoggerFactory.getLogger( DockerManager.class );
-	private static final int MAX_RUNNING_CONTAINERS = 3;
+	public static final int DEFAULT_MAX_RUNNING_CONTAINERS = 3;
 
 	final Docker docker;
 	private Image image;
-	private final ExecutorService executor = Executors.newFixedThreadPool( MAX_RUNNING_CONTAINERS );
+	private int maxcontainers = DEFAULT_MAX_RUNNING_CONTAINERS;
+	private ExecutorService executor = Executors.newFixedThreadPool( maxcontainers );
 
 	private DockerManager( Docker d ) {
 		docker = d;
@@ -52,6 +53,18 @@ public class DockerManager {
 		return new DockerManager( SystemUtils.IS_OS_WINDOWS
 				? new UnixDocker( new File( "/var/run/docker.sock" ) ) // don't know what the Windows equivalent is yet
 				: new UnixDocker( new File( "/var/run/docker.sock" ) ) );
+	}
+
+	public void setMaxContainers( int maxx ) {
+		if ( maxx != maxcontainers ) {
+			shutdown();
+			maxcontainers = maxx;
+			executor = Executors.newFixedThreadPool( maxcontainers );
+		}
+	}
+
+	public int getMaxContainers() {
+		return maxcontainers;
 	}
 
 	public boolean verifyAndPrepare() {
