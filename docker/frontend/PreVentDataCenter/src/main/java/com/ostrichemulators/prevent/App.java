@@ -42,7 +42,7 @@ public class App extends Application {
 
 		return ( SystemUtils.IS_OS_WINDOWS
 				? Paths.get( userhome, "Application Data", "Prevent Data Center", "worklist.pdc" )
-				: Paths.get( userhome, ".worklist.pdc" ) );
+				: Paths.get( userhome, ".prevent", "worklist.pdc" ) );
 	}
 
 	public static void main( String[] args ) {

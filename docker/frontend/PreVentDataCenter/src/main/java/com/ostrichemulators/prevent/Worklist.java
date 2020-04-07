@@ -8,17 +8,13 @@ package com.ostrichemulators.prevent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +46,9 @@ public class Worklist {
 	}
 
 	public static void save( List<WorkItem> items, Path savedloc ) throws IOException {
+		if ( !savedloc.getParent().toFile().exists() ) {
+			savedloc.getParent().toFile().mkdirs();
+		}
 		objmap.writeValue( savedloc.toFile(), items );
 	}
 

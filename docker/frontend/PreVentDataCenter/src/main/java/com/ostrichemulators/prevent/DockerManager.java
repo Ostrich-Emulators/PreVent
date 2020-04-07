@@ -15,6 +15,7 @@ import com.ostrichemulators.prevent.WorkItem.Status;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Collection;
@@ -131,8 +132,9 @@ public class DockerManager {
 	}
 
 	private static Path xmlPathForStp( WorkItem item ) {
-		// FIXME: this isn't right
-		return item.getPath();
+		File f = item.getPath().toFile();
+		String filename = FilenameUtils.getBaseName( f.toString() );
+		return Paths.get( f.getParent(), filename + ".xml" );
 	}
 
 	private static boolean needsStpToXmlConversion( WorkItem item ) {
@@ -151,7 +153,7 @@ public class DockerManager {
 					// if the extension is stp, but the type is stpxml, we need to do
 					// the STPtoXML conversion before we can convert (and remove XML afterwards)
 					if ( needsStpToXmlConversion( item ) ) {
-
+						StpToXml.convert( item.getPath(), xmlPathForStp( item ) );
 					}
 
 					Container c = createContainer( item );
@@ -174,6 +176,8 @@ public class DockerManager {
 				}
 				catch ( IOException x ) {
 					LOG.error( "{}", x );
+					item.error( x.getMessage());
+					l.itemChanged( item );
 				}
 			}
 			);
