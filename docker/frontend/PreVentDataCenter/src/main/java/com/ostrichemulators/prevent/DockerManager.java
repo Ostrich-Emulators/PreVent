@@ -9,6 +9,7 @@ import com.amihaiemil.docker.Container;
 import com.amihaiemil.docker.Docker;
 import com.amihaiemil.docker.Image;
 import com.amihaiemil.docker.Images;
+import com.amihaiemil.docker.Logs;
 import com.amihaiemil.docker.UnexpectedResponseException;
 import com.amihaiemil.docker.UnixDocker;
 import com.ostrichemulators.prevent.WorkItem.Status;
@@ -168,6 +169,9 @@ public class DockerManager {
 					c.start();
 					LOG.debug( "container {} has been started for {}", c.containerId().substring( 0, 12 ), item.getPath() );
 					int retcode = c.waitOn( null );
+					Logs logs = c.logs();
+					String stdout  = logs.stdout().fetch();
+					String stderr  = logs.stderr().fetch();
 					if ( retcode != 0 ) {
 						item.error( "unknown error" );
 					}
