@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -54,6 +55,7 @@ public class DockerManager {
 	private ExecutorService executor = Executors.newFixedThreadPool( maxcontainers );
 	private ScheduledExecutorService threadreaper;
 	private final Map<WorkItem, FutureTask<WorkItem>> runningThreads = Collections.synchronizedMap( new HashMap<>() );
+	private ScheduledFuture<?> reaperop;
 
 	private DockerManager( Docker d ) {
 		docker = d;
@@ -87,7 +89,6 @@ public class DockerManager {
 	}
 
 	public boolean verifyAndPrepare() {
-		startTheReaper();
 		try {
 			if ( docker.ping() ) {
 				image = null;
@@ -137,7 +138,10 @@ public class DockerManager {
 	}
 
 	public void shutdown() {
-		threadreaper.shutdownNow();
+		if ( null != threadreaper ) {
+			threadreaper.shutdownNow();
+		}
+
 		executor.shutdown();
 		try {
 			if ( !executor.awaitTermination( 5, TimeUnit.SECONDS ) ) {
@@ -149,29 +153,36 @@ public class DockerManager {
 		}
 
 		// stop all our timer threads so the system can shutdown cleanly
-		runningThreads.values().forEach( ft -> ft.cancel( true ) );
+		//runningThreads.values().forEach( ft -> ft.cancel( true ) );
 	}
 
-	private void startTheReaper() {
+	private void startReaping() {
+		if ( true ) {
+			return;
+		}
+
 		if ( null == threadreaper ) {
 			LOG.debug( "starting the conversion reaper" );
 			threadreaper = Executors.newSingleThreadScheduledExecutor();
 			// start a thread to stop threads that run too long
-			threadreaper.scheduleAtFixedRate( () -> {
+			reaperop = threadreaper.scheduleAtFixedRate( () -> {
 				// go through our running WorkItems, and calculate running time
-				LOG.debug( "thread reaper approaches..." );
+				LOG.debug( "conversion reaper approaches... {} {}", reaperop.isDone(), reaperop.isCancelled() );
 				final LocalDateTime NOW = LocalDateTime.now();
 				final int MAXDURR = App.prefs.getInt( Preference.CONVERSIONLIMIT, Integer.MAX_VALUE );
+
+				if ( runningThreads.isEmpty() ) {
+					LOG.debug( "nothing for reaper to reap" );
+				}
+
 				runningThreads.forEach( ( wi, ft ) -> {
 					Duration timed = Duration.between( wi.getStarted(), NOW );
-					LOG.debug( "checking item: {} ...runtime: {}", wi.getContainerId().substring( 0, 12 ), timed.toSeconds() );
-					if ( Status.RUNNING == wi.getStatus() && MAXDURR < timed.toSeconds() ) {
-						LOG.info( "killing conversion: {} in container {}", wi.getPath(), wi.getContainerId().substring( 0, 12 ) );
+					LOG.debug( "checking item: {} ...runtime: {}s (max:{}s)", wi, timed.toSeconds(), MAXDURR );
+					if ( Status.RUNNING == wi.getStatus() && MAXDURR <= timed.toSeconds() ) {
 						ft.cancel( true );
 					}
 				} );
 			}, 0, 5, TimeUnit.SECONDS );
-
 		}
 	}
 
@@ -188,6 +199,8 @@ public class DockerManager {
 	}
 
 	public void convert( Collection<WorkItem> work, WorkItemStateChangeListener l ) throws IOException {
+		startReaping();
+
 		for ( WorkItem item : work ) {
 			item.queued();
 			l.itemChanged( item );
@@ -210,18 +223,13 @@ public class DockerManager {
 					item.started( c.containerId() );
 					l.itemChanged( item );
 					c.start();
-					LOG.debug( "container {} has been started for {}", c.containerId().substring( 0, 12 ), item.getPath() );
+					LOG.debug( "container has been started for {}", item );
 					int retcode = c.waitOn( null );
 					Logs logs = c.logs();
 					String stdout = logs.stdout().fetch();
 					String stderr = logs.stderr().fetch();
 					if ( retcode != 0 ) {
-						if ( 137 == retcode ) {
-							item.killed();
-						}
-						else {
-							item.error( "unknown error" );
-						}
+						item.error( "unknown error" );
 					}
 					else {
 						item.finished( LocalDateTime.now() );
@@ -251,11 +259,16 @@ public class DockerManager {
 				public boolean cancel( boolean mayInterruptIfRunning ) {
 					if ( super.cancel( mayInterruptIfRunning ) ) {
 						for ( Container c : docker.containers() ) {
-							try {
-								c.kill();
-							}
-							catch ( IOException x ) {
-								LOG.error( "could not stop container: {}", c.containerId().subSequence( 0, 12 ), x );
+							if ( c.containerId().equals( item.getContainerId() ) ) {
+								try {
+									c.kill();
+									LOG.debug( "cancelling (killing) item:{}", item );
+									item.killed();
+									l.itemChanged( item );
+								}
+								catch ( IOException x ) {
+									LOG.error( "could not stop container for item: {}", item );
+								}
 							}
 						}
 					}
@@ -267,6 +280,11 @@ public class DockerManager {
 				runningThreads.put( item, conversion );
 				conversion.run();
 				runningThreads.remove( item );
+				if ( runningThreads.isEmpty() && null != threadreaper ) {
+					LOG.debug( "stopping the conversion reaper (nothing to reap)" );
+					threadreaper.shutdownNow();
+					threadreaper = null;
+				}
 			} );
 		}
 	}

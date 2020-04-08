@@ -148,4 +148,11 @@ public final class WorkItem {
 		}
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return String.format( "%s {%s}", file, ( null == containerId
+				? ""
+				: containerId.substring( 0, 12 ) ) );
+	}
 }
