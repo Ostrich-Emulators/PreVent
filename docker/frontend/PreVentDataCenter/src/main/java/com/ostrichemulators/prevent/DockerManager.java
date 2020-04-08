@@ -153,7 +153,13 @@ public class DockerManager {
 					// if the extension is stp, but the type is stpxml, we need to do
 					// the STPtoXML conversion before we can convert (and remove XML afterwards)
 					if ( needsStpToXmlConversion( item ) ) {
-						StpToXml.convert( item.getPath(), xmlPathForStp( item ) );
+						Process proc = StpToXml.convert( item.getPath(), xmlPathForStp( item ) );
+						int ret = proc.waitFor();
+						if ( 0 != ret ) {
+							item.error( "stp conversion failed" );
+							l.itemChanged( item );
+							return;
+						}
 					}
 
 					Container c = createContainer( item );
@@ -174,10 +180,15 @@ public class DockerManager {
 					LOG.debug( "done waiting! retcode: {}", retcode );
 					// FIXME: do housekeeping for this WorkItem now
 				}
-				catch ( IOException x ) {
+				catch ( IOException | InterruptedException x ) {
 					LOG.error( "{}", x );
-					item.error( x.getMessage());
+					item.error( x.getMessage() );
 					l.itemChanged( item );
+				}
+				finally {
+					if ( needsStpToXmlConversion( item ) ) {
+						xmlPathForStp( item ).toFile().delete();
+					}
 				}
 			}
 			);

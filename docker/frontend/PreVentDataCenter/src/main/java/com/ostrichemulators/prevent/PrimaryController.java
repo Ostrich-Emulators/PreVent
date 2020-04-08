@@ -31,9 +31,6 @@ import org.slf4j.LoggerFactory;
 
 public class PrimaryController implements Initializable, WorkItemStateChangeListener {
 
-	private static final String NATIVESTP = "parser.stp.native";
-	private static final String DOCKERCOUNT = "docker.containers.max";
-
 	private static final Logger LOG = LoggerFactory.getLogger( PrimaryController.class );
 	private static final int COLWIDTHS[] = { 15, 50, 15, 15 };
 	@FXML
@@ -55,6 +52,9 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 	private CheckBox nativestp;
 
 	@FXML
+	private CheckBox usephilips;
+
+	@FXML
 	private Spinner<Integer> dockercnt;
 	private final Preferences prefs = Preferences.userRoot().node( "com/ostrichemulators/prevent" );
 	private Path savelocation;
@@ -64,13 +64,15 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 		App.docker.setMaxContainers( dockercnt.getValue() );
 		dockercnt.setValueFactory( new SpinnerValueFactory.IntegerSpinnerValueFactory( 1,
 				10, dockercnt.getValue() ) );
-		prefs.putBoolean( NATIVESTP, nativestp.isSelected() );
-		prefs.putInt( DOCKERCOUNT, dockercnt.getValue() );
+		prefs.putBoolean( App.NATIVESTP, nativestp.isSelected() );
+		prefs.putBoolean( App.STPISPHILIPS, usephilips.isSelected() );
+		prefs.putInt( App.DOCKERCOUNT, dockercnt.getValue() );
 	}
 
 	private void loadPrefs() {
-		nativestp.setSelected( prefs.getBoolean( NATIVESTP, false ) );
-		App.docker.setMaxContainers( prefs.getInt( DOCKERCOUNT,
+		nativestp.setSelected( prefs.getBoolean( App.NATIVESTP, false ) );
+		usephilips.setSelected( prefs.getBoolean( App.STPISPHILIPS, false ) );
+		App.docker.setMaxContainers( prefs.getInt( App.DOCKERCOUNT,
 				DockerManager.DEFAULT_MAX_RUNNING_CONTAINERS ) );
 		dockercnt.setValueFactory( new SpinnerValueFactory.IntegerSpinnerValueFactory( 1,
 				10, App.docker.getMaxContainers() ) );
@@ -151,7 +153,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 		FileChooser chsr = new FileChooser();
 		chsr.setTitle( "Create New Worklist Items" );
 		Window window = table.getScene().getWindow();
-		final boolean nativestpx = App.prefs.getBoolean( NATIVESTP, false );
+		final boolean nativestpx = App.prefs.getBoolean( App.NATIVESTP, false );
 
 		chsr.showOpenMultipleDialog( window ).stream()
 				.map( file -> Worklist.from( file.toPath(), nativestpx ) )
@@ -174,7 +176,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 		DirectoryChooser chsr = new DirectoryChooser();
 		chsr.setTitle( "Create New Worklist Items from Directory" );
 		Window window = table.getScene().getWindow();
-		final boolean nativestpx = App.prefs.getBoolean( NATIVESTP, false );
+		final boolean nativestpx = App.prefs.getBoolean( App.NATIVESTP, false );
 
 		File dir = chsr.showDialog( window );
 		Worklist.recursively( dir.toPath(), nativestpx ).forEach( wi -> table.getItems().add( wi ) );
