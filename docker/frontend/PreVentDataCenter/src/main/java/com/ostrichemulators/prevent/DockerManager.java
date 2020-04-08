@@ -17,14 +17,18 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -48,6 +52,8 @@ public class DockerManager {
 	private Image image;
 	private int maxcontainers = DEFAULT_MAX_RUNNING_CONTAINERS;
 	private ExecutorService executor = Executors.newFixedThreadPool( maxcontainers );
+	private ScheduledExecutorService threadreaper;
+	private final Map<WorkItem, FutureTask<WorkItem>> runningThreads = Collections.synchronizedMap( new HashMap<>() );
 
 	private DockerManager( Docker d ) {
 		docker = d;
@@ -61,7 +67,16 @@ public class DockerManager {
 
 	public void setMaxContainers( int maxx ) {
 		if ( maxx != maxcontainers ) {
-			shutdown();
+			executor.shutdown();
+			try {
+				if ( !executor.awaitTermination( 500, TimeUnit.MILLISECONDS ) ) {
+					executor.shutdownNow();
+				}
+			}
+			catch ( InterruptedException e ) {
+				executor.shutdownNow();
+			}
+
 			maxcontainers = maxx;
 			executor = Executors.newFixedThreadPool( maxcontainers );
 		}
@@ -72,6 +87,7 @@ public class DockerManager {
 	}
 
 	public boolean verifyAndPrepare() {
+		startTheReaper();
 		try {
 			if ( docker.ping() ) {
 				image = null;
@@ -121,6 +137,7 @@ public class DockerManager {
 	}
 
 	public void shutdown() {
+		threadreaper.shutdownNow();
 		executor.shutdown();
 		try {
 			if ( !executor.awaitTermination( 5, TimeUnit.SECONDS ) ) {
@@ -129,6 +146,32 @@ public class DockerManager {
 		}
 		catch ( InterruptedException e ) {
 			executor.shutdownNow();
+		}
+
+		// stop all our timer threads so the system can shutdown cleanly
+		runningThreads.values().forEach( ft -> ft.cancel( true ) );
+	}
+
+	private void startTheReaper() {
+		if ( null == threadreaper ) {
+			LOG.debug( "starting the conversion reaper" );
+			threadreaper = Executors.newSingleThreadScheduledExecutor();
+			// start a thread to stop threads that run too long
+			threadreaper.scheduleAtFixedRate( () -> {
+				// go through our running WorkItems, and calculate running time
+				LOG.debug( "thread reaper approaches..." );
+				final LocalDateTime NOW = LocalDateTime.now();
+				final int MAXDURR = App.prefs.getInt( Preference.CONVERSIONLIMIT, Integer.MAX_VALUE );
+				runningThreads.forEach( ( wi, ft ) -> {
+					Duration timed = Duration.between( wi.getStarted(), NOW );
+					LOG.debug( "checking item: {} ...runtime: {}", wi.getContainerId().substring( 0, 12 ), timed.toSeconds() );
+					if ( Status.RUNNING == wi.getStatus() && MAXDURR < timed.toSeconds() ) {
+						LOG.info( "killing conversion: {} in container {}", wi.getPath(), wi.getContainerId().substring( 0, 12 ) );
+						ft.cancel( true );
+					}
+				} );
+			}, 0, 5, TimeUnit.SECONDS );
+
 		}
 	}
 
@@ -149,7 +192,7 @@ public class DockerManager {
 			item.queued();
 			l.itemChanged( item );
 
-			executor.submit( () -> {
+			FutureTask<WorkItem> conversion = new FutureTask<WorkItem>( () -> {
 				try {
 					// if the extension is stp, but the type is stpxml, we need to do
 					// the STPtoXML conversion before we can convert (and remove XML afterwards)
@@ -170,10 +213,15 @@ public class DockerManager {
 					LOG.debug( "container {} has been started for {}", c.containerId().substring( 0, 12 ), item.getPath() );
 					int retcode = c.waitOn( null );
 					Logs logs = c.logs();
-					String stdout  = logs.stdout().fetch();
-					String stderr  = logs.stderr().fetch();
+					String stdout = logs.stdout().fetch();
+					String stderr = logs.stderr().fetch();
 					if ( retcode != 0 ) {
-						item.error( "unknown error" );
+						if ( 137 == retcode ) {
+							item.killed();
+						}
+						else {
+							item.error( "unknown error" );
+						}
 					}
 					else {
 						item.finished( LocalDateTime.now() );
@@ -182,9 +230,13 @@ public class DockerManager {
 					l.itemChanged( item );
 
 					LOG.debug( "done waiting! retcode: {}", retcode );
-					// FIXME: do housekeeping for this WorkItem now
 				}
-				catch ( IOException | InterruptedException x ) {
+				catch ( InterruptedException x ) {
+					LOG.error( "Hey, I've been interrupted! {}", x );
+					item.error( x.getMessage() );
+					l.itemChanged( item );
+				}
+				catch ( IOException x ) {
 					LOG.error( "{}", x );
 					item.error( x.getMessage() );
 					l.itemChanged( item );
@@ -194,8 +246,28 @@ public class DockerManager {
 						xmlPathForStp( item ).toFile().delete();
 					}
 				}
-			}
-			);
+			}, item ) {
+				@Override
+				public boolean cancel( boolean mayInterruptIfRunning ) {
+					if ( super.cancel( mayInterruptIfRunning ) ) {
+						for ( Container c : docker.containers() ) {
+							try {
+								c.kill();
+							}
+							catch ( IOException x ) {
+								LOG.error( "could not stop container: {}", c.containerId().subSequence( 0, 12 ), x );
+							}
+						}
+					}
+					return false;
+				}
+			};
+
+			executor.submit( () -> {
+				runningThreads.put( item, conversion );
+				conversion.run();
+				runningThreads.remove( item );
+			} );
 		}
 	}
 
@@ -248,7 +320,7 @@ public class DockerManager {
 		// we only need to update items that are in the running state, in case
 		// they finished running while the app wasn't running
 		items.stream()
-				.filter( wi -> Status.STARTED == wi.getStatus() )
+				.filter( wi -> Status.RUNNING == wi.getStatus() )
 				.forEach( wi -> {
 					JsonObject obj = statusmap.get( wi.getContainerId() );
 					if ( null == obj ) {

@@ -21,10 +21,6 @@ public class App extends Application {
 	static final DockerManager docker = DockerManager.connect();
 	static final Preferences prefs = Preferences.userRoot().node( "com/ostrichemulators/prevent" );
 
-	static final String NATIVESTP = "parser.stp.native";
-	static final String STPISPHILIPS = "parser.stp.philips";
-	static final String DOCKERCOUNT = "docker.containers.max";
-
 	@Override
 	public void start( Stage stage ) throws IOException {
 		scene = new Scene( loadFXML( "primary" ) );

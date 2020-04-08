@@ -18,9 +18,10 @@ public final class WorkItem {
 	public enum Status {
 		ADDED,
 		QUEUED,
-		STARTED,
+		RUNNING,
 		FINISHED,
-		ERROR
+		ERROR,
+		KILLED
 	}
 
 	private Path file;
@@ -75,11 +76,15 @@ public final class WorkItem {
 		this.status = Status.QUEUED;
 	}
 
+	public void killed() {
+		this.status = Status.KILLED;
+	}
+
 	public void started( String containerid ) {
 		this.started = LocalDateTime.now();
 		this.finished = null;
 		this.containerId = containerid;
-		this.status = Status.STARTED;
+		this.status = Status.RUNNING;
 	}
 
 	public LocalDateTime getFinished() {
