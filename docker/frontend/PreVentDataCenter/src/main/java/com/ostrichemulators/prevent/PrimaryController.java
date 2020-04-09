@@ -107,6 +107,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 				return Integer.MAX_VALUE;
 			}
 		} );
+                vfac.setValue( Integer.MAX_VALUE );
 		durationtimer.setValueFactory( vfac );
 	}
 

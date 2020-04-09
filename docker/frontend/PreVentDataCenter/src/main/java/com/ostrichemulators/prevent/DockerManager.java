@@ -10,11 +10,14 @@ import com.amihaiemil.docker.Docker;
 import com.amihaiemil.docker.Image;
 import com.amihaiemil.docker.Images;
 import com.amihaiemil.docker.Logs;
+import com.amihaiemil.docker.TcpDocker;
 import com.amihaiemil.docker.UnexpectedResponseException;
 import com.amihaiemil.docker.UnixDocker;
 import com.ostrichemulators.prevent.WorkItem.Status;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -62,9 +65,16 @@ public class DockerManager {
 	}
 
 	public static DockerManager connect() {
-		return new DockerManager( SystemUtils.IS_OS_WINDOWS
-				? new UnixDocker( new File( "/var/run/docker.sock" ) ) // don't know what the Windows equivalent is yet
-				: new UnixDocker( new File( "/var/run/docker.sock" ) ) );
+            if( SystemUtils.IS_OS_WINDOWS ){
+                try{
+                    return new DockerManager( new TcpDocker( new URI( "http://localhost:2375" ) ) );
+                }
+                catch( URISyntaxException x ){
+                    LOG.error( "invalid docker URI {}", x);
+                }
+            }
+            
+            return new DockerManager( new UnixDocker( new File( "/var/run/docker.sock" ) ) );
 	}
 
 	public void setMaxContainers( int maxx ) {
