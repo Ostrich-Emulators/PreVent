@@ -61,7 +61,7 @@ public class StpToXml {
 				tmpdir = Files.createTempDirectory( "prevent." ).toString();
 				App.prefs.put( Preference.STPDIR, tmpdir );
 			}
-			File extractiondir = new File( tmpdir, "StpToolkit_8.2" );
+			File extractiondir = new File( tmpdir, "StpToolkit_8.4" );
 			stpdir = extractiondir.toPath();
 			if ( !( new File( extractiondir, "StpToolkit.exe" ).exists() ) ) {
 				LOG.info( "extracting STPtoXML to: {}", extractiondir );

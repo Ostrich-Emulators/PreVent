@@ -17,21 +17,21 @@ import javafx.stage.Stage;
  */
 public class WorkItemEntryController {
 
-	@FXML
-	private Button cancelbtn;
+  @FXML
+  private Button cancelbtn;
 
-	@FXML
-	private Button savebtn;
+  @FXML
+  private Button savebtn;
 
-	@FXML
-	private void save() throws IOException {
-		Stage stage = (Stage) savebtn.getScene().getWindow();
-		stage.close();
-	}
+  @FXML
+  private void save() throws IOException {
+    Stage stage = (Stage) savebtn.getScene().getWindow();
+    stage.close();
+  }
 
-	@FXML
-	private void cancel() throws IOException {
-		Stage stage = (Stage) cancelbtn.getScene().getWindow();
-		stage.close();
-	}
+  @FXML
+  private void cancel() throws IOException {
+    Stage stage = (Stage) cancelbtn.getScene().getWindow();
+    stage.close();
+  }
 }

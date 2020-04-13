@@ -11,9 +11,9 @@ package com.ostrichemulators.prevent;
  */
 public interface Preference {
 
-	static final String NATIVESTP = "parser.stp.native";
-	static final String STPISPHILIPS = "parser.stp.philips";
-	static final String DOCKERCOUNT = "docker.containers.max";
-	static final String CONVERSIONLIMIT = "conversion.duration.maxminutes";
-	static final String STPDIR = "tools.parser.stptoxml";
+  static final String NATIVESTP = "parser.stp.native";
+  static final String STPISPHILIPS = "parser.stp.philips";
+  static final String DOCKERCOUNT = "docker.containers.max";
+  static final String CONVERSIONLIMIT = "conversion.duration.maxminutes";
+  static final String STPDIR = "tools.parser.stptoxml";
 }

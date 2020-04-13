@@ -65,16 +65,16 @@ public class DockerManager {
 	}
 
 	public static DockerManager connect() {
-            if( SystemUtils.IS_OS_WINDOWS ){
-                try{
-                    return new DockerManager( new TcpDocker( new URI( "http://localhost:2375" ) ) );
-                }
-                catch( URISyntaxException x ){
-                    LOG.error( "invalid docker URI {}", x);
-                }
-            }
-            
-            return new DockerManager( new UnixDocker( new File( "/var/run/docker.sock" ) ) );
+    if ( SystemUtils.IS_OS_WINDOWS ) {
+      try {
+        return new DockerManager( new TcpDocker( new URI( "http://localhost:2375" ) ) );
+      }
+      catch ( URISyntaxException x ) {
+        LOG.error( "invalid docker URI {}", x );
+      }
+    }
+
+    return new DockerManager( new UnixDocker( new File( "/var/run/docker.sock" ) ) );
 	}
 
 	public void setMaxContainers( int maxx ) {

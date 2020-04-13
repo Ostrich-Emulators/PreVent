@@ -11,5 +11,5 @@ package com.ostrichemulators.prevent;
  */
 public interface WorkItemStateChangeListener {
 
-	public void itemChanged( WorkItem item );
+  public void itemChanged( WorkItem item );
 }
