@@ -13,9 +13,14 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonBar.ButtonData;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.Spinner;
@@ -122,7 +127,14 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       LOG.debug( "Docker is ready!" );
     }
     else {
-      LOG.error( "Docker does not have the required images pulled" );
+      Alert alert = new Alert( AlertType.ERROR );
+      alert.setTitle( "Docker Images Missing" );
+      alert.setHeaderText( "Docker is not Initialized Properly" );
+      ButtonType exitbtn = new ButtonType( "Exit Application", ButtonData.CANCEL_CLOSE );
+      alert.getButtonTypes().setAll( exitbtn );
+      alert.setContentText( "Docker may not be started, or the ry99/prevent image could not be pulled.\nOn Windows, Docker must be listening to port 2375." );
+      alert.showAndWait();
+      Platform.exit();
     }
 
     try {
