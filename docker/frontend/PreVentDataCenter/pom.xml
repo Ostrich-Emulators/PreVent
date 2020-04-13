@@ -22,7 +22,6 @@
             <artifactId>javafx-fxml</artifactId>
             <version>13</version>
         </dependency>
-		
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
@@ -110,6 +109,12 @@
             </plugin>
 
             <plugin>
+                <!-- 
+                    These are good for running the program directly from maven.
+                    You can run mvn javafx:run, for example. However, they 
+                    don't help when running not from maven. For that, check out
+                    the packaging howto.
+                -->
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.3</version>

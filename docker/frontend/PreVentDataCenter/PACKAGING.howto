@@ -1,0 +1,59 @@
+How to Package
+
+This file contains instructions for generating an executable package on Windows 10.
+
+In the "official" development environment, we use Java JDK 11. However, the Java 
+packager (jpackage) is integrated into the JDK 14 bundles. So, unfortunately, we
+use both for generating an executable package. Though untested, you should be able
+to use JDK 14 for everything, but it's harder to get/use on some platforms than 
+others.
+
+Basic Steps to packaging:
+1) Build the program
+2) Copy main jar to lib directory
+3) Move modules to a separate directory
+4) Run jpackage
+
+
+1) BUILD THE PROGRAM
+This is straight-forward: run "mvn clean install" to build the target directory.
+Inside this directory are the "lib" directory containing all the dependency jars,
+the PreVentDataCenter main jar, and a number of extra files and directories. We
+are only interested in the "lib" directory and PreVentDataCenter jar.
+
+
+2) COPY MAIN JAR TO LIB DIRECTORY
+Pretty easy, huh?
+
+
+3) MOVE MODULES TO A SEPARATE DIRECTORY
+Here's the tough step: we need to separate out the java modules in order to make
+a runtime image that can support our program. Unfortunately, which modules we need
+depends on which platform we're packaging for, so we don't appear to be able to
+do this within the pom itself.
+
+Make a new directory named "jmods" in the "target" directory (it will be a sibling
+of "lib"). Move all the jackson and javafx jars from "lib" to "jmods."
+
+
+4) RUN JPACKAGE
+Now we're ready to actually create the image. Simply run:
+ jpackage @jpackage-input.txt --module-path target/jmods;"C:/Program Files/Java/jdk-14/jmods"
+
+This should create a runtime image and put all the files in the right place within
+a directory called "Prevent Data Center." Test the application from this image.
+
+
+NOTES
+There is good reason these instructions only go as far as creating the runtime
+image: I can't get jpackage to create a usable installer. In any event, you can
+simply zip up the "Prevent Data Center" directory, and distribute this.
+
+
+TROUBLESHOOTING
+I only have one bullet in the troubleshooting gun: add --win-console to the 
+jpackage command. Of course, this only works if the app image gets built. But if
+it does, but still doesn't run, adding --win-console will at least leave a console
+window up so you can see any error messages.
+
+Good luck!
