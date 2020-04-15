@@ -325,17 +325,19 @@ public class DockerManager {
     final int MAXDURR = App.prefs.getInt( Preference.CONVERSIONLIMIT, Integer.MAX_VALUE );
 
     Duration timed = Duration.between( item.getStarted(), NOW );
-    LOG.debug( "checking item: {} ...runtime: {}s (max:{}s)", item, timed.toMinutes(), MAXDURR );
-    if ( Status.RUNNING == item.getStatus() && timed.toSeconds() >= MAXDURR ) {
+    //LOG.debug( "checking item: {} ...runtime: {}m (max:{}m)", item, timed.toMinutes(), MAXDURR );
+    if ( Status.RUNNING == item.getStatus() && timed.toMinutes() >= MAXDURR ) {
+      LOG.debug( "reaping work item {} (running too long)", item );
       return StopReason.TOO_LONG;
     }
 
     final String status = state.getString( "Status" );
-    // if we're still running, ok; else we need to stop our thread
+    // it's okay if we're still running
     if ( "running".equalsIgnoreCase( status ) ) {
       return StopReason.DONT_STOP;
     }
 
+    // if we exited, then we need to know why
     if ( "exited".equalsIgnoreCase( status ) ) {
       return ( 0 == state.getInt( "ExitCode" )
                ? StopReason.COMPLETED
