@@ -9,7 +9,6 @@ import com.amihaiemil.docker.Container;
 import com.amihaiemil.docker.Docker;
 import com.amihaiemil.docker.Image;
 import com.amihaiemil.docker.Images;
-import com.amihaiemil.docker.Logs;
 import com.amihaiemil.docker.TcpDocker;
 import com.amihaiemil.docker.UnexpectedResponseException;
 import com.amihaiemil.docker.UnixDocker;
@@ -24,7 +23,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,17 +47,22 @@ import org.slf4j.LoggerFactory;
  */
 public class DockerManager {
 
-  private static final Logger LOG = LoggerFactory.getLogger( DockerManager.class );
   public static final int DEFAULT_MAX_RUNNING_CONTAINERS = 3;
+  private static final Logger LOG = LoggerFactory.getLogger( DockerManager.class );
+  private static final int CHECK_INTERVAL_S = 5;
+
+  private static enum StopReason {
+    TOO_LONG, ERROR, SHUTDOWN, COMPLETED, DONT_STOP
+  };
 
   final Docker docker;
   private Image image;
   private int maxcontainers = DEFAULT_MAX_RUNNING_CONTAINERS;
   private ExecutorService executor = Executors.newFixedThreadPool( maxcontainers );
   private ScheduledExecutorService threadreaper;
-  private final Map<WorkItem, FutureTask<WorkItem>> runningThreads = Collections.synchronizedMap( new HashMap<>() );
   private ScheduledFuture<?> reaperop;
   private boolean shuttingDown = false;
+  private final Object monitor = new Object();
 
   private DockerManager( Docker d ) {
     docker = d;
@@ -115,6 +118,8 @@ public class DockerManager {
           LOG.debug( "PreVent image not found...fetching latest" );
           image = images.pull( "ry99/prevent", "latest" );
         }
+
+        startReaping();
       }
     }
     catch ( IOException x ) {
@@ -149,9 +154,14 @@ public class DockerManager {
   }
 
   public void shutdown() {
+    shuttingDown = true;
+
     LOG.info( "shutting down docker manager" );
     if ( null != threadreaper ) {
       threadreaper.shutdownNow();
+
+      LOG.debug( "cancelling reaperop thread" );
+      reaperop.cancel( true );
     }
 
     executor.shutdown();
@@ -164,39 +174,26 @@ public class DockerManager {
       executor.shutdownNow();
     }
 
-    // stop all our timer threads so the system can shutdown cleanly
-    shuttingDown = true;
-    runningThreads.values().forEach( ft -> ft.cancel( true ) );
+    // tell all our running threads to shutdown
+    synchronized ( monitor ) {
+      monitor.notifyAll();
+    }
+    LOG.debug( "done shutting down" );
   }
 
   private void startReaping() {
-    if ( true ) {
-      return;
-    }
+    // Our threadreaper just refreshes the container states every X seconds
+    // and notifies the worker threads to see what happened. The worker threads
+    // need to figure out for themselves if/how they should exit.
 
-    if ( null == threadreaper ) {
-      LOG.debug( "starting the conversion reaper" );
-      threadreaper = Executors.newSingleThreadScheduledExecutor();
-      // start a thread to stop threads that run too long
-      reaperop = threadreaper.scheduleAtFixedRate( () -> {
-        // go through our running WorkItems, and calculate running time
-        LOG.debug( "conversion reaper approaches... {} {}", reaperop.isDone(), reaperop.isCancelled() );
-        final LocalDateTime NOW = LocalDateTime.now();
-        final int MAXDURR = App.prefs.getInt( Preference.CONVERSIONLIMIT, Integer.MAX_VALUE );
-
-        if ( runningThreads.isEmpty() ) {
-          LOG.debug( "nothing for reaper to reap" );
-        }
-
-        runningThreads.forEach( ( wi, ft ) -> {
-          Duration timed = Duration.between( wi.getStarted(), NOW );
-          LOG.debug( "checking item: {} ...runtime: {}s (max:{}s)", wi, timed.toSeconds(), MAXDURR );
-          if ( Status.RUNNING == wi.getStatus() && MAXDURR <= timed.toSeconds() ) {
-            ft.cancel( true );
-          }
-        } );
-      }, 0, 5, TimeUnit.SECONDS );
-    }
+    LOG.debug( "starting the conversion reaper" );
+    threadreaper = Executors.newSingleThreadScheduledExecutor();
+    // start a thread to wake up threads every few seconds
+    reaperop = threadreaper.scheduleAtFixedRate( () -> {
+      synchronized ( monitor ) {
+        monitor.notifyAll();
+      }
+    }, 0, CHECK_INTERVAL_S, TimeUnit.SECONDS );
   }
 
   private static Path xmlPathForStp( WorkItem item ) {
@@ -212,99 +209,10 @@ public class DockerManager {
   }
 
   public void convert( Collection<WorkItem> work, WorkItemStateChangeListener l ) throws IOException {
-    startReaping();
-
     for ( WorkItem item : work ) {
       item.queued();
       l.itemChanged( item );
-
-      FutureTask<WorkItem> conversion = new FutureTask<WorkItem>( () -> {
-        try {
-          // if the extension is stp, but the type is stpxml, we need to do
-          // the STPtoXML conversion before we can convert (and remove XML afterwards)
-          if ( needsStpToXmlConversion( item ) ) {
-            Process proc = StpToXml.convert( item.getPath(), xmlPathForStp( item ) );
-            int ret = proc.waitFor();
-            if ( 0 != ret ) {
-              item.error( "stp conversion failed" );
-              l.itemChanged( item );
-              return;
-            }
-          }
-
-          Container c = createContainer( item );
-          item.started( c.containerId() );
-          l.itemChanged( item );
-          c.start();
-          LOG.debug( "container has been started for {}", item );
-          int retcode = c.waitOn( null );
-          Logs logs = c.logs();
-          String stdout = logs.stdout().fetch();
-          String stderr = logs.stderr().fetch();
-          if ( retcode != 0 ) {
-            item.error( "unknown error" );
-          }
-          else {
-            item.finished( LocalDateTime.now() );
-            c.remove();
-          }
-          l.itemChanged( item );
-
-          LOG.debug( "done waiting! retcode: {}", retcode );
-        }
-        catch ( InterruptedException x ) {
-          LOG.error( "Hey, I've been interrupted! {}", x );
-          item.error( x.getMessage() );
-          l.itemChanged( item );
-        }
-        catch ( IOException x ) {
-          LOG.error( "{}", x );
-          item.error( x.getMessage() );
-          l.itemChanged( item );
-        }
-        finally {
-          if ( needsStpToXmlConversion( item ) ) {
-            xmlPathForStp( item ).toFile().delete();
-          }
-        }
-      }, item ) {
-        @Override
-        public boolean cancel( boolean mayInterruptIfRunning ) {
-          if ( super.cancel( mayInterruptIfRunning ) ) {
-            if ( shuttingDown ) {
-              return true;
-            }
-            else {
-              for ( Container c : docker.containers() ) {
-                if ( c.containerId().equals( item.getContainerId() ) ) {
-                  try {
-                    c.kill();
-                    LOG.debug( "cancelling (killing) item:{}", item );
-                    item.killed();
-                    l.itemChanged( item );
-                    return true;
-                  }
-                  catch ( IOException x ) {
-                    LOG.error( "could not stop container for item: {}", item );
-                  }
-                }
-              }
-            }
-          }
-          return false;
-        }
-      };
-
-      executor.submit( () -> {
-        runningThreads.put( item, conversion );
-        conversion.run();
-        runningThreads.remove( item );
-        if ( runningThreads.isEmpty() && null != threadreaper ) {
-          LOG.debug( "stopping the conversion reaper (nothing to reap)" );
-          threadreaper.shutdownNow();
-          threadreaper = null;
-        }
-      } );
+      executor.submit( new ConversionTask( item, l, null ) );
     }
   }
 
@@ -391,27 +299,143 @@ public class DockerManager {
                 case "running":
                   // if the item is still running, we need to listen for when
                   // it's done, and update our table appropriately
-                  executor.submit( () -> {
-                    try {
-                      int retcode = containermap.get( wi.getContainerId() ).waitOn( null );
-                      if ( retcode != 0 ) {
-                        wi.error( "unknown error" );
-                      }
-                      else {
-                        wi.finished( LocalDateTime.now() );
-                        containermap.get( wi.getContainerId() ).remove();
-                      }
-                      l.itemChanged( wi );
-                    }
-                    catch ( IOException x ) {
-                      LOG.error( "{}", x );
-                    }
-                  } );
+                  executor.submit( new ConversionTask( wi, l, containermap.get( wi.getContainerId() ) ) );
                   break;
                 default:
                 // nothing to do here
               }
             }
           } );
+  }
+
+  private StopReason threadCanWaitLonger( WorkItem item, JsonObject state ) {
+
+    // if we're shutting down, we can't continue
+    if ( shuttingDown ) {
+      return StopReason.SHUTDOWN;
+    }
+
+    // container doesn't exist? error
+    if ( null == state ) {
+      return StopReason.ERROR;
+    }
+
+    // check if we're running too long
+    final LocalDateTime NOW = LocalDateTime.now();
+    final int MAXDURR = App.prefs.getInt( Preference.CONVERSIONLIMIT, Integer.MAX_VALUE );
+
+    Duration timed = Duration.between( item.getStarted(), NOW );
+    LOG.debug( "checking item: {} ...runtime: {}s (max:{}s)", item, timed.toMinutes(), MAXDURR );
+    if ( Status.RUNNING == item.getStatus() && timed.toSeconds() >= MAXDURR ) {
+      return StopReason.TOO_LONG;
+    }
+
+    final String status = state.getString( "Status" );
+    // if we're still running, ok; else we need to stop our thread
+    if ( "running".equalsIgnoreCase( status ) ) {
+      return StopReason.DONT_STOP;
+    }
+
+    if ( "exited".equalsIgnoreCase( status ) ) {
+      return ( 0 == state.getInt( "ExitCode" )
+               ? StopReason.COMPLETED
+               : StopReason.ERROR );
+    }
+
+    return StopReason.ERROR;
+  }
+
+  private class ConversionTask extends FutureTask<WorkItem> {
+
+    ConversionTask( WorkItem item, WorkItemStateChangeListener listener, Container reinitContainer ) {
+      super( () -> {
+        try {
+          Container c;
+          // if the extension is stp, but the type is stpxml, we need to do
+          // the STPtoXML conversion before we can convert (and remove XML afterwards)
+          if ( null != reinitContainer ) {
+            c = reinitContainer;
+          }
+          else {
+            if ( needsStpToXmlConversion( item ) ) {
+              Process proc = StpToXml.convert( item.getPath(), xmlPathForStp( item ) );
+              int ret = proc.waitFor();
+              if ( 0 != ret ) {
+                item.error( "stp conversion failed" );
+                listener.itemChanged( item );
+                return;
+              }
+            }
+
+            c = createContainer( item );
+            item.started( c.containerId() );
+            listener.itemChanged( item );
+            c.start();
+            LOG.debug( "container has been started for {}", item );
+          }
+
+          synchronized ( monitor ) {
+            StopReason reason = StopReason.DONT_STOP;
+            while ( StopReason.DONT_STOP == reason ) {
+              try {
+                DockerManager.this.monitor.wait();
+                reason = DockerManager.this.threadCanWaitLonger( item, c.inspect().getJsonObject( "State" ) );
+              }
+              catch ( InterruptedException ue ) {
+                if ( shuttingDown ) {
+                  reason = StopReason.SHUTDOWN;
+                }
+                else {
+                  LOG.warn( "ignoring this interruption: {}", ue.getLocalizedMessage() );
+                }
+              }
+            }
+            // okay, we can't wait any longer.
+            // this means one of 4 things:
+            // 1) the conversion has completed normally
+            // 2) the conversion ended in error
+            // 3) the conversion was killed (timed out)
+            // 4) the system is shutting down
+            switch ( reason ) {
+              case TOO_LONG:
+                item.killed();
+                break;
+              case ERROR:
+                item.error( "container error" );
+                break;
+              case COMPLETED:
+                item.finished( LocalDateTime.now() );
+                c.remove(); // remove containers that completed successfully
+                break;
+              case SHUTDOWN:
+                // don't do anything here (the container is still running)
+                break;
+              default:
+                // we should never get here!
+                throw new IllegalStateException( "BUG! Unhandled stop reason: " + reason );
+            }
+
+            listener.itemChanged( item );
+          }
+
+          LOG.debug( "done waiting! " );
+        }
+        catch ( InterruptedException x ) {
+          LOG.error( "Hey, I've been interrupted! {}", x );
+          item.error( x.getMessage() );
+          listener.itemChanged( item );
+        }
+        catch ( IOException x ) {
+          LOG.error( "{}", x );
+          item.error( x.getMessage() );
+          listener.itemChanged( item );
+        }
+        finally {
+          if ( needsStpToXmlConversion( item ) ) {
+            xmlPathForStp( item ).toFile().delete();
+          }
+        }
+      }, item );
+    }
   }
 }
