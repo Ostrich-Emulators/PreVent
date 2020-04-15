@@ -31,6 +31,7 @@ public final class WorkItem {
   private String checksum; // this is really the ID of this item
   private String type;
   private Status status = Status.ADDED;
+  private String message;
 
   private WorkItem() {
   }
@@ -73,6 +74,7 @@ public final class WorkItem {
     this.started = null;
     this.finished = null;
     this.containerId = null;
+    this.message = null;
     this.status = Status.QUEUED;
   }
 
@@ -99,12 +101,14 @@ public final class WorkItem {
   public void error( String err ) {
     this.finished = LocalDateTime.now();
     this.status = Status.ERROR;
+    this.message = err;
   }
 
   public void reinit() {
     this.started = null;
     this.finished = null;
     this.containerId = null;
+    this.message = null;
     this.status = Status.ADDED;
   }
 
@@ -114,6 +118,10 @@ public final class WorkItem {
 
   public Status getStatus() {
     return status;
+  }
+
+  public String getMessage() {
+    return message;
   }
 
   @Override

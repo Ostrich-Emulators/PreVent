@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 public class PrimaryController implements Initializable, WorkItemStateChangeListener {
 
   private static final Logger LOG = LoggerFactory.getLogger( PrimaryController.class );
-  private static final int COLWIDTHS[] = {15, 50, 15, 15};
+  private static final int COLWIDTHS[] = {15, 50, 15, 15, 10};
   @FXML
   private TableView<WorkItem> table;
 
@@ -55,6 +55,8 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 
   @FXML
   private TableColumn<WorkItem, LocalDateTime> endedcol;
+  @FXML
+  private TableColumn<WorkItem, String> messagecol;
 
   @FXML
   private CheckBox nativestp;
@@ -154,7 +156,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       sum += i;
     }
 
-    TableColumn cols[] = {statuscol, filecol, startedcol, endedcol};
+    TableColumn cols[] = {statuscol, filecol, startedcol, endedcol, messagecol};
     for ( int i = 0; i < COLWIDTHS.length; i++ ) {
       double pct = COLWIDTHS[i] / sum;
       cols[i].prefWidthProperty().bind(
@@ -162,6 +164,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     }
 
     statuscol.setCellValueFactory( new PropertyValueFactory<>( "status" ) );
+    messagecol.setCellValueFactory( new PropertyValueFactory<>( "message" ) );
 
     filecol.setCellValueFactory( new PropertyValueFactory<>( "path" ) );
     filecol.setCellFactory( column -> new LeadingEllipsisTableCell() );

@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashMap;
@@ -265,13 +266,13 @@ public class DockerManager {
     // we only need to update items that are in the running state, in case
     // they finished running while the app wasn't running
     items.stream()
-          .filter( wi -> Status.RUNNING == wi.getStatus() )
-          .forEach( wi -> {
-            JsonObject obj = statusmap.get( wi.getContainerId() );
+          .filter( item -> Status.RUNNING == item.getStatus() )
+          .forEach( item -> {
+            JsonObject obj = statusmap.get( item.getContainerId() );
             if ( null == obj ) {
-              // we don't have this container anymore, so we can't tell what happened.
-              // we need to re-convert this item
-              wi.reinit();
+              // we don't have this container anymore, so we can't tell what
+              // happened. we need to re-convert this item
+              item.error( "missing container" );
             }
             else {
               switch ( obj.getString( "Status" ) ) {
@@ -281,25 +282,27 @@ public class DockerManager {
                     String endtime = obj.getString( "FinishedAt" );
                     try {
                       ZonedDateTime zdt = ZonedDateTime.parse( endtime );
-                      wi.finished( zdt.toLocalDateTime() );
-                      containermap.get( wi.getContainerId() ).remove();
+                      LOG.debug( "setting finished time from container for item:{}", item );
+                      item.finished( zdt.withZoneSameInstant( ZoneId.systemDefault() ).toLocalDateTime() );
+                      containermap.get( item.getContainerId() ).remove();
                     }
                     catch ( UnexpectedResponseException | IOException x ) {
                       LOG.warn( "{}", x );
                     }
                   }
                   else {
-                    wi.error( "unknown error at restart" );
+                    item.error( "unknown error at restart" );
                   }
                 }
                 break;
                 case "dead":
-                  wi.reinit();
+                  item.reinit();
                   break;
                 case "running":
                   // if the item is still running, we need to listen for when
                   // it's done, and update our table appropriately
-                  executor.submit( new ConversionTask( wi, l, containermap.get( wi.getContainerId() ) ) );
+                  LOG.debug( "attaching to running container for item: {}", item );
+                  executor.submit( new ConversionTask( item, l, containermap.get( item.getContainerId() ) ) );
                   break;
                 default:
                 // nothing to do here
