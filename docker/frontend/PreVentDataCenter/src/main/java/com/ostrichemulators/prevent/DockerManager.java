@@ -284,7 +284,9 @@ public class DockerManager {
                       ZonedDateTime zdt = ZonedDateTime.parse( endtime );
                       LOG.debug( "setting finished time from container for item:{}", item );
                       item.finished( zdt.withZoneSameInstant( ZoneId.systemDefault() ).toLocalDateTime() );
-                      containermap.get( item.getContainerId() ).remove();
+                      if ( App.prefs.getBoolean( Preference.DOCKERREMOVE, false ) ) {
+                        containermap.get( item.getContainerId() ).remove();
+                      }
                     }
                     catch ( UnexpectedResponseException | IOException x ) {
                       LOG.warn( "{}", x );
@@ -411,7 +413,9 @@ public class DockerManager {
                 break;
               case COMPLETED:
                 item.finished( LocalDateTime.now() );
-                c.remove(); // remove containers that completed successfully
+                if ( App.prefs.getBoolean( Preference.DOCKERREMOVE, false ) ) {
+                  c.remove(); // remove containers that completed successfully
+                }
                 break;
               case SHUTDOWN:
                 // don't do anything here (the container is still running)
@@ -436,6 +440,7 @@ public class DockerManager {
           listener.itemChanged( item );
 
           if ( needsStpToXmlConversion( item ) ) {
+            LOG.debug( "removing XML from STPtoXML conversion: {}", xmlPathForStp( item ) );
             xmlPathForStp( item ).toFile().delete();
           }
         }

@@ -32,18 +32,20 @@ public final class WorkItem {
   private String type;
   private Status status = Status.ADDED;
   private String message;
+  private long bytes;
 
   private WorkItem() {
   }
 
   WorkItem( Path file, String checksum, String containerId, LocalDateTime started,
-        LocalDateTime finished, String type ) {
+        LocalDateTime finished, String type, long size ) {
     setPath( file );
     this.containerId = containerId;
     this.started = started;
     this.finished = finished;
     this.checksum = checksum;
     this.type = type;
+    this.bytes = size;
   }
 
   public String getType() {
@@ -68,6 +70,14 @@ public final class WorkItem {
 
   public LocalDateTime getStarted() {
     return started;
+  }
+
+  public long getBytes() {
+    return bytes;
+  }
+
+  public void setBytes( long bytes ) {
+    this.bytes = bytes;
   }
 
   public void queued() {

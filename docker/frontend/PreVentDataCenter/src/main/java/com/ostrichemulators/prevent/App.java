@@ -10,12 +10,20 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.prefs.Preferences;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import org.apache.commons.lang3.SystemUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * JavaFX App
  */
 public class App extends Application {
+
+  private static final Logger LOG = LoggerFactory.getLogger( App.class );
 
   private static Scene scene;
   static final DockerManager docker = DockerManager.connect();
@@ -26,6 +34,21 @@ public class App extends Application {
     scene = new Scene( loadFXML( "primary" ) );
     stage.setScene( scene );
     stage.setTitle( "PreVent Data Center" );
+
+    if ( docker.verifyAndPrepare() ) {
+      LOG.debug( "Docker is ready!" );
+    }
+    else {
+      Alert alert = new Alert( Alert.AlertType.ERROR );
+      alert.setTitle( "Docker Images Missing" );
+      alert.setHeaderText( "Docker is not Initialized Properly" );
+      ButtonType exitbtn = new ButtonType( "Exit Application", ButtonBar.ButtonData.CANCEL_CLOSE );
+      alert.getButtonTypes().setAll( exitbtn );
+      alert.setContentText( "Docker may not be started, or the ry99/prevent image could not be pulled.\nOn Windows, Docker must be listening to port 2375." );
+      alert.showAndWait();
+      Platform.exit();
+    }
+
     stage.show();
   }
 

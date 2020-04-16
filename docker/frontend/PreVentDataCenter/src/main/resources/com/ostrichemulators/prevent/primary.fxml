@@ -17,7 +17,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<BorderPane prefHeight="504.0" prefWidth="671.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ostrichemulators.prevent.PrimaryController">
+<BorderPane prefHeight="504.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.ostrichemulators.prevent.PrimaryController">
    <top>
       <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
         <items>
@@ -35,13 +35,16 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <TableView fx:id="table" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <TableView fx:id="table" tableMenuButtonVisible="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                           <columns>
                             <TableColumn fx:id="statuscol" minWidth="75.0" prefWidth="-1.0" text="Status" />
                             <TableColumn fx:id="filecol" minWidth="75.0" prefWidth="-1.0" text="File" />
+                              <TableColumn fx:id="sizecol" prefWidth="75.0" text="Size (KB)" />
+                              <TableColumn fx:id="typecol" prefWidth="75.0" text="Type" visible="false" />
                               <TableColumn fx:id="startedcol" minWidth="75.0" prefWidth="-1.0" text="Started" />
                               <TableColumn fx:id="endedcol" minWidth="75.0" prefWidth="-1.0" text="Ended" />
-                              <TableColumn fx:id="messagecol" prefWidth="75.0" text="Message" />
+                              <TableColumn fx:id="messagecol" prefWidth="75.0" text="Message" visible="false" />
+                              <TableColumn fx:id="containercol" prefWidth="75.0" text="Container" visible="false" />
                           </columns>
                         </TableView>
                      </children>
@@ -64,19 +67,22 @@
                           </columnConstraints>
                           <rowConstraints>
                             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                              <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                               <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                           </rowConstraints>
                            <children>
                               <Label text="Max. Docker Containers" />
-                              <Label text="Use Native STP Parser (experimental)" GridPane.rowIndex="1" />
-                              <CheckBox fx:id="nativestp" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <Label text="Use Native STP Parser (experimental)" GridPane.rowIndex="2" />
+                              <CheckBox fx:id="nativestp" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                               <Spinner fx:id="dockercnt" editable="true" prefHeight="26.0" prefWidth="66.0" GridPane.columnIndex="1" />
-                              <CheckBox fx:id="usephilips" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                              <Label text="Use Philips format for STPtoXML" GridPane.rowIndex="2" />
-                              <Label text="Max. Conversion Duration" GridPane.rowIndex="3" />
-                              <Spinner fx:id="durationtimer" editable="true" prefHeight="26.0" prefWidth="148.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                              <CheckBox fx:id="usephilips" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                              <Label text="Use Philips format for STPtoXML" GridPane.rowIndex="3" />
+                              <Label text="Max. Conversion Duration" GridPane.rowIndex="4" />
+                              <Spinner fx:id="durationtimer" editable="true" prefHeight="26.0" prefWidth="148.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                              <CheckBox fx:id="removecontainers" mnemonicParsing="false" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <Label text="Remove Docker Containers on Success" GridPane.rowIndex="1" />
                            </children>
                         </GridPane>
                         <ButtonBar layoutX="75.0" layoutY="397.0" prefHeight="40.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">

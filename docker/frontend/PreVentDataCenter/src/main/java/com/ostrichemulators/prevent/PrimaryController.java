@@ -13,14 +13,10 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonBar.ButtonData;
-import javafx.scene.control.ButtonType;
+import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.Spinner;
@@ -40,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class PrimaryController implements Initializable, WorkItemStateChangeListener {
 
   private static final Logger LOG = LoggerFactory.getLogger( PrimaryController.class );
-  private static final int COLWIDTHS[] = {15, 50, 15, 15, 10};
+  private static final int COLWIDTHS[] = {15, 50, 10, 10, 15, 15, 10, 10};
   @FXML
   private TableView<WorkItem> table;
 
@@ -55,14 +51,27 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 
   @FXML
   private TableColumn<WorkItem, LocalDateTime> endedcol;
+
   @FXML
   private TableColumn<WorkItem, String> messagecol;
+
+  @FXML
+  private TableColumn<WorkItem, Long> sizecol;
+
+  @FXML
+  private TableColumn<WorkItem, String> typecol;
+
+  @FXML
+  private TableColumn<WorkItem, String> containercol;
 
   @FXML
   private CheckBox nativestp;
 
   @FXML
   private CheckBox usephilips;
+
+  @FXML
+  private CheckBox removecontainers;
 
   @FXML
   private Spinner<Integer> dockercnt;
@@ -78,6 +87,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
           10, dockercnt.getValue() ) );
     prefs.putBoolean( Preference.NATIVESTP, nativestp.isSelected() );
     prefs.putBoolean( Preference.STPISPHILIPS, usephilips.isSelected() );
+    prefs.putBoolean( Preference.DOCKERREMOVE, removecontainers.isSelected() );
     prefs.putInt( Preference.DOCKERCOUNT, dockercnt.getValue() );
     prefs.putInt( Preference.CONVERSIONLIMIT, durationtimer.getValue() );
   }
@@ -85,6 +95,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   private void loadPrefs() {
     nativestp.setSelected( prefs.getBoolean( Preference.NATIVESTP, false ) );
     usephilips.setSelected( prefs.getBoolean( Preference.STPISPHILIPS, false ) );
+    removecontainers.setSelected( prefs.getBoolean( Preference.DOCKERREMOVE, false ) );
     App.docker.setMaxContainers( prefs.getInt( Preference.DOCKERCOUNT,
           DockerManager.DEFAULT_MAX_RUNNING_CONTAINERS ) );
     dockercnt.setValueFactory( new SpinnerValueFactory.IntegerSpinnerValueFactory( 1,
@@ -125,20 +136,6 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 
     loadPrefs();
 
-    if ( App.docker.verifyAndPrepare() ) {
-      LOG.debug( "Docker is ready!" );
-    }
-    else {
-      Alert alert = new Alert( AlertType.ERROR );
-      alert.setTitle( "Docker Images Missing" );
-      alert.setHeaderText( "Docker is not Initialized Properly" );
-      ButtonType exitbtn = new ButtonType( "Exit Application", ButtonData.CANCEL_CLOSE );
-      alert.getButtonTypes().setAll( exitbtn );
-      alert.setContentText( "Docker may not be started, or the ry99/prevent image could not be pulled.\nOn Windows, Docker must be listening to port 2375." );
-      alert.showAndWait();
-      Platform.exit();
-    }
-
     try {
       List<WorkItem> allitems = Worklist.open( savelocation );
       App.docker.reinitializeItems( allitems, this );
@@ -156,7 +153,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       sum += i;
     }
 
-    TableColumn cols[] = {statuscol, filecol, startedcol, endedcol, messagecol};
+    TableColumn cols[] = {statuscol, filecol, sizecol, typecol, startedcol, endedcol, messagecol, containercol};
     for ( int i = 0; i < COLWIDTHS.length; i++ ) {
       double pct = COLWIDTHS[i] / sum;
       cols[i].prefWidthProperty().bind(
@@ -165,6 +162,11 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 
     statuscol.setCellValueFactory( new PropertyValueFactory<>( "status" ) );
     messagecol.setCellValueFactory( new PropertyValueFactory<>( "message" ) );
+    typecol.setCellValueFactory( new PropertyValueFactory<>( "type" ) );
+    containercol.setCellValueFactory( new PropertyValueFactory<>( "containerId" ) );
+
+    sizecol.setCellValueFactory( new PropertyValueFactory<>( "bytes" ) );
+    sizecol.setCellFactory( column -> new KbTableCell() );
 
     filecol.setCellValueFactory( new PropertyValueFactory<>( "path" ) );
     filecol.setCellFactory( column -> new LeadingEllipsisTableCell() );
@@ -200,35 +202,34 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   void addFiles() throws IOException {
     FileChooser chsr = new FileChooser();
     chsr.setTitle( "Create New Worklist Items" );
+    chsr.setInitialDirectory( new File( App.prefs.get( Preference.LASTDIR, "." ) ) );
     Window window = table.getScene().getWindow();
     final boolean nativestpx = App.prefs.getBoolean( Preference.NATIVESTP, false );
 
-    chsr.showOpenMultipleDialog( window ).stream()
+    List<WorkItem> newitems = chsr.showOpenMultipleDialog( window ).stream()
           .map( file -> Worklist.from( file.toPath(), nativestpx ) )
           .filter( wi -> wi.isPresent() )
           .map( wi -> wi.get() )
-          .forEach( wi -> table.getItems().add( wi ) );
-    Worklist.save( table.getItems(), savelocation );
-
-//		Parent dialog = App.loadFXML( "workitementry" );
-//		Stage stage = new Stage();
-//		stage.initModality( Modality.APPLICATION_MODAL );
-//		stage.initStyle( StageStyle.DECORATED );
-//		stage.setTitle( "Create New Worklist Item" );
-//		stage.setScene( new Scene( dialog ) );
-//		stage.show();
+          .collect( Collectors.toList() );
+    if ( !newitems.isEmpty() ) {
+      table.getItems().addAll( newitems );
+      Worklist.save( table.getItems(), savelocation );
+      App.prefs.put( Preference.LASTDIR, newitems.get( 0 ).getPath().getParent().toString() );
+    }
   }
 
   @FXML
   void addDir() throws IOException {
     DirectoryChooser chsr = new DirectoryChooser();
     chsr.setTitle( "Create New Worklist Items from Directory" );
+    chsr.setInitialDirectory( new File( App.prefs.get( Preference.LASTDIR, "." ) ) );
     Window window = table.getScene().getWindow();
     final boolean nativestpx = App.prefs.getBoolean( Preference.NATIVESTP, false );
 
     File dir = chsr.showDialog( window );
     Worklist.recursively( dir.toPath(), nativestpx ).forEach( wi -> table.getItems().add( wi ) );
     Worklist.save( table.getItems(), savelocation );
+    App.prefs.put( Preference.LASTDIR, dir.getParent() );
   }
 
   @Override
@@ -268,6 +269,22 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       }
       else {
         setText( item.toString() );
+      }
+    }
+  }
+
+  private static class KbTableCell extends TableCell<WorkItem, Long> {
+
+    @Override
+    protected void updateItem( Long bytes, boolean empty ) {
+      super.updateItem( bytes, empty );
+
+      setAlignment( Pos.CENTER_RIGHT );
+      if ( empty ) {
+        setText( null );
+      }
+      else {
+        setText( String.valueOf( bytes / 1024 ) );
       }
     }
   }

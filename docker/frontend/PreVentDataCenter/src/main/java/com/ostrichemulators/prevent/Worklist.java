@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,13 +63,17 @@ public class Worklist {
         // DWC
         File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "info" ) );
         if ( inners.length > 0 ) {
-          return from( inners[0].toPath(), nativestp );
+          Optional<WorkItem> wi = from( inners[0].toPath(), nativestp );
+          wi.ifPresent( i -> i.setBytes( FileUtils.sizeOfDirectory( f ) ) );
+          return wi;
         }
 
         // WFDB
         inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "hea" ) );
         if ( inners.length > 0 ) {
-          return from( inners[0].toPath(), nativestp );
+          Optional<WorkItem> wi = from( inners[0].toPath(), nativestp );
+          wi.ifPresent( i -> i.setBytes( FileUtils.sizeOfDirectory( f ) ) );
+          return wi;
         }
 
         // ZL
@@ -76,22 +81,15 @@ public class Worklist {
         if ( inners.length > 0 ) {
           //return Optional.of( new WorkItem( p, DigestUtils.md5Hex( p.toAbsolutePath().toString() ), null, null, null, "zl" ) );
           // ignore checksums for now
-          return Optional.of( new WorkItem( p, "", null, null, null, "zl" ) );
+          return Optional.of( new WorkItem( p, "", null, null, null, "zl", FileUtils.sizeOfDirectory( f ) ) );
         }
       }
       else if ( !FilenameUtils.isExtension( p.getFileName().toString(), "hdf5" ) ) {
         if ( FilenameUtils.isExtension( p.getFileName().toString(), "stp" ) && !nativestp ) {
-          return Optional.of( new WorkItem( p, "", null, null, null, "stpxml" ) );
+          return Optional.of( new WorkItem( p, "", null, null, null, "stpxml", FileUtils.sizeOf( p.toFile() ) ) );
         }
 
-        //try ( InputStream is = new BufferedInputStream( new FileInputStream( p.toFile() ) ) ) {
-        // ignore checksums for now
-        //return Optional.of( new WorkItem( p, DigestUtils.md5Hex( is ), null, null, null, null ) );
-        return Optional.of( new WorkItem( p, "", null, null, null, null ) );
-        //}
-        //catch ( IOException x ) {
-        //	LOG.error( "{}", x );
-        //}
+        return Optional.of( new WorkItem( p, "", null, null, null, null, FileUtils.sizeOf( p.toFile() ) ) );
       }
     }
     return Optional.empty();
@@ -108,19 +106,28 @@ public class Worklist {
         // DWC
         File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "info" ) );
         if ( inners.length > 0 ) {
-          from( inners[0].toPath(), nativestp ).ifPresent( wi -> items.add( wi ) );
+          from( inners[0].toPath(), nativestp ).ifPresent( wi -> {
+            wi.setBytes( FileUtils.sizeOfDirectory( f ) );
+            items.add( wi );
+          } );
         }
         else {
           // WFDB
           inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "hea" ) );
           if ( inners.length > 0 ) {
-            from( inners[0].toPath(), nativestp ).ifPresent( wi -> items.add( wi ) );
+            from( inners[0].toPath(), nativestp ).ifPresent( wi -> {
+              wi.setBytes( FileUtils.sizeOfDirectory( f ) );
+              items.add( wi );
+            } );
           }
           else {
             // ZL
             inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "gzip" ) );
             if ( inners.length > 0 ) {
-              from( p, nativestp ).ifPresent( wi -> items.add( wi ) );
+              from( p, nativestp ).ifPresent( wi -> {
+                wi.setBytes( FileUtils.sizeOfDirectory( f ) );
+                items.add( wi );
+              } );
             }
             else {
               // f is a directory, so add all files we find there, and recurse
