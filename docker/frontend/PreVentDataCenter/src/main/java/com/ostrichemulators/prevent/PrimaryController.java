@@ -284,7 +284,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
         setText( null );
       }
       else {
-        setText( String.valueOf( bytes / 1024 ) );
+        setText( String.valueOf( bytes / 1000 ) );
       }
     }
   }

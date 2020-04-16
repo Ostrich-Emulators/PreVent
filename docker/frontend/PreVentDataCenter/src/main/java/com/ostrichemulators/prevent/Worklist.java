@@ -85,7 +85,7 @@ public class Worklist {
         }
       }
       else if ( !FilenameUtils.isExtension( p.getFileName().toString(), "hdf5" ) ) {
-        if ( FilenameUtils.isExtension( p.getFileName().toString(), "stp" ) && !nativestp ) {
+        if ( FilenameUtils.isExtension( p.getFileName().toString().toLowerCase(), "stp" ) && !nativestp ) {
           return Optional.of( new WorkItem( p, "", null, null, null, "stpxml", FileUtils.sizeOf( p.toFile() ) ) );
         }
 
