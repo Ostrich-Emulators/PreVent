@@ -52,6 +52,10 @@ public final class WorkItem {
     return type;
   }
 
+  public void setType( String t ) {
+    this.type = t;
+  }
+
   public Path getPath() {
     return file;
   }

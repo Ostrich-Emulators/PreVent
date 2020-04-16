@@ -13,7 +13,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -27,7 +29,18 @@ import org.slf4j.LoggerFactory;
 public class Worklist {
 
   private static final Logger LOG = LoggerFactory.getLogger( Worklist.class );
+  private static final Map<String, String> EXT_TYPE_LKP = new HashMap<>();
   private static ObjectMapper objmap;
+
+  static {
+    EXT_TYPE_LKP.put( "medi", "tdms" );
+    EXT_TYPE_LKP.put( "xml", "stpxml" );
+    EXT_TYPE_LKP.put( "tdms", "tdms" );
+    EXT_TYPE_LKP.put( "mat", "mat5" );
+    EXT_TYPE_LKP.put( "mat4", "mat4" );
+    EXT_TYPE_LKP.put( "mat73", "mat73" );
+    EXT_TYPE_LKP.put( "stp", "stp" );
+  }
 
   public static List<WorkItem> open( Path saveloc ) throws IOException {
     List<WorkItem> list = new ArrayList<>();
@@ -64,7 +77,10 @@ public class Worklist {
         File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "info" ) );
         if ( inners.length > 0 ) {
           Optional<WorkItem> wi = from( inners[0].toPath(), nativestp );
-          wi.ifPresent( i -> i.setBytes( FileUtils.sizeOfDirectory( f ) ) );
+          wi.ifPresent( i -> {
+            i.setBytes( FileUtils.sizeOfDirectory( f ) );
+            i.setType( "dwc" );
+          } );
           return wi;
         }
 
@@ -72,7 +88,10 @@ public class Worklist {
         inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "hea" ) );
         if ( inners.length > 0 ) {
           Optional<WorkItem> wi = from( inners[0].toPath(), nativestp );
-          wi.ifPresent( i -> i.setBytes( FileUtils.sizeOfDirectory( f ) ) );
+          wi.ifPresent( i -> {
+            i.setBytes( FileUtils.sizeOfDirectory( f ) );
+            i.setType( "wfdb" );
+          } );
           return wi;
         }
 
@@ -89,7 +108,8 @@ public class Worklist {
           return Optional.of( new WorkItem( p, "", null, null, null, "stpxml", FileUtils.sizeOf( p.toFile() ) ) );
         }
 
-        return Optional.of( new WorkItem( p, "", null, null, null, null, FileUtils.sizeOf( p.toFile() ) ) );
+        final String type = EXT_TYPE_LKP.getOrDefault( FilenameUtils.getExtension( p.getFileName().toString() ), "unknown" );
+        return Optional.of( new WorkItem( p, "", null, null, null, type, FileUtils.sizeOf( p.toFile() ) ) );
       }
     }
     return Optional.empty();
@@ -108,6 +128,7 @@ public class Worklist {
         if ( inners.length > 0 ) {
           from( inners[0].toPath(), nativestp ).ifPresent( wi -> {
             wi.setBytes( FileUtils.sizeOfDirectory( f ) );
+            wi.setType( "dwc" );
             items.add( wi );
           } );
         }
@@ -117,6 +138,7 @@ public class Worklist {
           if ( inners.length > 0 ) {
             from( inners[0].toPath(), nativestp ).ifPresent( wi -> {
               wi.setBytes( FileUtils.sizeOfDirectory( f ) );
+              wi.setType( "wfdb" );
               items.add( wi );
             } );
           }
@@ -126,6 +148,7 @@ public class Worklist {
             if ( inners.length > 0 ) {
               from( p, nativestp ).ifPresent( wi -> {
                 wi.setBytes( FileUtils.sizeOfDirectory( f ) );
+                wi.setType( "zl" );
                 items.add( wi );
               } );
             }
