@@ -307,6 +307,7 @@ public class DockerManager {
                 default:
                 // nothing to do here
               }
+              l.itemChanged( item );
             }
           } );
   }
@@ -419,8 +420,6 @@ public class DockerManager {
                 // we should never get here!
                 throw new IllegalStateException( "BUG! Unhandled stop reason: " + reason );
             }
-
-            listener.itemChanged( item );
           }
 
           LOG.debug( "done waiting! " );
@@ -428,14 +427,14 @@ public class DockerManager {
         catch ( InterruptedException x ) {
           LOG.error( "Hey, I've been interrupted! {}", x );
           item.error( x.getMessage() );
-          listener.itemChanged( item );
         }
         catch ( IOException x ) {
           LOG.error( "{}", x );
           item.error( x.getMessage() );
-          listener.itemChanged( item );
         }
         finally {
+          listener.itemChanged( item );
+
           if ( needsStpToXmlConversion( item ) ) {
             xmlPathForStp( item ).toFile().delete();
           }
