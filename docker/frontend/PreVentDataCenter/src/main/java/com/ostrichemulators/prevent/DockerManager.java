@@ -260,7 +260,7 @@ public class DockerManager {
     // anything that was queued on the last run should be reset since
     // that executor is no longer running
     items.stream()
-          .filter( wi -> Status.QUEUED == wi.getStatus() )
+          .filter( wi -> Status.QUEUED == wi.getStatus() || Status.PREPROCESSING == wi.getStatus() )
           .forEach( wi -> wi.reinit() );
 
     // we only need to update items that are in the running state, in case
@@ -314,11 +314,24 @@ public class DockerManager {
           } );
   }
 
+  private boolean runTooLong( WorkItem item ) {
+    final LocalDateTime NOW = LocalDateTime.now();
+    final int MAXDURR = App.prefs.getInt( Preference.CONVERSIONLIMIT, Integer.MAX_VALUE );
+    Duration timed = Duration.between( item.getStarted(), NOW );
+    return ( timed.toMinutes() >= MAXDURR );
+  }
+
   private StopReason threadCanWaitLonger( WorkItem item, JsonObject state ) {
 
     // if we're shutting down, we can't continue
     if ( shuttingDown ) {
       return StopReason.SHUTDOWN;
+    }
+
+    // if we're preprocessing, we don't have a container
+    // yet, so just check running time
+    if ( Status.PREPROCESSING == item.getStatus() && runTooLong( item ) ) {
+      return StopReason.TOO_LONG;
     }
 
     // container doesn't exist? error
@@ -327,12 +340,8 @@ public class DockerManager {
     }
 
     // check if we're running too long
-    final LocalDateTime NOW = LocalDateTime.now();
-    final int MAXDURR = App.prefs.getInt( Preference.CONVERSIONLIMIT, Integer.MAX_VALUE );
-
-    Duration timed = Duration.between( item.getStarted(), NOW );
     //LOG.debug( "checking item: {} ...runtime: {}m (max:{}m)", item, timed.toMinutes(), MAXDURR );
-    if ( Status.RUNNING == item.getStatus() && timed.toMinutes() >= MAXDURR ) {
+    if ( Status.RUNNING == item.getStatus() && runTooLong( item ) ) {
       LOG.debug( "reaping work item {} (running too long)", item );
       return StopReason.TOO_LONG;
     }
@@ -366,8 +375,26 @@ public class DockerManager {
           }
           else {
             if ( needsStpToXmlConversion( item ) ) {
+              item.preprocess();
+              listener.itemChanged( item );
               Process proc = StpToXml.convert( item.getPath(), xmlPathForStp( item ) );
-              int ret = proc.waitFor();
+              synchronized ( monitor ) {
+                while ( proc.isAlive() && StopReason.DONT_STOP == threadCanWaitLonger( item, null ) ) {
+                  try {
+                    DockerManager.this.monitor.wait();
+                  }
+                  catch ( InterruptedException ie ) {
+                    if ( shuttingDown ) {
+                      proc.destroyForcibly();
+                    }
+                    else {
+                      LOG.warn( "ignoring this interruption (preprocessing): {}", ie.getLocalizedMessage() );
+                    }
+                  }
+                }
+              }
+
+              int ret = proc.exitValue();
               if ( 0 != ret ) {
                 item.error( "stp conversion failed" );
                 listener.itemChanged( item );
@@ -427,10 +454,6 @@ public class DockerManager {
           }
 
           LOG.debug( "done waiting! " );
-        }
-        catch ( InterruptedException x ) {
-          LOG.error( "Hey, I've been interrupted! {}", x );
-          item.error( x.getMessage() );
         }
         catch ( IOException x ) {
           LOG.error( "{}", x );

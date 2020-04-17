@@ -117,13 +117,17 @@
                 -->
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
-                <version>0.0.3</version>
+                <version>0.0.4</version>
                 <executions>
                     <execution>
                         <!-- Default configuration for running -->
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>com.ostrichemulators.prevent.App</mainClass>
+                            <options>
+                                <option>--add-opens</option>
+                                <option>javafx.base/javafx.beans.property=ALL-UNNAMED</option>
+                            </options>
                         </configuration>
                     </execution>
                     <execution>
@@ -132,6 +136,8 @@
                         <configuration>
                             <options>
                                 <option>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</option>
+                                <option>--add-opens</option>
+                                <option>javafx.base/javafx.beans.property=ALL-UNNAMED</option>
                             </options>
                             <mainClass>com.ostrichemulators.prevent.App</mainClass>
                         </configuration>
@@ -142,6 +148,8 @@
                         <configuration>
                             <options>
                                 <option>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</option>
+                                <option>--add-opens</option>
+                                <option>javafx.base/javafx.beans.property=ALL-UNNAMED</option>
                             </options>
                             <mainClass>com.ostrichemulators.prevent.App</mainClass>
                         </configuration>

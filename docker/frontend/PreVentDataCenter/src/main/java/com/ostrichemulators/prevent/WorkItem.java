@@ -8,6 +8,12 @@ package com.ostrichemulators.prevent;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import javafx.beans.property.ReadOnlyLongProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 
 /**
  *
@@ -21,18 +27,20 @@ public final class WorkItem {
     RUNNING,
     FINISHED,
     ERROR,
-    KILLED
+    KILLED,
+    PREPROCESSING
   }
 
   private Path file;
-  private String containerId;
-  private LocalDateTime started;
-  private LocalDateTime finished;
   private String checksum; // this is really the ID of this item
-  private String type;
-  private Status status = Status.ADDED;
-  private String message;
-  private long bytes;
+  private final SimpleLongProperty bytes = new SimpleLongProperty();
+
+  private final SimpleStringProperty containerId = new SimpleStringProperty();
+  private final SimpleObjectProperty<LocalDateTime> started = new SimpleObjectProperty<>();
+  private final SimpleObjectProperty<LocalDateTime> finished = new SimpleObjectProperty<>();
+  private final SimpleStringProperty type = new SimpleStringProperty();
+  private final SimpleObjectProperty<Status> status = new SimpleObjectProperty<>( Status.ADDED );
+  private final SimpleStringProperty message = new SimpleStringProperty();
 
   private WorkItem() {
   }
@@ -40,20 +48,24 @@ public final class WorkItem {
   WorkItem( Path file, String checksum, String containerId, LocalDateTime started,
         LocalDateTime finished, String type, long size ) {
     setPath( file );
-    this.containerId = containerId;
-    this.started = started;
-    this.finished = finished;
+    this.containerId.set( containerId );
+    this.started.set( started );
+    this.finished.set( finished );
     this.checksum = checksum;
-    this.type = type;
-    this.bytes = size;
+    this.type.set( type );
+    this.bytes.set( size );
   }
 
-  public String getType() {
+  public ReadOnlyStringProperty typeProperty() {
     return type;
   }
 
+  public String getType() {
+    return type.get();
+  }
+
   public void setType( String t ) {
-    this.type = t;
+    this.type.set( t );
   }
 
   public Path getPath() {
@@ -64,77 +76,122 @@ public final class WorkItem {
     this.file = file;
   }
 
-  public String getContainerId() {
+  public ReadOnlyStringProperty containerIdProperty() {
     return containerId;
   }
 
+  public String getContainerId() {
+    return containerId.get();
+  }
+
   public void setContainerId( String containerId ) {
-    this.containerId = containerId;
+    this.containerId.set( containerId );
   }
 
   public LocalDateTime getStarted() {
-    return started;
+    return started.get();
   }
 
   public long getBytes() {
-    return bytes;
+    return bytes.get();
   }
 
   public void setBytes( long bytes ) {
-    this.bytes = bytes;
+    this.bytes.set( bytes );
+  }
+
+  public ReadOnlyLongProperty bytesProperty() {
+    return bytes;
   }
 
   public void queued() {
-    this.started = null;
-    this.finished = null;
-    this.containerId = null;
-    this.message = null;
-    this.status = Status.QUEUED;
+    this.started.set( null );
+    this.finished.set( null );
+    this.containerId.set( null );
+    this.message.set( null );
+    this.status.set( Status.QUEUED );
   }
 
   public void killed() {
-    this.status = Status.KILLED;
+    this.status.set( Status.KILLED );
+  }
+
+  public void preprocess() {
+    this.started.set( LocalDateTime.now() );
+    this.finished.set( null );
+    this.containerId.set( null );
+    this.status.set( Status.PREPROCESSING );
   }
 
   public void started( String containerid ) {
-    this.started = LocalDateTime.now();
-    this.finished = null;
-    this.containerId = containerid;
-    this.status = Status.RUNNING;
+    if ( Status.PREPROCESSING != this.status.get() ) {
+      this.started.set( LocalDateTime.now() );
+    }
+    this.finished.set( null );
+    this.containerId.set( containerid );
+    this.status.set( Status.RUNNING );
+  }
+
+  void setStarted( LocalDateTime f ) {
+    this.started.set( f );
   }
 
   public LocalDateTime getFinished() {
-    return finished;
+    return finished.get();
   }
 
   public void finished( LocalDateTime finished ) {
-    this.finished = finished;
-    this.status = Status.FINISHED;
+    this.finished.set( finished );
+    this.status.set( Status.FINISHED );
+  }
+
+  void setFinished( LocalDateTime f ) {
+    this.finished.set( f );
+  }
+
+  public ReadOnlyObjectProperty<LocalDateTime> finishedProperty() {
+    return finished;
+  }
+
+  public ReadOnlyObjectProperty<LocalDateTime> startedProperty() {
+    return started;
   }
 
   public void error( String err ) {
-    this.finished = LocalDateTime.now();
-    this.status = Status.ERROR;
-    this.message = err;
+    this.finished.set( LocalDateTime.now() );
+    this.status.set( Status.ERROR );
+    this.message.set( err );
   }
 
   public void reinit() {
-    this.started = null;
-    this.finished = null;
-    this.containerId = null;
-    this.message = null;
-    this.status = Status.ADDED;
+    this.started.set( null );
+    this.finished.set( null );
+    this.containerId.set( null );
+    this.message.set( null );
+    this.status.set( Status.ADDED );
   }
 
   public String getChecksum() {
     return checksum;
   }
 
-  public Status getStatus() {
+  public ReadOnlyObjectProperty<Status> statusProperty() {
     return status;
   }
 
+  public Status getStatus() {
+    return status.get();
+  }
+
+  void setStatus( Status s ) {
+    status.set( s );
+  }
+
   public String getMessage() {
+    return message.get();
+  }
+
+  public ReadOnlyStringProperty messageProperty() {
     return message;
   }
 
@@ -175,6 +232,6 @@ public final class WorkItem {
   public String toString() {
     return String.format( "%s {%s}", file, ( null == containerId
                                              ? ""
-                                             : containerId.substring( 0, 12 ) ) );
+                                             : containerId.get().substring( 0, 12 ) ) );
   }
 }
