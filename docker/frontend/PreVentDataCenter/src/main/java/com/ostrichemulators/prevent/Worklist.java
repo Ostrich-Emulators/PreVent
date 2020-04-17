@@ -74,7 +74,7 @@ public class Worklist {
         // check if this directory is WFDB, DWC, or ZL
 
         // DWC
-        File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "info" ) );
+        File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName().toLowerCase(), "info" ) );
         if ( inners.length > 0 ) {
           Optional<WorkItem> wi = from( inners[0].toPath(), nativestp );
           wi.ifPresent( i -> {
@@ -85,7 +85,7 @@ public class Worklist {
         }
 
         // WFDB
-        inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "hea" ) );
+        inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName().toLowerCase(), "hea" ) );
         if ( inners.length > 0 ) {
           Optional<WorkItem> wi = from( inners[0].toPath(), nativestp );
           wi.ifPresent( i -> {
@@ -96,19 +96,19 @@ public class Worklist {
         }
 
         // ZL
-        inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "gzip" ) );
+        inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName().toLowerCase(), "gzip" ) );
         if ( inners.length > 0 ) {
           //return Optional.of( new WorkItem( p, DigestUtils.md5Hex( p.toAbsolutePath().toString() ), null, null, null, "zl" ) );
           // ignore checksums for now
           return Optional.of( new WorkItem( p, "", null, null, null, "zl", FileUtils.sizeOfDirectory( f ) ) );
         }
       }
-      else if ( !FilenameUtils.isExtension( p.getFileName().toString(), "hdf5" ) ) {
+      else if ( !FilenameUtils.isExtension( p.getFileName().toString().toLowerCase(), "hdf5" ) ) {
         if ( FilenameUtils.isExtension( p.getFileName().toString().toLowerCase(), "stp" ) && !nativestp ) {
           return Optional.of( new WorkItem( p, "", null, null, null, "stpxml", FileUtils.sizeOf( p.toFile() ) ) );
         }
 
-        final String type = EXT_TYPE_LKP.getOrDefault( FilenameUtils.getExtension( p.getFileName().toString() ), "unknown" );
+        final String type = EXT_TYPE_LKP.getOrDefault( FilenameUtils.getExtension( p.getFileName().toString().toLowerCase() ), "unknown" );
         return Optional.of( new WorkItem( p, "", null, null, null, type, FileUtils.sizeOf( p.toFile() ) ) );
       }
     }
@@ -124,7 +124,7 @@ public class Worklist {
         // but if we have anything else, then recurse and add whatever we find.
 
         // DWC
-        File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "info" ) );
+        File[] inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName().toLowerCase(), "info" ) );
         if ( inners.length > 0 ) {
           from( inners[0].toPath(), nativestp ).ifPresent( wi -> {
             wi.setBytes( FileUtils.sizeOfDirectory( f ) );
@@ -134,7 +134,7 @@ public class Worklist {
         }
         else {
           // WFDB
-          inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "hea" ) );
+          inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName().toLowerCase(), "hea" ) );
           if ( inners.length > 0 ) {
             from( inners[0].toPath(), nativestp ).ifPresent( wi -> {
               wi.setBytes( FileUtils.sizeOfDirectory( f ) );
@@ -144,7 +144,7 @@ public class Worklist {
           }
           else {
             // ZL
-            inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName(), "gzip" ) );
+            inners = f.listFiles( fname -> FilenameUtils.isExtension( fname.getName().toLowerCase(), "gzip" ) );
             if ( inners.length > 0 ) {
               from( p, nativestp ).ifPresent( wi -> {
                 wi.setBytes( FileUtils.sizeOfDirectory( f ) );
