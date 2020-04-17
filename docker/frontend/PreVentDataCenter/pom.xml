@@ -123,11 +123,11 @@
                         <!-- Default configuration for running -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.ostrichemulators.prevent.App</mainClass>
                             <options>
                                 <option>--add-opens</option>
                                 <option>javafx.base/javafx.beans.property=ALL-UNNAMED</option>
                             </options>
+                            <mainClass>com.ostrichemulators.prevent.App</mainClass>
                         </configuration>
                     </execution>
                     <execution>

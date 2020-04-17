@@ -33,8 +33,8 @@ public final class WorkItem {
 
   private Path file;
   private String checksum; // this is really the ID of this item
-  private final SimpleLongProperty bytes = new SimpleLongProperty();
 
+  private final SimpleLongProperty bytes = new SimpleLongProperty();
   private final SimpleStringProperty containerId = new SimpleStringProperty();
   private final SimpleObjectProperty<LocalDateTime> started = new SimpleObjectProperty<>();
   private final SimpleObjectProperty<LocalDateTime> finished = new SimpleObjectProperty<>();
@@ -189,6 +189,10 @@ public final class WorkItem {
 
   public String getMessage() {
     return message.get();
+  }
+
+  void setMessage( String s ){
+    message.set( s );
   }
 
   public ReadOnlyStringProperty messageProperty() {
