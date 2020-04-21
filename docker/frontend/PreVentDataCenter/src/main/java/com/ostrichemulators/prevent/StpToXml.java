@@ -48,7 +48,7 @@ public class StpToXml {
     cmds.add( "-o" );
     cmds.add( xmlfile.toString() );
     //cmds.add( "-utc" );
-    if ( App.prefs.getBoolean( Preference.STPISPHILIPS, false ) ) {
+    if ( App.prefs.isStpPhilips() ) {
       cmds.add( "-p" );
     }
     LOG.debug( "STPtoXML command: {}", String.join( " ", cmds ) );
@@ -71,10 +71,10 @@ public class StpToXml {
    */
   private static void initIfNeeded() throws IOException {
     if ( null == stpdir ) {
-      String tmpdir = App.prefs.get( Preference.STPDIR, "missing" );
-      if ( "missing".equals( tmpdir ) ) {
-        tmpdir = Files.createTempDirectory( "prevent." ).toString();
-        App.prefs.put( Preference.STPDIR, tmpdir );
+      File tmpdir = App.prefs.getStpDir();
+      if ( null == tmpdir ) {
+        tmpdir = Files.createTempDirectory( "prevent." ).toFile();
+        App.prefs.setStpDir( tmpdir.toPath() );
       }
       File extractiondir = new File( tmpdir, "StpToolkit_8.4" );
       stpdir = extractiondir.toPath();

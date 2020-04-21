@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
@@ -91,7 +92,6 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   @FXML
   private Label outputlbl;
 
-  private final Preferences prefs = Preferences.userRoot().node( "com/ostrichemulators/prevent" );
   private Path savelocation;
 
   @FXML
@@ -99,25 +99,29 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     App.docker.setMaxContainers( dockercnt.getValue() );
     dockercnt.setValueFactory( new SpinnerValueFactory.IntegerSpinnerValueFactory( 1,
           10, dockercnt.getValue() ) );
-    prefs.putBoolean( Preference.NATIVESTP, nativestp.isSelected() );
-    prefs.putBoolean( Preference.STPISPHILIPS, usephilips.isSelected() );
-    prefs.putBoolean( Preference.DOCKERREMOVE, removecontainers.isSelected() );
-    prefs.putInt( Preference.DOCKERCOUNT, dockercnt.getValue() );
-    prefs.putInt( Preference.CONVERSIONLIMIT, durationtimer.getValue() );
-    prefs.put( Preference.OUTPUTDIR, outputlbl.getText() );
+
+    App.prefs
+          .setMaxConversionMinutes( durationtimer.getValue() )
+          .setNativeStp( nativestp.isSelected() )
+          .setMaxDockerCount( dockercnt.getValue() )
+          .setStpPhilips( usephilips.isSelected() )
+          .setRemoveDockerOnSuccess( removecontainers.isSelected() );
+    if ( !"From Input".equals( outputlbl.getText() ) ) {
+      App.prefs.setOutputPath( Paths.get( outputlbl.getText() ) );
+    }
   }
 
   private void loadPrefs() {
-    nativestp.setSelected( prefs.getBoolean( Preference.NATIVESTP, false ) );
-    usephilips.setSelected( prefs.getBoolean( Preference.STPISPHILIPS, false ) );
-    removecontainers.setSelected( prefs.getBoolean( Preference.DOCKERREMOVE, false ) );
-    App.docker.setMaxContainers( prefs.getInt( Preference.DOCKERCOUNT,
-          DockerManager.DEFAULT_MAX_RUNNING_CONTAINERS ) );
+    nativestp.setSelected( App.prefs.useNativeStp() );
+    usephilips.setSelected( App.prefs.isStpPhilips() );
+    removecontainers.setSelected( App.prefs.removeDockerOnSuccess() );
+    App.docker.setMaxContainers( App.prefs.getMaxDockerCount() );
     dockercnt.setValueFactory( new SpinnerValueFactory.IntegerSpinnerValueFactory( 1,
           10, App.docker.getMaxContainers() ) );
 
     outputlbl.setTextOverrun( OverrunStyle.CENTER_ELLIPSIS );
-    outputlbl.setText( prefs.get( Preference.OUTPUTDIR, "From Input" ) );
+    Path outpath = App.prefs.getOutputPath();
+    outputlbl.setText( null == outpath ? "From Input" : outpath.toString() );
 
     ListSpinnerValueFactory<Integer> vfac = new SpinnerValueFactory.ListSpinnerValueFactory<>(
           FXCollections.observableArrayList( 10, 30, 60, 180, 480, Integer.MAX_VALUE ) );
@@ -252,9 +256,9 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   void addFiles() throws IOException {
     FileChooser chsr = new FileChooser();
     chsr.setTitle( "Create New Worklist Items" );
-    chsr.setInitialDirectory( new File( App.prefs.get( Preference.LASTDIR, "." ) ) );
+    chsr.setInitialDirectory( App.prefs.getLastOpenedDir() );
     Window window = table.getScene().getWindow();
-    final boolean nativestpx = App.prefs.getBoolean( Preference.NATIVESTP, false );
+    final boolean nativestpx = App.prefs.useNativeStp();
 
     List<WorkItem> newitems = chsr.showOpenMultipleDialog( window ).stream()
           .map( file -> Worklist.from( file.toPath(), nativestpx ) )
@@ -264,7 +268,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     if ( !newitems.isEmpty() ) {
       table.getItems().addAll( newitems );
       Worklist.save( table.getItems(), savelocation );
-      App.prefs.put( Preference.LASTDIR, newitems.get( 0 ).getPath().getParent().toString() );
+      App.prefs.setLastOpenedDir( newitems.get( 0 ).getPath().getParent().toFile() );
     }
   }
 
@@ -272,14 +276,14 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   void addDir() throws IOException {
     DirectoryChooser chsr = new DirectoryChooser();
     chsr.setTitle( "Create New Worklist Items from Directory" );
-    chsr.setInitialDirectory( new File( App.prefs.get( Preference.LASTDIR, "." ) ) );
+    chsr.setInitialDirectory( App.prefs.getLastOpenedDir() );
     Window window = table.getScene().getWindow();
-    final boolean nativestpx = App.prefs.getBoolean( Preference.NATIVESTP, false );
+    final boolean nativestpx = App.prefs.useNativeStp();
 
     File dir = chsr.showDialog( window );
     Worklist.recursively( dir.toPath(), nativestpx ).forEach( wi -> table.getItems().add( wi ) );
     Worklist.save( table.getItems(), savelocation );
-    App.prefs.put( Preference.LASTDIR, dir.getParent() );
+    App.prefs.setLastOpenedDir( dir.getParentFile() );
   }
 
   @Override
@@ -298,10 +302,9 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     DirectoryChooser chsr = new DirectoryChooser();
     chsr.setTitle( "Select Output Directory" );
 
-    String outdir = App.prefs.get( Preference.OUTPUTDIR,
-          App.prefs.get( Preference.LASTDIR, "From Input" ) );
-    if ( !"From Input".equals( outdir ) ) {
-      chsr.setInitialDirectory( new File( outdir ) );
+    Path outdir = App.prefs.getOutputPath();
+    if ( null != outdir ) {
+      chsr.setInitialDirectory( outdir.toFile() );
     }
     Window window = table.getScene().getWindow();
 

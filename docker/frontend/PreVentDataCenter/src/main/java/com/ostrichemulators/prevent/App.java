@@ -9,7 +9,6 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.prefs.Preferences;
 import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,7 @@ public class App extends Application {
 
   private static Scene scene;
   static final DockerManager docker = DockerManager.connect();
-  static final Preferences prefs = Preferences.userRoot().node( "com/ostrichemulators/prevent" );
+  static final Preference prefs = Preference.open();
 
   @Override
   public void start( Stage stage ) throws IOException {

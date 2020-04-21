@@ -287,7 +287,7 @@ public class DockerManager {
                       ZonedDateTime zdt = ZonedDateTime.parse( endtime );
                       LOG.debug( "setting finished time from container for item:{}", item );
                       item.finished( zdt.withZoneSameInstant( ZoneId.systemDefault() ).toLocalDateTime() );
-                      if ( App.prefs.getBoolean( Preference.DOCKERREMOVE, false ) ) {
+                      if ( App.prefs.removeDockerOnSuccess() ) {
                         containermap.get( item.getContainerId() ).remove();
                       }
                     }
@@ -319,7 +319,7 @@ public class DockerManager {
 
   private boolean runTooLong( WorkItem item ) {
     final LocalDateTime NOW = LocalDateTime.now();
-    final int MAXDURR = App.prefs.getInt( Preference.CONVERSIONLIMIT, Integer.MAX_VALUE );
+    final int MAXDURR = App.prefs.getMaxConversionMinutes();
     Duration timed = Duration.between( item.getStarted(), NOW );
     return ( timed.toMinutes() >= MAXDURR );
   }
@@ -448,7 +448,7 @@ public class DockerManager {
                 break;
               case COMPLETED:
                 item.finished( LocalDateTime.now() );
-                if ( App.prefs.getBoolean( Preference.DOCKERREMOVE, false ) ) {
+                if ( App.prefs.removeDockerOnSuccess() ) {
                   c.remove(); // remove containers that completed successfully
                 }
                 break;

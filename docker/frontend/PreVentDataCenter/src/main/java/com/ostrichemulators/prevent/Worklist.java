@@ -69,7 +69,7 @@ public class Worklist {
 
   public static Optional<WorkItem> from( Path p, boolean nativestp ) {
     File f = p.toFile();
-    final String outdir = App.prefs.get( Preference.OUTPUTDIR, null );
+    final Path outdir = App.prefs.getOutputPath();
 
     if ( f.canRead() ) {
       if ( f.isDirectory() ) {
@@ -105,13 +105,13 @@ public class Worklist {
           return Optional.of( WorkItem.builder( p )
                 .type( "zl" )
                 .bytes( FileUtils.sizeOfDirectory( f ) )
-                .calculateOutput( outdir )
+                .outdir( outdir )
                 .build() );
         }
       }
       else if ( !FilenameUtils.isExtension( p.getFileName().toString().toLowerCase(), "hdf5" ) ) {
         WorkItemBuilder builder = WorkItem.builder( p )
-              .calculateOutput( outdir )
+              .outdir( outdir )
               .bytes( FileUtils.sizeOf( p.toFile() ) );
 
         if ( FilenameUtils.isExtension( p.getFileName().toString().toLowerCase(), "stp" ) && !nativestp ) {
