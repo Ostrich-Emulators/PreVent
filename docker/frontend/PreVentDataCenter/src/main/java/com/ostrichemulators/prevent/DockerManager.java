@@ -12,6 +12,7 @@ import com.amihaiemil.docker.Images;
 import com.amihaiemil.docker.TcpDocker;
 import com.amihaiemil.docker.UnexpectedResponseException;
 import com.amihaiemil.docker.UnixDocker;
+import com.ostrichemulators.prevent.StpToXml.StpConversionInfo;
 import com.ostrichemulators.prevent.WorkItem.Status;
 import java.io.File;
 import java.io.IOException;
@@ -369,6 +370,7 @@ public class DockerManager {
 
     ConversionTask( WorkItem item, WorkItemStateChangeListener listener, Container reinitContainer ) {
       super( () -> {
+        StpConversionInfo cnv = null;
         try {
           File f = item.getOutputPath().toFile();
           if ( !f.exists() ) {
@@ -385,15 +387,15 @@ public class DockerManager {
             if ( needsStpToXmlConversion( item ) ) {
               item.preprocess();
               listener.itemChanged( item );
-              Process proc = StpToXml.convert( item.getPath(), xmlPathForStp( item ) );
+              cnv = StpToXml.convert( item.getPath(), xmlPathForStp( item ) );
               synchronized ( monitor ) {
-                while ( proc.isAlive() && StopReason.DONT_STOP == threadCanWaitLonger( item, null ) ) {
+                while ( cnv.process.isAlive() && StopReason.DONT_STOP == threadCanWaitLonger( item, null ) ) {
                   try {
                     DockerManager.this.monitor.wait();
                   }
                   catch ( InterruptedException ie ) {
                     if ( shuttingDown ) {
-                      proc.destroyForcibly();
+                      cnv.process.destroyForcibly();
                     }
                     else {
                       LOG.warn( "ignoring this interruption (preprocessing): {}", ie.getLocalizedMessage() );
@@ -402,8 +404,9 @@ public class DockerManager {
                 }
               }
 
-              int ret = proc.exitValue();
+              int ret = cnv.process.exitValue();
               if ( 0 != ret ) {
+                // FIXME: save the output log somewhere
                 item.error( "stp conversion failed" );
                 listener.itemChanged( item );
                 return;
@@ -439,6 +442,8 @@ public class DockerManager {
             // 2) the conversion ended in error
             // 3) the conversion was killed (timed out)
             // 4) the system is shutting down
+
+            // FIXME: no matter how we got to this point, save the container logs somewhere
             switch ( reason ) {
               case TOO_LONG:
                 item.killed();

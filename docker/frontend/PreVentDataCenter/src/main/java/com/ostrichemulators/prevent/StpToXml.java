@@ -31,7 +31,22 @@ public class StpToXml {
   private static final Logger LOG = LoggerFactory.getLogger( StpToXml.class );
   private static Path stpdir;
 
-  public static Process convert( Path stpfile, Path xmlfile ) throws IOException {
+  public static class StpConversionInfo {
+
+    public final Process process;
+    public final File dir;
+    public final File stdoutfile;
+    public final File stderrfile;
+
+    public StpConversionInfo( Process process, File dir, File stdoutfile, File stderrfile ) {
+      this.process = process;
+      this.dir = dir;
+      this.stdoutfile = stdoutfile;
+      this.stderrfile = stderrfile;
+    }
+  }
+
+  public static StpConversionInfo convert( Path stpfile, Path xmlfile ) throws IOException {
     initIfNeeded();
 
     // STPtoXML seems to struggle when multiple conversions are running from the
@@ -53,13 +68,16 @@ public class StpToXml {
     }
     LOG.debug( "STPtoXML command: {}", String.join( " ", cmds ) );
 
+    File stdout = new File( dir, "stp-output.log" );
+    File stderr = new File( dir, "stp-errors.log" );
     Process proc = new ProcessBuilder()
           .command( cmds )
-          .redirectError( new File( dir, "stp-errors.log" ) )
-          .redirectOutput( new File( dir, "stp-output.log" ) )
+          .redirectError( stderr )
+          .redirectOutput( stdout )
           .directory( dir )
           .start();
-    return proc;
+
+    return new StpConversionInfo( proc, dir, stdout, stderr );
   }
 
   /**
