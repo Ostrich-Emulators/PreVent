@@ -221,14 +221,17 @@ public class DockerManager {
     JsonArrayBuilder mounts = Json.createArrayBuilder();
     JsonObjectBuilder volumes = Json.createObjectBuilder();
     mounts.add( String.format( "%s:/opt/todo", item.getPath().getParent().toString() ) );
+    mounts.add( String.format( "%s:/opt/output", item.getOutputPath().toString() ) );
+
     volumes.add( "/opt/todo", Json.createObjectBuilder() );
+    volumes.add( "/opt/output", Json.createObjectBuilder() );
 
     JsonObjectBuilder hostconfig = Json.createObjectBuilder();
     hostconfig.add( "Binds", mounts );
 
     JsonArrayBuilder cmds = Json.createArrayBuilder( List.of(
-          "--to",
-          "hdf5",
+          "--to", "hdf5",
+          "--pattern", "/opt/output/%S",
           "--localtime",
           String.format( "/opt/todo/%s", ( needsStpToXmlConversion( item )
                                            ? xmlPathForStp( item )
@@ -367,6 +370,11 @@ public class DockerManager {
     ConversionTask( WorkItem item, WorkItemStateChangeListener listener, Container reinitContainer ) {
       super( () -> {
         try {
+          File f = item.getOutputPath().toFile();
+          if ( !f.exists() ) {
+            f.mkdirs();
+          }
+
           Container c;
           // if the extension is stp, but the type is stpxml, we need to do
           // the STPtoXML conversion before we can convert (and remove XML afterwards)

@@ -23,6 +23,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
@@ -50,6 +51,9 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 
   @FXML
   private TableColumn<WorkItem, Path> filecol;
+
+  @FXML
+  private TableColumn<WorkItem, Path> outputcol;
 
   @FXML
   private TableColumn<WorkItem, LocalDateTime> startedcol;
@@ -80,8 +84,13 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 
   @FXML
   private Spinner<Integer> dockercnt;
+
   @FXML
   private Spinner<Integer> durationtimer;
+
+  @FXML
+  private Label outputlbl;
+
   private final Preferences prefs = Preferences.userRoot().node( "com/ostrichemulators/prevent" );
   private Path savelocation;
 
@@ -95,6 +104,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     prefs.putBoolean( Preference.DOCKERREMOVE, removecontainers.isSelected() );
     prefs.putInt( Preference.DOCKERCOUNT, dockercnt.getValue() );
     prefs.putInt( Preference.CONVERSIONLIMIT, durationtimer.getValue() );
+    prefs.put( Preference.OUTPUTDIR, outputlbl.getText() );
   }
 
   private void loadPrefs() {
@@ -105,6 +115,9 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
           DockerManager.DEFAULT_MAX_RUNNING_CONTAINERS ) );
     dockercnt.setValueFactory( new SpinnerValueFactory.IntegerSpinnerValueFactory( 1,
           10, App.docker.getMaxContainers() ) );
+
+    outputlbl.setTextOverrun( OverrunStyle.CENTER_ELLIPSIS );
+    outputlbl.setText( prefs.get( Preference.OUTPUTDIR, "From Input" ) );
 
     ListSpinnerValueFactory<Integer> vfac = new SpinnerValueFactory.ListSpinnerValueFactory<>(
           FXCollections.observableArrayList( 10, 30, 60, 180, 480, Integer.MAX_VALUE ) );
@@ -190,6 +203,9 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     filecol.setCellValueFactory( new PropertyValueFactory<>( "path" ) );
     filecol.setCellFactory( column -> new LeadingEllipsisTableCell() );
 
+    outputcol.setCellValueFactory( new PropertyValueFactory<>( "outputPath" ) );
+    outputcol.setCellFactory( column -> new LeadingEllipsisTableCell() );
+
     startedcol.setCellValueFactory( new PropertyValueFactory<>( "started" ) );
     startedcol.setCellFactory( column -> new LocalDateTableCell() );
 
@@ -203,12 +219,27 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   }
 
   @FXML
-  void convert() throws IOException {
+  void convertAll() throws IOException {
     try {
       // ignore items that are already running, already finished, or already queued
       Set<Status> workable = new HashSet<>( List.of( Status.ERROR, Status.ADDED, Status.KILLED ) );
       List<WorkItem> todo = table.getItems().stream()
             .filter( wi -> workable.contains( wi.getStatus() ) )
+            .collect( Collectors.toList() );
+      App.docker.convert( todo, this );
+    }
+    catch ( IOException x ) {
+      LOG.error( "{}", x );
+    }
+  }
+
+  @FXML
+  void convertSelected() throws IOException {
+    try {
+      // run whatever's selected (except already-queued or already running items)
+      Set<Status> workable = new HashSet<>( List.of( Status.RUNNING, Status.PREPROCESSING, Status.QUEUED ) );
+      List<WorkItem> todo = table.getSelectionModel().getSelectedItems().stream()
+            .filter( wi -> !workable.contains( wi.getStatus() ) )
             .collect( Collectors.toList() );
       App.docker.convert( todo, this );
     }
@@ -260,6 +291,27 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     catch ( IOException xx ) {
       LOG.warn( "Could not save WorkItem update", xx );
     }
+  }
+
+  @FXML
+  void selectOutputDir() {
+    DirectoryChooser chsr = new DirectoryChooser();
+    chsr.setTitle( "Select Output Directory" );
+
+    String outdir = App.prefs.get( Preference.OUTPUTDIR,
+          App.prefs.get( Preference.LASTDIR, "From Input" ) );
+    if ( !"From Input".equals( outdir ) ) {
+      chsr.setInitialDirectory( new File( outdir ) );
+    }
+    Window window = table.getScene().getWindow();
+
+    File dir = chsr.showDialog( window );
+    outputlbl.setText( dir.getAbsolutePath() );
+  }
+
+  @FXML
+  void setOutputFromInput() {
+    outputlbl.setText( "From Input" );
   }
 
   private static class LocalDateTableCell extends TableCell<WorkItem, LocalDateTime> {

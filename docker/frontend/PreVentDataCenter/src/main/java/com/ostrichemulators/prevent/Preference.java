@@ -17,5 +17,6 @@ public interface Preference {
   static final String DOCKERREMOVE = "docker.containers.remove-on-success";
   static final String CONVERSIONLIMIT = "conversion.duration.maxminutes";
   static final String STPDIR = "tools.parser.stptoxml";
-  static final String LASTDIR = "filedir";
+  static final String LASTDIR = "directory.last";
+  static final String OUTPUTDIR = "directory.output";
 }

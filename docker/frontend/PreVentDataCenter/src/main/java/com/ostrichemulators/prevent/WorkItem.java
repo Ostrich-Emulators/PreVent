@@ -6,6 +6,7 @@
 package com.ostrichemulators.prevent;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import javafx.beans.property.ReadOnlyLongProperty;
@@ -41,12 +42,17 @@ public final class WorkItem {
   private final SimpleStringProperty type = new SimpleStringProperty();
   private final SimpleObjectProperty<Status> status = new SimpleObjectProperty<>( Status.ADDED );
   private final SimpleStringProperty message = new SimpleStringProperty();
+  private final SimpleObjectProperty<Path> outputdir = new SimpleObjectProperty<>();
 
   private WorkItem() {
   }
 
-  WorkItem( Path file, String checksum, String containerId, LocalDateTime started,
-        LocalDateTime finished, String type, long size ) {
+  public static WorkItemBuilder builder( Path p ) {
+    return new WorkItemBuilder( p );
+  }
+
+  private WorkItem( Path file, String checksum, String containerId, LocalDateTime started,
+        LocalDateTime finished, String type, long size, Path outputdir ) {
     setPath( file );
     this.containerId.set( containerId );
     this.started.set( started );
@@ -54,6 +60,7 @@ public final class WorkItem {
     this.checksum = checksum;
     this.type.set( type );
     this.bytes.set( size );
+    this.outputdir.set( outputdir );
   }
 
   public ReadOnlyStringProperty typeProperty() {
@@ -74,6 +81,18 @@ public final class WorkItem {
 
   public void setPath( Path file ) {
     this.file = file;
+  }
+
+  public Path getOutputPath() {
+    return outputdir.get();
+  }
+
+  public void setOutputPath( Path file ) {
+    this.outputdir.set( file );
+  }
+
+  public ReadOnlyObjectProperty<Path> outputPathProperty() {
+    return outputdir;
   }
 
   public ReadOnlyStringProperty containerIdProperty() {
@@ -191,7 +210,7 @@ public final class WorkItem {
     return message.get();
   }
 
-  void setMessage( String s ){
+  void setMessage( String s ) {
     message.set( s );
   }
 
@@ -237,5 +256,79 @@ public final class WorkItem {
     return String.format( "%s {%s}", file, ( null == containerId
                                              ? ""
                                              : containerId.get().substring( 0, 12 ) ) );
+  }
+
+  public static class WorkItemBuilder {
+
+    private Path file;
+    private String type;
+    private Path outputdir;
+    private long size;
+
+    private WorkItemBuilder( Path p ) {
+      file = p;
+    }
+
+    /**
+     * Sets the path of this builder. Note that this function could reset the
+     * output directory if the output directory is derived from the input file
+     *
+     * @param f
+     * @return
+     */
+    public WorkItemBuilder path( Path f ) {
+      file = f;
+      return this;
+    }
+
+    public WorkItemBuilder type( String t ) {
+      type = t;
+      return this;
+    }
+
+    /**
+     * Set the output location.
+     *
+     * @param p The new location. If null, the output location is derived from
+     * the input path.
+     * @return
+     */
+    public WorkItemBuilder outdir( Path p ) {
+      outputdir = p;
+      return this;
+    }
+
+    /**
+     * Determines the appropriate output location based on the string path.
+     *
+     * @param s the output location. If null, the outdir will be derived from
+     * the input path.
+     * @return
+     */
+    public WorkItemBuilder calculateOutput( String s ) {
+      return ( null == s
+               ? outdir( null )
+               : outdir( Paths.get( s ) ) );
+    }
+
+    public WorkItemBuilder bytes( long l ) {
+      size = l;
+      return this;
+    }
+
+    /**
+     * The current output directory. For information purposes only :)
+     *
+     * @return
+     */
+    public Path currentOutputDir() {
+      return ( null == outputdir
+               ? file.getParent()
+               : outputdir );
+    }
+
+    public WorkItem build() {
+      return new WorkItem( file, null, null, null, null, type, size, currentOutputDir() );
+    }
   }
 }

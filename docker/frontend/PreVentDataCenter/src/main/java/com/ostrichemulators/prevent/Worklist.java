@@ -8,6 +8,7 @@ package com.ostrichemulators.prevent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.ostrichemulators.prevent.WorkItem.WorkItemBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -68,6 +69,7 @@ public class Worklist {
 
   public static Optional<WorkItem> from( Path p, boolean nativestp ) {
     File f = p.toFile();
+    final String outdir = App.prefs.get( Preference.OUTPUTDIR, null );
 
     if ( f.canRead() ) {
       if ( f.isDirectory() ) {
@@ -100,16 +102,26 @@ public class Worklist {
         if ( inners.length > 0 ) {
           //return Optional.of( new WorkItem( p, DigestUtils.md5Hex( p.toAbsolutePath().toString() ), null, null, null, "zl" ) );
           // ignore checksums for now
-          return Optional.of( new WorkItem( p, "", null, null, null, "zl", FileUtils.sizeOfDirectory( f ) ) );
+          return Optional.of( WorkItem.builder( p )
+                .type( "zl" )
+                .bytes( FileUtils.sizeOfDirectory( f ) )
+                .calculateOutput( outdir )
+                .build() );
         }
       }
       else if ( !FilenameUtils.isExtension( p.getFileName().toString().toLowerCase(), "hdf5" ) ) {
+        WorkItemBuilder builder = WorkItem.builder( p )
+              .calculateOutput( outdir )
+              .bytes( FileUtils.sizeOf( p.toFile() ) );
+
         if ( FilenameUtils.isExtension( p.getFileName().toString().toLowerCase(), "stp" ) && !nativestp ) {
-          return Optional.of( new WorkItem( p, "", null, null, null, "stpxml", FileUtils.sizeOf( p.toFile() ) ) );
+          builder.type( "stpxml" );
+        }
+        else {
+          builder.type( EXT_TYPE_LKP.getOrDefault( FilenameUtils.getExtension( p.getFileName().toString().toLowerCase() ), "unknown" ) );
         }
 
-        final String type = EXT_TYPE_LKP.getOrDefault( FilenameUtils.getExtension( p.getFileName().toString().toLowerCase() ), "unknown" );
-        return Optional.of( new WorkItem( p, "", null, null, null, type, FileUtils.sizeOf( p.toFile() ) ) );
+        return Optional.of( builder.build() );
       }
     }
     return Optional.empty();
