@@ -13,13 +13,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
-import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -31,10 +32,14 @@ import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.SpinnerValueFactory.ListSpinnerValueFactory;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
@@ -174,9 +179,36 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 
     try {
       List<WorkItem> allitems = Worklist.open( savelocation );
+
+      table.setRowFactory( tv -> {
+        TableRow<WorkItem> row = new TableRow();
+        row.setOnMouseClicked( event -> {
+          if ( event.getClickCount() > 1 && !row.isEmpty() ) {
+            popDetails( row.getItem() );
+          }
+        } );
+        return row;
+      } );
+
       App.docker.reinitializeItems( allitems, this );
 
       table.getItems().addAll( allitems );
+    }
+    catch ( IOException x ) {
+      LOG.error( "{}", x );
+    }
+  }
+
+  private void popDetails( WorkItem item ) {
+    try {
+      Parent parent = App.loadFXML( "workitementry" );
+
+      Stage newWindow = new Stage();
+      newWindow.setTitle( "Item Details" );
+      newWindow.initModality( Modality.WINDOW_MODAL );
+      newWindow.initStyle( StageStyle.DECORATED );
+      newWindow.setScene( new Scene( parent ) );
+      newWindow.show();
     }
     catch ( IOException x ) {
       LOG.error( "{}", x );
