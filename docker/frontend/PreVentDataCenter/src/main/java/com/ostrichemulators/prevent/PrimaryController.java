@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 public class PrimaryController implements Initializable, WorkItemStateChangeListener {
 
   private static final Logger LOG = LoggerFactory.getLogger( PrimaryController.class );
-  private static final int COLWIDTHS[] = {15, 50, 10, 10, 15, 15, 10, 10};
+  private static final int COLWIDTHS[] = {15, 50, 10, 10, 15, 15, 10, 10, 10};
   @FXML
   private TableView<WorkItem> table;
 
@@ -221,7 +221,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       sum += i;
     }
 
-    TableColumn cols[] = {statuscol, filecol, sizecol, typecol, startedcol, endedcol, messagecol, containercol};
+    TableColumn cols[] = {statuscol, filecol, sizecol, typecol, startedcol, endedcol, messagecol, containercol, outputcol};
     for ( int i = 0; i < COLWIDTHS.length; i++ ) {
       double pct = COLWIDTHS[i] / sum;
       cols[i].prefWidthProperty().bind(
@@ -313,9 +313,11 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     final boolean nativestpx = App.prefs.useNativeStp();
 
     File dir = chsr.showDialog( window );
-    Worklist.recursively( dir.toPath(), nativestpx ).forEach( wi -> table.getItems().add( wi ) );
-    Worklist.save( table.getItems(), savelocation );
-    App.prefs.setLastOpenedDir( dir.getParentFile() );
+    if( null != dir ){
+      Worklist.recursively( dir.toPath(), nativestpx ).forEach( wi -> table.getItems().add( wi ) );
+      Worklist.save( table.getItems(), savelocation );
+      App.prefs.setLastOpenedDir( dir.getParentFile() );
+    }
   }
 
   @Override

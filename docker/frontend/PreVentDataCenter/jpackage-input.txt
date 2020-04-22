@@ -1,5 +1,6 @@
 --type app-image
 --input target/lib
+--arguments javafx.base/javafx.beans.property=ALL-UNNAMED
 --add-modules java.naming,java.management,javafx.controls,javafx.fxml,java.base,java.prefs,com.fasterxml.jackson.annotation,com.fasterxml.jackson.core,com.fasterxml.jackson.databind,com.fasterxml.jackson.datatype.jsr310
 --name "PreVent Data Center"
 --main-jar PreVentDataCenter-1.0-SNAPSHOT.jar
