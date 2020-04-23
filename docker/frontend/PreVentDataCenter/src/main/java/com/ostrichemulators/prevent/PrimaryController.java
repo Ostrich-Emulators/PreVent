@@ -231,7 +231,8 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       sum += i;
     }
 
-    TableColumn cols[] = {statuscol, filecol, sizecol, typecol, startedcol, endedcol, messagecol, containercol, outputcol};
+    TableColumn cols[] = {statuscol, filecol, sizecol, typecol, startedcol,
+      endedcol, messagecol, containercol, outputcol};
     for ( int i = 0; i < COLWIDTHS.length; i++ ) {
       double pct = COLWIDTHS[i] / sum;
       cols[i].prefWidthProperty().bind(
