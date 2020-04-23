@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
@@ -30,6 +30,7 @@ import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.SpinnerValueFactory.ListSpinnerValueFactory;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -37,9 +38,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
@@ -97,7 +95,11 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   @FXML
   private Label outputlbl;
 
+  @FXML
+  private SplitPane splitter;
+
   private Path savelocation;
+  private WorkItemEntryController detailscontroller;
 
   @FXML
   void saveconfig() {
@@ -159,6 +161,18 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   @Override
   public void initialize( URL url, ResourceBundle rb ) {
     savelocation = App.getConfigLocation();
+
+    FXMLLoader loader = new FXMLLoader( App.class.getResource( "workitementry.fxml" ) );
+    try {
+      Parent parent = loader.load();
+      detailscontroller = loader.getController();
+      splitter.getItems().add( parent );
+      splitter.setDividerPosition( 0, 1.0 );
+    }
+    catch ( IOException x ) {
+      LOG.error( "{}", x );
+    }
+
     fixTableLayout();
 
     loadPrefs();
@@ -183,8 +197,12 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       table.setRowFactory( tv -> {
         TableRow<WorkItem> row = new TableRow();
         row.setOnMouseClicked( event -> {
-          if ( event.getClickCount() > 1 && !row.isEmpty() ) {
-            popDetails( row.getItem() );
+          WorkItem item = row.getItem();
+          if ( !row.isEmpty() ) {
+            detailscontroller.setItem( item );
+            if ( event.getClickCount() > 1 ) {
+              popDetails( item );
+            }
           }
         } );
         return row;
@@ -200,18 +218,10 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   }
 
   private void popDetails( WorkItem item ) {
-    try {
-      Parent parent = App.loadFXML( "workitementry" );
+    detailscontroller.setItem( item );
 
-      Stage newWindow = new Stage();
-      newWindow.setTitle( "Item Details" );
-      newWindow.initModality( Modality.WINDOW_MODAL );
-      newWindow.initStyle( StageStyle.DECORATED );
-      newWindow.setScene( new Scene( parent ) );
-      newWindow.show();
-    }
-    catch ( IOException x ) {
-      LOG.error( "{}", x );
+    if ( splitter.getDividerPositions()[0] > 0.7 ) {
+      splitter.setDividerPosition( 0, 0.7 );
     }
   }
 
@@ -313,7 +323,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     final boolean nativestpx = App.prefs.useNativeStp();
 
     File dir = chsr.showDialog( window );
-    if( null != dir ){
+    if ( null != dir ) {
       Worklist.recursively( dir.toPath(), nativestpx ).forEach( wi -> table.getItems().add( wi ) );
       Worklist.save( table.getItems(), savelocation );
       App.prefs.setLastOpenedDir( dir.getParentFile() );

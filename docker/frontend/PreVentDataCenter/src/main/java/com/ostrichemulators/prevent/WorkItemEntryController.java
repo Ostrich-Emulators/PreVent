@@ -5,10 +5,8 @@
  */
 package com.ostrichemulators.prevent;
 
-import java.io.IOException;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.stage.Stage;
+import javafx.scene.control.Label;
 
 /**
  * FXML Controller class
@@ -17,21 +15,13 @@ import javafx.stage.Stage;
  */
 public class WorkItemEntryController {
 
-  @FXML
-  private Button cancelbtn;
+  private WorkItem item;
 
   @FXML
-  private Button savebtn;
+  private Label txtlbl;
 
-  @FXML
-  private void save() throws IOException {
-    Stage stage = (Stage) savebtn.getScene().getWindow();
-    stage.close();
-  }
-
-  @FXML
-  private void cancel() throws IOException {
-    Stage stage = (Stage) cancelbtn.getScene().getWindow();
-    stage.close();
+  public void setItem( WorkItem wi ) {
+    this.item = wi;
+    txtlbl.setText( item.toString() );
   }
 }

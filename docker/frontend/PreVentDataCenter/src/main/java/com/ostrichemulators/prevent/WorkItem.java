@@ -253,9 +253,11 @@ public final class WorkItem {
 
   @Override
   public String toString() {
-    return String.format( "%s {%s}", file, ( null == containerId
-                                             ? ""
-                                             : containerId.get().substring( 0, 12 ) ) );
+    String cid = containerId.getValueSafe();
+    String c = ( cid.isBlank()
+                 ? "none"
+                 : cid.substring( 0, Math.min( cid.length(), 12 ) ) );
+    return String.format( "%s {%s}", file, c );
   }
 
   public static class WorkItemBuilder {
