@@ -201,7 +201,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
           if ( !row.isEmpty() ) {
             detailscontroller.setItem( item );
             if ( event.getClickCount() > 1 ) {
-              popDetails( item );
+              toggleDetails( item );
             }
           }
         } );
@@ -217,26 +217,31 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     }
   }
 
-  private void popDetails( WorkItem item ) {
-    detailscontroller.setItem( item );
-
-    if ( splitter.getDividerPositions()[0] > 0.7 ) {
+  private void toggleDetails( WorkItem item ) {
+    double pos = splitter.getDividerPositions()[0];
+    if ( pos > 0.7 ) {
       splitter.setDividerPosition( 0, 0.7 );
+    }
+    else {
+      splitter.setDividerPosition( 0, 1.0 );
     }
   }
 
   private void fixTableLayout() {
-    double sum = 0d;
-    for ( int i : COLWIDTHS ) {
-      sum += i;
-    }
-
     TableColumn cols[] = {statuscol, filecol, sizecol, typecol, startedcol,
       endedcol, messagecol, containercol, outputcol};
+
+    double sum = 0d;
     for ( int i = 0; i < COLWIDTHS.length; i++ ) {
-      double pct = COLWIDTHS[i] / sum;
-      cols[i].prefWidthProperty().bind(
-            table.widthProperty().multiply( pct ) );
+      sum += ( cols[i].isVisible() ? COLWIDTHS[i] : 0 );
+    }
+
+    for ( int i = 0; i < COLWIDTHS.length; i++ ) {
+      if ( cols[i].isVisible() ) {
+        double pct = COLWIDTHS[i] / sum;
+        cols[i].prefWidthProperty().bind(
+              table.widthProperty().multiply( pct ) );
+      }
     }
 
     statuscol.setCellValueFactory( new PropertyValueFactory<>( "status" ) );

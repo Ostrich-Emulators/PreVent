@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 import javafx.beans.property.ReadOnlyLongProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -33,7 +34,7 @@ public final class WorkItem {
   }
 
   private Path file;
-  private String checksum; // this is really the ID of this item
+  private String id;
 
   private final SimpleLongProperty bytes = new SimpleLongProperty();
   private final SimpleStringProperty containerId = new SimpleStringProperty();
@@ -51,13 +52,15 @@ public final class WorkItem {
     return new WorkItemBuilder( p );
   }
 
-  private WorkItem( Path file, String checksum, String containerId, LocalDateTime started,
+  private WorkItem( Path file, String id, String containerId, LocalDateTime started,
         LocalDateTime finished, String type, long size, Path outputdir ) {
     setPath( file );
     this.containerId.set( containerId );
     this.started.set( started );
     this.finished.set( finished );
-    this.checksum = checksum;
+    this.id = ( null == id
+                ? UUID.randomUUID().toString()
+                : id );
     this.type.set( type );
     this.bytes.set( size );
     this.outputdir.set( outputdir );
@@ -190,8 +193,8 @@ public final class WorkItem {
     this.status.set( Status.ADDED );
   }
 
-  public String getChecksum() {
-    return checksum;
+  public String getId() {
+    return id;
   }
 
   public ReadOnlyObjectProperty<Status> statusProperty() {

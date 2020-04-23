@@ -15,9 +15,12 @@ import com.amihaiemil.docker.UnixDocker;
 import com.ostrichemulators.prevent.StpToXml.StpConversionInfo;
 import com.ostrichemulators.prevent.WorkItem.Status;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -34,11 +37,13 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPOutputStream;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -282,6 +287,14 @@ public class DockerManager {
               switch ( obj.getString( "Status" ) ) {
                 case "exited": {
                   int retval = obj.getInt( "ExitCode" );
+
+                  try {
+                    saveContainerLogs( item, containermap.get( item.getContainerId() ) );
+                  }
+                  catch ( IOException x ) {
+                    LOG.error( "unable to save logs: {}", item );
+                  }
+
                   if ( 0 == retval ) {
                     String endtime = obj.getString( "FinishedAt" );
                     try {
@@ -444,6 +457,8 @@ public class DockerManager {
             // 4) the system is shutting down
 
             // FIXME: no matter how we got to this point, save the container logs somewhere
+            saveContainerLogs( item, c );
+
             switch ( reason ) {
               case TOO_LONG:
                 item.killed();
@@ -481,6 +496,26 @@ public class DockerManager {
           }
         }
       }, item );
+    }
+  }
+
+  private void saveContainerLogs( WorkItem item, Container container ) throws IOException {
+    File datadir = App.getDataDirLocation().resolve( item.getId() ).toFile();
+    boolean ok = ( datadir.exists() && datadir.isDirectory()
+                   ? true
+                   : datadir.mkdirs() );
+    if ( !ok ) {
+      throw new RuntimeException( "unable to save logs: " + datadir );
+    }
+
+    try ( OutputStream outstream = new GZIPOutputStream( new FileOutputStream( new File( datadir, "stderr.gz" ) ) ) ) {
+      String log = container.logs().stderr().fetch();
+      IOUtils.write( log, outstream, StandardCharsets.UTF_8.toString() );
+    }
+
+    try ( OutputStream outstream = new GZIPOutputStream( new FileOutputStream( new File( datadir, "stdout.gz" ) ) ) ) {
+      String log = container.logs().stdout().fetch();
+      IOUtils.write( log, outstream, StandardCharsets.UTF_8.toString() );
     }
   }
 }

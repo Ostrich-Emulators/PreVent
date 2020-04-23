@@ -40,12 +40,20 @@ public class App extends Application {
     return new FXMLLoader( App.class.getResource( fxml + ".fxml" ) ).load();
   }
 
-  public static Path getConfigLocation() {
+  public static Path getRootLocation() {
     String userhome = System.getProperty( "user.home" );
 
     return ( SystemUtils.IS_OS_WINDOWS
-             ? Paths.get( userhome, "Application Data", "Prevent Data Center", "worklist.pdc" )
-             : Paths.get( userhome, ".prevent", "worklist.pdc" ) );
+             ? Paths.get( userhome, "Application Data", "Prevent Data Center" )
+             : Paths.get( userhome, ".prevent" ) );
+  }
+
+  public static Path getConfigLocation() {
+    return getRootLocation().resolve( "worklist.pdc" );
+  }
+
+  public static Path getDataDirLocation() {
+    return getRootLocation().resolve( "data" );
   }
 
   public static void main( String[] args ) {
