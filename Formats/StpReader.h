@@ -35,12 +35,23 @@ namespace FormatConverter {
     StpReader( const std::string& name );
     virtual ~StpReader( );
 
+    struct StpMetadata {
+      std::string name;
+      std::string mrn;
+      dr_time start_utc;
+      dr_time stop_utc;
+      int segment_count;
+    };
+
+    static std::vector<StpMetadata> parseMetadata( const std::string& input );
+
   protected:
     ReadResult fill( std::unique_ptr<SignalSet>&, const ReadResult& lastfill ) override;
     int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
     void finish( ) override;
 
   private:
+    static StpMetadata metaFromSignalSet( const std::unique_ptr<SignalSet>& );
 
     enum ChunkReadResult {
       OK, ROLLOVER, NEW_PATIENT, UNKNOWN_BLOCKTYPE, HR_BLOCK_PROBLEM
@@ -118,14 +129,12 @@ namespace FormatConverter {
     private:
 
       BlockConfig( int read = 1 )
-      : isskip( true ), label( "SKIP" ), divBy10( false ), readcount( read ), unsign( false ),
-      uom( "Uncalib" ) {
-      }
+          : isskip( true ), label( "SKIP" ), divBy10( false ), readcount( read ), unsign( false ),
+          uom( "Uncalib" ) { }
 
       BlockConfig( const std::string& lbl, size_t read = 2, unsigned int div = 0, bool unsign = true, const std::string& uom = "" )
-      : isskip( false ), label( lbl ), divBy10( div ), readcount( read ), unsign( unsign ),
-      uom( uom ) {
-      }
+          : isskip( false ), label( lbl ), divBy10( div ), readcount( read ), unsign( unsign ),
+          uom( uom ) { }
     };
 
     // <editor-fold defaultstate="collapsed" desc="block configs">
@@ -302,6 +311,7 @@ namespace FormatConverter {
     std::vector<unsigned char> decodebuffer;
     unsigned long magiclong;
     WaveTracker wavetracker;
+    bool metadataonly;
   };
 }
 #endif /* STPREADER_H */

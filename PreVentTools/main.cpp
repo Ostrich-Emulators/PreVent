@@ -40,12 +40,13 @@
 #include "NullSignalData.h"
 #include "Hdf5Reader.h"
 #include "AppendingUtils.h"
+#include "StpReader.h"
 
 using namespace FormatConverter;
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
-      << "Syntax: " << progname << " [options] <input hdf5>"
+      << "Syntax: " << progname << " [options] <input {hdf5,stp}>"
       << std::endl << "\toptions:"
       << std::endl << "\t-o or --output <output file>"
       << std::endl << "\t-S or --set-attr <key[:<i|s|d>]=value>\tsets the given attribute to the value"
@@ -62,6 +63,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
       << std::endl << "\t-D or --statistics or --stats\tcalculates descriptive statistics"
       << std::endl << "\t-P or --append <file>\tappends extra data to file (implies --clobber)"
+      << std::endl << "\t--stp-metas\tprint metadata from STP file"
       << std::endl;
   exit( 1 );
 }
@@ -84,6 +86,7 @@ struct option longopts[] = {
   { "stats", no_argument, NULL, 'D' },
   { "statistics", no_argument, NULL, 'D' },
   { "append", required_argument, NULL, 'P' },
+  { "stp-meta", no_argument, NULL, 'Q' },
   { 0, 0, 0, 0 }
 };
 
@@ -137,9 +140,10 @@ int main( int argc, char** argv ) {
   bool listvitals = false;
   bool calc = false;
   bool needsoutput = false;
+  bool stpmeta = false;
   std::vector<std::string> appendfiles;
 
-  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WVDP:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WVDP:Q", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'o':
         outfilename = optarg;
@@ -158,6 +162,9 @@ int main( int argc, char** argv ) {
         break;
       case 'V':
         listvitals = true;
+        break;
+      case 'Q':
+        stpmeta = true;
         break;
       case 'D':
         calc = true;
@@ -228,6 +235,17 @@ int main( int argc, char** argv ) {
       ss << "will not overwrite " << outfilename << " (use --clobber)";
       helpAndExit( argv[0], ss.str( ) );
     }
+  }
+
+  if ( stpmeta ) {
+    for ( int i = optind; i < argc; i++ ) {
+      auto vector = StpReader::parseMetadata( argv[i] );
+      for ( auto meta : vector ) {
+        std::cout << meta.name << "\t" << meta.mrn << "\t" << meta.start_utc
+            << "\t" << meta.stop_utc << "\t" << meta.segment_count << std::endl;
+      }
+    }
+    return 0;
   }
 
   // just in case an exception gets thrown...

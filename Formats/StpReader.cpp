@@ -38,7 +38,7 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   /**
    * Note: wave labels *can* change depending on what vitals are in the file
@@ -201,11 +201,9 @@ namespace FormatConverter {
 
   // <editor-fold defaultstate="collapsed" desc="Wave Tracker">
 
-  StpReader::WaveTracker::WaveTracker( ) {
-  }
+  StpReader::WaveTracker::WaveTracker( ) { }
 
-  StpReader::WaveTracker::~WaveTracker( ) {
-  }
+  StpReader::WaveTracker::~WaveTracker( ) { }
 
   void StpReader::WaveTracker::prune( ) {
 
@@ -275,8 +273,8 @@ namespace FormatConverter {
         else {
           // we will roll-over short limits eventually (and that's ok)
           rslt = ( 0xFF == currseq && 0x00 == seqnum
-                  ? WaveSequenceResult::NORMAL
-                  : WaveSequenceResult::SEQBREAK );
+              ? WaveSequenceResult::NORMAL
+              : WaveSequenceResult::SEQBREAK );
         }
       }
 
@@ -293,7 +291,7 @@ namespace FormatConverter {
   }
 
   void StpReader::WaveTracker::breaksync( StpReader::WaveSequenceResult rslt,
-          const unsigned short& seqnum, const dr_time& time ) {
+      const unsigned short& seqnum, const dr_time& time ) {
 
     // for timed breaks, we really just want to fill up the current second
     // with missing data.
@@ -318,9 +316,9 @@ namespace FormatConverter {
       // how many we have at the current time
       const dr_time ctime = ( --sequencenums.end( ) )->second;
       size_t count = std::count_if( sequencenums.begin( ), sequencenums.end( ),
-              [ctime]( std::pair<unsigned short, dr_time> p ) {
-                return (p.second == ctime );
-              } );
+          [ctime]( std::pair<unsigned short, dr_time> p ) {
+            return (p.second == ctime );
+          } );
       for ( size_t lim = 1; lim <= ( 8 - count ); lim++ ) {
         sequencenums.push_back( std::make_pair( ( currseq + lim ) % 0xFF, ctime ) );
       }
@@ -427,11 +425,11 @@ namespace FormatConverter {
       std::stringstream vals;
       if ( datapoints.size( ) > expectedValues[waveid] ) {
         std::cout << "more values than needed (" << datapoints.size( ) << "/" << expectedValues[waveid]
-                << ") for waveid: " << waveid << std::endl;
+            << ") for waveid: " << waveid << std::endl;
       }
       if ( datapoints.size( ) < expectedValues[waveid] ) {
         std::cout << "filling in " << ( expectedValues[waveid] - datapoints.size( ) )
-                << " for waveid: " << waveid << std::endl;
+            << " for waveid: " << waveid << std::endl;
         datapoints.resize( expectedValues[waveid], SignalData::MISSING_VALUE );
       }
 
@@ -480,9 +478,9 @@ namespace FormatConverter {
         const dr_time ctime = vitalstarttime( );
 
         size_t count = std::count_if( sequencenums.begin( ), sequencenums.end( ),
-                [ctime]( std::pair<unsigned short, dr_time> p ) {
-                  return (p.second == ctime );
-                } );
+            [ctime]( std::pair<unsigned short, dr_time> p ) {
+              return (p.second == ctime );
+            } );
         if ( count > 7 ) {
           mytime = ctime - 2000; // -2000 because we're about to increment it by 2000
         }
@@ -497,8 +495,8 @@ namespace FormatConverter {
 
   unsigned short StpReader::WaveTracker::currentseq( ) const {
     return ( empty( )
-            ? 0
-            : ( --sequencenums.end( ) )->first );
+        ? 0
+        : ( --sequencenums.end( ) )->first );
   }
 
   dr_time StpReader::WaveTracker::vitalstarttime( ) const {
@@ -513,17 +511,13 @@ namespace FormatConverter {
   }
   // </editor-fold>
 
-  StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ) {
-  }
+  StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ), metadataonly( false ) { }
 
-  StpReader::StpReader( const std::string& name ) : Reader( name ), firstread( true ), work( 1024 * 1024 ) {
-  }
+  StpReader::StpReader( const std::string& name ) : Reader( name ), firstread( true ), work( 1024 * 1024 ), metadataonly( false ) { }
 
-  StpReader::StpReader( const StpReader& orig ) : Reader( orig ), firstread( orig.firstread ), work( orig.work.capacity( ) ) {
-  }
+  StpReader::StpReader( const StpReader& orig ) : Reader( orig ), firstread( orig.firstread ), work( orig.work.capacity( ) ), metadataonly( false ) { }
 
-  StpReader::~StpReader( ) {
-  }
+  StpReader::~StpReader( ) { }
 
   void StpReader::finish( ) {
     if ( filestream ) {
@@ -566,7 +560,7 @@ namespace FormatConverter {
   }
 
   ReadResult StpReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
-    output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
+    //output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
     try {
       filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
@@ -624,7 +618,7 @@ namespace FormatConverter {
           //output( ) << "read " << bytesread << " bytes of segment" << std::endl;
           if ( bytesread < segsize ) {
             work.skip( segsize - bytesread );
-            output( ) << "skipping ahead " << ( segsize - bytesread ) << " bytes to next segment at " << ( startpop + segsize ) << std::endl;
+            //output( ) << "skipping ahead " << ( segsize - bytesread ) << " bytes to next segment at " << ( startpop + segsize ) << std::endl;
           }
         }
         else if ( ChunkReadResult::UNKNOWN_BLOCKTYPE == rslt ) {
@@ -632,22 +626,22 @@ namespace FormatConverter {
         }
         else {
           // something happened so rewind our to our mark
-          output( ) << "rewinding to start of segment (mark: " << ( work.popped( ) - work.poppedSinceMark( ) ) << ")" << std::endl;
+          //output( ) << "rewinding to start of segment (mark: " << ( work.popped( ) - work.poppedSinceMark( ) ) << ")" << std::endl;
           work.rewindToMark( );
 
 
           // if we're ending a file, flush all the wave data we can, but don't
           // write values that should go in the next file
           while ( !wavetracker.empty( ) && wavetracker.starttime( ) <= currentTime ) {
-            output( ) << "flushing wave data for end-of-day" << std::endl;
+            //output( ) << "flushing wave data for end-of-day" << std::endl;
             wavetracker.flushone( info );
           }
 
           return ( ChunkReadResult::ROLLOVER == rslt
-                  ? ReadResult::END_OF_DAY
-                  : ChunkReadResult::NEW_PATIENT == rslt
-                  ? ReadResult::END_OF_PATIENT
-                  : ReadResult::ERROR );
+              ? ReadResult::END_OF_DAY
+              : ChunkReadResult::NEW_PATIENT == rslt
+              ? ReadResult::END_OF_PATIENT
+              : ReadResult::ERROR );
         }
       }
 
@@ -661,14 +655,14 @@ namespace FormatConverter {
       }
     }
 
-    output( ) << "file is exhausted" << std::endl;
+    //output( ) << "file is exhausted" << std::endl;
 
     // copy any data we have left in our filler set to the real set
 
 
     // if we still have stuff in our work buffer, process it
     if ( !work.empty( ) ) {
-      output( ) << "still have stuff in our work buffer!" << std::endl;
+      //output( ) << "still have stuff in our work buffer!" << std::endl;
       processOneChunk( info, work.size( ) );
 
       // we're done with the file, so write all the wave data we have
@@ -685,7 +679,7 @@ namespace FormatConverter {
   }
 
   StpReader::ChunkReadResult StpReader::processOneChunk( std::unique_ptr<SignalSet>& info,
-          const size_t& maxread ) {
+      const size_t& maxread ) {
     // we are guaranteed to have a complete segment in the work buffer
     // and the work buffer head is pointing to the start of the segment
     work.mark( );
@@ -710,6 +704,15 @@ namespace FormatConverter {
           return ChunkReadResult::NEW_PATIENT;
         }
       }
+
+      if ( metadataonly ) {
+        // this ain't pretty, but we can't get any timing information from
+        // the SignalSet if we don't have any data in it...so put some dummy
+        // data in there
+        info->addOffset( work.popped( ), currentTime );
+        return ChunkReadResult::OK;
+      }
+
       work.skip( 2 );
       // offset is number of bytes from byte 64, but we want to track bytes
       // since we started reading (set our mark)
@@ -886,7 +889,7 @@ namespace FormatConverter {
     }
     catch ( const std::runtime_error & err ) {
       std::cerr << err.what( ) << " (chunk started at byte: "
-              << chunkstart << ")" << std::endl;
+          << chunkstart << ")" << std::endl;
       return ChunkReadResult::UNKNOWN_BLOCKTYPE;
     }
   }
@@ -894,7 +897,7 @@ namespace FormatConverter {
   void StpReader::unhandledBlockType( unsigned int type, unsigned int fmt ) const {
     std::stringstream ss;
     ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-            << type << " " << fmt << " starting at " << std::dec << work.popped( );
+        << type << " " << fmt << " starting at " << std::dec << work.popped( );
     throw std::runtime_error( ss.str( ) );
   }
 
@@ -961,7 +964,7 @@ namespace FormatConverter {
       }
       else if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::SEQBREAK == wavecheck ) {
         output( ) << "wave sequence check: " << wavecheck << " (old/new): " << oldseq << "/"
-                << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
+            << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
       }
       // skip the other two bytes (don't know what they mean, if anything)
       work.skip( 2 );
@@ -1025,7 +1028,7 @@ namespace FormatConverter {
           }
           else if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::SEQBREAK == wavecheck ) {
             output( ) << "wave sequence check (2): " << wavecheck << " (old/new): " << oldseq << "/"
-                    << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
+                << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
           }
 
           // skip the other two bytes (don't know what they mean, if anything)
@@ -1040,18 +1043,18 @@ namespace FormatConverter {
       else if ( valstoread > 4 ) {
         std::stringstream ss;
         ss << "don't really think we want to read " << valstoread << " values for wave/count:"
-                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
-                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-                << " starting at " << std::dec << work.popped( );
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
+            << " starting at " << std::dec << work.popped( );
         std::string ex = ss.str( );
         throw std::runtime_error( ex );
       }
       else if ( 0 == StpReader::WAVELABELS.count( waveid ) ) {
         std::stringstream ss;
         ss << "unknown wave id/count: "
-                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
-                << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-                << " starting at " << std::dec << work.popped( );
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
+            << " starting at " << std::dec << work.popped( );
         std::string ex = ss.str( );
         throw std::runtime_error( ex );
       }
@@ -1310,5 +1313,68 @@ namespace FormatConverter {
     }
 
     return name;
+  }
+
+  std::vector<StpReader::StpMetadata> StpReader::parseMetadata( const std::string& input ) {
+    std::vector<StpReader::StpMetadata> metas;
+    std::unique_ptr<SignalSet> info( new BasicSignalSet( ) );
+    StpReader reader;
+    int failed = reader.prepare( input, info );
+    if ( failed ) {
+      std::cerr << "error while opening input file. error code: " << failed << std::endl;
+      return metas;
+    }
+    reader.metadataonly = true;
+
+    ReadResult last = ReadResult::FIRST_READ;
+
+    bool okToContinue = true;
+    while ( okToContinue ) {
+      last = reader.fill( info, last );
+      switch ( last ) {
+        case ReadResult::FIRST_READ:
+          // NOTE: no break here
+        case ReadResult::NORMAL:
+          break;
+        case ReadResult::END_OF_DAY:
+          // NOTE: no break here
+        case ReadResult::END_OF_PATIENT:
+          metas.push_back( metaFromSignalSet( info ) );
+          break;
+        case ReadResult::END_OF_FILE:
+          metas.push_back( metaFromSignalSet( info ) );
+          okToContinue = false;
+          break;
+        case ReadResult::ERROR:
+          std::cerr << "error while reading input file" << std::endl;
+          okToContinue = false;
+          break;
+      }
+    }
+
+    return metas;
+  }
+
+  StpReader::StpMetadata StpReader::metaFromSignalSet( const std::unique_ptr<SignalSet>& info ) {
+    StpReader::StpMetadata meta;
+    if ( info->metadata( ).count( "Patient Name" ) > 0 ) {
+      meta.name = info->metadata( ).at( "Patient Name" );
+    }
+    if ( info->metadata( ).count( "MRN" ) > 0 ) {
+      meta.mrn = info->metadata( ).at( "MRN" );
+    }
+
+    if ( info->offsets( ).size( ) > 0 ) {
+      meta.segment_count = (int) ( info->offsets( ).size( ) );
+      std::vector<dr_time> times;
+      for ( auto en : info->offsets( ) ) {
+        times.push_back( en.second );
+      }
+      std::sort( times.begin( ), times.end( ) );
+      meta.start_utc = times[0];
+      meta.stop_utc = times[info->offsets( ).size( ) - 1];
+    }
+
+    return meta;
   }
 }
