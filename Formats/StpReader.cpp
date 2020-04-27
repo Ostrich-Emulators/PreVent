@@ -1339,15 +1339,15 @@ namespace FormatConverter{
           break;
         case ReadResult::END_OF_DAY:
           metas.push_back( metaFromSignalSet( info ) );
-          info->reset( );
+          info->reset( false );
           break;
         case ReadResult::END_OF_PATIENT:
           metas.push_back( metaFromSignalSet( info ) );
-          info->reset( );
+          info->reset( false );
           break;
         case ReadResult::END_OF_FILE:
           metas.push_back( metaFromSignalSet( info ) );
-          info->reset( );
+          info->reset( false );
           okToContinue = false;
           break;
         case ReadResult::ERROR:

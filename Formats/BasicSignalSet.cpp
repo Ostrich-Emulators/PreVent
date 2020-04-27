@@ -130,6 +130,8 @@ namespace FormatConverter{
       metamap.clear( );
       metamap[SignalData::TIMEZONE] = "UTC";
       metamap[SignalData::BUILD_NUM] = GIT_BUILD;
+
+      segs.clear();
     }
   }
 
