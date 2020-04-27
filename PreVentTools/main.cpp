@@ -86,7 +86,7 @@ struct option longopts[] = {
   { "stats", no_argument, NULL, 'D' },
   { "statistics", no_argument, NULL, 'D' },
   { "append", required_argument, NULL, 'P' },
-  { "stp-meta", no_argument, NULL, 'Q' },
+  { "stp-metas", no_argument, NULL, 'Q' },
   { 0, 0, 0, 0 }
 };
 
