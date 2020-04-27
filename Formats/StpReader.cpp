@@ -556,6 +556,7 @@ namespace FormatConverter{
     filestream = new zstr::ifstream( filename );
     decodebuffer.reserve( 1024 * 64 ); // read file in 64K chunks (arbitrary, but much less than 1/2 the work buffer size)
     magiclong = std::numeric_limits<unsigned long>::max( );
+    currentTime = 0;
     return 0;
   }
 
@@ -1337,7 +1338,8 @@ namespace FormatConverter{
         case ReadResult::NORMAL:
           break;
         case ReadResult::END_OF_DAY:
-          // NOTE: no break here
+          metas.push_back( metaFromSignalSet( info ) );
+          break;
         case ReadResult::END_OF_PATIENT:
           metas.push_back( metaFromSignalSet( info ) );
           break;
@@ -1351,6 +1353,8 @@ namespace FormatConverter{
           break;
       }
     }
+
+    reader.finish( );
 
     return metas;
   }

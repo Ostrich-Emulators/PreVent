@@ -241,7 +241,7 @@ int main( int argc, char** argv ) {
     for ( int i = optind; i < argc; i++ ) {
       auto vector = StpReader::parseMetadata( argv[i] );
       for ( auto meta : vector ) {
-        std::cout << meta.name << "\t" << meta.mrn << "\t" << meta.start_utc
+        std::cout << argv[i] << "\t" << meta.name << "\t" << meta.mrn << "\t" << meta.start_utc
             << "\t" << meta.stop_utc << "\t" << meta.segment_count << std::endl;
       }
     }
