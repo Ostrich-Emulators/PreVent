@@ -1,3 +1,6 @@
+4.2.2
+  * (Tools) Added --stp-metas
+
 4.2.1
   * Added support for DWC composite data files
   * Added "Auxillary_Data" groups within datasets, as needed

@@ -2,7 +2,7 @@
 # the hdf5c++ wrapper has some incompatibility with cmake, I think
 #set(CMAKE_CXX_COMPILER ${HDF5_CXX_COMPILER_EXECUTABLE})
 
-set(LIBVERSION 4.2.1)
+set(LIBVERSION 4.2.2)
 project(formatconverter VERSION ${LIBVERSION} LANGUAGES CXX)
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/../lib/formatconverter-${LIBVERSION}:$ORIGIN/")
