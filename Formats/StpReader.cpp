@@ -1320,6 +1320,7 @@ namespace FormatConverter{
     std::vector<StpReader::StpMetadata> metas;
     std::unique_ptr<SignalSet> info( new BasicSignalSet( ) );
     StpReader reader;
+    reader.setNonbreaking( true );
     int failed = reader.prepare( input, info );
     if ( failed ) {
       std::cerr << "error while opening input file. error code: " << failed << std::endl;
