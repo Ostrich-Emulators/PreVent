@@ -25,7 +25,9 @@ IMAGEID=$(docker image ls|grep 'prevent-tool' | cut -c43-54)
 docker tag $IMAGEID "ry99/prevent-tools:$VERSION"
 docker tag $IMAGEID "ry99/prevent-tools:$VERSION"
 
-echo "Now run this:"
+echo
+echo 
+echo "Now run these:"
 echo "docker push ry99/prevent:latest"
 echo "docker push ry99/prevent:$VERSION"
 echo "docker push ry99/prevent-cnv:latest"
