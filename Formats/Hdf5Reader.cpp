@@ -797,7 +797,7 @@ namespace FormatConverter{
       if ( startpos == endpos && checktime != needle ) {
         // no where else to look, but we didn't find our needle
 
-        if ( checktime < needle ) {
+        if ( checktime < needle && checkpos < ROWS - 1 ) {
           checkpos++;
         }
         if ( nullptr != found ) {

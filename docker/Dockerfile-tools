@@ -1,0 +1,2 @@
+FROM ry99/prevent:latest
+ENTRYPOINT ["/usr/bin/preventtools"]

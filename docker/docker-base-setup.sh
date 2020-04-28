@@ -37,7 +37,7 @@ make
 make install
 popd
 
-ln -s /usr/lib/formatconverter-4.2.1/libformats.so /usr/lib
+ln -s /usr/lib/formatconverter-4.2.2/libformats.so /usr/lib
 
 cd /tmp
 rm -rf TDMSpp* PreVent* matio* wfdb*

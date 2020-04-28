@@ -1,7 +1,7 @@
 FROM ubuntu:19.10
 LABEL maintainer="Ryan Bobko <ryan@ostrich-emulators.com>", \
 BUILD_SIGNATURE="PreVent Format Converter", \
-version="4.2.1"
+version="4.2.2"
 
 RUN apt-get update
 RUN apt-get install -y \
