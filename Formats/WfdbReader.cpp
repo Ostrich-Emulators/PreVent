@@ -12,6 +12,8 @@
 #include <iterator>
 #include <sys/stat.h>
 #include <math.h>
+#include <libgen.h>
+#include <cstring>
 
 namespace FormatConverter{
 
@@ -111,6 +113,15 @@ namespace FormatConverter{
     if ( 0 != rslt ) {
       return rslt;
     }
+
+    char header_c[headername.size( )];
+    strncpy( header_c, headername.c_str( ), headername.size( ) );
+
+    std::string path( ". " );
+    path += dirname( header_c );
+    char dir_c[path.size( )];
+    strncpy( dir_c, path.c_str( ), path.size( ) );
+    setwfdb( dir_c );
 
     sigcount = isigopen( (char *) ( headername.c_str( ) ), NULL, 0 );
     if ( sigcount > 0 ) {

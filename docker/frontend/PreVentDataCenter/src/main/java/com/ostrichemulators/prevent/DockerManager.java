@@ -122,10 +122,12 @@ public class DockerManager {
           image = images.iterator().next();
         }
         else {
-          LOG.debug( "PreVent image not found...fetching latest" );
+          LOG.debug( "PreVent image not found" );
           image = images.pull( "ry99/prevent", "latest" );
         }
 
+        LOG.debug( "pulling  ry99/prevent:latest" );
+        image = images.pull( "ry99/prevent", "latest" );
         startReaping();
       }
     }
