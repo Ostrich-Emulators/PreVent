@@ -7,6 +7,7 @@
 #include "WfdbReader.h"
 #include "DataRow.h"
 #include "SignalData.h"
+#include "config.h"
 
 #include <iostream>
 #include <iterator>
@@ -14,15 +15,19 @@
 #include <math.h>
 #include <libgen.h>
 #include <cstring>
+#include <unistd.h>
 
-namespace FormatConverter{
+namespace FormatConverter {
 
-  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) { }
+  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
+  }
 
   WfdbReader::WfdbReader( const std::string& name ) : Reader( name ), extra_ms( 0 ),
-      basetimeset( false ), framecount( 0 ) { }
+      basetimeset( false ), framecount( 0 ) {
+  }
 
-  WfdbReader::~WfdbReader( ) { }
+  WfdbReader::~WfdbReader( ) {
+  }
 
   void WfdbReader::setBaseTime( const dr_time& basetime ) {
     _basetime = basetime;
@@ -43,7 +48,7 @@ namespace FormatConverter{
     timestr.append( datepart );
 
     char * buffer = new char[timestr.size( )];
-    strcpy( buffer, timestr.c_str( ) );
+    strncpy( buffer, timestr.c_str( ), timestr.size( ) );
 
     setbasetime( buffer );
     delete [] timepart;
@@ -114,16 +119,20 @@ namespace FormatConverter{
       return rslt;
     }
 
-    char header_c[headername.size( )];
-    strncpy( header_c, headername.c_str( ), headername.size( ) );
-
     std::string path( ". " );
+    char header_c[headername.size( ) + 1];
+    strncpy( header_c, headername.c_str( ), headername.size( ) + 1 );
     path += dirname( header_c );
-    char dir_c[path.size( )];
-    strncpy( dir_c, path.c_str( ), path.size( ) );
-    setwfdb( dir_c );
+    setwfdb( (char *) path.c_str() );
 
-    sigcount = isigopen( (char *) ( headername.c_str( ) ), NULL, 0 );
+    // the record name is just the basename of the file, no dir, no suffix
+    size_t lastslash = headername.rfind( dirsep );
+    std::string cutup( headername );
+    if ( std::string::npos != lastslash ) {
+      cutup = cutup.substr( lastslash + 1 );
+    }
+
+    sigcount = isigopen( (char *)cutup.c_str(), NULL, 0 );
     if ( sigcount > 0 ) {
       WFDB_Frequency wffreqhz = getifreq( );
       bool iswave = ( wffreqhz > 1 );
