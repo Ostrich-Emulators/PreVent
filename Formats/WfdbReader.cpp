@@ -44,10 +44,7 @@ namespace FormatConverter{
     //timestr += std::to_string( ms );
     timestr.append( datepart );
 
-    char buffer[timestr.size( )] = { };
-    strncpy( buffer, timestr.c_str( ), timestr.size( ) );
-
-    setbasetime( buffer );
+    setbasetime( (char *) timestr.c_str( ) );
     delete [] timepart;
     delete [] datepart;
 
