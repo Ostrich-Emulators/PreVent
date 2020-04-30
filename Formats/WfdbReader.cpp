@@ -17,17 +17,14 @@
 #include <cstring>
 #include <unistd.h>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
-  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
-  }
+  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) { }
 
   WfdbReader::WfdbReader( const std::string& name ) : Reader( name ), extra_ms( 0 ),
-      basetimeset( false ), framecount( 0 ) {
-  }
+      basetimeset( false ), framecount( 0 ) { }
 
-  WfdbReader::~WfdbReader( ) {
-  }
+  WfdbReader::~WfdbReader( ) { }
 
   void WfdbReader::setBaseTime( const dr_time& basetime ) {
     _basetime = basetime;
@@ -123,7 +120,7 @@ namespace FormatConverter {
     char header_c[headername.size( ) + 1];
     strncpy( header_c, headername.c_str( ), headername.size( ) + 1 );
     path += dirname( header_c );
-    setwfdb( (char *) path.c_str() );
+    setwfdb( (char *) path.c_str( ) );
 
     // the record name is just the basename of the file, no dir, no suffix
     size_t lastslash = headername.rfind( dirsep );
@@ -132,7 +129,7 @@ namespace FormatConverter {
       cutup = cutup.substr( lastslash + 1 );
     }
 
-    sigcount = isigopen( (char *)cutup.c_str(), NULL, 0 );
+    sigcount = isigopen( (char *) cutup.c_str( ), NULL, 0 );
     if ( sigcount > 0 ) {
       WFDB_Frequency wffreqhz = getifreq( );
       bool iswave = ( wffreqhz > 1 );
@@ -151,7 +148,7 @@ namespace FormatConverter {
         output( ) << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
       }
 
-      sigcount = isigopen( (char *) ( headername.c_str( ) ), siginfo, sigcount );
+      sigcount = isigopen( (char *) ( cutup.c_str( ) ), siginfo, sigcount );
 
       for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
         std::unique_ptr<SignalData>& dataset = ( iswave
