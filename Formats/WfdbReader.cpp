@@ -44,13 +44,12 @@ namespace FormatConverter{
     //timestr += std::to_string( ms );
     timestr.append( datepart );
 
-    char * buffer = new char[timestr.size( )];
+    char buffer[timestr.size( )] = { };
     strncpy( buffer, timestr.c_str( ), timestr.size( ) );
 
     setbasetime( buffer );
     delete [] timepart;
     delete [] datepart;
-    delete [] buffer;
 
     basetimeset = true;
   }
@@ -122,7 +121,7 @@ namespace FormatConverter{
     path += dirname( header_c );
     setwfdb( (char *) path.c_str( ) );
 
-    // the record name is just the basename of the file, no dir, no suffix
+    // the record name is just the basename of the file
     size_t lastslash = headername.rfind( dirsep );
     std::string cutup( headername );
     if ( std::string::npos != lastslash ) {
