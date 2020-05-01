@@ -8,7 +8,7 @@ NullSignalData.cpp
 AppendingUtils.cpp
 )
 
-target_link_libraries(preventtools formats)
+target_link_libraries(preventtools formats stdc++fs)
 
 target_compile_options(preventtools PRIVATE -Wall)
 

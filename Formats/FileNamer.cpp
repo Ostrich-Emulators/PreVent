@@ -8,7 +8,6 @@
 #include "SignalSet.h"
 #include "config.h"
 #include <sys/stat.h>
-#include <experimental/filesystem>
 #include <iostream>
 #include <ctime>
 #include <sstream>
@@ -27,8 +26,6 @@
 namespace FormatConverter{
   const std::string FileNamer::DEFAULT_PATTERN = "%d%i-p%p-%s.%t";
   const std::string FileNamer::FILENAME_PATTERN = "%i.%t";
-
-  namespace fs = std::experimental::filesystem::v1;
 
   FileNamer::FileNamer( const std::string& pat ) : pattern( pat ), offset( 0 ) {
   }
@@ -67,9 +64,6 @@ namespace FormatConverter{
 
   void FileNamer::inputfilename( const std::string& inny ) {
     inputfile = inny;
-    //std::cout<<"curent path: "<<fs::current_path()<<" | or : "<<fs::current_path().generic_string()<<std::endl;
-    // OLD CODE:
-    //conversions["%C"] = ""; //fs::current_path( ).generic_string( ) + dirsep;
 
     //Last modification date
     struct stat t_stat;

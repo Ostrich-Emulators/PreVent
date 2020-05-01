@@ -16,9 +16,11 @@
 #include <map>
 #include <memory>
 #include <iostream>
+#include <locale>
 #include <getopt.h>
 #include <sys/stat.h>
 #include <fstream>
+#include <filesystem>
 
 #include <H5Cpp.h>
 #include <H5Opublic.h>
@@ -43,6 +45,7 @@
 #include "StpReader.h"
 
 using namespace FormatConverter;
+namespace fs = std::filesystem;
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
@@ -63,7 +66,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
       << std::endl << "\t-D or --statistics or --stats\tcalculates descriptive statistics"
       << std::endl << "\t-P or --append <file>\tappends extra data to file (implies --clobber)"
-      << std::endl << "\t--stp-metas\tprint metadata from STP file"
+      << std::endl << "\t--stp-metas\tprint metadata from STP file or directory of STP files"
       << std::endl;
   exit( 1 );
 }
@@ -238,13 +241,39 @@ int main( int argc, char** argv ) {
   }
 
   if ( stpmeta ) {
+    std::vector<fs::path> files;
     for ( int i = optind; i < argc; i++ ) {
-      auto vector = StpReader::parseMetadata( argv[i] );
+      fs::path p1 = argv[i];
+      if ( fs::is_directory( p1 ) ) {
+        for ( auto& f : fs::directory_iterator( p1 ) ) {
+          std::string ext = f.path( ).extension( );
+          std::transform( ext.begin(), ext.end(), ext.begin(), ::toupper);
+          if ( ".STP" == ext ) {
+            files.push_back( f.path( ) );
+          }
+        }
+      }
+      else {
+        files.push_back( p1 );
+      }
+    }
+
+    std::ostream& outstream = ( outfilename.empty( )
+    ? std::cout
+    : *( new std::ofstream( outfilename ) ) );
+
+    for ( const auto& file : files ) {
+      auto vector = StpReader::parseMetadata( file );
       for ( auto meta : vector ) {
-        std::cout << argv[i] << "\t" << meta.name << "\t" << meta.mrn << "\t" << meta.start_utc
+        outstream << file << "\t" << meta.name << "\t" << meta.mrn << "\t" << meta.start_utc
             << "\t" << meta.stop_utc << "\t" << meta.segment_count << std::endl;
       }
     }
+
+    if ( !outfilename.empty( ) ) {
+      delete &outstream;
+    }
+
     return 0;
   }
 

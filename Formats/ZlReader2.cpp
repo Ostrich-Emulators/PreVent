@@ -22,7 +22,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <experimental/filesystem>
+#include <filesystem>
 #include "config.h"
 #include "json.hpp"
 
@@ -34,7 +34,7 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-namespace fs = std::experimental::filesystem::v1;
+namespace fs = std::filesystem;
 namespace FormatConverter {
 
   ZlReader2::ZlReader2( ) : Reader( "Zl" ), firstread( true ) {
