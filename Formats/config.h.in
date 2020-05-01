@@ -20,16 +20,16 @@ const std::string osname =
       "Windows 32-bit";
 #elif _WIN64
       "Windows 64-bit";
-#elif __unix || __unix__
-      "Unix";
-#elif __APPLE__ || __MACH__
-      "Mac OSX";
-#elif __linux__
-      "Linux";
-#elif __FreeBSD__
-      "FreeBSD";
 #elif __CYGWIN__
       "Cygwin";
+#elif __linux__
+      "Linux";
+#elif __APPLE__ || __MACH__
+      "Mac OSX";
+#elif __FreeBSD__
+      "FreeBSD";
+#elif __unix || __unix__
+      "Unix";
 #else
       "Other";
 #endif

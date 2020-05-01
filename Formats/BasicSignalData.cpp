@@ -22,6 +22,8 @@
 #include <cstdio>
 #include <limits>
 #include <queue>
+#include <filesystem>
+#include "config.h"
 
 namespace FormatConverter {
 
@@ -136,7 +138,19 @@ namespace FormatConverter {
     std::stringstream ss;
 
     if ( nullptr == file ) {
+      if ( "Cygwin" == osname ) {
+        // Cygwin seems to crash if you try to write to a file created
+        // by tmpfile() if the temp directory doesn't actually exist,
+        // so make sure we create it ahead of time
+        std::filesystem::path p = std::filesystem::path( std::tmpnam( nullptr ) );
+        auto tmpdir = p.parent_path( );
+        if ( !std::filesystem::exists( tmpdir ) ) {
+          std::filesystem::create_directories( tmpdir );
+        }
+      }
+
       file = tmpfile( );
+      
     }
 
     while ( !data.empty( ) ) {
