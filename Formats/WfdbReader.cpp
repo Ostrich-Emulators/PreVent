@@ -17,14 +17,21 @@
 #include <cstring>
 #include <unistd.h>
 
-namespace FormatConverter{
+#ifdef __CYGWIN__
+#include <sys/cygwin.h>
+#endif
 
-  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) { }
+namespace FormatConverter {
+
+  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
+  }
 
   WfdbReader::WfdbReader( const std::string& name ) : Reader( name ), extra_ms( 0 ),
-      basetimeset( false ), framecount( 0 ) { }
+      basetimeset( false ), framecount( 0 ) {
+  }
 
-  WfdbReader::~WfdbReader( ) { }
+  WfdbReader::~WfdbReader( ) {
+  }
 
   void WfdbReader::setBaseTime( const dr_time& basetime ) {
     _basetime = basetime;
@@ -115,7 +122,29 @@ namespace FormatConverter{
     std::string path( ". " );
     char header_c[headername.size( ) + 1];
     strncpy( header_c, headername.c_str( ), headername.size( ) + 1 );
-    path += dirname( header_c );
+    std::string wfdbdir( dirname( header_c ) );
+    path += wfdbdir;
+
+#ifdef __CYGWIN__
+    size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, wfdbdir.c_str( ), NULL, 0 );
+    if ( size < 0 ) {
+      std::cerr << "cannot resolve path: " << path << std::endl;
+      return -1;
+    }
+
+    std::cout << "size returned is: " << size << std::endl;
+    char * cygpath = (char *) malloc( size );
+    if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, wfdbdir.c_str( ),
+        cygpath, size ) ) {
+      perror( "cygwin_conv_path" );
+      return -1;
+    }
+
+    path.clear( );
+    path.append( ". " ).append( cygpath );
+    free( cygpath );
+
+#endif
     setwfdb( (char *) path.c_str( ) );
 
     // the record name is just the basename of the file
