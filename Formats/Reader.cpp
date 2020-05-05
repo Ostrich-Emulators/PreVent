@@ -18,18 +18,15 @@
 #include <locale>         // std::locale, std::time_get, std::use_facet
 #include <iomanip>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ),
-  quiet( false ), onefile( false ), local_time( false ), timemod( TimeModifier::passthru( ) ) {
-  }
+      quiet( false ), onefile( false ), local_time( false ), timemod( TimeModifier::passthru( ) ) { }
 
   Reader::Reader( const Reader& r ) : rdrname( "x" ), quiet( r.quiet ),
-  onefile( r.onefile ), local_time( r.local_time ), timemod( r.timemod ) {
-  }
+      onefile( r.onefile ), local_time( r.local_time ), timemod( r.timemod ) { }
 
-  Reader::~Reader( ) {
-  }
+  Reader::~Reader( ) { }
 
   std::string Reader::name( ) const {
     return rdrname;
@@ -64,8 +61,8 @@ namespace FormatConverter {
 
   int Reader::prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) {
     std::string timezone = ( 0 == info->metadata( ).count( SignalData::TIMEZONE )
-            ? "UTC"
-            : info->metadata( ).at( SignalData::TIMEZONE ) );
+        ? "UTC"
+        : info->metadata( ).at( SignalData::TIMEZONE ) );
     info->reset( false );
     info->setMeta( SignalData::TIMEZONE, timezone );
     info->setMeta( "Source Reader", name( ) );
@@ -105,8 +102,8 @@ namespace FormatConverter {
   }
 
   bool Reader::getAttributes( const std::string& inputfile, const std::string& signal,
-          std::map<std::string, int>& mapi, std::map<std::string, double>& mapd, std::map<std::string, std::string>& maps,
-          dr_time& starttime, dr_time& endtime) {
+      std::map<std::string, int>& mapi, std::map<std::string, double>& mapd, std::map<std::string, std::string>& maps,
+      dr_time& starttime, dr_time& endtime ) {
     return false;
   }
 
@@ -130,12 +127,12 @@ namespace FormatConverter {
   }
 
   void Reader::splice( const std::string& inputfile, const std::string& path,
-          dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
+      dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
     std::cerr << "this reader does not support splicing" << std::endl;
   }
 
   bool Reader::strptime2( const std::string& input, const std::string& format,
-          std::tm * tm ) {
+      std::tm * tm ) {
     std::istringstream iss( input );
     iss >> std::get_time( tm, format.c_str( ) );
     if ( iss.fail( ) ) {
