@@ -30,14 +30,6 @@
 #include "config.h"
 #include "CircularBuffer.h"
 
-#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
-#include <fcntl.h>
-#include <io.h>
-#define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
-#else
-#define SET_BINARY_MODE(file)
-#endif
-
 namespace FormatConverter{
 
   /**
@@ -511,48 +503,18 @@ namespace FormatConverter{
   }
   // </editor-fold>
 
-  StpGeReader::StpGeReader( const std::string& name ) : Reader( name ), firstread( true ), work( 1024 * 1024 ), metadataonly( false ) { }
+  StpGeReader::StpGeReader( const std::string& name ) : StpReaderBase( name ), firstread( true ) { }
 
-  StpGeReader::StpGeReader( const StpGeReader& orig ) : Reader( orig ), firstread( orig.firstread ), work( orig.work.capacity( ) ), metadataonly( false ) { }
+  StpGeReader::StpGeReader( const StpGeReader& orig ) : StpReaderBase( orig ), firstread( orig.firstread ) { }
 
   StpGeReader::~StpGeReader( ) { }
 
-  void StpGeReader::finish( ) {
-    if ( filestream ) {
-      delete filestream;
-    }
-  }
-
   int StpGeReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) {
-    int rslt = Reader::prepare( filename, data );
+    int rslt = StpReaderBase::prepare( filename, data );
     if ( rslt != 0 ) {
       return rslt;
     }
 
-    // STP files are a concatenation of zlib-compressed segments, so we need to
-    // know when we're *really* done reading. Otherwise, the decoder will say
-    // it's at the end of the file once the first segment is fully read
-    struct stat filestat;
-    if ( stat( filename.c_str( ), &filestat ) == -1 ) {
-      perror( "stat failed" );
-      return -1;
-    }
-
-    //    zstr::ifstream doublereader( filename );
-    //    char * skipper = new char[1024 * 1024];
-    //    std::ofstream outy( "uncompressed.segs" );
-    //    do {
-    //      doublereader.read( skipper, 1024 * 1024 );
-    //      for ( size_t i = 0; i < 1024 * 1024; i++ ) {
-    //        outy << skipper[i];
-    //      }
-    //    }
-    //    while ( doublereader.gcount( ) > 0 );
-    //    outy.close( );
-    //    delete []skipper;
-
-    filestream = new zstr::ifstream( filename );
-    decodebuffer.reserve( 1024 * 64 ); // read file in 64K chunks (arbitrary, but much less than 1/2 the work buffer size)
     magiclong = std::numeric_limits<unsigned long>::max( );
     currentTime = 0;
     return 0;
@@ -561,19 +523,14 @@ namespace FormatConverter{
   ReadResult StpGeReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
     //output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
-    try {
-      filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
-    }
-    catch ( zstr::Exception& x ) {
-      std::cerr << x.what( ) << std::endl;
+    int cnt = readMore( );
+    if ( cnt < 0 ) {
       return ReadResult::ERROR;
     }
 
     if ( ReadResult::END_OF_PATIENT == lastrr ) {
       info->setMeta( "Patient Name", "" ); // reset the patient name
     }
-
-    std::streamsize cnt = filestream->gcount( );
 
     while ( 0 != cnt ) {
       if ( work.available( ) < 1024 * 768 ) {
@@ -582,15 +539,6 @@ namespace FormatConverter{
         std::cerr << "work buffer is too full...something is going wrong" << std::endl;
         return ReadResult::ERROR;
       }
-
-      //      output( ) << "read " << cnt << " bytes from input" << std::endl
-      //          << "size before: " << work.size( ) << std::endl;
-      // put everything on our buffer, and we'll read only full segments from there
-      for ( int i = 0; i < cnt; i++ ) {
-        work.push( decodebuffer[i] );
-      }
-      //      output( ) << "size after : " << work.size( ) << std::endl
-      //          << "     avail : " << work.available( ) << std::endl;
 
       if ( ReadResult::FIRST_READ == lastrr && std::numeric_limits<unsigned long>::max( ) == magiclong ) {
         // the first 4 bytes of the file are the segment demarcator
@@ -644,12 +592,8 @@ namespace FormatConverter{
         }
       }
 
-      try {
-        filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
-        cnt = filestream->gcount( );
-      }
-      catch ( zstr::Exception& x ) {
-        std::cerr << x.what( ) << std::endl;
+      cnt = readMore( );
+      if ( cnt < 0 ) {
         return ReadResult::ERROR;
       }
     }
@@ -657,7 +601,6 @@ namespace FormatConverter{
     //output( ) << "file is exhausted" << std::endl;
 
     // copy any data we have left in our filler set to the real set
-
 
     // if we still have stuff in our work buffer, process it
     if ( !work.empty( ) ) {
@@ -704,7 +647,7 @@ namespace FormatConverter{
         }
       }
 
-      if ( metadataonly ) {
+      if ( isMetadataOnly() ) {
         // this ain't pretty, but we can't get any timing information from
         // the SignalSet if we don't have any data in it...so put some dummy
         // data in there
@@ -898,49 +841,6 @@ namespace FormatConverter{
     ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
         << type << " " << fmt << " starting at " << std::dec << work.popped( );
     throw std::runtime_error( ss.str( ) );
-  }
-
-  unsigned long StpGeReader::popUInt64( ) {
-    std::vector<unsigned char> vec = work.popvec( 4 );
-    return ( vec[0] << 24 | vec[1] << 16 | vec[2] << 8 | vec[3] );
-  }
-
-  unsigned int StpGeReader::popUInt16( ) {
-    unsigned char b1 = work.pop( );
-    unsigned char b2 = work.pop( );
-    return ( b1 << 8 | b2 );
-  }
-
-  unsigned int StpGeReader::readUInt16( ) {
-    unsigned char b1 = work.read( );
-    unsigned char b2 = work.read( 1 );
-    return ( b1 << 8 | b2 );
-  }
-
-  int StpGeReader::popInt16( ) {
-    unsigned char b1 = work.pop( );
-    unsigned char b2 = work.pop( );
-
-    short val = ( b1 << 8 | b2 );
-    return val;
-  }
-
-  int StpGeReader::popInt8( ) {
-    return (char) work.pop( );
-  }
-
-  unsigned int StpGeReader::popUInt8( ) {
-    return work.pop( );
-  }
-
-  std::string StpGeReader::popString( size_t length ) {
-    std::vector<char> chars;
-    chars.reserve( length );
-    auto data = work.popvec( length );
-    for ( size_t i = 0; i < data.size( ) && 0 != data[i]; i++ ) {
-      chars.push_back( (char) data[i] );
-    }
-    return std::string( chars.begin( ), chars.end( ) );
   }
 
   dr_time StpGeReader::popTime( ) {
@@ -1324,7 +1224,7 @@ namespace FormatConverter{
       std::cerr << "error while opening input file. error code: " << failed << std::endl;
       return metas;
     }
-    reader.metadataonly = true;
+    reader.setMetadataOnly();
 
     ReadResult last = ReadResult::FIRST_READ;
 

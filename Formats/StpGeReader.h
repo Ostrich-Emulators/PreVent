@@ -13,7 +13,7 @@
 #ifndef STPGEREADER_H
 #define STPGEREADER_H
 
-#include "Reader.h"
+#include "StpReaderBase.h"
 #include "StreamChunkReader.h"
 #include <map>
 #include <string>
@@ -29,7 +29,7 @@ namespace FormatConverter {
   /**
    * A reader for the HSDI signal files that UVA is producing
    */
-  class StpGeReader : public Reader {
+  class StpGeReader : public StpReaderBase {
   public:
     StpGeReader( const std::string& name = "STP (GE)" );
     virtual ~StpGeReader( );
@@ -45,9 +45,8 @@ namespace FormatConverter {
     static std::vector<StpMetadata> parseMetadata( const std::string& input );
 
   protected:
-    ReadResult fill( std::unique_ptr<SignalSet>&, const ReadResult& lastfill ) override;
-    int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
-    void finish( ) override;
+    virtual ReadResult fill( std::unique_ptr<SignalSet>&, const ReadResult& lastfill ) override;
+    virtual int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
 
   private:
     static StpMetadata metaFromSignalSet( const std::unique_ptr<SignalSet>& );
@@ -278,13 +277,6 @@ namespace FormatConverter {
     StpGeReader( const StpGeReader& orig );
     ChunkReadResult processOneChunk( std::unique_ptr<SignalSet>&, const size_t& maxread );
     dr_time popTime( );
-    std::string popString( size_t length );
-    int popInt16( );
-    int popInt8( );
-    unsigned int popUInt8( );
-    unsigned int popUInt16( );
-    unsigned int readUInt16( );
-    unsigned long popUInt64( );
 
     static std::string wavelabel( int waveid, const std::unique_ptr<SignalSet>& );
 
@@ -305,12 +297,8 @@ namespace FormatConverter {
 
     bool firstread;
     dr_time currentTime;
-    zstr::ifstream * filestream;
-    CircularBuffer<unsigned char> work;
-    std::vector<unsigned char> decodebuffer;
     unsigned long magiclong;
     WaveTracker wavetracker;
-    bool metadataonly;
   };
 }
 #endif /* STPGEREADER_H */

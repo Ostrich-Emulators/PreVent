@@ -13,10 +13,18 @@
 
 #include <sys/stat.h>
 
+#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
+#include <fcntl.h>
+#include <io.h>
+#define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
+#else
+#define SET_BINARY_MODE(file)
+#endif
+
 namespace FormatConverter{
 
   StpReaderBase::StpReaderBase( const std::string& name ) : Reader( name ),
-       work( 1024 * 1024 ), metadataonly( false ) { }
+      work( 1024 * 1024 ), metadataonly( false ) { }
 
   StpReaderBase::StpReaderBase( const StpReaderBase& orig ) : Reader( orig ),
       work( orig.work.capacity( ) ), metadataonly( orig.metadataonly ) { }
