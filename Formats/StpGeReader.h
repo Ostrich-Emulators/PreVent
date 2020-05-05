@@ -33,14 +33,6 @@ namespace FormatConverter {
     StpGeReader( const std::string& name = "STP (GE)" );
     virtual ~StpGeReader( );
 
-    struct StpMetadata {
-      std::string name;
-      std::string mrn;
-      dr_time start_utc;
-      dr_time stop_utc;
-      int segment_count;
-    };
-
     static std::vector<StpMetadata> parseMetadata( const std::string& input );
 
   protected:

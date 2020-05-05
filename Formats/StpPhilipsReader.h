@@ -26,16 +26,7 @@ namespace FormatConverter {
   public:
     StpPhilipsReader( const std::string& name = "STP (Philips)" );
     virtual ~StpPhilipsReader( );
-
-    struct StpMetadata {
-      std::string name;
-      std::string mrn;
-      dr_time start_utc;
-      dr_time stop_utc;
-      int segment_count;
-    };
-
-    static std::vector<StpMetadata> parseMetadata( const std::string& input );
+    static std::vector<StpReaderBase::StpMetadata> parseMetadata( const std::string& input );
 
   protected:
     virtual ReadResult fill( std::unique_ptr<SignalSet>&, const ReadResult& lastfill ) override;
@@ -67,10 +58,26 @@ namespace FormatConverter {
      * @return
      */
     bool hasCompleteXmlDoc( std::string& doc, std::string& rootelement );
-    
 
     bool firstread;
     dr_time currentTime;
+    std::string currentPatientId;
+
+    class PatientParser {
+    public:
+      static void start( void * data, const char * el, const char ** attr );
+      static void end( void * data, const char * el );
+      static void chars( void * data, const char * text, int len );
+      static void comment( void * data, const char * text );
+    };
+
+    class DataParser {
+    public:
+      static void start( void * data, const char * el, const char ** attr );
+      static void end( void * data, const char * el );
+      static void chars( void * data, const char * text, int len );
+      static void comment( void * data, const char * text );
+    };
   };
 }
 #endif /* STPPHOILIPSREADER_H */

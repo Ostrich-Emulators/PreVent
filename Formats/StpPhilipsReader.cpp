@@ -28,14 +28,7 @@
 #include <filesystem>
 #include "config.h"
 #include "CircularBuffer.h"
-
-#if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
-#include <fcntl.h>
-#include <io.h>
-#define SET_BINARY_MODE(file) setmode(fileno(file), O_BINARY)
-#else
-#define SET_BINARY_MODE(file)
-#endif
+#include <expat.h>
 
 namespace FormatConverter{
 
@@ -62,6 +55,8 @@ namespace FormatConverter{
       return ReadResult::ERROR;
     }
 
+    XML_Parser parser = XML_ParserCreate( NULL );
+    XML_SetUserData( parser, info.get( ) );
     while ( cnt > 0 ) {
       if ( work.available( ) < 1024 * 768 ) {
         // we should never come close to filling up our work buffer
@@ -74,10 +69,34 @@ namespace FormatConverter{
       ChunkReadResult rslt = ChunkReadResult::OK;
       std::string xmldoc;
       std::string rootelement;
+
       while ( hasCompleteXmlDoc( xmldoc, rootelement ) && ChunkReadResult::OK == rslt ) {
         //output( ) << "next segment is " << std::dec << segsize << " bytes big" << std::endl;
         output( ) << "root element is: " << rootelement << std::endl;
         output( ) << xmldoc << std::endl << std::endl;
+
+        if ( "PatientUpdateResponse" == rootelement ) {
+          XML_SetElementHandler( parser, StpPhilipsReader::PatientParser::start, StpPhilipsReader::PatientParser::end );
+          XML_SetCharacterDataHandler( parser, StpPhilipsReader::PatientParser::chars );
+          XML_SetCommentHandler( parser, StpPhilipsReader::PatientParser::comment );
+        }
+        else {
+          XML_SetElementHandler( parser, StpPhilipsReader::DataParser::start, StpPhilipsReader::DataParser::end );
+          XML_SetCharacterDataHandler( parser, StpPhilipsReader::DataParser::chars );
+          XML_SetCommentHandler( parser, StpPhilipsReader::DataParser::comment );
+        }
+
+        XML_Status status = XML_Parse( parser, xmldoc.c_str( ), xmldoc.length( ), true );
+        if ( status != XML_STATUS_OK ) {
+          XML_Error err = XML_GetErrorCode( parser );
+          std::cerr << XML_ErrorString( err )
+              << " line: " << XML_GetCurrentLineNumber( parser )
+              << " column: " << XML_GetCurrentColumnNumber( parser )
+              << std::endl;
+          return ReadResult::ERROR;
+        }
+
+
         xmldoc.clear( );
         rootelement.clear( );
       }
@@ -99,7 +118,8 @@ namespace FormatConverter{
       //output( ) << "still have stuff in our work buffer!" << std::endl;
       processOneChunk( info, work.size( ) );
     }
-    //copySaved( filler, info );
+
+    XML_ParserFree( parser );
     return ReadResult::END_OF_FILE;
   }
 
@@ -190,8 +210,8 @@ namespace FormatConverter{
     return ok;
   }
 
-  std::vector<StpPhilipsReader::StpMetadata> StpPhilipsReader::parseMetadata( const std::string& input ) {
-    std::vector<StpPhilipsReader::StpMetadata> metas;
+  std::vector<StpReaderBase::StpMetadata> StpPhilipsReader::parseMetadata( const std::string& input ) {
+    std::vector<StpReaderBase::StpMetadata> metas;
     std::unique_ptr<SignalSet> info( new BasicSignalSet( ) );
     StpPhilipsReader reader;
     reader.setNonbreaking( true );
@@ -237,8 +257,8 @@ namespace FormatConverter{
     return metas;
   }
 
-  StpPhilipsReader::StpMetadata StpPhilipsReader::metaFromSignalSet( const std::unique_ptr<SignalSet>& info ) {
-    StpPhilipsReader::StpMetadata meta;
+  StpReaderBase::StpMetadata StpPhilipsReader::metaFromSignalSet( const std::unique_ptr<SignalSet>& info ) {
+    StpReaderBase::StpMetadata meta;
     if ( info->metadata( ).count( "Patient Name" ) > 0 ) {
       meta.name = info->metadata( ).at( "Patient Name" );
     }
@@ -259,4 +279,42 @@ namespace FormatConverter{
 
     return meta;
   }
+
+  void StpPhilipsReader::PatientParser::start( void * data, const char * el, const char ** attr ) {
+    std::cout << "patient start: " << el << std::endl;
+  }
+
+  void StpPhilipsReader::PatientParser::end( void * data, const char * el ) {
+    std::cout << "patient end: " << el << std::endl;
+  }
+
+  void StpPhilipsReader::PatientParser::chars( void * data, const char * text, int len ) {
+    std::string chardata( text, len );
+    SignalUtils::trim( chardata );
+    if ( !chardata.empty( ) ) {
+      std::cout << "patient chars:" << chardata << std::endl;
+    }
+  }
+
+  void StpPhilipsReader::PatientParser::comment( void * data, const char * text ) { }
+
+  void StpPhilipsReader::DataParser::start( void * data, const char * el, const char ** attr ) {
+    std::cout << "data start: " << el << std::endl;
+  }
+
+  void StpPhilipsReader::DataParser::end( void * data, const char * el ) {
+    std::cout << "data end: " << el << std::endl;
+  }
+
+  void StpPhilipsReader::DataParser::chars( void * data, const char * text, int len ) {
+    std::string chardata( text, len );
+    SignalUtils::trim( chardata );
+    if ( !chardata.empty( ) ) {
+      std::cout << "data chars:" << chardata << std::endl;
+    }
+
+  }
+
+  void StpPhilipsReader::DataParser::comment( void * data, const char * text ) { }
 }
+

@@ -32,9 +32,18 @@ namespace FormatConverter {
     virtual bool isMetadataOnly( ) const;
     virtual void finish( );
 
+    struct StpMetadata {
+      std::string name;
+      std::string mrn;
+      dr_time start_utc;
+      dr_time stop_utc;
+      int segment_count;
+    };
+
+
   protected:
     std::string popString( size_t length );
-    std::string readString( size_t length);
+    std::string readString( size_t length );
 
     int popInt16( );
     int popInt8( );

@@ -1203,8 +1203,8 @@ namespace FormatConverter{
     return name;
   }
 
-  std::vector<StpGeReader::StpMetadata> StpGeReader::parseMetadata( const std::string& input ) {
-    std::vector<StpGeReader::StpMetadata> metas;
+  std::vector<StpReaderBase::StpMetadata> StpGeReader::parseMetadata( const std::string& input ) {
+    std::vector<StpReaderBase::StpMetadata> metas;
     std::unique_ptr<SignalSet> info( new BasicSignalSet( ) );
     StpGeReader reader;
     reader.setNonbreaking( true );
@@ -1250,8 +1250,8 @@ namespace FormatConverter{
     return metas;
   }
 
-  StpGeReader::StpMetadata StpGeReader::metaFromSignalSet( const std::unique_ptr<SignalSet>& info ) {
-    StpGeReader::StpMetadata meta;
+  StpReaderBase::StpMetadata StpGeReader::metaFromSignalSet( const std::unique_ptr<SignalSet>& info ) {
+    StpReaderBase::StpMetadata meta;
     if ( info->metadata( ).count( "Patient Name" ) > 0 ) {
       meta.name = info->metadata( ).at( "Patient Name" );
     }
