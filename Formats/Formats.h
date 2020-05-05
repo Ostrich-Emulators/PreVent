@@ -21,7 +21,7 @@ namespace FormatConverter {
 
   enum Format {
     UNRECOGNIZED, WFDB, HDF5, STPXML, DSZL, MAT5, MAT4, MAT73,
-    CSV, CPCXML, STPJSON, MEDI, STPGE, DWC
+    CSV, CPCXML, STPJSON, MEDI, STPGE, STPP, DWC
   };
 
   class Formats {

@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef STPREADER_H
-#define STPREADER_H
+#ifndef STPPHOILIPSREADER_H
+#define STPPHOILIPSREADER_H
 
 #include "Reader.h"
 #include "StreamChunkReader.h"
@@ -29,11 +29,10 @@ namespace FormatConverter {
   /**
    * A reader for the HSDI signal files that UVA is producing
    */
-  class StpReader : public Reader {
+  class StpPhilipsReader : public Reader {
   public:
-    StpReader( );
-    StpReader( const std::string& name );
-    virtual ~StpReader( );
+    StpPhilipsReader( const std::string& name = "STP (Philips)" );
+    virtual ~StpPhilipsReader( );
 
     struct StpMetadata {
       std::string name;
@@ -276,7 +275,7 @@ namespace FormatConverter {
 
     static const std::map<int, std::string> WAVELABELS;
 
-    StpReader( const StpReader& orig );
+    StpPhilipsReader( const StpPhilipsReader& orig );
     ChunkReadResult processOneChunk( std::unique_ptr<SignalSet>&, const size_t& maxread );
     dr_time popTime( );
     std::string popString( size_t length );
@@ -314,5 +313,5 @@ namespace FormatConverter {
     bool metadataonly;
   };
 }
-#endif /* STPREADER_H */
+#endif /* STPPHOILIPSREADER_H */
 

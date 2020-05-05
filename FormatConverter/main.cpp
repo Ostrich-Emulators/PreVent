@@ -219,6 +219,9 @@ int main( int argc, char** argv ) {
       case FormatConverter::STPGE:
         fromstr = "stpge";
         break;
+      case FormatConverter::STPP:
+        fromstr = "stpp";
+        break;
       case FormatConverter::STPXML:
         fromstr = "stpxml";
         break;

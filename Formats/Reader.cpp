@@ -8,7 +8,8 @@
 #include "StpJsonReader.h"
 #include "CpcXmlReader.h"
 #include "TdmsReader.h"
-#include "StpReader.h"
+#include "StpGeReader.h"
+#include "StpPhilipsReader.h"
 #include "DwcReader.h"
 
 #include <iostream>       // std::cout, std::ios
@@ -41,7 +42,9 @@ namespace FormatConverter {
       case FormatConverter::DSZL:
         return std::unique_ptr<Reader>( new ZlReader2( ) );
       case FormatConverter::STPGE:
-        return std::unique_ptr<Reader>( new StpReader( ) );
+        return std::unique_ptr<Reader>( new StpGeReader( ) );
+      case FormatConverter::STPP:
+        return std::unique_ptr<Reader>( new StpPhilipsReader( ) );
       case FormatConverter::STPXML:
         return std::unique_ptr<Reader>( new StpXmlReader( ) );
       case FormatConverter::HDF5:

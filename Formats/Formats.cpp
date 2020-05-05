@@ -30,6 +30,9 @@ namespace FormatConverter{
     if ( "stpge" == fmt ) {
       return STPGE;
     }
+    if ( "stpp" == fmt ) {
+      return STPP;
+    }
     if ( "stpxml" == fmt ) {
       return STPXML;
     }
@@ -85,8 +88,11 @@ namespace FormatConverter{
       else if ( "stpge" == suffix ) {
         return Format::STPGE;
       }
+      else if ( "stpp" == suffix ) {
+        return Format::STPP;
+      }
       else if ( "stp" == suffix ) {
-        std::cout<<"\"stp\" interpreted as \"stpge\""<<std::endl;
+        std::cout<<"\"stp\" interpreted as \"stpge\", use \"stpp\" for Philips version"<<std::endl;
         return Format::STPGE;
       }
       else if ( "csv" == suffix ) {

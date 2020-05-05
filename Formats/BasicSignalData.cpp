@@ -138,7 +138,7 @@ namespace FormatConverter {
     std::stringstream ss;
 
     if ( nullptr == file ) {
-      if ( "Cygwin" == osname ) {
+#ifdef __CYGWIN__
         // Cygwin seems to crash if you try to write to a file created
         // by tmpfile() if the temp directory doesn't actually exist,
         // so make sure we create it ahead of time
@@ -147,8 +147,7 @@ namespace FormatConverter {
         if ( !std::filesystem::exists( tmpdir ) ) {
           std::filesystem::create_directories( tmpdir );
         }
-      }
-
+#endif
       file = tmpfile( );
       
     }

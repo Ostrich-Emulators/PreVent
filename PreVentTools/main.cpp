@@ -42,7 +42,7 @@
 #include "NullSignalData.h"
 #include "Hdf5Reader.h"
 #include "AppendingUtils.h"
-#include "StpReader.h"
+#include "StpGeReader.h"
 
 using namespace FormatConverter;
 namespace fs = std::filesystem;
@@ -263,7 +263,7 @@ int main( int argc, char** argv ) {
     : *( new std::ofstream( outfilename ) ) );
 
     for ( const auto& file : files ) {
-      auto vector = StpReader::parseMetadata( file );
+      auto vector = StpGeReader::parseMetadata( file );
       for ( auto meta : vector ) {
         outstream << file << "\t" << meta.name << "\t" << meta.mrn << "\t" << meta.start_utc
             << "\t" << meta.stop_utc << "\t" << meta.segment_count << std::endl;

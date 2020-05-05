@@ -73,7 +73,8 @@ ZlReader2.cpp
 ZlReader.cpp
 TimeModifier.cpp
 TimeParser.cpp
-StpReader.cpp
+StpGeReader.cpp
+StpPhilipsReader.cpp
 DwcReader.cpp
 generated/config.h
 generated/releases.h
@@ -141,7 +142,8 @@ Writer.h
 XmlReaderBase.h
 ZlReader2.h
 ZlReader.h
-StpReader.h
+StpGeReader.h
+StpPhilipsReader.h
 DwcReader.h
 zstr.hpp
 strict_fstream.hpp

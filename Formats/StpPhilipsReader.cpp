@@ -13,7 +13,7 @@
  * Almost all the zlib code was taken from http://www.zlib.net/zlib_how.html
  */
 
-#include "StpReader.h"
+#include "StpPhilipsReader.h"
 #include "SignalData.h"
 #include "DataRow.h"
 #include "Hdf5Writer.h"
@@ -43,7 +43,7 @@ namespace FormatConverter{
   /**
    * Note: wave labels *can* change depending on what vitals are in the file
    */
-  const std::map<int, std::string> StpReader::WAVELABELS = {
+  const std::map<int, std::string> StpPhilipsReader::WAVELABELS = {
     {0x07, "I" },
     {0x08, "II" },
     {0x09, "III" },
@@ -63,149 +63,149 @@ namespace FormatConverter{
   };
 
   // <editor-fold defaultstate="collapsed" desc="block configs">
-  const StpReader::BlockConfig StpReader::SKIP = BlockConfig::skip( );
-  const StpReader::BlockConfig StpReader::SKIP2 = BlockConfig::skip( 2 );
-  const StpReader::BlockConfig StpReader::SKIP4 = BlockConfig::skip( 4 );
-  const StpReader::BlockConfig StpReader::SKIP5 = BlockConfig::skip( 5 );
-  const StpReader::BlockConfig StpReader::SKIP6 = BlockConfig::skip( 6 );
-  const StpReader::BlockConfig StpReader::HR = BlockConfig::vital( "HR", "Bpm" );
-  const StpReader::BlockConfig StpReader::PVC = BlockConfig::vital( "PVC", "Bpm" );
-  const StpReader::BlockConfig StpReader::STI = BlockConfig::div10( "ST-I", "mm", 1, false );
-  const StpReader::BlockConfig StpReader::STII = BlockConfig::div10( "ST-II", "mm", 1, false );
-  const StpReader::BlockConfig StpReader::STIII = BlockConfig::div10( "ST-III", "mm", 1, false );
-  const StpReader::BlockConfig StpReader::STAVR = BlockConfig::div10( "ST-AVR", "mm", 1, false );
-  const StpReader::BlockConfig StpReader::STAVL = BlockConfig::div10( "ST-AVL", "mm", 1, false );
-  const StpReader::BlockConfig StpReader::STAVF = BlockConfig::div10( "ST-AVF", "mm", 1, false );
-  const StpReader::BlockConfig StpReader::STV = BlockConfig::div10( "ST-V", "mm", 1, false );
-  const StpReader::BlockConfig StpReader::STV1 = BlockConfig::div10( "ST-V1", "mm", 1, false );
-  const StpReader::BlockConfig StpReader::BT = BlockConfig::div10( "BT", "Deg C", 2 );
-  const StpReader::BlockConfig StpReader::IT = BlockConfig::div10( "IT", "Deg C", 2 );
-  const StpReader::BlockConfig StpReader::RESP = BlockConfig::vital( "RESP", "BrMin" );
-  const StpReader::BlockConfig StpReader::APNEA = BlockConfig::vital( "APNEA", "mmHg" );
-  const StpReader::BlockConfig StpReader::NBP_M = BlockConfig::vital( "NBP-M", "mmHg" );
-  const StpReader::BlockConfig StpReader::NBP_S = BlockConfig::vital( "NBP-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::NBP_D = BlockConfig::vital( "NBP-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::CUFF = BlockConfig::vital( "CUFF", "mmHg", 2, false );
-  const StpReader::BlockConfig StpReader::AR1_M = BlockConfig::vital( "AR1-M", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR1_S = BlockConfig::vital( "AR1-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR1_D = BlockConfig::vital( "AR1-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR1_R = BlockConfig::vital( "AR1-R", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR2_M = BlockConfig::vital( "AR1-M", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR2_S = BlockConfig::vital( "AR1-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR2_D = BlockConfig::vital( "AR1-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR2_R = BlockConfig::vital( "AR1-R", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR3_M = BlockConfig::vital( "AR1-M", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR3_S = BlockConfig::vital( "AR1-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR3_D = BlockConfig::vital( "AR1-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR3_R = BlockConfig::vital( "AR1-R", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR4_M = BlockConfig::vital( "AR1-M", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR4_S = BlockConfig::vital( "AR1-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR4_D = BlockConfig::vital( "AR1-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::AR4_R = BlockConfig::vital( "AR1-R", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SKIP = BlockConfig::skip( );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SKIP2 = BlockConfig::skip( 2 );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SKIP4 = BlockConfig::skip( 4 );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SKIP5 = BlockConfig::skip( 5 );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SKIP6 = BlockConfig::skip( 6 );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::HR = BlockConfig::vital( "HR", "Bpm" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PVC = BlockConfig::vital( "PVC", "Bpm" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::STI = BlockConfig::div10( "ST-I", "mm", 1, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::STII = BlockConfig::div10( "ST-II", "mm", 1, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::STIII = BlockConfig::div10( "ST-III", "mm", 1, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::STAVR = BlockConfig::div10( "ST-AVR", "mm", 1, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::STAVL = BlockConfig::div10( "ST-AVL", "mm", 1, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::STAVF = BlockConfig::div10( "ST-AVF", "mm", 1, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::STV = BlockConfig::div10( "ST-V", "mm", 1, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::STV1 = BlockConfig::div10( "ST-V1", "mm", 1, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::BT = BlockConfig::div10( "BT", "Deg C", 2 );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::IT = BlockConfig::div10( "IT", "Deg C", 2 );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::RESP = BlockConfig::vital( "RESP", "BrMin" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::APNEA = BlockConfig::vital( "APNEA", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::NBP_M = BlockConfig::vital( "NBP-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::NBP_S = BlockConfig::vital( "NBP-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::NBP_D = BlockConfig::vital( "NBP-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CUFF = BlockConfig::vital( "CUFF", "mmHg", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR1_M = BlockConfig::vital( "AR1-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR1_S = BlockConfig::vital( "AR1-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR1_D = BlockConfig::vital( "AR1-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR1_R = BlockConfig::vital( "AR1-R", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR2_M = BlockConfig::vital( "AR1-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR2_S = BlockConfig::vital( "AR1-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR2_D = BlockConfig::vital( "AR1-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR2_R = BlockConfig::vital( "AR1-R", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR3_M = BlockConfig::vital( "AR1-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR3_S = BlockConfig::vital( "AR1-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR3_D = BlockConfig::vital( "AR1-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR3_R = BlockConfig::vital( "AR1-R", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR4_M = BlockConfig::vital( "AR1-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR4_S = BlockConfig::vital( "AR1-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR4_D = BlockConfig::vital( "AR1-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::AR4_R = BlockConfig::vital( "AR1-R", "mmHg" );
 
-  const StpReader::BlockConfig StpReader::SPO2_P = BlockConfig::vital( "SPO2-%", "%" );
-  const StpReader::BlockConfig StpReader::SPO2_R = BlockConfig::vital( "SPO2-R", "Bpm" );
-  const StpReader::BlockConfig StpReader::VENT = BlockConfig::vital( "Vent Rate", "BrMin" );
-  const StpReader::BlockConfig StpReader::IN_HLD = BlockConfig::div10( "IN_HLD", "Sec", 2, false );
-  const StpReader::BlockConfig StpReader::PRS_SUP = BlockConfig::vital( "PRS-SUP", "cmH2O" );
-  const StpReader::BlockConfig StpReader::INSP_TM = BlockConfig::div100( "INSP-TM", "Sec", 2, false );
-  const StpReader::BlockConfig StpReader::INSP_PC = BlockConfig::vital( "INSP-PC", "%" );
-  const StpReader::BlockConfig StpReader::I_E = BlockConfig::div10( "I:E", "", 2, false );
-  const StpReader::BlockConfig StpReader::SET_PCP = BlockConfig::vital( "SET-PCP", "cmH2O" );
-  const StpReader::BlockConfig StpReader::SET_IE = BlockConfig::div10( "SET-IE", "", 2, false );
-  const StpReader::BlockConfig StpReader::APRV_LO_T = BlockConfig::div10( "APRV-LO-T", "Sec", 2, false );
-  const StpReader::BlockConfig StpReader::APRV_HI_T = BlockConfig::div10( "APRV-HI-T", "Sec", 2, false );
-  const StpReader::BlockConfig StpReader::APRV_LO = BlockConfig::vital( "APRV-LO", "cmH20", 2, false );
-  const StpReader::BlockConfig StpReader::APRV_HI = BlockConfig::vital( "APRV-HI", "cmH20", 2, false );
-  const StpReader::BlockConfig StpReader::RESIS = BlockConfig::div10( "RESIS", "cmH2O/L/Sec", 2, false );
-  const StpReader::BlockConfig StpReader::MEAS_PEEP = BlockConfig::vital( "MEAS-PEEP", "cmH2O" );
-  const StpReader::BlockConfig StpReader::INTR_PEEP = BlockConfig::vital( "INTR-PEEP", "cmH2O", 2, false );
-  const StpReader::BlockConfig StpReader::INSP_TV = BlockConfig::vital( "INSP-TV", "" );
-  const StpReader::BlockConfig StpReader::COMP = BlockConfig::vital( "COMP", "ml/cmH20" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SPO2_P = BlockConfig::vital( "SPO2-%", "%" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SPO2_R = BlockConfig::vital( "SPO2-R", "Bpm" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::VENT = BlockConfig::vital( "Vent Rate", "BrMin" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::IN_HLD = BlockConfig::div10( "IN_HLD", "Sec", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PRS_SUP = BlockConfig::vital( "PRS-SUP", "cmH2O" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::INSP_TM = BlockConfig::div100( "INSP-TM", "Sec", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::INSP_PC = BlockConfig::vital( "INSP-PC", "%" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::I_E = BlockConfig::div10( "I:E", "", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SET_PCP = BlockConfig::vital( "SET-PCP", "cmH2O" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SET_IE = BlockConfig::div10( "SET-IE", "", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::APRV_LO_T = BlockConfig::div10( "APRV-LO-T", "Sec", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::APRV_HI_T = BlockConfig::div10( "APRV-HI-T", "Sec", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::APRV_LO = BlockConfig::vital( "APRV-LO", "cmH20", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::APRV_HI = BlockConfig::vital( "APRV-HI", "cmH20", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::RESIS = BlockConfig::div10( "RESIS", "cmH2O/L/Sec", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::MEAS_PEEP = BlockConfig::vital( "MEAS-PEEP", "cmH2O" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::INTR_PEEP = BlockConfig::vital( "INTR-PEEP", "cmH2O", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::INSP_TV = BlockConfig::vital( "INSP-TV", "" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::COMP = BlockConfig::vital( "COMP", "ml/cmH20" );
 
-  const StpReader::BlockConfig StpReader::SPONT_MV = BlockConfig::vital( "SPONT-MV", "L/Min", 2, false );
-  const StpReader::BlockConfig StpReader::SPONT_R = BlockConfig::vital( "SPONT-R", "BrMin", 2, false );
-  const StpReader::BlockConfig StpReader::SET_TV = BlockConfig::vital( "SET-TV", "ml", 2, false );
-  const StpReader::BlockConfig StpReader::B_FLW = BlockConfig::vital( "B-FLW", "L/Min", 2, false );
-  const StpReader::BlockConfig StpReader::FLW_R = BlockConfig::vital( "FLW-R", "cmH20", 2, false );
-  const StpReader::BlockConfig StpReader::FLW_TRIG = BlockConfig::vital( "FLW-TRIG", "L/Min", 2, false );
-  const StpReader::BlockConfig StpReader::HF_FLW = BlockConfig::vital( "HF-FLW", "L/Min", 2, false );
-  const StpReader::BlockConfig StpReader::HF_R = BlockConfig::vital( "HF-R", "Sec", 2, false );
-  const StpReader::BlockConfig StpReader::HF_PRS = BlockConfig::vital( "HF-PRS", "cmH2O", 2, false );
-  const StpReader::BlockConfig StpReader::TMP_1 = BlockConfig::div10( "TMP-1", "Deg C" );
-  const StpReader::BlockConfig StpReader::TMP_2 = BlockConfig::div10( "TMP-2", "Deg C" );
-  const StpReader::BlockConfig StpReader::DELTA_TMP = BlockConfig::div10( "DELTA-TMP", "Deg C" );
-  const StpReader::BlockConfig StpReader::LA1 = BlockConfig::vital( "LA1", "mmHg" );
-  const StpReader::BlockConfig StpReader::CVP1 = BlockConfig::vital( "CVP1", "mmHg" );
-  const StpReader::BlockConfig StpReader::CVP2 = BlockConfig::vital( "CVP2", "mmHg" );
-  const StpReader::BlockConfig StpReader::CVP3 = BlockConfig::vital( "CVP3", "mmHg" );
-  const StpReader::BlockConfig StpReader::CVP4 = BlockConfig::vital( "CVP4", "mmHg" );
-  const StpReader::BlockConfig StpReader::CPP1 = BlockConfig::vital( "CPP1", "mmHg" );
-  const StpReader::BlockConfig StpReader::ICP1 = BlockConfig::vital( "ICP1", "mmHg" );
-  const StpReader::BlockConfig StpReader::CPP2 = BlockConfig::vital( "CPP2", "mmHg" );
-  const StpReader::BlockConfig StpReader::ICP2 = BlockConfig::vital( "ICP2", "mmHg" );
-  const StpReader::BlockConfig StpReader::CPP3 = BlockConfig::vital( "CPP3", "mmHg" );
-  const StpReader::BlockConfig StpReader::ICP3 = BlockConfig::vital( "ICP3", "mmHg" );
-  const StpReader::BlockConfig StpReader::CPP4 = BlockConfig::vital( "CPP4", "mmHg" );
-  const StpReader::BlockConfig StpReader::ICP4 = BlockConfig::vital( "ICP4", "mmHg" );
-  const StpReader::BlockConfig StpReader::SP1 = BlockConfig::vital( "SP1", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA1_S = BlockConfig::vital( "PA1-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA1_D = BlockConfig::vital( "PA1-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA1_R = BlockConfig::vital( "PA1-R", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA1_M = BlockConfig::vital( "PA1-M", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA2_S = BlockConfig::vital( "PA2-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA2_D = BlockConfig::vital( "PA2-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA2_R = BlockConfig::vital( "PA2-R", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA2_M = BlockConfig::vital( "PA2-M", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA3_S = BlockConfig::vital( "PA3-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA3_D = BlockConfig::vital( "PA3-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA3_R = BlockConfig::vital( "PA3-R", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA3_M = BlockConfig::vital( "PA3-M", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA4_S = BlockConfig::vital( "PA4-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA4_D = BlockConfig::vital( "PA4-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA4_R = BlockConfig::vital( "PA4-R", "mmHg" );
-  const StpReader::BlockConfig StpReader::PA4_M = BlockConfig::vital( "PA4-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SPONT_MV = BlockConfig::vital( "SPONT-MV", "L/Min", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SPONT_R = BlockConfig::vital( "SPONT-R", "BrMin", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SET_TV = BlockConfig::vital( "SET-TV", "ml", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::B_FLW = BlockConfig::vital( "B-FLW", "L/Min", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::FLW_R = BlockConfig::vital( "FLW-R", "cmH20", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::FLW_TRIG = BlockConfig::vital( "FLW-TRIG", "L/Min", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::HF_FLW = BlockConfig::vital( "HF-FLW", "L/Min", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::HF_R = BlockConfig::vital( "HF-R", "Sec", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::HF_PRS = BlockConfig::vital( "HF-PRS", "cmH2O", 2, false );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::TMP_1 = BlockConfig::div10( "TMP-1", "Deg C" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::TMP_2 = BlockConfig::div10( "TMP-2", "Deg C" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::DELTA_TMP = BlockConfig::div10( "DELTA-TMP", "Deg C" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::LA1 = BlockConfig::vital( "LA1", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CVP1 = BlockConfig::vital( "CVP1", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CVP2 = BlockConfig::vital( "CVP2", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CVP3 = BlockConfig::vital( "CVP3", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CVP4 = BlockConfig::vital( "CVP4", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CPP1 = BlockConfig::vital( "CPP1", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::ICP1 = BlockConfig::vital( "ICP1", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CPP2 = BlockConfig::vital( "CPP2", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::ICP2 = BlockConfig::vital( "ICP2", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CPP3 = BlockConfig::vital( "CPP3", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::ICP3 = BlockConfig::vital( "ICP3", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CPP4 = BlockConfig::vital( "CPP4", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::ICP4 = BlockConfig::vital( "ICP4", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SP1 = BlockConfig::vital( "SP1", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA1_S = BlockConfig::vital( "PA1-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA1_D = BlockConfig::vital( "PA1-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA1_R = BlockConfig::vital( "PA1-R", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA1_M = BlockConfig::vital( "PA1-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA2_S = BlockConfig::vital( "PA2-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA2_D = BlockConfig::vital( "PA2-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA2_R = BlockConfig::vital( "PA2-R", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA2_M = BlockConfig::vital( "PA2-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA3_S = BlockConfig::vital( "PA3-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA3_D = BlockConfig::vital( "PA3-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA3_R = BlockConfig::vital( "PA3-R", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA3_M = BlockConfig::vital( "PA3-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA4_S = BlockConfig::vital( "PA4-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA4_D = BlockConfig::vital( "PA4-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA4_R = BlockConfig::vital( "PA4-R", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PA4_M = BlockConfig::vital( "PA4-M", "mmHg" );
 
-  const StpReader::BlockConfig StpReader::UAC1_S = BlockConfig::vital( "UAC1-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::UAC1_D = BlockConfig::vital( "UAC1-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::UAC1_R = BlockConfig::vital( "UAC1-R", "Bpm" );
-  const StpReader::BlockConfig StpReader::UAC1_M = BlockConfig::vital( "UAC1-M", "mmHg" );
-  const StpReader::BlockConfig StpReader::UAC2_S = BlockConfig::vital( "UAC2-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::UAC2_D = BlockConfig::vital( "UAC2-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::UAC2_R = BlockConfig::vital( "UAC2-R", "Bpm" );
-  const StpReader::BlockConfig StpReader::UAC2_M = BlockConfig::vital( "UAC2-M", "mmHg" );
-  const StpReader::BlockConfig StpReader::UAC3_S = BlockConfig::vital( "UAC3-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::UAC3_D = BlockConfig::vital( "UAC3-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::UAC3_R = BlockConfig::vital( "UAC3-R", "Bpm" );
-  const StpReader::BlockConfig StpReader::UAC3_M = BlockConfig::vital( "UAC3-M", "mmHg" );
-  const StpReader::BlockConfig StpReader::UAC4_S = BlockConfig::vital( "UAC4-S", "mmHg" );
-  const StpReader::BlockConfig StpReader::UAC4_D = BlockConfig::vital( "UAC4-D", "mmHg" );
-  const StpReader::BlockConfig StpReader::UAC4_R = BlockConfig::vital( "UAC4-R", "Bpm" );
-  const StpReader::BlockConfig StpReader::UAC4_M = BlockConfig::vital( "UAC4-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC1_S = BlockConfig::vital( "UAC1-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC1_D = BlockConfig::vital( "UAC1-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC1_R = BlockConfig::vital( "UAC1-R", "Bpm" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC1_M = BlockConfig::vital( "UAC1-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC2_S = BlockConfig::vital( "UAC2-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC2_D = BlockConfig::vital( "UAC2-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC2_R = BlockConfig::vital( "UAC2-R", "Bpm" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC2_M = BlockConfig::vital( "UAC2-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC3_S = BlockConfig::vital( "UAC3-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC3_D = BlockConfig::vital( "UAC3-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC3_R = BlockConfig::vital( "UAC3-R", "Bpm" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC3_M = BlockConfig::vital( "UAC3-M", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC4_S = BlockConfig::vital( "UAC4-S", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC4_D = BlockConfig::vital( "UAC4-D", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC4_R = BlockConfig::vital( "UAC4-R", "Bpm" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::UAC4_M = BlockConfig::vital( "UAC4-M", "mmHg" );
 
-  const StpReader::BlockConfig StpReader::PT_RR = BlockConfig::vital( "PT-RR", "BrMin" );
-  const StpReader::BlockConfig StpReader::PEEP = BlockConfig::vital( "PEEP", "cmH20" );
-  const StpReader::BlockConfig StpReader::MV = BlockConfig::div10( "MV", "L/min" );
-  const StpReader::BlockConfig StpReader::Fi02 = BlockConfig::vital( "Fi02", "%" );
-  const StpReader::BlockConfig StpReader::TV = BlockConfig::vital( "TV", "ml" );
-  const StpReader::BlockConfig StpReader::PIP = BlockConfig::vital( "PIP", "cmH20" );
-  const StpReader::BlockConfig StpReader::PPLAT = BlockConfig::vital( "PPLAT", "cmH20" );
-  const StpReader::BlockConfig StpReader::MAWP = BlockConfig::vital( "MAWP", "cmH20" );
-  const StpReader::BlockConfig StpReader::SENS = BlockConfig::div10( "SENS", "cmH20" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PT_RR = BlockConfig::vital( "PT-RR", "BrMin" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PEEP = BlockConfig::vital( "PEEP", "cmH20" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::MV = BlockConfig::div10( "MV", "L/min" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::Fi02 = BlockConfig::vital( "Fi02", "%" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::TV = BlockConfig::vital( "TV", "ml" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PIP = BlockConfig::vital( "PIP", "cmH20" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::PPLAT = BlockConfig::vital( "PPLAT", "cmH20" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::MAWP = BlockConfig::vital( "MAWP", "cmH20" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::SENS = BlockConfig::div10( "SENS", "cmH20" );
 
-  const StpReader::BlockConfig StpReader::CO2_EX = BlockConfig::vital( "CO2-EX", "mmHg" );
-  const StpReader::BlockConfig StpReader::CO2_IN = BlockConfig::vital( "CO2-IN", "mmHg" );
-  const StpReader::BlockConfig StpReader::CO2_RR = BlockConfig::vital( "CO2-RR", "BrMin" );
-  const StpReader::BlockConfig StpReader::O2_EXP = BlockConfig::div10( "O2-EXP", "%" );
-  const StpReader::BlockConfig StpReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" ); // </editor-fold>
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CO2_EX = BlockConfig::vital( "CO2-EX", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CO2_IN = BlockConfig::vital( "CO2-IN", "mmHg" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::CO2_RR = BlockConfig::vital( "CO2-RR", "BrMin" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::O2_EXP = BlockConfig::div10( "O2-EXP", "%" );
+  const StpPhilipsReader::BlockConfig StpPhilipsReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" ); // </editor-fold>
 
   // <editor-fold defaultstate="collapsed" desc="Wave Tracker">
 
-  StpReader::WaveTracker::WaveTracker( ) { }
+  StpPhilipsReader::WaveTracker::WaveTracker( ) { }
 
-  StpReader::WaveTracker::~WaveTracker( ) { }
+  StpPhilipsReader::WaveTracker::~WaveTracker( ) { }
 
-  void StpReader::WaveTracker::prune( ) {
+  void StpPhilipsReader::WaveTracker::prune( ) {
 
     std::vector<int> toremove;
     for ( auto& m : wavevals ) {
@@ -227,7 +227,7 @@ namespace FormatConverter{
     }
   }
 
-  StpReader::WaveSequenceResult StpReader::WaveTracker::newseq( const unsigned short& seqnum, dr_time time ) {
+  StpPhilipsReader::WaveSequenceResult StpPhilipsReader::WaveTracker::newseq( const unsigned short& seqnum, dr_time time ) {
     WaveSequenceResult rslt;
     if ( empty( ) ) {
       rslt = WaveSequenceResult::NORMAL;
@@ -290,7 +290,7 @@ namespace FormatConverter{
     return rslt;
   }
 
-  void StpReader::WaveTracker::breaksync( StpReader::WaveSequenceResult rslt,
+  void StpPhilipsReader::WaveTracker::breaksync( StpPhilipsReader::WaveSequenceResult rslt,
       const unsigned short& seqnum, const dr_time& time ) {
 
     // for timed breaks, we really just want to fill up the current second
@@ -368,7 +368,7 @@ namespace FormatConverter{
     }
   }
 
-  void StpReader::WaveTracker::newvalues( int waveid, std::vector<int>& values ) {
+  void StpPhilipsReader::WaveTracker::newvalues( int waveid, std::vector<int>& values ) {
     size_t valstoread = values.size( );
     if ( 0 == expectedValues.count( waveid ) ) {
       expectedValues[waveid] = valstoread * 120;
@@ -397,15 +397,15 @@ namespace FormatConverter{
     miniseen[waveid]++;
   }
 
-  bool StpReader::WaveTracker::writable( ) const {
+  bool StpPhilipsReader::WaveTracker::writable( ) const {
     return sequencenums.size( ) > 7;
   }
 
-  bool StpReader::WaveTracker::empty( ) const {
+  bool StpPhilipsReader::WaveTracker::empty( ) const {
     return sequencenums.empty( );
   }
 
-  void StpReader::WaveTracker::flushone( std::unique_ptr<SignalSet>& info ) {
+  void StpPhilipsReader::WaveTracker::flushone( std::unique_ptr<SignalSet>& info ) {
     if ( empty( ) ) {
       std::cout << "no wave data to flush" << std::endl;
     }
@@ -493,39 +493,37 @@ namespace FormatConverter{
     //    }
   }
 
-  unsigned short StpReader::WaveTracker::currentseq( ) const {
+  unsigned short StpPhilipsReader::WaveTracker::currentseq( ) const {
     return ( empty( )
         ? 0
         : ( --sequencenums.end( ) )->first );
   }
 
-  dr_time StpReader::WaveTracker::vitalstarttime( ) const {
+  dr_time StpPhilipsReader::WaveTracker::vitalstarttime( ) const {
     if ( empty( ) ) {
       return 0;
     }
     return sequencenums.begin( )->second;
   }
 
-  const dr_time StpReader::WaveTracker::starttime( ) const {
+  const dr_time StpPhilipsReader::WaveTracker::starttime( ) const {
     return mytime;
   }
   // </editor-fold>
 
-  StpReader::StpReader( ) : Reader( "STP" ), firstread( true ), work( 1024 * 1024 ), metadataonly( false ) { }
+  StpPhilipsReader::StpPhilipsReader( const std::string& name ) : Reader( name ), firstread( true ), work( 1024 * 1024 ), metadataonly( false ) { }
 
-  StpReader::StpReader( const std::string& name ) : Reader( name ), firstread( true ), work( 1024 * 1024 ), metadataonly( false ) { }
+  StpPhilipsReader::StpPhilipsReader( const StpPhilipsReader& orig ) : Reader( orig ), firstread( orig.firstread ), work( orig.work.capacity( ) ), metadataonly( false ) { }
 
-  StpReader::StpReader( const StpReader& orig ) : Reader( orig ), firstread( orig.firstread ), work( orig.work.capacity( ) ), metadataonly( false ) { }
+  StpPhilipsReader::~StpPhilipsReader( ) { }
 
-  StpReader::~StpReader( ) { }
-
-  void StpReader::finish( ) {
+  void StpPhilipsReader::finish( ) {
     if ( filestream ) {
       delete filestream;
     }
   }
 
-  int StpReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) {
+  int StpPhilipsReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) {
     int rslt = Reader::prepare( filename, data );
     if ( rslt != 0 ) {
       return rslt;
@@ -560,7 +558,7 @@ namespace FormatConverter{
     return 0;
   }
 
-  ReadResult StpReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
+  ReadResult StpPhilipsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
     //output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
     try {
@@ -675,11 +673,11 @@ namespace FormatConverter{
     return ReadResult::END_OF_FILE;
   }
 
-  bool StpReader::isunity( ) const {
+  bool StpPhilipsReader::isunity( ) const {
     return 0 == magiclong;
   }
 
-  StpReader::ChunkReadResult StpReader::processOneChunk( std::unique_ptr<SignalSet>& info,
+  StpPhilipsReader::ChunkReadResult StpPhilipsReader::processOneChunk( std::unique_ptr<SignalSet>& info,
       const size_t& maxread ) {
     // we are guaranteed to have a complete segment in the work buffer
     // and the work buffer head is pointing to the start of the segment
@@ -895,31 +893,31 @@ namespace FormatConverter{
     }
   }
 
-  void StpReader::unhandledBlockType( unsigned int type, unsigned int fmt ) const {
+  void StpPhilipsReader::unhandledBlockType( unsigned int type, unsigned int fmt ) const {
     std::stringstream ss;
     ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
         << type << " " << fmt << " starting at " << std::dec << work.popped( );
     throw std::runtime_error( ss.str( ) );
   }
 
-  unsigned long StpReader::popUInt64( ) {
+  unsigned long StpPhilipsReader::popUInt64( ) {
     std::vector<unsigned char> vec = work.popvec( 4 );
     return ( vec[0] << 24 | vec[1] << 16 | vec[2] << 8 | vec[3] );
   }
 
-  unsigned int StpReader::popUInt16( ) {
+  unsigned int StpPhilipsReader::popUInt16( ) {
     unsigned char b1 = work.pop( );
     unsigned char b2 = work.pop( );
     return ( b1 << 8 | b2 );
   }
 
-  unsigned int StpReader::readUInt16( ) {
+  unsigned int StpPhilipsReader::readUInt16( ) {
     unsigned char b1 = work.read( );
     unsigned char b2 = work.read( 1 );
     return ( b1 << 8 | b2 );
   }
 
-  int StpReader::popInt16( ) {
+  int StpPhilipsReader::popInt16( ) {
     unsigned char b1 = work.pop( );
     unsigned char b2 = work.pop( );
 
@@ -927,15 +925,15 @@ namespace FormatConverter{
     return val;
   }
 
-  int StpReader::popInt8( ) {
+  int StpPhilipsReader::popInt8( ) {
     return (char) work.pop( );
   }
 
-  unsigned int StpReader::popUInt8( ) {
+  unsigned int StpPhilipsReader::popUInt8( ) {
     return work.pop( );
   }
 
-  std::string StpReader::popString( size_t length ) {
+  std::string StpPhilipsReader::popString( size_t length ) {
     std::vector<char> chars;
     chars.reserve( length );
     auto data = work.popvec( length );
@@ -945,14 +943,14 @@ namespace FormatConverter{
     return std::string( chars.begin( ), chars.end( ) );
   }
 
-  dr_time StpReader::popTime( ) {
+  dr_time StpPhilipsReader::popTime( ) {
     // time is in little-endian format
     auto shorts = work.popvec( 4 );
     time_t time = ( ( shorts[1] << 24 ) | ( shorts[0] << 16 ) | ( shorts[3] << 8 ) | shorts[2] );
     return time * 1000;
   }
 
-  StpReader::ChunkReadResult StpReader::readWavesBlock( std::unique_ptr<SignalSet>& info, const size_t& maxread ) {
+  StpPhilipsReader::ChunkReadResult StpPhilipsReader::readWavesBlock( std::unique_ptr<SignalSet>& info, const size_t& maxread ) {
     if ( 0x04 == work.read( ) ) {
       work.skip( ); // skip the 0x04
       auto oldseq = wavetracker.currentseq( );
@@ -1050,7 +1048,7 @@ namespace FormatConverter{
         std::string ex = ss.str( );
         throw std::runtime_error( ex );
       }
-      else if ( 0 == StpReader::WAVELABELS.count( waveid ) ) {
+      else if ( 0 == StpPhilipsReader::WAVELABELS.count( waveid ) ) {
         std::stringstream ss;
         ss << "unknown wave id/count: "
             << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
@@ -1090,7 +1088,7 @@ namespace FormatConverter{
     return ChunkReadResult::OK;
   }
 
-  void StpReader::readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize ) {
+  void StpPhilipsReader::readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize ) {
     size_t read = 0;
     for ( const auto& cfg : vitals ) {
       read += cfg.readcount;
@@ -1173,7 +1171,7 @@ namespace FormatConverter{
     work.skip( blocksize - read );
   }
 
-  std::string StpReader::div10s( int val, unsigned int multiple ) {
+  std::string StpPhilipsReader::div10s( int val, unsigned int multiple ) {
     if ( 0 == val ) {
       return "0";
     }
@@ -1206,7 +1204,7 @@ namespace FormatConverter{
     return ss.str( );
   }
 
-  bool StpReader::workHasFullSegment( size_t* size ) {
+  bool StpPhilipsReader::workHasFullSegment( size_t* size ) {
     // ensure the data in our buffer starts with a segment marker, and goes at
     // least to the next segment marker. we do this by reading each byte (sorry)
 
@@ -1294,8 +1292,8 @@ namespace FormatConverter{
     return ok;
   }
 
-  std::string StpReader::wavelabel( int waveid, const std::unique_ptr<SignalSet>& info ) {
-    std::string name = StpReader::WAVELABELS.at( waveid );
+  std::string StpPhilipsReader::wavelabel( int waveid, const std::unique_ptr<SignalSet>& info ) {
+    std::string name = StpPhilipsReader::WAVELABELS.at( waveid );
 
     if ( 28 == waveid ) {
       // if we have PA2-X, then this is a PA2 wave
@@ -1316,10 +1314,10 @@ namespace FormatConverter{
     return name;
   }
 
-  std::vector<StpReader::StpMetadata> StpReader::parseMetadata( const std::string& input ) {
-    std::vector<StpReader::StpMetadata> metas;
+  std::vector<StpPhilipsReader::StpMetadata> StpPhilipsReader::parseMetadata( const std::string& input ) {
+    std::vector<StpPhilipsReader::StpMetadata> metas;
     std::unique_ptr<SignalSet> info( new BasicSignalSet( ) );
-    StpReader reader;
+    StpPhilipsReader reader;
     reader.setNonbreaking( true );
     int failed = reader.prepare( input, info );
     if ( failed ) {
@@ -1363,8 +1361,8 @@ namespace FormatConverter{
     return metas;
   }
 
-  StpReader::StpMetadata StpReader::metaFromSignalSet( const std::unique_ptr<SignalSet>& info ) {
-    StpReader::StpMetadata meta;
+  StpPhilipsReader::StpMetadata StpPhilipsReader::metaFromSignalSet( const std::unique_ptr<SignalSet>& info ) {
+    StpPhilipsReader::StpMetadata meta;
     if ( info->metadata( ).count( "Patient Name" ) > 0 ) {
       meta.name = info->metadata( ).at( "Patient Name" );
     }
