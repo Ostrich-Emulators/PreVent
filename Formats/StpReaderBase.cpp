@@ -120,6 +120,16 @@ namespace FormatConverter{
     return std::string( chars.begin( ), chars.end( ) );
   }
 
+  std::string StpReaderBase::readString( size_t length ) {
+    std::vector<char> chars;
+    chars.reserve( length );
+
+    for ( size_t i = 0; i < length; i++ ) {
+      chars.push_back( (char) work.read( i ) );
+    }
+    return std::string( chars.begin( ), chars.end( ) );
+  }
+
   int StpReaderBase::readMore( ) {
     std::vector<unsigned char> decodebuffer;
     decodebuffer.reserve( 1024 * 64 );

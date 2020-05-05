@@ -16,9 +16,8 @@
 #include "StpPhilipsReader.h"
 #include "SignalData.h"
 #include "DataRow.h"
-#include "Hdf5Writer.h"
-#include "StreamChunkReader.h"
 #include "BasicSignalSet.h"
+#include "SignalUtils.h"
 
 #include <algorithm>
 #include <iostream>
@@ -54,64 +53,46 @@ namespace FormatConverter{
   ReadResult StpPhilipsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
     //output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
-    int cnt = StpReaderBase::readMore( );
-
     if ( ReadResult::END_OF_PATIENT == lastrr ) {
       info->setMeta( "Patient Name", "" ); // reset the patient name
+    }
+
+    int cnt = StpReaderBase::readMore( );
+    if ( cnt < 0 ) {
+      return ReadResult::ERROR;
     }
 
     while ( cnt > 0 ) {
       if ( work.available( ) < 1024 * 768 ) {
         // we should never come close to filling up our work buffer
-        // so if we have, make sure the sure knows
+        // so if we have, make sure the user knows
         std::cerr << "work buffer is too full...something is going wrong" << std::endl;
         return ReadResult::ERROR;
       }
 
-      ChunkReadResult rslt = ChunkReadResult::OK;
       // read as many segments as we can before reading more data
-      size_t segsize = 0;
-      while ( workHasFullSegment( &segsize ) && ChunkReadResult::OK == rslt ) {
+      ChunkReadResult rslt = ChunkReadResult::OK;
+      std::string xmldoc;
+      std::string rootelement;
+      while ( hasCompleteXmlDoc( xmldoc, rootelement ) && ChunkReadResult::OK == rslt ) {
         //output( ) << "next segment is " << std::dec << segsize << " bytes big" << std::endl;
-
-        size_t startpop = work.popped( );
-        rslt = processOneChunk( info, segsize );
-        size_t endpop = work.popped( );
-
-        if ( ChunkReadResult::OK == rslt ) {
-          size_t bytesread = endpop - startpop;
-          //output( ) << "read " << bytesread << " bytes of segment" << std::endl;
-          if ( bytesread < segsize ) {
-            work.skip( segsize - bytesread );
-            //output( ) << "skipping ahead " << ( segsize - bytesread ) << " bytes to next segment at " << ( startpop + segsize ) << std::endl;
-          }
-        }
-        else if ( ChunkReadResult::UNKNOWN_BLOCKTYPE == rslt ) {
-          return ReadResult::ERROR;
-        }
-        else {
-          // something happened so rewind our to our mark
-          //output( ) << "rewinding to start of segment (mark: " << ( work.popped( ) - work.poppedSinceMark( ) ) << ")" << std::endl;
-          work.rewindToMark( );
-
-          return ( ChunkReadResult::ROLLOVER == rslt
-              ? ReadResult::END_OF_DAY
-              : ChunkReadResult::NEW_PATIENT == rslt
-              ? ReadResult::END_OF_PATIENT
-              : ReadResult::ERROR );
-        }
+        output( ) << "root element is: " << rootelement << std::endl;
+        output( ) << xmldoc << std::endl << std::endl;
+        xmldoc.clear( );
+        rootelement.clear( );
       }
 
+      xmldoc.clear( );
+      rootelement.clear( );
       cnt = readMore( );
       if ( cnt < 0 ) {
         return ReadResult::ERROR;
       }
     }
 
-    //output( ) << "file is exhausted" << std::endl;
+    output( ) << "file is exhausted" << std::endl;
 
     // copy any data we have left in our filler set to the real set
-
 
     // if we still have stuff in our work buffer, process it
     if ( !work.empty( ) ) {
@@ -120,6 +101,22 @@ namespace FormatConverter{
     }
     //copySaved( filler, info );
     return ReadResult::END_OF_FILE;
+  }
+
+  void StpPhilipsReader::skipUntil( const std::string& needle ) {
+    while ( !work.empty( ) ) {
+      while ( work.pop( ) != needle[0] ) {
+        // nothing to do here, just wanted to pop
+      }
+
+      // found the first character, so see if we found the whole string
+      size_t start = work.popped( ) - 1;
+      std::string str = readString( needle.size( ) - 1 );
+      if ( needle.substr( 1 ) == str ) {
+        work.rewind( work.popped( ) - start );
+        break;
+      }
+    }
   }
 
   StpPhilipsReader::ChunkReadResult StpPhilipsReader::processOneChunk( std::unique_ptr<SignalSet>& info,
@@ -134,24 +131,62 @@ namespace FormatConverter{
     return time * 1000;
   }
 
-  bool StpPhilipsReader::workHasFullSegment( size_t* size ) {
-    // ensure the data in our buffer starts with a segment marker, and goes at
-    // least to the next segment marker. we do this by reading each byte (sorry)
+  bool StpPhilipsReader::hasCompleteXmlDoc( std::string& found, std::string& rootelement ) {
+    // ensure that our data has at least one xml header ("<?xml...>")
+    // and closes the root element (there is junk afterwards)
 
     if ( work.empty( ) ) {
-      return false;
+      found = false;
+      return "";
     }
 
     bool ok = false;
+    work.mark( );
+    size_t markpop = work.popped( );
     try {
-      work.mark( );
+      skipUntil( "<?xml" );
+      size_t xmlstart = work.popped( ) - markpop;
+
+      work.skip( );
+      skipUntil( "<" ); // find the root element
+      size_t startElement = work.popped( ) + 1;
+      skipUntil( ">" );
+      size_t endElement = work.popped( );
+
+      work.rewind( endElement - startElement );
+      std::string rootline = popString( endElement - startElement );
+
+      // FIXME: stop at the first space
+      auto rootpieces = SignalUtils::splitcsv( rootline, ' ' );
+      rootelement.append( rootpieces[0] );
+
+      std::string endneedle( "</" + rootelement + ">" );
+      skipUntil( endneedle );
+      skipUntil( ">" );
+      work.skip( );
+      size_t xmlend = work.popped( );
+
+      work.rewindToMark( );
+      work.skip( xmlstart );
+
+      std::string temp( popString( xmlend - xmlstart ) );
+      if ( temp[temp.size( ) - 1] != '>' ) {
+        // FIXME: why do we end up with one extra character on every
+        // read but the first?!
+        work.rewind( );
+        temp.erase( temp.size( ) - 1 );
+      }
+
+      found.append( temp );
       ok = true;
     }
     catch ( const std::runtime_error& x ) {
-      // don't care, but don't throw
+      // most likely, we've tried to read past the end of our buffer
+      // don't really care, but don't throw anything, and rewind so we can
+      // fill in more data later without losing what we have in the chute
+      work.rewindToMark( );
     }
 
-    work.rewindToMark( );
     return ok;
   }
 
@@ -165,7 +200,7 @@ namespace FormatConverter{
       std::cerr << "error while opening input file. error code: " << failed << std::endl;
       return metas;
     }
-    reader.setMetadataOnly();
+    reader.setMetadataOnly( );
 
     ReadResult last = ReadResult::FIRST_READ;
 

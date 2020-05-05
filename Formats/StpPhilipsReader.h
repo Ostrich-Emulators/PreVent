@@ -44,6 +44,12 @@ namespace FormatConverter {
   private:
     static StpMetadata metaFromSignalSet( const std::unique_ptr<SignalSet>& );
 
+    /**
+     * Skips forward in the work buffer until the needle is at the head
+     * @param needle
+     */
+    void skipUntil( const std::string& needle );
+
     enum ChunkReadResult {
       OK, ROLLOVER, NEW_PATIENT, UNKNOWN_BLOCKTYPE, HR_BLOCK_PROBLEM
     };
@@ -55,11 +61,13 @@ namespace FormatConverter {
     dr_time popTime( );
 
     /**
-     * determines if the work buffer has at least one full segment in it
-     * @param size the size of the first segment in the work buffer, if a complete segment exists
+     * determines if the work buffer has at least one full XML doc in it
+     * @param doc a complete XML doc, if it exists, will be appended to this string
+     * @param rootelement the root element of the document will be appended to this string
      * @return
      */
-    bool workHasFullSegment( size_t * size = nullptr );
+    bool hasCompleteXmlDoc( std::string& doc, std::string& rootelement );
+    
 
     bool firstread;
     dr_time currentTime;

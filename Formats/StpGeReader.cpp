@@ -4,20 +4,9 @@
  * and open the template in the editor.
  */
 
-/* 
- * File:   CacheFileHdf5Writer.cpp
- * Author: ryan
- * 
- * Created on August 26, 2016, 12:55 PM
- * 
- * Almost all the zlib code was taken from http://www.zlib.net/zlib_how.html
- */
-
 #include "StpGeReader.h"
 #include "SignalData.h"
 #include "DataRow.h"
-#include "Hdf5Writer.h"
-#include "StreamChunkReader.h"
 #include "BasicSignalSet.h"
 
 #include <algorithm>

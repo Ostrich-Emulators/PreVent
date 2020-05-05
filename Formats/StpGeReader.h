@@ -14,13 +14,12 @@
 #define STPGEREADER_H
 
 #include "StpReaderBase.h"
-#include "StreamChunkReader.h"
+
 #include <map>
 #include <string>
 #include <memory>
 #include <istream>
 #include "zstr.hpp"
-#include "CircularBuffer.h"
 
 namespace FormatConverter {
   class SignalData;

@@ -28,12 +28,14 @@ namespace FormatConverter {
 
     virtual int prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) override;
 
-    void setMetadataOnly( bool metasonly = true );
-    bool isMetadataOnly( ) const;
-    void finish( );
+    virtual void setMetadataOnly( bool metasonly = true );
+    virtual bool isMetadataOnly( ) const;
+    virtual void finish( );
 
   protected:
     std::string popString( size_t length );
+    std::string readString( size_t length);
+
     int popInt16( );
     int popInt8( );
     unsigned int popUInt8( );
