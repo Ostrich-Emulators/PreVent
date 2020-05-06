@@ -376,9 +376,22 @@ namespace FormatConverter{
     //    std::cout << "data end: " << el << std::endl;
     xmlpassthru * xml = (xmlpassthru*) data;
     if ( 0 == strcmp( "NumericCompound", el ) ) {
+      bool added = false;
+      auto& vital = xml->signals->addVital( xml->label, &added );
+      if ( added ) {
+        vital->setUom( xml->uom );
+        vital->setChunkIntervalAndSampleRate( 1024, 1 );
+      }
+      vital->add( DataRow( xml->currentTime, xml->value ) );
       std::cout << "save vital data: " << xml->currentTime << " " << xml->label << " (" << xml->uom << ") " << xml->value << std::endl;
     }
     else if ( 0 == strcmp( "WaveSegment", el ) ) {
+      bool added = false;
+      auto& wave = xml->signals->addWave( xml->label, &added );
+      if ( added ) {
+        wave->setChunkIntervalAndSampleRate( 1024, 1024 / std::stoi( xml->sampleperiod ) );
+      }
+      // wave->add( DataRow( xml->currentTime, xml->value ) );
       std::cout << "save wave data: " << xml->currentTime << " " << xml->label << " (" << xml->sampleperiod << ") " << xml->value << std::endl;
     }
     else if ( ParseState::WAVE == xml->state ) {
