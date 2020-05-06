@@ -35,6 +35,11 @@ namespace FormatConverter {
   private:
     static StpMetadata metaFromSignalSet( const std::unique_ptr<SignalSet>& );
 
+    enum ParseState {
+      UNINTERESTING, PATIENTINFO, NUMERICCOMPOUND, NUMERICVALUE, NUMERICATTR,
+      WAVE
+    };
+
     /**
      * Skips forward in the work buffer until the needle is at the head
      * @param needle
@@ -58,10 +63,22 @@ namespace FormatConverter {
      * @return
      */
     bool hasCompleteXmlDoc( std::string& doc, std::string& rootelement );
+    dr_time parseTime( const std::string& datetime );
 
-    bool firstread;
-    dr_time currentTime;
-    std::string currentPatientId;
+    ParseState state;
+
+    struct xmlpassthru {
+      std::unique_ptr<SignalSet>& signals;
+      ParseState state;
+      std::string currentText;
+      std::string currentPatientId;
+      std::string label;
+      std::string value;
+      std::string uom;
+      std::string sampleperiod;
+      dr_time currentTime;
+      StpPhilipsReader& outer;
+    };
 
     class PatientParser {
     public:

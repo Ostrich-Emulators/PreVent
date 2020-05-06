@@ -32,9 +32,9 @@
 
 namespace FormatConverter{
 
-  StpPhilipsReader::StpPhilipsReader( const std::string& name ) : StpReaderBase( name ), firstread( true ) { }
+  StpPhilipsReader::StpPhilipsReader( const std::string& name ) : StpReaderBase( name ) { }
 
-  StpPhilipsReader::StpPhilipsReader( const StpPhilipsReader& orig ) : StpReaderBase( orig ), firstread( orig.firstread ) { }
+  StpPhilipsReader::StpPhilipsReader( const StpPhilipsReader& orig ) : StpReaderBase( orig ) { }
 
   StpPhilipsReader::~StpPhilipsReader( ) { }
 
@@ -55,9 +55,10 @@ namespace FormatConverter{
       return ReadResult::ERROR;
     }
 
+    std::string patientId;
     while ( cnt > 0 ) {
       std::cout << "popped: " << work.popped( ) << "; work buffer size: " << work.size( ) << "; available:" << work.available( ) << std::endl;
-      if ( work.available( ) < 1024 * 512 ) {
+      if ( work.available( ) < 1024 * 768 ) {
         // we should never come close to filling up our work buffer
         // so if we have, make sure the user knows
         std::cerr << "work buffer is too full...something is going wrong" << std::endl;
@@ -72,7 +73,8 @@ namespace FormatConverter{
       while ( hasCompleteXmlDoc( xmldoc, rootelement ) && ChunkReadResult::OK == rslt ) {
         //output( ) << "next segment is " << std::dec << segsize << " bytes big" << std::endl;
         XML_Parser parser = XML_ParserCreate( NULL );
-        XML_SetUserData( parser, info.get( ) );
+        xmlpassthru passthru = { info, ParseState::UNINTERESTING, .outer = *this };
+        XML_SetUserData( parser, &passthru );
         //        output( ) << "root element is: " << rootelement << std::endl;
         //        output( ) << xmldoc << std::endl << std::endl;
         //        output( ) << "doc is " << xmldoc.length( ) << " big" << std::endl;
@@ -99,6 +101,16 @@ namespace FormatConverter{
         XML_ParserFree( parser );
         xmldoc.clear( );
         rootelement.clear( );
+
+        // FIXME: this puts the first data point of the new patient with the
+        // old patient's data! Check PatientId earlier, and rewind our buffer
+        // if we need to use END_OF_PATIENT
+        if ( patientId.empty( ) ) {
+          patientId = passthru.currentPatientId;
+        }
+        else if ( patientId != passthru.currentPatientId ) {
+          return ReadResult::END_OF_PATIENT;
+        }
       }
 
       xmldoc.clear( );
@@ -150,7 +162,7 @@ namespace FormatConverter{
   }
 
   bool StpPhilipsReader::hasCompleteXmlDoc( std::string& found, std::string& rootelement ) {
-    // ensure that our data has at least one xml header ("<?xml...>")
+    // ensure that our data has at least one xml header ("<?xml->..>")
     // and closes the root element (there is junk afterwards)
     if ( work.empty( ) ) {
       found = false;
@@ -281,37 +293,130 @@ namespace FormatConverter{
     return meta;
   }
 
+  dr_time StpPhilipsReader::parseTime( const std::string& datetime ) {
+    int y, M, d, h, m, s, ms;
+    int tzh = 0;
+    int tzm = 0;
+
+    int parsed = std::sscanf( datetime.c_str( ), "%d-%d-%dT%d:%d:%d.%dZ", &y, &M, &d, &h, &m, &s, &ms );
+    if ( parsed > 6 ) {
+      // got hours-based timezone, no 'Z'
+      if ( tzh < 0 ) {
+        tzm = -tzm;
+      }
+    }
+
+    tm time;
+    time.tm_year = y - 1900;
+    time.tm_mon = M - 1;
+    time.tm_mday = d;
+    time.tm_hour = h;
+    time.tm_min = m;
+    time.tm_sec = s;
+    time.tm_gmtoff = tzh;
+
+    time_t tt = mktime( &time );
+    dr_time newtime = tt * 1000 + ms;
+    return Reader::modtime( newtime );
+  }
+
   void StpPhilipsReader::PatientParser::start( void * data, const char * el, const char ** attr ) {
-    //    std::cout << "patient start: " << el << std::endl;
+    if ( 0 == strcmp( "PatientInfo", el ) ) {
+      ( (xmlpassthru*) data )->state = ParseState::PATIENTINFO;
+    }
   }
 
   void StpPhilipsReader::PatientParser::end( void * data, const char * el ) {
-    //    std::cout << "patient end: " << el << std::endl;
+    xmlpassthru * xml = (xmlpassthru*) data;
+    if ( ParseState::PATIENTINFO == xml->state ) {
+      if ( 0 == strcmp( "Id", el ) ) {
+        xml->currentPatientId = xml->currentText;
+      }
+      else if ( 0 == strcmp( "DisplayName", el ) ) {
+        xml->signals->setMeta( "Patient Name", xml->currentText );
+      }
+      else if ( 0 == strcmp( "DateOfBirth", el ) ) {
+        xml->signals->setMeta( "DOB", std::to_string( xml->outer.parseTime( xml->currentText ) ) );
+        xml->signals->setMeta( el, xml->currentText );
+      }
+      else if ( 0 == strcmp( "PrimaryId", el ) || 0 == strcmp( "LifetimeId", el ) ) {
+        xml->signals->setMeta( el, xml->currentText );
+      }
+    }
+    else {
+      xml->state = ParseState::UNINTERESTING;
+    }
   }
 
   void StpPhilipsReader::PatientParser::chars( void * data, const char * text, int len ) {
     std::string chardata( text, len );
     SignalUtils::trim( chardata );
     if ( !chardata.empty( ) ) {
-      //      std::cout << "patient chars:" << chardata << std::endl;
+      ( *(xmlpassthru*) data ).currentText = chardata;
     }
   }
 
   void StpPhilipsReader::DataParser::start( void * data, const char * el, const char ** attr ) {
-    //    std::cout << "data start: " << el << std::endl;
+    xmlpassthru * xml = (xmlpassthru*) data;
+    if ( 0 == strcmp( "NumericCompound", el ) ) {
+      xml->state = ParseState::NUMERICCOMPOUND;
+    }
+    else if ( 0 == strcmp( "NumericValue", el ) ) {
+      xml->state = ParseState::NUMERICVALUE;
+    }
+    else if ( 0 == strcmp( "NumericAttribute", el ) ) {
+      xml->state = ParseState::NUMERICATTR;
+    }
+    else if ( 0 == strcmp( "Wave", el ) ) {
+      xml->state = ParseState::WAVE;
+    }
   }
 
   void StpPhilipsReader::DataParser::end( void * data, const char * el ) {
     //    std::cout << "data end: " << el << std::endl;
+    xmlpassthru * xml = (xmlpassthru*) data;
+    if ( 0 == strcmp( "NumericCompound", el ) ) {
+      std::cout << "save vital data: " << xml->currentTime << " " << xml->label << " (" << xml->uom << ") " << xml->value << std::endl;
+    }
+    else if ( 0 == strcmp( "WaveSegment", el ) ) {
+      std::cout << "save wave data: " << xml->currentTime << " " << xml->label << " (" << xml->sampleperiod << ") " << xml->value << std::endl;
+    }
+    else if ( ParseState::WAVE == xml->state ) {
+      if ( 0 == strcmp( "Label", el ) ) {
+        xml->label = xml->currentText;
+      }
+      else if ( 0 == strcmp( "SamplePeriod", el ) ) {
+        xml->sampleperiod = xml->currentText;
+      }
+      else if ( 0 == strcmp( "WaveSamples", el ) ) {
+        xml->value = xml->currentText;
+      }
+    }
+    else if ( ParseState::NUMERICCOMPOUND == xml->state ) {
+      if ( 0 == strcmp( "Time", el ) ) {
+        xml->currentTime = xml->outer.parseTime( xml->currentText );
+      }
+    }
+    else if ( ParseState::NUMERICVALUE == xml->state ) {
+      if ( 0 == strcmp( "Label", el ) ) {
+        xml->label = xml->currentText;
+      }
+      else if ( 0 == strcmp( "Value", el ) ) {
+        xml->value = xml->currentText;
+      }
+    }
+    else if ( ParseState::NUMERICATTR == xml->state ) {
+      if ( 0 == strcmp( "UnitLabel", el ) ) {
+        xml->uom = xml->currentText;
+      }
+    }
+    else {
+      xml->state = ParseState::UNINTERESTING;
+    }
   }
 
   void StpPhilipsReader::DataParser::chars( void * data, const char * text, int len ) {
-    std::string chardata( text, len );
-    SignalUtils::trim( chardata );
-    if ( !chardata.empty( ) ) {
-      //      std::cout << "data chars:" << chardata << std::endl;
-    }
-
+    return PatientParser::chars( data, text, len );
   }
 }
 
