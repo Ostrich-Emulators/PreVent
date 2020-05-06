@@ -44,7 +44,7 @@ namespace FormatConverter{
   }
 
   ReadResult StpPhilipsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
-    //output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
+    output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
     if ( ReadResult::END_OF_PATIENT == lastrr ) {
       info->setMeta( "Patient Name", "" ); // reset the patient name
@@ -55,10 +55,9 @@ namespace FormatConverter{
       return ReadResult::ERROR;
     }
 
-    XML_Parser parser = XML_ParserCreate( NULL );
-    XML_SetUserData( parser, info.get( ) );
     while ( cnt > 0 ) {
-      if ( work.available( ) < 1024 * 768 ) {
+      std::cout << "popped: " << work.popped( ) << "; work buffer size: " << work.size( ) << "; available:" << work.available( ) << std::endl;
+      if ( work.available( ) < 1024 * 512 ) {
         // we should never come close to filling up our work buffer
         // so if we have, make sure the user knows
         std::cerr << "work buffer is too full...something is going wrong" << std::endl;
@@ -72,18 +71,19 @@ namespace FormatConverter{
 
       while ( hasCompleteXmlDoc( xmldoc, rootelement ) && ChunkReadResult::OK == rslt ) {
         //output( ) << "next segment is " << std::dec << segsize << " bytes big" << std::endl;
-        output( ) << "root element is: " << rootelement << std::endl;
-        output( ) << xmldoc << std::endl << std::endl;
+        XML_Parser parser = XML_ParserCreate( NULL );
+        XML_SetUserData( parser, info.get( ) );
+        //        output( ) << "root element is: " << rootelement << std::endl;
+        //        output( ) << xmldoc << std::endl << std::endl;
+        //        output( ) << "doc is " << xmldoc.length( ) << " big" << std::endl;
 
         if ( "PatientUpdateResponse" == rootelement ) {
           XML_SetElementHandler( parser, StpPhilipsReader::PatientParser::start, StpPhilipsReader::PatientParser::end );
           XML_SetCharacterDataHandler( parser, StpPhilipsReader::PatientParser::chars );
-          XML_SetCommentHandler( parser, StpPhilipsReader::PatientParser::comment );
         }
         else {
           XML_SetElementHandler( parser, StpPhilipsReader::DataParser::start, StpPhilipsReader::DataParser::end );
           XML_SetCharacterDataHandler( parser, StpPhilipsReader::DataParser::chars );
-          XML_SetCommentHandler( parser, StpPhilipsReader::DataParser::comment );
         }
 
         XML_Status status = XML_Parse( parser, xmldoc.c_str( ), xmldoc.length( ), true );
@@ -96,7 +96,7 @@ namespace FormatConverter{
           return ReadResult::ERROR;
         }
 
-
+        XML_ParserFree( parser );
         xmldoc.clear( );
         rootelement.clear( );
       }
@@ -119,7 +119,6 @@ namespace FormatConverter{
       processOneChunk( info, work.size( ) );
     }
 
-    XML_ParserFree( parser );
     return ReadResult::END_OF_FILE;
   }
 
@@ -130,10 +129,9 @@ namespace FormatConverter{
       }
 
       // found the first character, so see if we found the whole string
-      size_t start = work.popped( ) - 1;
       std::string str = readString( needle.size( ) - 1 );
       if ( needle.substr( 1 ) == str ) {
-        work.rewind( work.popped( ) - start );
+        work.rewind( ); // rewind to the first character
         break;
       }
     }
@@ -154,7 +152,6 @@ namespace FormatConverter{
   bool StpPhilipsReader::hasCompleteXmlDoc( std::string& found, std::string& rootelement ) {
     // ensure that our data has at least one xml header ("<?xml...>")
     // and closes the root element (there is junk afterwards)
-
     if ( work.empty( ) ) {
       found = false;
       return "";
@@ -167,17 +164,16 @@ namespace FormatConverter{
       skipUntil( "<?xml" );
       size_t xmlstart = work.popped( ) - markpop;
 
-      work.skip( );
+      work.skip( ); // skip the '<' of <?xml
       skipUntil( "<" ); // find the root element
-      size_t startElement = work.popped( ) + 1;
+      size_t rootElementNameStart = work.popped( ) + 1;
       skipUntil( ">" );
-      size_t endElement = work.popped( );
+      size_t rootElementNameStop = work.popped( );
 
-      work.rewind( endElement - startElement );
-      std::string rootline = popString( endElement - startElement );
+      size_t rootElementNameLength = ( rootElementNameStop - rootElementNameStart );
+      work.rewind( rootElementNameLength );
 
-      // FIXME: stop at the first space
-      auto rootpieces = SignalUtils::splitcsv( rootline, ' ' );
+      auto rootpieces = SignalUtils::splitcsv( popString( rootElementNameLength ), ' ' );
       rootelement.append( rootpieces[0] );
 
       std::string endneedle( "</" + rootelement + ">" );
@@ -189,7 +185,9 @@ namespace FormatConverter{
       work.rewindToMark( );
       work.skip( xmlstart );
 
-      std::string temp( popString( xmlend - xmlstart ) );
+      size_t doclength = ( ( xmlend - markpop ) - xmlstart );
+      std::string temp( popString( doclength ) );
+
       if ( temp[temp.size( ) - 1] != '>' ) {
         // FIXME: why do we end up with one extra character on every
         // read but the first?!
@@ -197,6 +195,8 @@ namespace FormatConverter{
         temp.erase( temp.size( ) - 1 );
       }
 
+      //std::cout << "\tmark at: " << markpop << "; " << xmlstart << " bytes of junk first; xml doc: "
+      //    << ( markpop + xmlstart ) << "-" << xmlend << " (popped: " << work.popped( ) << ")" << std::endl;
       found.append( temp );
       ok = true;
     }
@@ -205,6 +205,7 @@ namespace FormatConverter{
       // don't really care, but don't throw anything, and rewind so we can
       // fill in more data later without losing what we have in the chute
       work.rewindToMark( );
+      //std::cout << "\trewound to " << work.popped( ) << std::endl;
     }
 
     return ok;
@@ -281,40 +282,36 @@ namespace FormatConverter{
   }
 
   void StpPhilipsReader::PatientParser::start( void * data, const char * el, const char ** attr ) {
-    std::cout << "patient start: " << el << std::endl;
+    //    std::cout << "patient start: " << el << std::endl;
   }
 
   void StpPhilipsReader::PatientParser::end( void * data, const char * el ) {
-    std::cout << "patient end: " << el << std::endl;
+    //    std::cout << "patient end: " << el << std::endl;
   }
 
   void StpPhilipsReader::PatientParser::chars( void * data, const char * text, int len ) {
     std::string chardata( text, len );
     SignalUtils::trim( chardata );
     if ( !chardata.empty( ) ) {
-      std::cout << "patient chars:" << chardata << std::endl;
+      //      std::cout << "patient chars:" << chardata << std::endl;
     }
   }
 
-  void StpPhilipsReader::PatientParser::comment( void * data, const char * text ) { }
-
   void StpPhilipsReader::DataParser::start( void * data, const char * el, const char ** attr ) {
-    std::cout << "data start: " << el << std::endl;
+    //    std::cout << "data start: " << el << std::endl;
   }
 
   void StpPhilipsReader::DataParser::end( void * data, const char * el ) {
-    std::cout << "data end: " << el << std::endl;
+    //    std::cout << "data end: " << el << std::endl;
   }
 
   void StpPhilipsReader::DataParser::chars( void * data, const char * text, int len ) {
     std::string chardata( text, len );
     SignalUtils::trim( chardata );
     if ( !chardata.empty( ) ) {
-      std::cout << "data chars:" << chardata << std::endl;
+      //      std::cout << "data chars:" << chardata << std::endl;
     }
 
   }
-
-  void StpPhilipsReader::DataParser::comment( void * data, const char * text ) { }
 }
 

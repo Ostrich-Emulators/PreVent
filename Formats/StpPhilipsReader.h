@@ -68,7 +68,6 @@ namespace FormatConverter {
       static void start( void * data, const char * el, const char ** attr );
       static void end( void * data, const char * el );
       static void chars( void * data, const char * text, int len );
-      static void comment( void * data, const char * text );
     };
 
     class DataParser {
@@ -76,7 +75,6 @@ namespace FormatConverter {
       static void start( void * data, const char * el, const char ** attr );
       static void end( void * data, const char * el );
       static void chars( void * data, const char * text, int len );
-      static void comment( void * data, const char * text );
     };
   };
 }
