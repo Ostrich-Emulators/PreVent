@@ -64,8 +64,11 @@ namespace FormatConverter {
      */
     bool hasCompleteXmlDoc( std::string& doc, std::string& rootelement );
     dr_time parseTime( const std::string& datetime );
+    static std::string peekPatientId( const std::string& xmldoc, bool ispatientdoc );
+    dr_time peekTime( const std::string& xmldoc );
 
     ParseState state;
+    dr_time currentTime;
 
     struct xmlpassthru {
       std::unique_ptr<SignalSet>& signals;
