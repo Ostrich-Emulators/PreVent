@@ -87,7 +87,7 @@ namespace FormatConverter{
     std::string patientId;
     int loopcounter = 0;
     while ( cnt > 0 ) {
-      if ( 0 == loopcounter % 1000 ) {
+      if ( 0 == loopcounter % 3000 ) {
         std::cout << "(loop " << loopcounter << ") popped: " << work.popped( ) << "; work buffer size: " << work.size( ) << "; available:" << work.available( ) << std::endl;
       }
       loopcounter++;
@@ -107,6 +107,9 @@ namespace FormatConverter{
       size_t beforecheck = work.popped( );
       while ( hasCompleteXmlDoc( xmldoc, rootelement ) && ChunkReadResult::OK == rslt ) {
         //output( ) << "next segment is " << std::dec << segsize << " bytes big" << std::endl;
+        //        if ( 2213001668L <= work.popped( ) ) {
+        //          std::cout << "get ready: " << work.popped( ) << " " << work.size( ) << std::endl;
+        //        }
 
         bool isPatientDoc = ( "PatientUpdateResponse" == rootelement );
 
@@ -163,6 +166,9 @@ namespace FormatConverter{
         rootelement.clear( );
 
         beforecheck = work.popped( );
+        //        if ( 2213001668L <= work.popped( ) ) {
+        //          std::cout << "get ready: " << work.popped( ) << " " << work.size( ) << std::endl;
+        //        }
       }
 
       xmldoc.clear( );
@@ -221,8 +227,7 @@ namespace FormatConverter{
     // ensure that our data has at least one xml header ("<?xml->..>")
     // and closes the root element (there is junk afterwards)
     if ( work.empty( ) ) {
-      found = false;
-      return "";
+      return false;
     }
 
     bool ok = false;
@@ -444,14 +449,14 @@ namespace FormatConverter{
         vital->setChunkIntervalAndSampleRate( 1024, 1 );
       }
 
-      if ( xml->value != "NaN" ) {
-        //        try {
-        //          std::stoi( xml->value );
-        //        }
-        //        catch ( std::exception& ex ) {
-        //          std::cout << "eRRror! " << ex.what( ) << std::endl << "value: " << xml->value << std::endl;
-        //        }
+      // we call stoi to ensure we have an actual value
+      // ...if an exception is thrown, just move on
+      try {
+        std::stoi( xml->value );
         vital->add( DataRow( xml->currentTime, xml->value ) );
+      }
+      catch ( std::exception& ex ) {
+        // don't care
       }
       //std::cout << "save vital data: " << xml->currentTime << " " << xml->label << " (" << xml->uom << ") " << xml->value << std::endl;
     }
