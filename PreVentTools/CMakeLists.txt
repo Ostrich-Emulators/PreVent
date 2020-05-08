@@ -4,7 +4,6 @@ H5Cat.cpp
 main.cpp
 OutputSignalData.cpp
 StatisticalSignalData.cpp
-NullSignalData.cpp
 AppendingUtils.cpp
 )
 

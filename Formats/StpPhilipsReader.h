@@ -69,6 +69,7 @@ namespace FormatConverter {
 
     ParseState state;
     dr_time currentTime;
+    bool wavewarning;
 
     struct xmlpassthru {
       std::unique_ptr<SignalSet>& signals;
@@ -95,6 +96,12 @@ namespace FormatConverter {
       static void start( void * data, const char * el, const char ** attr );
       static void end( void * data, const char * el );
       static void chars( void * data, const char * text, int len );
+    private:
+      static const std::string NUMERIC_CMPD;
+      static const std::string NUMERIC_ATTR;
+      static const std::string NUMERIC_VAL;
+      static const std::string WAVE;
+      static const std::string WAVE_SEG;
     };
   };
 }

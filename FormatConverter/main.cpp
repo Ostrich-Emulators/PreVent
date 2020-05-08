@@ -32,44 +32,44 @@ using namespace FormatConverter;
 
 void helpAndExit( char * progname, std::string msg = "" ) {
   std::cerr << msg << std::endl
-          << "Syntax: " << progname << " --to <format> <file>..."
-          << std::endl << "\t-f or --from <input format>"
-          << std::endl << "\t-t or --to <output format>"
-          << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
-          << std::endl << "\t-s or --sqlite <db file>"
-          << std::endl << "\t-q or --quiet"
-          << std::endl << "\t-1 or --stop-after-one"
-          << std::endl << "\t-l or --localtime"
-          << std::endl << "\t-Z or --offset <time string (MM/DD/YYYY) or seconds since 01/01/1970>"
-          << std::endl << "\t-S or --opening-date <time string (MM/DD/YYYY) or seconds since 01/01/1970>"
-          << std::endl << "\t-p or --pattern <naming pattern>"
-          << std::endl << "\t-n or --no-break or --one-file"
-          << std::endl << "\t-C or --no-cache"
-          << std::endl << "\t-T or --time-step (store timing information as offset from start of file"
-          << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
-          << std::endl << "\t-R or --release (show release information and exit)"
-          << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, cpcxml, stpjson, tdms, medi, dwc, zl"
-          << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
-          << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
-          << std::endl << "\tthe --pattern option recognizes these format specifiers:"
-          << std::endl << "\t  %p - patient ordinal"
-          << std::endl << "\t  %i - input filename (without directory or extension)"
-          << std::endl << "\t  %d - input directory (with trailing separator)"
-          << std::endl << "\t  %C - current directory (with trailing separator)"
-          << std::endl << "\t  %x - input extension"
-          << std::endl << "\t  %m - modified date of input file"
-          << std::endl << "\t  %c - creation date of input file"
-          << std::endl << "\t  %D - date of conversion"
-          << std::endl << "\t  %s - date of first data point"
-          << std::endl << "\t  %e - date of last data point"
-          << std::endl << "\t  %o - output file ordinal"
-          << std::endl << "\t  %t - the --to option's extension (e.g., hdf5, csv)"
-          << std::endl << "\t  all dates are output in YYYYMMDD format"
-          << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file (or pattern)"
-          << std::endl << "\tthe --offset option will shift dates by the desired amount"
-          << std::endl << "\tthe --opening-date option will shift dates so that the first time in the output is the given date"
-          << std::endl << "\tif file is -, stdin is read for input"
-          << std::endl << std::endl;
+      << "Syntax: " << progname << " --to <format> <file>..."
+      << std::endl << "\t-f or --from <input format>"
+      << std::endl << "\t-t or --to <output format>"
+      << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
+      << std::endl << "\t-s or --sqlite <db file>"
+      << std::endl << "\t-q or --quiet"
+      << std::endl << "\t-1 or --stop-after-one"
+      << std::endl << "\t-l or --localtime"
+      << std::endl << "\t-Z or --offset <time string (MM/DD/YYYY) or seconds since 01/01/1970>"
+      << std::endl << "\t-S or --opening-date <time string (MM/DD/YYYY) or seconds since 01/01/1970>"
+      << std::endl << "\t-p or --pattern <naming pattern>"
+      << std::endl << "\t-n or --no-break or --one-file"
+      << std::endl << "\t-C or --no-cache"
+      << std::endl << "\t-T or --time-step (store timing information as offset from start of file"
+      << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
+      << std::endl << "\t-R or --release (show release information and exit)"
+      << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, cpcxml, stpjson, tdms, medi, dwc, zl"
+      << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
+      << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
+      << std::endl << "\tthe --pattern option recognizes these format specifiers:"
+      << std::endl << "\t  %p - patient ordinal"
+      << std::endl << "\t  %i - input filename (without directory or extension)"
+      << std::endl << "\t  %d - input directory (with trailing separator)"
+      << std::endl << "\t  %C - current directory (with trailing separator)"
+      << std::endl << "\t  %x - input extension"
+      << std::endl << "\t  %m - modified date of input file"
+      << std::endl << "\t  %c - creation date of input file"
+      << std::endl << "\t  %D - date of conversion"
+      << std::endl << "\t  %s - date of first data point"
+      << std::endl << "\t  %e - date of last data point"
+      << std::endl << "\t  %o - output file ordinal"
+      << std::endl << "\t  %t - the --to option's extension (e.g., hdf5, csv)"
+      << std::endl << "\t  all dates are output in YYYYMMDD format"
+      << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file (or pattern)"
+      << std::endl << "\tthe --offset option will shift dates by the desired amount"
+      << std::endl << "\tthe --opening-date option will shift dates so that the first time in the output is the given date"
+      << std::endl << "\tif file is -, stdin is read for input"
+      << std::endl << std::endl;
   exit( 1 );
 }
 
@@ -185,8 +185,8 @@ int main( int argc, char** argv ) {
 
   if ( !Options::asBool( OptionsKey::QUIET ) ) {
     std::cout << argv[0] << " version " << FC_VERS_MAJOR
-            << "." << FC_VERS_MINOR << "." << FC_VERS_MICRO
-            << "; build " << GIT_BUILD << std::endl;
+        << "." << FC_VERS_MINOR << "." << FC_VERS_MICRO
+        << "; build " << GIT_BUILD << std::endl;
   }
 
   if ( ( optind + 1 ) > argc ) {
@@ -243,6 +243,7 @@ int main( int argc, char** argv ) {
       case FormatConverter::DWC:
         fromstr = "dwc";
         break;
+      case FormatConverter::NOOP:
       case FormatConverter::UNRECOGNIZED:
         fromstr = "";
         break;
@@ -269,8 +270,8 @@ int main( int argc, char** argv ) {
   // FIXME: if we're localizing time, then offsetstr should be assumed to be localtime
   dr_time offset = TimeParser::parse( offsetstr );
   TimeModifier timemod = ( offsetIsDesiredDate
-          ? TimeModifier::time( offset )
-          : TimeModifier::offset( offset ) );
+      ? TimeModifier::time( offset )
+      : TimeModifier::offset( offset ) );
 
   std::unique_ptr<Reader> from;
   std::unique_ptr<Writer> to;
@@ -322,8 +323,8 @@ int main( int argc, char** argv ) {
     std::string input( argv[i] );
     to->filenamer( ).inputfilename( input );
     std::cout << "converting " << input
-            << " from " << fromstr
-            << " to " << tostr << std::endl;
+        << " from " << fromstr
+        << " to " << tostr << std::endl;
 
     if ( from->prepare( input, data ) < 0 ) {
       std::cerr << "could not prepare file for reading" << std::endl;

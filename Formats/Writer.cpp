@@ -10,6 +10,7 @@
 #include "WfdbWriter.h"
 #include "MatWriter.h"
 #include "CsvWriter.h"
+#include "NullWriter.h"
 #include "ConversionListener.h"
 #include "FileNamer.h"
 #include "OffsetTimeSignalSet.h"
@@ -52,7 +53,8 @@ namespace FormatConverter {
         return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV4 ) );
       case FormatConverter::CSV:
         return std::unique_ptr<Writer>( new CsvWriter( ) );
-
+      case FormatConverter::NOOP:
+        return std::unique_ptr<Writer>( new NullWriter( ) );
       default:
         throw "writer not yet implemented";
     }

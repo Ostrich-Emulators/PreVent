@@ -31,6 +31,11 @@
 #include <expat.h>
 
 namespace FormatConverter{
+  const std::string StpPhilipsReader::DataParser::NUMERIC_ATTR = "NumericAttribute";
+  const std::string StpPhilipsReader::DataParser::NUMERIC_CMPD = "NumericCompound";
+  const std::string StpPhilipsReader::DataParser::NUMERIC_VAL = "NumericValue";
+  const std::string StpPhilipsReader::DataParser::WAVE = "Wave";
+  const std::string StpPhilipsReader::DataParser::WAVE_SEG = "WaveSegment";
 
   StpPhilipsReader::StpPhilipsReader( const std::string& name ) : StpReaderBase( name ) { }
 
@@ -64,6 +69,7 @@ namespace FormatConverter{
 
   int StpPhilipsReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) {
     int rslt = StpReaderBase::prepare( filename, data );
+    wavewarning = false;
     return rslt;
   }
 
@@ -386,8 +392,7 @@ namespace FormatConverter{
 
   void StpPhilipsReader::PatientParser::start( void * data, const char * el, const char ** attr ) {
     if ( 0 == strcmp( "PatientInfo", el ) ) {
-      ( (
-          xmlpassthru*) data )->state = ParseState::PATIENTINFO;
+      ( (xmlpassthru*) data )->state = ParseState::PATIENTINFO;
     }
   }
 
@@ -424,16 +429,16 @@ namespace FormatConverter{
 
   void StpPhilipsReader::DataParser::start( void * data, const char * el, const char ** attr ) {
     xmlpassthru * xml = (xmlpassthru*) data;
-    if ( 0 == strcmp( "NumericCompound", el ) ) {
+    if ( NUMERIC_CMPD == el ) {
       xml->state = ParseState::NUMERICCOMPOUND;
     }
-    else if ( 0 == strcmp( "NumericValue", el ) ) {
+    else if ( NUMERIC_VAL == el ) {
       xml->state = ParseState::NUMERICVALUE;
     }
-    else if ( 0 == strcmp( "NumericAttribute", el ) ) {
+    else if ( NUMERIC_ATTR == el ) {
       xml->state = ParseState::NUMERICATTR;
     }
-    else if ( 0 == strcmp( "Wave", el ) ) {
+    else if ( WAVE == el ) {
       xml->state = ParseState::WAVE;
     }
   }
@@ -441,7 +446,7 @@ namespace FormatConverter{
   void StpPhilipsReader::DataParser::end( void * data, const char * el ) {
     //    std::cout << "data end: " << el << std::endl;
     xmlpassthru * xml = (xmlpassthru*) data;
-    if ( 0 == strcmp( "NumericCompound", el ) ) {
+    if ( NUMERIC_CMPD == el ) {
       bool added = false;
       auto& vital = xml->signals->addVital( xml->label, &added );
       if ( added ) {
@@ -460,28 +465,34 @@ namespace FormatConverter{
       }
       //std::cout << "save vital data: " << xml->currentTime << " " << xml->label << " (" << xml->uom << ") " << xml->value << std::endl;
     }
-    else if ( 0 == strcmp( "WaveSegment", el ) ) {
-      bool added = false;
-      auto& wave = xml->signals->addWave( xml->label, &added );
-      if ( added ) {
-        if ( !xml->uom.empty( ) ) {
-          wave->setUom( xml->uom );
-        }
-        wave->setChunkIntervalAndSampleRate( 1024, 1024 / std::stoi( xml->sampleperiod ) );
+    else if ( WAVE_SEG == el ) {
+      if ( !xml->outer.wavewarning ) {
+        xml->outer.wavewarning = true;
+        xml->outer.output( ) << "Warning: waveform data parsing is not yet implemented" << std::endl;
       }
 
-      std::string vals;
-      for ( size_t i = 0; i < xml->value.size( ); i += 4 ) {
-        int val = std::stoi( "0x" + xml->value.substr( i, 2 ), nullptr, 16 );
-
-        if ( !vals.empty( ) ) {
-          vals.append( "," );
-        }
-        vals.append( std::to_string( val ) );
-      }
-
-      wave->add( DataRow( xml->currentTime, vals ) );
-      //std::cout << "save wave data: " << xml->currentTime << " " << xml->label << " (" << xml->sampleperiod << ") " << xml->value << std::endl;
+      //      bool added = false;
+      //      auto& wave = xml->signals->addWave( xml->label, &added );
+      //      if ( added ) {
+      //        if ( !xml->uom.empty( ) ) {
+      //          wave->setUom( xml->uom );
+      //        }
+      //        wave->setChunkIntervalAndSampleRate( 1024, 1024 / std::stoi( xml->sampleperiod ) );
+      //      }
+      //
+      //      std::string vals;
+      //      std::string_view view( xml->value );
+      //      for ( size_t i = 0; i < xml->value.size( ); i += 4 ) {
+      //        int val = std::stoi( xml->value.substr( i, 2 ), nullptr, 16 );
+      //
+      //        if ( !vals.empty( ) ) {
+      //          vals.append( "," );
+      //        }
+      //        vals.append( std::to_string( val ) );
+      //      }
+      //
+      //      wave->add( DataRow( xml->currentTime, vals ) );
+      //      //std::cout << "save wave data: " << xml->currentTime << " " << xml->label << " (" << xml->sampleperiod << ") " << xml->value << std::endl;
     }
     else if ( 0 == strcmp( "PatientId", el ) ) {
       xml->currentPatientId = xml->currentText;

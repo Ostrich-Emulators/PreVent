@@ -11,14 +11,11 @@
 
 namespace FormatConverter{
 
-  Formats::~Formats( ) {
-  }
+  Formats::~Formats( ) { }
 
-  Formats::Formats( ) {
-  }
+  Formats::Formats( ) { }
 
-  Formats::Formats( const Formats& ) {
-  }
+  Formats::Formats( const Formats& ) { }
 
   Format Formats::getValue( const std::string& fmt ) {
     if ( "wfdb" == fmt ) {
@@ -57,14 +54,21 @@ namespace FormatConverter{
     if ( "tdms" == fmt || "medi" == fmt ) {
       return MEDI;
     }
-    if( "dwc" == fmt ){
+    if ( "dwc" == fmt ) {
       return DWC;
+    }
+    if ( "noop" == fmt ) {
+      return NOOP;
     }
 
     return UNRECOGNIZED;
   }
 
   Format Formats::guess( const std::string& filename ) {
+    if ( "noop" == filename ) {
+      return NOOP;
+    }
+
     int idx = filename.find_last_of( '.' );
     if ( idx > 0 ) {
       std::string suffix = filename.substr( idx + 1 );
@@ -92,7 +96,7 @@ namespace FormatConverter{
         return Format::STPP;
       }
       else if ( "stp" == suffix ) {
-        std::cout<<"\"stp\" interpreted as \"stpge\", use \"stpp\" for Philips version"<<std::endl;
+        std::cout << "\"stp\" interpreted as \"stpge\", use \"stpp\" for Philips version" << std::endl;
         return Format::STPGE;
       }
       else if ( "csv" == suffix ) {
@@ -104,7 +108,7 @@ namespace FormatConverter{
       else if ( "tdms" == suffix || "medi" == suffix ) {
         return Format::MEDI;
       }
-      else if( "info" == suffix ){
+      else if ( "info" == suffix ) {
         return Format::DWC;
       }
     }

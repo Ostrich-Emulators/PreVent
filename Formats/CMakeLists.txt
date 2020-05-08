@@ -77,6 +77,8 @@ StpReaderBase.cpp
 StpGeReader.cpp
 StpPhilipsReader.cpp
 DwcReader.cpp
+NullWriter.cpp
+NullSignalData.cpp
 generated/config.h
 generated/releases.h
 )
@@ -150,5 +152,7 @@ DwcReader.h
 zstr.hpp
 strict_fstream.hpp
 CircularBuffer.h
+NullWriter.h
+NullSignalData.h
 generated/releases.h
 DESTINATION ${include_dest} )
