@@ -33,6 +33,10 @@ namespace FormatConverter {
     virtual int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
 
   private:
+    static const std::string XML_HEADER;
+    static const std::string LT;
+    static const std::string GT;
+
     static StpMetadata metaFromSignalSet( const std::unique_ptr<SignalSet>& );
 
     enum ParseState {
@@ -53,8 +57,6 @@ namespace FormatConverter {
     static const std::map<int, std::string> WAVELABELS;
 
     StpPhilipsReader( const StpPhilipsReader& orig );
-    ChunkReadResult processOneChunk( std::unique_ptr<SignalSet>&, const size_t& maxread );
-    dr_time popTime( );
 
     /**
      * determines if the work buffer has at least one full XML doc in it
@@ -63,9 +65,9 @@ namespace FormatConverter {
      * @return
      */
     bool hasCompleteXmlDoc( std::string& doc, std::string& rootelement );
-    dr_time parseTime( const std::string& datetime );
-    static std::string peekPatientId( const std::string& xmldoc, bool ispatientdoc );
-    dr_time peekTime( const std::string& xmldoc );
+    dr_time parseTime( const std::string_view& datetime );
+    static std::string_view peekPatientId( const std::string& xmldoc, bool ispatientdoc );
+    dr_time peekTime( const std::string_view& xmldoc );
 
     ParseState state;
     dr_time currentTime;
@@ -89,6 +91,8 @@ namespace FormatConverter {
       static void start( void * data, const char * el, const char ** attr );
       static void end( void * data, const char * el );
       static void chars( void * data, const char * text, int len );
+    private:
+      static std::string xmltext;
     };
 
     class DataParser {

@@ -37,13 +37,17 @@ namespace FormatConverter{
   const std::string StpPhilipsReader::DataParser::WAVE = "Wave";
   const std::string StpPhilipsReader::DataParser::WAVE_SEG = "WaveSegment";
 
+  const std::string StpPhilipsReader::XML_HEADER = "<?xml ";
+  const std::string StpPhilipsReader::LT = "<";
+  const std::string StpPhilipsReader::GT = ">";
+
   StpPhilipsReader::StpPhilipsReader( const std::string& name ) : StpReaderBase( name ) { }
 
   StpPhilipsReader::StpPhilipsReader( const StpPhilipsReader& orig ) : StpReaderBase( orig ) { }
 
   StpPhilipsReader::~StpPhilipsReader( ) { }
 
-  std::string StpPhilipsReader::peekPatientId( const std::string& xmldoc, bool ispatientdoc ) {
+  std::string_view StpPhilipsReader::peekPatientId( const std::string& xmldoc, bool ispatientdoc ) {
     size_t start;
     size_t end;
     if ( ispatientdoc ) {
@@ -56,15 +60,23 @@ namespace FormatConverter{
       end = xmldoc.find( "</PatientId>", start );
     }
 
-    return xmldoc.substr( start, ( end - start ) );
+    std::string_view sv( xmldoc );
+    sv.remove_suffix( xmldoc.size( ) - end );
+    sv.remove_prefix( start );
+    return sv;
   }
 
-  dr_time StpPhilipsReader::peekTime( const std::string& xmldoc ) {
+  dr_time StpPhilipsReader::peekTime( const std::string_view& xmldoc ) {
     size_t start = xmldoc.find( "<Time>" ) + 6;
     size_t end = xmldoc.find( "</Time>", start );
-    return ( ( !( std::string::npos == start || std::string::npos == end ) )
-        ? parseTime( xmldoc.substr( start, ( end - start ) ) )
-        : 0 );
+
+    if ( !( std::string::npos == start || std::string::npos == end ) ) {
+      std::string_view sv( xmldoc );
+      sv.remove_suffix( xmldoc.size( ) - end );
+      sv.remove_suffix( start );
+      return parseTime( sv );
+    }
+    return 0;
   }
 
   int StpPhilipsReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) {
@@ -122,7 +134,7 @@ namespace FormatConverter{
 
         // if the patient has changed, we need to end this read before processing
         // the XML fully. Same goes with the rollover check
-        std::string newpatientid = peekPatientId( xmldoc, isPatientDoc );
+        std::string_view newpatientid = peekPatientId( xmldoc, isPatientDoc );
         if ( patientId.empty( ) ) {
           patientId = newpatientid;
         }
@@ -168,8 +180,6 @@ namespace FormatConverter{
         }
 
         XML_ParserFree( parser );
-        xmldoc.clear( );
-        rootelement.clear( );
 
         beforecheck = work.popped( );
         //        if ( 2213001668L <= work.popped( ) ) {
@@ -177,8 +187,6 @@ namespace FormatConverter{
         //        }
       }
 
-      xmldoc.clear( );
-      rootelement.clear( );
       cnt = readMore( );
       if ( cnt < 0 ) {
         return ReadResult::ERROR;
@@ -191,42 +199,27 @@ namespace FormatConverter{
 
     // if we still have stuff in our work buffer, process it
     if ( !work.empty( ) ) {
-      //output( ) << "still have stuff in our work buffer!" << std::endl;
-
-      processOneChunk( info, work.size( ) );
+      output( ) << "still have stuff in our work buffer!" << std::endl;
     }
 
     return ReadResult::END_OF_FILE;
   }
 
   void StpPhilipsReader::skipUntil( const std::string& needle ) {
+    // we'll work with views to reduce string copies
+    std::string_view view( needle );
     while ( !work.empty( ) ) {
-      while ( work.pop( ) != needle[0] ) {
+      while ( work.pop( ) != view[0] ) {
         // nothing to do here, just wanted to pop
       }
 
       // found the first character, so see if we found the whole string
-      std::string str = readString( needle.size( ) - 1 );
-      if ( needle.substr( 1 ) == str ) {
+      if ( view.substr( 1 ) == readString( needle.size( ) - 1 ) ) {
+        // found!
         work.rewind( ); // rewind to the first character
-
         break;
       }
     }
-  }
-
-  StpPhilipsReader::ChunkReadResult StpPhilipsReader::processOneChunk( std::unique_ptr<SignalSet>& info,
-      const size_t& maxread ) {
-
-    return ChunkReadResult::OK;
-  }
-
-  dr_time StpPhilipsReader::popTime( ) {
-    // time is in little-endian format
-    auto shorts = work.popvec( 4 );
-    time_t time = ( ( shorts[1] << 24 ) | ( shorts[0] << 16 ) | ( shorts[3] << 8 ) | shorts[2] );
-
-    return time * 1000;
   }
 
   bool StpPhilipsReader::hasCompleteXmlDoc( std::string& found, std::string& rootelement ) {
@@ -240,24 +233,24 @@ namespace FormatConverter{
     work.mark( );
     size_t markpop = work.popped( );
     try {
-      skipUntil( "<?xml" );
+      skipUntil( XML_HEADER );
       size_t xmlstart = work.popped( ) - markpop;
 
       work.skip( ); // skip the '<' of <?xml
-      skipUntil( "<" ); // find the root element
+      skipUntil( LT ); // find the root element
       size_t rootElementNameStart = work.popped( ) + 1;
-      skipUntil( ">" );
+      skipUntil( GT );
       size_t rootElementNameStop = work.popped( );
 
       size_t rootElementNameLength = ( rootElementNameStop - rootElementNameStart );
       work.rewind( rootElementNameLength );
 
       auto rootpieces = SignalUtils::splitcsv( popString( rootElementNameLength ), ' ' );
-      rootelement.append( rootpieces[0] );
+      rootelement.assign( rootpieces[0] );
 
       std::string endneedle( "</" + rootelement + ">" );
       skipUntil( endneedle );
-      skipUntil( ">" );
+      skipUntil( GT );
       work.skip( );
       size_t xmlend = work.popped( );
 
@@ -276,7 +269,7 @@ namespace FormatConverter{
 
       //std::cout << "\tmark at: " << markpop << "; " << xmlstart << " bytes of junk first; xml doc: "
       //    << ( markpop + xmlstart ) << "-" << xmlend << " (popped: " << work.popped( ) << ")" << std::endl;
-      found.append( temp );
+      found.assign( temp );
       ok = true;
     }
     catch ( const std::runtime_error& x ) {
@@ -362,12 +355,13 @@ namespace FormatConverter{
     return meta;
   }
 
-  dr_time StpPhilipsReader::parseTime( const std::string& datetime ) {
+  dr_time StpPhilipsReader::parseTime( const std::string_view& datetime ) {
     int y, M, d, h, m, s, ms;
     int tzh = 0;
     int tzm = 0;
 
-    int parsed = std::sscanf( datetime.c_str( ), "%d-%d-%dT%d:%d:%d.%dZ", &y, &M, &d, &h, &m, &s, &ms );
+    std::string strdata( datetime );
+    int parsed = std::sscanf( strdata.c_str( ), "%d-%d-%dT%d:%d:%d.%dZ", &y, &M, &d, &h, &m, &s, &ms );
     if ( parsed > 6 ) {
       // got hours-based timezone, no 'Z'
       if ( tzh < 0 ) {
@@ -420,11 +414,9 @@ namespace FormatConverter{
   }
 
   void StpPhilipsReader::PatientParser::chars( void * data, const char * text, int len ) {
-    std::string chardata( text, len );
-    SignalUtils::trim( chardata );
-    if ( !chardata.empty( ) ) {
-      ( *(xmlpassthru*) data ).currentText = chardata;
-    }
+    xmlpassthru * xml = (xmlpassthru*) data;
+    xml->currentText.assign( text, len );
+    //SignalUtils::trim( xml->currentText );
   }
 
   void StpPhilipsReader::DataParser::start( void * data, const char * el, const char ** attr ) {
