@@ -40,6 +40,12 @@ namespace FormatConverter{
   const std::string StpPhilipsReader::XML_HEADER = "<?xml ";
   const std::string StpPhilipsReader::LT = "<";
   const std::string StpPhilipsReader::GT = ">";
+  const std::string StpPhilipsReader::PATIENT_NAME = "Patient Name";
+  const std::string StpPhilipsReader::PATIENT_MRN = "MRN";
+  const std::string StpPhilipsReader::PATIENT_PRIMARYID = "PrimaryId";
+  const std::string StpPhilipsReader::PATIENT_LIFETIMEID = "LifetimeId";
+  const std::string StpPhilipsReader::PATIENT_DOB = "DOB";
+  const std::string StpPhilipsReader::PATIENT_DATEOFBIRTH = "Date of Birth";
 
   StpPhilipsReader::StpPhilipsReader( const std::string& name ) : StpReaderBase( name ) { }
 
@@ -70,13 +76,9 @@ namespace FormatConverter{
     size_t start = xmldoc.find( "<Time>" ) + 6;
     size_t end = xmldoc.find( "</Time>", start );
 
-    if ( !( std::string::npos == start || std::string::npos == end ) ) {
-      std::string_view sv( xmldoc );
-      sv.remove_suffix( xmldoc.size( ) - end );
-      sv.remove_suffix( start );
-      return parseTime( sv );
-    }
-    return 0;
+    return ( std::string::npos == start || std::string::npos == end )
+        ? 0
+        : parseTime( std::string( xmldoc.substr( start, ( end - start ) ) ) );
   }
 
   int StpPhilipsReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) {
@@ -90,11 +92,11 @@ namespace FormatConverter{
     output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
     if ( ReadResult::END_OF_PATIENT == lastrr ) {
-      info->setMeta( "Patient Name", "" ); // reset the patient name
-      info->setMeta( "PrimaryId", "" );
-      info->setMeta( "LifetimeId", "" );
-      info->setMeta( "DOB", "" );
-      info->setMeta( "Date of Birth", "" );
+      info->setMeta( PATIENT_NAME, "" ); // reset the patient name
+      info->setMeta( PATIENT_PRIMARYID, "" );
+      info->setMeta( PATIENT_LIFETIMEID, "" );
+      info->setMeta( PATIENT_DOB, "" );
+      info->setMeta( PATIENT_DATEOFBIRTH, "" );
     }
 
     int cnt = StpReaderBase::readMore( );
@@ -102,13 +104,15 @@ namespace FormatConverter{
       return ReadResult::ERROR;
     }
 
+    std::string xmldoc;
+    std::string rootelement;
     std::string patientId;
-    int loopcounter = 0;
+    //    int loopcounter = 0;
     while ( cnt > 0 ) {
-      if ( 0 == loopcounter % 3000 ) {
-        std::cout << "(loop " << loopcounter << ") popped: " << work.popped( ) << "; work buffer size: " << work.size( ) << "; available:" << work.available( ) << std::endl;
-      }
-      loopcounter++;
+      //      if ( 0 == loopcounter % 3000 ) {
+      //        std::cout << "(loop " << loopcounter << ") popped: " << work.popped( ) << "; work buffer size: " << work.size( ) << "; available:" << work.available( ) << std::endl;
+      //      }
+      //      loopcounter++;
 
       if ( work.available( ) < 1024 * 768 ) {
         // we should never come close to filling up our work buffer
@@ -119,8 +123,6 @@ namespace FormatConverter{
 
       // read as many segments as we can before reading more data
       ChunkReadResult rslt = ChunkReadResult::OK;
-      std::string xmldoc;
-      std::string rootelement;
 
       size_t beforecheck = work.popped( );
       while ( hasCompleteXmlDoc( xmldoc, rootelement ) && ChunkReadResult::OK == rslt ) {
@@ -206,20 +208,48 @@ namespace FormatConverter{
   }
 
   void StpPhilipsReader::skipUntil( const std::string& needle ) {
-    // we'll work with views to reduce string copies
-    std::string_view view( needle );
-    while ( !work.empty( ) ) {
-      while ( work.pop( ) != view[0] ) {
-        // nothing to do here, just wanted to pop
-      }
+    CircularBuffer<char> haystack( needle.size( ) );
 
-      // found the first character, so see if we found the whole string
-      if ( view.substr( 1 ) == readString( needle.size( ) - 1 ) ) {
-        // found!
-        work.rewind( ); // rewind to the first character
-        break;
+    // fill our circular buffer to start
+    for ( size_t i = 0; i < needle.size( ); i++ ) {
+      haystack.push( (char) work.pop( ) );
+    }
+
+    // algorithm: walk through the characters in our work buffer
+    // if we get a (character) match, advance
+    // if we get a miss, roll the buffer, then go back to
+    // checking starting at position 0 again
+
+    size_t needlpos = 0;
+    while ( needlpos < needle.size( ) ) {
+      if ( needle[needlpos] == haystack.read( needlpos ) ) {
+        needlpos++;
+      }
+      else {
+        needlpos = 0;
+        haystack.pop( );
+        haystack.push( (char) work.pop( ) );
       }
     }
+
+    // if we get here before running out of buffer, we've found our string
+    // rewind to the beginning of the needle
+    work.rewind( needle.size( ) );
+
+
+    //    std::string_view view( needle );
+    //    while ( !work.empty( ) ) {
+    //      while ( work.pop( ) != view[0] ) {
+    //        // nothing to do here, just wanted to pop
+    //      }
+    //
+    //      // found the first character, so see if we found the whole string
+    //      if ( view.substr( 1 ) == readString( needle.size( ) - 1 ) ) {
+    //        // found!
+    //        work.rewind( ); // rewind to the first character
+    //        break;
+    //      }
+    //    }
   }
 
   bool StpPhilipsReader::hasCompleteXmlDoc( std::string& found, std::string& rootelement ) {
@@ -236,7 +266,7 @@ namespace FormatConverter{
       skipUntil( XML_HEADER );
       size_t xmlstart = work.popped( ) - markpop;
 
-      work.skip( ); // skip the '<' of <?xml
+      work.skip( XML_HEADER.size( ) ); // skip "<?xml" but not any other attributes
       skipUntil( LT ); // find the root element
       size_t rootElementNameStart = work.popped( ) + 1;
       skipUntil( GT );
@@ -247,11 +277,13 @@ namespace FormatConverter{
 
       auto rootpieces = SignalUtils::splitcsv( popString( rootElementNameLength ), ' ' );
       rootelement.assign( rootpieces[0] );
+      if ( 0 == elementClosings.count( rootelement ) ) {
+        elementClosings[rootelement] = "</" + rootelement + ">";
+      }
 
-      std::string endneedle( "</" + rootelement + ">" );
+      const std::string& endneedle = elementClosings[rootelement];
       skipUntil( endneedle );
-      skipUntil( GT );
-      work.skip( );
+      work.skip( endneedle.size( ) );
       size_t xmlend = work.popped( );
 
       work.rewindToMark( );
@@ -333,11 +365,11 @@ namespace FormatConverter{
 
   StpReaderBase::StpMetadata StpPhilipsReader::metaFromSignalSet( const std::unique_ptr<SignalSet>& info ) {
     StpReaderBase::StpMetadata meta;
-    if ( info->metadata( ).count( "Patient Name" ) > 0 ) {
-      meta.name = info->metadata( ).at( "Patient Name" );
+    if ( info->metadata( ).count( PATIENT_NAME ) > 0 ) {
+      meta.name = info->metadata( ).at( PATIENT_NAME );
     }
-    if ( info->metadata( ).count( "MRN" ) > 0 ) {
-      meta.mrn = info->metadata( ).at( "MRN" );
+    if ( info->metadata( ).count( PATIENT_MRN ) > 0 ) {
+      meta.mrn = info->metadata( ).at( PATIENT_MRN );
     }
 
     if ( info->offsets( ).size( ) > 0 ) {
@@ -355,18 +387,17 @@ namespace FormatConverter{
     return meta;
   }
 
-  dr_time StpPhilipsReader::parseTime( const std::string_view& datetime ) {
+  dr_time StpPhilipsReader::parseTime( const std::string& datetime ) {
     int y, M, d, h, m, s, ms;
     int tzh = 0;
-    int tzm = 0;
 
-    std::string strdata( datetime );
-    int parsed = std::sscanf( strdata.c_str( ), "%d-%d-%dT%d:%d:%d.%dZ", &y, &M, &d, &h, &m, &s, &ms );
-    if ( parsed > 6 ) {
-      // got hours-based timezone, no 'Z'
-      if ( tzh < 0 ) {
-        tzm = -tzm;
-      }
+    if ( std::string::npos == datetime.find( '.' ) ) {
+      // no ms
+      std::sscanf( datetime.c_str( ), "%d-%d-%dT%d:%d:%d%d", &y, &M, &d, &h, &m, &s, &tzh );
+      ms = 0;
+    }
+    else {
+      std::sscanf( datetime.c_str( ), "%d-%d-%dT%d:%d:%d.%dZ", &y, &M, &d, &h, &m, &s, &ms );
     }
 
     tm time;
@@ -397,11 +428,11 @@ namespace FormatConverter{
         xml->currentPatientId = xml->currentText;
       }
       else if ( 0 == strcmp( "DisplayName", el ) ) {
-        xml->signals->setMeta( "Patient Name", xml->currentText );
+        xml->signals->setMeta( PATIENT_NAME, xml->currentText );
       }
       else if ( 0 == strcmp( "DateOfBirth", el ) ) {
-        xml->signals->setMeta( "DOB", std::to_string( xml->outer.parseTime( xml->currentText ) ) );
-        xml->signals->setMeta( "Date of Birth", xml->currentText );
+        xml->signals->setMeta( PATIENT_DOB, std::to_string( xml->outer.parseTime( xml->currentText ) ) );
+        xml->signals->setMeta( PATIENT_DATEOFBIRTH, xml->currentText );
       }
       else if ( 0 == strcmp( "PrimaryId", el ) || 0 == strcmp( "LifetimeId", el ) ) {
         xml->signals->setMeta( el, xml->currentText );

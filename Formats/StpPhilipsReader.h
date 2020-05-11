@@ -36,6 +36,12 @@ namespace FormatConverter {
     static const std::string XML_HEADER;
     static const std::string LT;
     static const std::string GT;
+    static const std::string PATIENT_NAME;
+    static const std::string PATIENT_MRN;
+    static const std::string PATIENT_PRIMARYID;
+    static const std::string PATIENT_LIFETIMEID;
+    static const std::string PATIENT_DOB;
+    static const std::string PATIENT_DATEOFBIRTH;
 
     static StpMetadata metaFromSignalSet( const std::unique_ptr<SignalSet>& );
 
@@ -65,13 +71,14 @@ namespace FormatConverter {
      * @return
      */
     bool hasCompleteXmlDoc( std::string& doc, std::string& rootelement );
-    dr_time parseTime( const std::string_view& datetime );
+    dr_time parseTime( const std::string& datetime );
     static std::string_view peekPatientId( const std::string& xmldoc, bool ispatientdoc );
     dr_time peekTime( const std::string_view& xmldoc );
 
     ParseState state;
     dr_time currentTime;
     bool wavewarning;
+    std::map<std::string, std::string> elementClosings;
 
     struct xmlpassthru {
       std::unique_ptr<SignalSet>& signals;
