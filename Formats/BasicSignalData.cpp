@@ -25,7 +25,7 @@
 #include <filesystem>
 #include "config.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   const int BasicSignalData::CACHE_LIMIT = 30000;
 
@@ -114,12 +114,15 @@ namespace FormatConverter {
     return label;
   }
 
-  void BasicSignalData::startPopping( ) {
+  bool BasicSignalData::startPopping( ) {
     popping = true;
     if ( nullptr != file ) {
-      cache( ); // copy any extra rows to disk
+      if ( !cache( ) ) { // copy any extra rows to disk
+        return false;
+      }
       std::rewind( file );
     }
+    return true;
   }
 
   double BasicSignalData::highwater( ) const {
@@ -130,26 +133,25 @@ namespace FormatConverter {
     return lowval;
   }
 
-  void BasicSignalData::cache( ) {
+  bool BasicSignalData::cache( ) {
     if ( nocache ) {
-      return;
+      return true;
     }
 
     std::stringstream ss;
 
     if ( nullptr == file ) {
 #ifdef __CYGWIN__
-        // Cygwin seems to crash if you try to write to a file created
-        // by tmpfile() if the temp directory doesn't actually exist,
-        // so make sure we create it ahead of time
-        std::filesystem::path p = std::filesystem::path( std::tmpnam( nullptr ) );
-        auto tmpdir = p.parent_path( );
-        if ( !std::filesystem::exists( tmpdir ) ) {
-          std::filesystem::create_directories( tmpdir );
-        }
+      // Cygwin seems to crash if you try to write to a file created
+      // by tmpfile() if the temp directory doesn't actually exist,
+      // so make sure we create it ahead of time
+      std::filesystem::path p = std::filesystem::path( std::tmpnam( nullptr ) );
+      auto tmpdir = p.parent_path( );
+      if ( !std::filesystem::exists( tmpdir ) ) {
+        std::filesystem::create_directories( tmpdir );
+      }
 #endif
       file = tmpfile( );
-      
     }
 
     while ( !data.empty( ) ) {
@@ -164,20 +166,28 @@ namespace FormatConverter {
       }
       ss << "\n";
     }
-    std::fputs( ss.str( ).c_str( ), file );
+
+    int ok = std::fputs( ss.str( ).c_str( ), file );
+    if ( ok < 0 ) {
+      return false;
+    }
+
     fflush( file );
     livecount = 0;
+    return true;
   }
 
   size_t BasicSignalData::inmemsize( ) const {
     return data.size( );
   }
 
-  void BasicSignalData::add( const DataRow& row ) {
+  bool BasicSignalData::add( const DataRow& row ) {
 
     if ( livecount >= CACHE_LIMIT ) {
       // copy current data list to disk
-      cache( );
+      if ( !cache( ) ) {
+        return false;
+      }
     }
 
     datacount++;
@@ -206,6 +216,8 @@ namespace FormatConverter {
       firstdata = row.time;
     }
     dates.push_front( row.time );
+
+    return true;
   }
 
   void BasicSignalData::setWave( bool wave ) {
@@ -377,11 +389,11 @@ namespace FormatConverter {
         : namedevents.at( type ) );
   }
 
-  void BasicSignalData::addAuxillaryData( const std::string& name, const TimedData& data ){
-    aux[name].push_back(data);
+  void BasicSignalData::addAuxillaryData( const std::string& name, const TimedData& data ) {
+    aux[name].push_back( data );
   }
 
-  std::map<std::string, std::vector<TimedData>> BasicSignalData::auxdata( ){
+  std::map<std::string, std::vector<TimedData>> BasicSignalData::auxdata( ) {
     return aux;
   }
 }

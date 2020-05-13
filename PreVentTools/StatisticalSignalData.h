@@ -29,7 +29,7 @@ namespace FormatConverter {
     StatisticalSignalData(SignalData * data);
     virtual ~StatisticalSignalData( );
 
-    virtual void add( const FormatConverter::DataRow& row ) override;
+    virtual bool add( const FormatConverter::DataRow& row ) override;
 
     double mean( ) const;
     double stddev( ) const;

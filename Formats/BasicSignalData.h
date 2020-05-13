@@ -34,7 +34,7 @@ namespace FormatConverter {
     virtual ~BasicSignalData( );
 
     virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) override;
-    virtual void add( const FormatConverter::DataRow& row ) override;
+    virtual bool add( const FormatConverter::DataRow& row ) override;
     virtual size_t size( ) const override;
     virtual dr_time startTime( ) const override;
     virtual dr_time endTime( ) const override;
@@ -74,7 +74,7 @@ namespace FormatConverter {
     virtual std::map<std::string, std::vector<TimedData>> auxdata( ) override;
 
   private:
-    void startPopping( );
+    bool startPopping( );
 
     /**
      * copy rows from the cache file to the data list.
@@ -82,7 +82,7 @@ namespace FormatConverter {
      * @return the number uncached, or 0 if there is no cache, or it's empty
      */
     int uncache( int count = CACHE_LIMIT );
-    void cache( );
+    bool cache( );
 
     const std::string label;
     dr_time firstdata;

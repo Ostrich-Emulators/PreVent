@@ -34,8 +34,8 @@ namespace FormatConverter{
     signal->moveDataTo( signal );
   }
 
-  void SignalDataWrapper::add( const DataRow& row ) {
-    signal->add( row );
+  bool SignalDataWrapper::add( const DataRow& row ) {
+    return signal->add( row );
   }
 
   void SignalDataWrapper::setUom( const std::string& u ) {

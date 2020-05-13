@@ -7,19 +7,19 @@
 #include "ClippingSignalSet.h"
 #include "SignalDataWrapper.h"
 #include "BasicSignalSet.h"
-namespace FormatConverter {
+namespace FormatConverter{
 
-  class ClippingSignalData : public SignalDataWrapper {
+  class ClippingSignalData : public SignalDataWrapper{
   public:
 
-    ClippingSignalData( ClippingSignalSet& set, SignalData * signal ) : SignalDataWrapper( signal ),
-    parent( set ) {
-    }
+    ClippingSignalData( ClippingSignalSet& set, SignalData * signal )
+        : SignalDataWrapper( signal ), parent( set ) { }
 
-    void add( const FormatConverter::DataRow& row ) {
+    bool add( const FormatConverter::DataRow& row ) {
       if ( parent.timeok( row.time ) ) {
-        SignalDataWrapper::add( row );
+        return SignalDataWrapper::add( row );
       }
+      return true;
     }
 
   private:
@@ -31,12 +31,12 @@ namespace FormatConverter {
   }
 
   ClippingSignalSet::ClippingSignalSet( const std::unique_ptr<SignalSet>& w, dr_time * starttime, dr_time * endtime )
-  : SignalSetWrapper( w ) {
+      : SignalSetWrapper( w ) {
     init( starttime, endtime );
   }
 
   ClippingSignalSet::ClippingSignalSet( SignalSet * w, dr_time * starttime, dr_time * endtime )
-  : SignalSetWrapper( w ) {
+      : SignalSetWrapper( w ) {
     init( starttime, endtime );
   }
 
@@ -46,8 +46,7 @@ namespace FormatConverter {
     return set;
   }
 
-  ClippingSignalSet::~ClippingSignalSet( ) {
-  }
+  ClippingSignalSet::~ClippingSignalSet( ) { }
 
   void ClippingSignalSet::init( dr_time* starttime, dr_time* endtime ) {
     havefirsttime = false;

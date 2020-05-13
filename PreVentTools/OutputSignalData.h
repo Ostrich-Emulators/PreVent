@@ -28,7 +28,7 @@ namespace FormatConverter {
     OutputSignalData(std::ostream& out);
     virtual ~OutputSignalData();
 
-    virtual void add(const FormatConverter::DataRow& row) override;
+    virtual bool add(const FormatConverter::DataRow& row) override;
 
   private:
     std::ostream& output;

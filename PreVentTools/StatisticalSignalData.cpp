@@ -102,7 +102,7 @@ namespace FormatConverter{
     return std::sqrt( variance( ) );
   }
 
-  void StatisticalSignalData::add( const FormatConverter::DataRow& row ) {
+  bool StatisticalSignalData::add( const FormatConverter::DataRow& row ) {
     SignalDataWrapper::add( row );
 
     std::vector<double> values;
@@ -136,5 +136,6 @@ namespace FormatConverter{
     }
 
     _count += values.size( );
+    return true;
   }
 }

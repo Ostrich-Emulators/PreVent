@@ -28,7 +28,7 @@ namespace FormatConverter {
 	public:
 		NullSignalData( const std::string& name = "-", bool iswave = false );
 		virtual ~NullSignalData( );
-		virtual void add( const FormatConverter::DataRow& row ) override;
+		virtual bool add( const FormatConverter::DataRow& row ) override;
 	};
 }
 

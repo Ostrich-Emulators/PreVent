@@ -39,7 +39,7 @@ namespace FormatConverter {
 
     virtual std::unique_ptr<SignalData> shallowcopy(bool includedates = false) override;
     virtual void moveDataTo(std::unique_ptr<SignalData>& signal) override;
-    virtual void add(const FormatConverter::DataRow& row) override;
+    virtual bool add(const FormatConverter::DataRow& row) override;
     virtual void setUom(const std::string& u) override;
     virtual const std::string& uom() const override;
     virtual int scale() const override;

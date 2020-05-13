@@ -11,6 +11,7 @@ namespace FormatConverter{
   NullSignalData::~NullSignalData( ) {
   }
 
-  void NullSignalData::add( const FormatConverter::DataRow& row ) {
+  bool NullSignalData::add( const FormatConverter::DataRow& row ) {
+    return true;
   }
 }

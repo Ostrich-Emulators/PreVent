@@ -4,16 +4,14 @@
 #include "DataRow.h"
 #include <cmath>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   OutputSignalData::OutputSignalData( std::ostream& out ) : BasicSignalData( "-" ),
-  output( out ) {
-  }
+      output( out ) { }
 
-  OutputSignalData::~OutputSignalData( ) {
-  }
+  OutputSignalData::~OutputSignalData( ) { }
 
-  void OutputSignalData::add( const FormatConverter::DataRow& row ) {
+  bool OutputSignalData::add( const FormatConverter::DataRow& row ) {
     int period = BasicSignalData::chunkInterval( );
     int mspervalue = period / BasicSignalData::readingsPerChunk( );
     int scale = BasicSignalData::scale( );
@@ -34,5 +32,7 @@ namespace FormatConverter {
         time += mspervalue;
       }
     }
+
+    return true;
   }
 }
