@@ -104,13 +104,6 @@ namespace FormatConverter{
       return ReadResult::ERROR;
     }
 
-    if ( work.popped( ) >= 244327058l ) {
-      int x = 0;
-      if ( x > 1 ) {
-        std::cout << "here" << std::endl;
-      }
-    }
-
     std::string xmldoc;
     std::string rootelement;
     std::string patientId;
