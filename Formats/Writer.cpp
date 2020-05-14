@@ -100,7 +100,7 @@ namespace FormatConverter {
     output( ) << "filling data" << std::endl;
     ReadResult retcode = from->fill( data );
 
-    int files = 0;
+    int files = 1;
     while ( retcode != ReadResult::ERROR ) {
       data->complete( );
       drain( data );
