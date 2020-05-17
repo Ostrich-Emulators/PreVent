@@ -403,7 +403,6 @@ namespace FormatConverter{
       const int waveid = w.first;
       std::vector<int>& datapoints = w.second;
 
-      std::stringstream vals;
       if ( datapoints.size( ) > expectedValues[waveid] ) {
         std::cout << "more values than needed (" << datapoints.size( ) << "/" << expectedValues[waveid]
             << ") for waveid: " << waveid << std::endl;
@@ -421,10 +420,6 @@ namespace FormatConverter{
         if ( datapoints[i]> -32753 ) {
           waveok = true;
         }
-        if ( 0 != i ) {
-          vals << ",";
-        }
-        vals << datapoints[i];
       }
 
       if ( waveok ) {
@@ -434,7 +429,7 @@ namespace FormatConverter{
           signal->setChunkIntervalAndSampleRate( 2000, expectedValues[waveid] );
         }
 
-        signal->add( DataRow( startt, vals.str( ) ) );
+        signal->add( DataRow( startt, datapoints ) );
       }
 
       datapoints.erase( datapoints.begin( ), datapoints.begin( ) + expectedValues[waveid] );
@@ -636,7 +631,7 @@ namespace FormatConverter{
         }
       }
 
-      if ( isMetadataOnly() ) {
+      if ( isMetadataOnly( ) ) {
         // this ain't pretty, but we can't get any timing information from
         // the SignalSet if we don't have any data in it...so put some dummy
         // data in there
@@ -1011,10 +1006,10 @@ namespace FormatConverter{
             }
 
             if ( cfg.divBy10 ) {
-              sig->add( DataRow( currentTime, div10s( val, cfg.divBy10 ) ) );
+              sig->add( DataRow::from( currentTime, div10s( val, cfg.divBy10 ) ) );
             }
             else {
-              sig->add( DataRow( currentTime, std::to_string( val ) ) );
+              sig->add( DataRow( currentTime, val ) );
             }
           }
         }
@@ -1037,11 +1032,11 @@ namespace FormatConverter{
             }
 
             if ( cfg.divBy10 ) {
-              sig->add( DataRow( currentTime, div10s( val, cfg.divBy10 ) ) );
+              sig->add( DataRow::from( currentTime, div10s( val, cfg.divBy10 ) ) );
             }
             else {
 
-              sig->add( DataRow( currentTime, std::to_string( val ) ) );
+              sig->add( DataRow( currentTime, val ) );
             }
           }
         }
@@ -1213,7 +1208,7 @@ namespace FormatConverter{
       std::cerr << "error while opening input file. error code: " << failed << std::endl;
       return metas;
     }
-    reader.setMetadataOnly();
+    reader.setMetadataOnly( );
 
     ReadResult last = ReadResult::FIRST_READ;
 

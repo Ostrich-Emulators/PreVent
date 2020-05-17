@@ -24,30 +24,27 @@
 #include <sstream>
 #include <map>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   const std::set<std::string> CpcXmlReader::ignorables
   {
     "formatID", "sessionID", "blockSQN", "blockLength",
     "startDateTime", "StartTime", "SessStatus", "MODE",
-    "mean"};
+    "mean" };
 
-  CpcXmlReader::CpcXmlReader( ) : XmlReaderBase( "CPC XML" ), currtime( 0 ), lasttime( 0 ) {
-  }
+  CpcXmlReader::CpcXmlReader( ) : XmlReaderBase( "CPC XML" ), currtime( 0 ), lasttime( 0 ) { }
 
   CpcXmlReader::CpcXmlReader( const CpcXmlReader& orig ) : XmlReaderBase( orig ),
-  currtime( 0 ), lasttime( 0 ) {
-  }
+      currtime( 0 ), lasttime( 0 ) { }
 
-  CpcXmlReader::~CpcXmlReader( ) {
-  }
+  CpcXmlReader::~CpcXmlReader( ) { }
 
   void CpcXmlReader::comment( const std::string& text ) {
     // nothing to do  
   }
 
   void CpcXmlReader::start( const std::string& element,
-          std::map<std::string, std::string>& attrs ) {
+      std::map<std::string, std::string>& attrs ) {
     if ( "cpc" == element ) {
       lasttime = currtime;
 
@@ -93,19 +90,17 @@ namespace FormatConverter {
 
       std::vector<BYTE> data = base64_decode( value );
       std::string vals;
+      std::vector<int> datavals;
+      datavals.reserve( data.size( ) / 2 );
       for ( size_t i = 0; i < data.size( ); i += 2 ) {
         BYTE one = data[i];
         BYTE two = data[i + 1];
         short val = ( ( two << 8 ) | one ); // litle-endian (from trial-and-error)
-
-        if ( !vals.empty( ) ) {
-          vals.append( "," );
-        }
-        vals.append( std::to_string( val ) );
+        datavals.push_back( val );
       }
 
       std::unique_ptr<SignalData>& signal = filler->addWave( label, &added );
-      signal->add( FormatConverter::DataRow( currtime, vals ) );
+      signal->add( DataRow( currtime, datavals ) );
       if ( added ) {
         signal->setChunkIntervalAndSampleRate( 2000, valsperdr );
         signal->setMeta( "Gain", gain );
@@ -122,7 +117,7 @@ namespace FormatConverter {
       if ( inmg ) {
         if ( inwave ) {
           // we have wave data to decode
-          value = text;
+          value.assign( text );
         }
         else if ( inhz ) {
           wavehz = std::stod( text );
@@ -135,9 +130,10 @@ namespace FormatConverter {
         }
       }
       else {
+        // in a vital
         bool added = false;
         std::unique_ptr<SignalData>& signal = filler->addVital( label, &added );
-        signal->add( FormatConverter::DataRow( currtime, text ) );
+        signal->add( DataRow::one( currtime, text ) );
 
         if ( added ) {
           signal->setChunkIntervalAndSampleRate( 2000, 1 );

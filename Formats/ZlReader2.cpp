@@ -35,19 +35,15 @@
 #endif
 
 namespace fs = std::filesystem;
-namespace FormatConverter {
+namespace FormatConverter{
 
-  ZlReader2::ZlReader2( ) : Reader( "Zl" ), firstread( true ) {
-  }
+  ZlReader2::ZlReader2( ) : Reader( "Zl" ), firstread( true ) { }
 
-  ZlReader2::ZlReader2( const std::string& name ) : Reader( name ), firstread( true ) {
-  }
+  ZlReader2::ZlReader2( const std::string& name ) : Reader( name ), firstread( true ) { }
 
-  ZlReader2::ZlReader2( const ZlReader2& orig ) : Reader( orig ), firstread( orig.firstread ) {
-  }
+  ZlReader2::ZlReader2( const ZlReader2& orig ) : Reader( orig ), firstread( orig.firstread ) { }
 
-  ZlReader2::~ZlReader2( ) {
-  }
+  ZlReader2::~ZlReader2( ) { }
 
   void ZlReader2::finish( ) {
     signalToReaderLkp.clear( );
@@ -85,7 +81,7 @@ namespace FormatConverter {
 
       myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
       signalToReaderLkp[signal] = std::unique_ptr<StreamChunkReader>( new StreamChunkReader( myfile,
-              ( islibz || isgz ), false, isgz ) );
+          ( islibz || isgz ), false, isgz ) );
     }
 
     return 0;
@@ -129,12 +125,15 @@ namespace FormatConverter {
             std::string timestr = j2[0];
             std::string data = j2[2];
 
-            if ( added ) {
-              int readings = (int) FormatConverter::DataRow::ints( data ).size( );
-              signal->setChunkIntervalAndSampleRate( 250, readings );
-            }
             if ( waveIsOk( data ) ) {
-              signal->add( FormatConverter::DataRow( modtime( std::stol( timestr ) ), data ) );
+              DataRow row = DataRow::many( modtime( std::stol( timestr ) ), data );
+
+              if ( added ) {
+                int readings = static_cast<int> ( row.data.size( ) );
+                signal->setChunkIntervalAndSampleRate( 250, readings );
+              }
+
+              signal->add( row );
             }
           }
         }
@@ -152,12 +151,14 @@ namespace FormatConverter {
           for ( auto j2 : jj ) {
             std::string timestr = j2[0];
             std::string data = j2[2];
-            if ( added ) {
-              int readings = (int) FormatConverter::DataRow::ints( data ).size( );
-              signal->setChunkIntervalAndSampleRate( 250, readings );
-            }
             if ( waveIsOk( data ) ) {
-              signal->add( FormatConverter::DataRow( modtime( std::stol( timestr ) ), data ) );
+              DataRow row = DataRow::many( modtime( std::stol( timestr ) ), data );
+              if ( added ) {
+                int readings = static_cast<int> ( row.data.size( ) );
+                signal->setChunkIntervalAndSampleRate( 250, readings );
+              }
+
+              signal->add( row );
             }
           }
         }

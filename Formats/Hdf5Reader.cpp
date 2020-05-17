@@ -346,36 +346,17 @@ namespace FormatConverter{
       }
     }
 
-    double powscale = std::pow( 10, scale );
-    // just read everything all at once...in the future, we probably want to
-    // worry about using hyperslabs
-
     // FIXME: use hyperslabs (slabreadi/slabreads is fine when we only have 1 column)
 
     if ( dataset.getDataType( ) == H5::PredType::STD_I16LE ) {
       short read[ROWS][COLS] = { };
+
       dataset.read( read, dataset.getDataType( ) );
       for ( size_t row = 0; row < ROWS; row++ ) {
         short val = read[row][0];
-        std::string valstr;
-
-        if ( 0 != scale ) {
-          valstr = std::to_string( (double) val / powscale );
-          // remove any trailing 0s from the string
-          while ( '0' == valstr[valstr.size( ) - 1] ) {
-            valstr.erase( valstr.size( ) - 1, 1 );
-          }
-          // make sure we don't end in a .
-          if ( '.' == valstr[valstr.size( ) - 1] ) {
-            valstr.erase( valstr.size( ) - 1 );
-          }
-        }
-        else {
-          valstr = std::to_string( val );
-        }
 
         // FIXME: we better hope valsPerTime is always 1!
-        FormatConverter::DataRow drow( times[row / valsPerTime], valstr );
+        DataRow drow( times[row / valsPerTime], val, scale );
         if ( COLS > 1 ) {
           for ( size_t c = 1; c < COLS; c++ ) {
             drow.extras[attrmap[c]] = std::to_string( read[row][c] );
@@ -390,25 +371,9 @@ namespace FormatConverter{
       for ( size_t row = 0; row < ROWS; row++ ) {
 
         int val = read[row][0];
-        std::string valstr;
-
-        if ( 0 != scale ) {
-          valstr = std::to_string( (double) val / powscale );
-          // remove any trailing 0s from the string
-          while ( '0' == valstr[valstr.size( ) - 1] ) {
-            valstr.erase( valstr.size( ) - 1, 1 );
-          }
-          // make sure we don't end in a .
-          if ( '.' == valstr[valstr.size( ) - 1] ) {
-            valstr.erase( valstr.size( ) - 1 );
-          }
-        }
-        else {
-          valstr = std::to_string( val );
-        }
 
         // FIXME: we better hope valsPerTime is always 1!
-        FormatConverter::DataRow drow( times[row / valsPerTime], valstr );
+        FormatConverter::DataRow drow( times[row / valsPerTime], val, scale );
         if ( COLS > 1 ) {
           for ( size_t c = 1; c < COLS; c++ ) {
             drow.extras[attrmap[c]] = std::to_string( read[row][c] );
@@ -436,8 +401,8 @@ namespace FormatConverter{
     hsize_t count[] = { slabrows, COLS };
     const hsize_t offset0[] = { 0, 0 };
 
-    std::string values;
-    int valcnt = 0;
+    std::vector<int> values;
+    values.reserve( valsPerTime );
 
     std::vector<short> shortbuff;
     std::vector<int> intbuff;
@@ -451,7 +416,6 @@ namespace FormatConverter{
     }
 
     int timecounter = 0;
-    double powscale = std::pow( 10, scale );
     while ( offset[0] < ROWS ) {
       dataspace.selectHyperslab( H5S_SELECT_SET, count, offset );
       H5::DataSpace memspace( 2, count );
@@ -464,52 +428,13 @@ namespace FormatConverter{
       }
 
       for ( size_t row = 0; row < count[0]; row++ ) {
-        if ( !values.empty( ) ) {
-          values.append( "," );
-        }
-
-        std::string valstr;
         int val = ( doints ? intbuff[row] : shortbuff[row] );
-        if ( 0 != scale ) {
-          valstr = std::to_string( (double) val / powscale );
-          // remove any trailing 0s from the string
-          while ( '0' == valstr[valstr.size( ) - 1] ) {
-            valstr.erase( valstr.size( ) - 1, 1 );
-          }
-          // make sure we don't end in a .
-          if ( '.' == valstr[valstr.size( ) - 1] ) {
-            valstr.erase( valstr.size( ) - 1 );
-          }
-          else {
-            valstr = std::to_string( val );
-          }
-        }
-        else {
-          short val = shortbuff[row];
-          if ( 0 != scale ) {
-            valstr = std::to_string( (double) val / powscale );
-            // remove any trailing 0s from the string
-            while ( '0' == valstr[valstr.size( ) - 1] ) {
-              valstr.erase( valstr.size( ) - 1, 1 );
-            }
-            // make sure we don't end in a .
-            if ( '.' == valstr[valstr.size( ) - 1] ) {
-              valstr.erase( valstr.size( ) - 1 );
-            }
-          }
-          else {
-            valstr = std::to_string( val );
-          }
-        }
+        values.push_back( val );
 
-        values.append( valstr );
-
-        valcnt++;
-        if ( valsPerTime == valcnt ) {
-          FormatConverter::DataRow drow( times[timecounter++], values );
+        if ( static_cast<size_t> ( valsPerTime ) == values.size( ) ) {
+          FormatConverter::DataRow drow( times[timecounter++], values, scale );
           signal->add( drow );
           values.clear( );
-          valcnt = 0;
         }
       }
 
@@ -649,7 +574,6 @@ namespace FormatConverter{
       H5::DataSet globaltimes = group.openDataSet( "/Events/Global_Times" );
 
       const int scale = metaint( data, SignalData::SCALE );
-      const double scalefactor = std::pow( 10, scale );
 
       int readingsperperiod = metaint( data, SignalData::READINGS_PER_CHUNK );
       int periodtime = metaint( data, SignalData::CHUNK_INTERVAL_MS );
@@ -725,24 +649,7 @@ namespace FormatConverter{
               : slabstopidx );
         }
 
-        if ( 0 == scale ) {
-          // no scaling, so we can treat everything as integers
-          std::string valstr = std::to_string( datavals[dataidx++] );
-          for ( int j = 1; j < readingsperperiod; j++ ) {
-            valstr.append( "," );
-            valstr.append( std::to_string( datavals[dataidx++] ) );
-          }
-          signal->add( FormatConverter::DataRow( time, valstr ) );
-        }
-        else {
-          // worry about the scale factor, so treat everything as a double (and remove trailing 0s
-          std::string valstr = SignalUtils::tosmallstring( (double) datavals[dataidx++], scalefactor );
-          for ( int j = 1; j < readingsperperiod; j++ ) {
-            valstr.append( "," );
-            valstr.append( SignalUtils::tosmallstring( (double) datavals[dataidx++], scalefactor ) );
-          }
-          signal->add( FormatConverter::DataRow( time, valstr ) );
-        }
+        signal->add( FormatConverter::DataRow( time, datavals, scale ) );
       }
     }
     catch ( H5::FileIException& error ) {

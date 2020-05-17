@@ -154,7 +154,7 @@ namespace FormatConverter{
           if ( added ) {
             signal->setChunkIntervalAndSampleRate( interval, 1 );
           }
-          signal->add( DataRow( csvtime, m.second ) );
+          signal->add( DataRow::from( csvtime, m.second ) );
         }
       }
     }

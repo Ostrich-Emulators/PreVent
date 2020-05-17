@@ -15,6 +15,7 @@
 
 #include "StpXmlReader.h"
 #include "SignalData.h"
+#include "SignalUtils.h"
 
 #include <iostream>
 #include <fstream>
@@ -25,9 +26,9 @@
 #include <map>
 #include <memory>
 
-namespace FormatConverter {
-  const std::set<std::string> StpXmlReader::Hz60({"RR", "VNT_PRES", "VNT_FLOW"} );
-  const std::set<std::string> StpXmlReader::Hz120({"ICP1", "ICP2", "ICP4", "LA4"} );
+namespace FormatConverter{
+  const std::set<std::string> StpXmlReader::Hz60({ "RR", "VNT_PRES", "VNT_FLOW" } );
+  const std::set<std::string> StpXmlReader::Hz120({ "ICP1", "ICP2", "ICP4", "LA4" } );
   const int StpXmlReader::INDETERMINATE = 0;
   const int StpXmlReader::INHEADER = 1;
   const int StpXmlReader::INVITAL = 2;
@@ -49,17 +50,14 @@ namespace FormatConverter {
   bool warnedix;
 
   StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ), prevtime( 0 ),
-  currvstime( 0 ), lastvstime( 0 ), currwavetime( 0 ), lastwavetime( 0 ),
-  recordtime( 0 ), currsegidx( 0 ), warnMissingName( true ), warnJunkData( true ),
-  v8( false ), isphilips( false ), isix( false ), warnedix( false ), skipwave( false ),
-  skipvital( false ), state( INDETERMINATE ) {
-  }
+      currvstime( 0 ), lastvstime( 0 ), currwavetime( 0 ), lastwavetime( 0 ),
+      recordtime( 0 ), currsegidx( 0 ), warnMissingName( true ), warnJunkData( true ),
+      v8( false ), isphilips( false ), isix( false ), warnedix( false ), skipwave( false ),
+      skipvital( false ), state( INDETERMINATE ) { }
 
-  StpXmlReader::StpXmlReader( const StpXmlReader& orig ) : XmlReaderBase( orig ) {
-  }
+  StpXmlReader::StpXmlReader( const StpXmlReader& orig ) : XmlReaderBase( orig ) { }
 
-  StpXmlReader::~StpXmlReader( ) {
-  }
+  StpXmlReader::~StpXmlReader( ) { }
 
   void StpXmlReader::setstate( int st ) {
     state = st;
@@ -133,7 +131,7 @@ namespace FormatConverter {
     }
     else if ( "Value" == element ) {
       if ( 0 != attributes.count( "UOM" ) ) {
-        uom = attributes["UOM"];
+        uom.assign( attributes["UOM"] );
       }
 
       attrs = attributes;
@@ -150,8 +148,8 @@ namespace FormatConverter {
     }
     else if ( "WaveformData" == element ) {
       attrs = attributes;
-      label = attributes[v8 || isphilips ? "Label" : "Channel"];
-      uom = attributes["UOM"];
+      label.assign( attributes[v8 || isphilips ? "Label" : "Channel"] );
+      uom.assign( attributes["UOM"] );
       if ( v8 || isphilips ) {
         v8samplerate = std::stoi( attributes["SampleRate"] );
         if ( isix && !v8 && v8samplerate <= 16 ) {
@@ -197,8 +195,8 @@ namespace FormatConverter {
       else {
 
         std::string pname = ( 0 == filler->metadata( ).count( "Patient Name" )
-                ? ""
-                : filler->metadata( ).at( "Patient Name" ) );
+            ? ""
+            : filler->metadata( ).at( "Patient Name" ) );
         if ( text != pname ) {
           setResult( ReadResult::END_OF_PATIENT );
           // we've cut over to a new set of data, so
@@ -214,55 +212,20 @@ namespace FormatConverter {
         return;
       }
       if ( "Par" == element || "Parameter" == element ) {
-        label = text;
+        label.assign( text );
       }
       else if ( "Value" == element ) {
-        value = text;
+        value.assign( text );
       }
       else if ( "TimeUTC" == element ) {
         recordtime = time( text );
       }
       else if ( "VS" == element || "VitalSign" == element ) {
-        bool added = false;
-
         // skip missing value marker for vitals
         if ( SignalData::MISSING_VALUESTR != value ) {
-
           // v8 has a lot of stuff in value that isn't really a value
           // so we need to check that we have a number here
-          try {
-            std::stof( value );
-            std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
-
-            if ( added ) {
-              if ( isphilips ) {
-                sig->setChunkIntervalAndSampleRate( isix ? 1024 : 1000, 1 );
-              }
-              else {
-                sig->setChunkIntervalAndSampleRate( 2000, 1 );
-              }
-
-              for ( auto x : sig->metad( ) ) {
-                output( ) << x.first << ":=>" << x.second << std::endl;
-              }
-
-              if ( !uom.empty( ) ) {
-                sig->setUom( uom );
-              }
-
-            }
-
-            FormatConverter::DataRow row( currvstime, value, attrs );
-            sig->add( row );
-            if ( !( 0 == recordtime || recordtime == currvstime ) ) {
-              sig->recordEvent( "collection discrepancy", recordtime );
-            }
-            recordtime = 0;
-          }
-          catch ( std::invalid_argument& ) {
-            // don't really care since we're not adding the data to our dataset
-            // value = MISSING_VALUESTR;
-          }
+          addVital( value );
         }
       }
       else if ( "VitalSigns" == element ) {
@@ -298,43 +261,9 @@ namespace FormatConverter {
               thz = 120;
             }
           }
-          const int hz = thz;
 
           if ( waveIsOk( wavepoints ) ) {
-            bool first;
-            std::unique_ptr<SignalData>& sig = filler->addWave( label, &first );
-            if ( first ) {
-              if ( v8 ) {
-
-                int interval = std::stoi( attrs.at( "SamplePeriodInMsec" ) );
-                int reads = v8samplerate;
-                if ( !isphilips ) {
-                  interval *= 2;
-                  reads *= 2;
-                }
-                sig->setChunkIntervalAndSampleRate( interval, reads );
-              }
-              else {
-                // Stp always reads in 1024ms increments for Philips, 2s for GE monitors
-                if ( isphilips ) {
-                  sig->setChunkIntervalAndSampleRate( isix ? 1024 : 1000, hz );
-                }
-                else {
-                  sig->setChunkIntervalAndSampleRate( 2000, 2 * hz );
-                }
-              }
-
-              if ( !uom.empty( ) ) {
-                sig->setUom( uom );
-              }
-
-              if ( 0 != attrs.count( "Cal" ) ) {
-                sig->setMeta( "Cal", attrs["Cal"] );
-              }
-            }
-
-            FormatConverter::DataRow row( currwavetime, wavepoints, attrs );
-            sig->add( row );
+            addWave( wavepoints, thz );
           }
           else if ( warnJunkData ) {
             warnJunkData = false;
@@ -356,10 +285,89 @@ namespace FormatConverter {
       std::string versiontxt = text.substr( pos + 8 );
       int ver = std::stof( versiontxt );
       if ( ver >= 8.0 ) {
-
         v8 = true;
       }
     }
+  }
+
+  void StpXmlReader::addVital( const std::string& text ) {
+    bool added = false;
+    try {
+      std::stof( value );
+      std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
+
+      if ( added ) {
+        if ( isphilips ) {
+          sig->setChunkIntervalAndSampleRate( isix ? 1024 : 1000, 1 );
+        }
+        else {
+          sig->setChunkIntervalAndSampleRate( 2000, 1 );
+        }
+
+        if ( !uom.empty( ) ) {
+          sig->setUom( uom );
+        }
+      }
+
+      DataRow row = DataRow::one( currvstime, value );
+      row.extras = attrs;
+      sig->add( row );
+      if ( !( 0 == recordtime || recordtime == currvstime ) ) {
+        sig->recordEvent( "collection discrepancy", recordtime );
+      }
+      recordtime = 0;
+    }
+    catch ( std::invalid_argument& ) {
+      // don't really care since we're not adding the data to our dataset
+      // value = MISSING_VALUESTR;
+    }
+  }
+
+  void StpXmlReader::addWave( const std::string& wavepoints, int hz ) {
+    bool first = false;
+    std::unique_ptr<SignalData>& sig = filler->addWave( label, &first );
+    if ( first ) {
+      if ( v8 ) {
+
+        int interval = std::stoi( attrs.at( "SamplePeriodInMsec" ) );
+        int reads = v8samplerate;
+        if ( !isphilips ) {
+          interval *= 2;
+          reads *= 2;
+        }
+        sig->setChunkIntervalAndSampleRate( interval, reads );
+      }
+      else {
+        // Stp always reads in 1024ms increments for Philips, 2s for GE monitors
+        if ( isphilips ) {
+          sig->setChunkIntervalAndSampleRate( isix ? 1024 : 1000, hz );
+        }
+        else {
+          sig->setChunkIntervalAndSampleRate( 2000, 2 * hz );
+        }
+      }
+
+      if ( !uom.empty( ) ) {
+        sig->setUom( uom );
+      }
+
+      if ( 0 != attrs.count( "Cal" ) ) {
+        sig->setMeta( "Cal", attrs["Cal"] );
+      }
+    }
+
+    DataRow row = DataRow::many( currwavetime, wavepoints );
+
+    // we want to keep attributes that mean something; not attributes
+    // that are the same for every data point in this wave
+    std::map<std::string, std::string> keepattrs( attrs );
+    std::vector<std::string> removers{ "Label", "ID", "SamplePeriodInMsec", "SampleRate", "Samples", "UOM" };
+    for ( auto& key : removers ) {
+      keepattrs.erase( key );
+    }
+
+    row.extras = keepattrs;
+    sig->add( row );
   }
 
   std::string StpXmlReader::resample( const std::string& data, int hz ) {
@@ -373,33 +381,21 @@ namespace FormatConverter {
       return data;
     }
 
-
-    std::vector<std::string> valvec;
-    valvec.reserve( hz * 2 );
-
-    std::stringstream stream( data );
-    if ( 120 == hz ) {
-      // remove every other value
-      for ( std::string each; std::getline( stream, each, ',' ); valvec.push_back( each ) ) {
-        std::getline( stream, each, ',' );
-      }
-    }
-    else if ( 60 == hz ) {
-      // keep one val, skip the next 3
-      for ( std::string each; std::getline( stream, each, ',' ); valvec.push_back( each ) ) {
-        std::getline( stream, each, ',' );
-        std::getline( stream, each, ',' );
-        std::getline( stream, each, ',' );
-      }
-    }
-
+    std::vector<std::string_view> valvec = SignalUtils::splitcsv( std::string_view( data ) );
+    const int skips = ( 120 == hz ? 1 : 3 );
+    int skipsdone = skips;
     std::string newvals;
-    for ( auto s : valvec ) {
-      if ( !newvals.empty( ) ) {
-
-        newvals.append( "," );
+    for ( auto sv : valvec ) {
+      if ( skips == skipsdone ) {
+        if ( !newvals.empty( ) ) {
+          newvals.append( "," );
+        }
+        newvals.append( sv );
+        skipsdone = 0;
       }
-      newvals.append( s );
+      else {
+        skipsdone++;
+      }
     }
 
     return newvals;

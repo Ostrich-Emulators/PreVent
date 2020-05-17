@@ -294,13 +294,7 @@ namespace FormatConverter {
             currents[signalidx].resize( expected, SignalData::MISSING_VALUE );
           }
 
-          std::ostringstream ss;
-          std::copy( currents[signalidx].begin( ), currents[signalidx].end( ) - 1,
-              std::ostream_iterator<int>( ss, "," ) );
-          ss << currents[signalidx].back( );
-
-          std::string vals = ss.str( );
-          dataset->add( DataRow( curtime, vals ) );
+          dataset->add( DataRow( curtime, currents[signalidx] ) );
         }
       }
 

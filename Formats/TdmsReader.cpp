@@ -13,14 +13,12 @@
 #include <iomanip>
 #include <iostream>
 #include <sys/stat.h>
-namespace FormatConverter {
+namespace FormatConverter{
 
-  TdmsReader::TdmsReader( ) : Reader( "TDMS" ), filler( nullptr ) {
-  }
+  TdmsReader::TdmsReader( ) : Reader( "TDMS" ), filler( nullptr ) { }
 
   TdmsReader::~TdmsReader( ) {
-
-  }
+ }
 
   void TdmsReader::data( const std::string& channelname, const unsigned char* datablock, TDMS::data_type_t datatype, size_t num_vals ) {
     std::vector<double> vals;
@@ -42,8 +40,8 @@ namespace FormatConverter {
 
     // get our SignalData for this channel
     std::unique_ptr<SignalData>& signal = ( rec.iswave
-            ? filler->addWave( rec.name )
-            : filler->addVital( rec.name ) );
+        ? filler->addWave( rec.name )
+        : filler->addVital( rec.name ) );
     int timeinc = signal->chunkInterval( );
     size_t freq = signal->readingsPerChunk( );
 
@@ -172,8 +170,8 @@ namespace FormatConverter {
     // figure out if this is a wave or a vital
     bool added = false;
     std::unique_ptr<SignalData>& signal = ( iswave
-            ? filler->addWave( name, &added )
-            : filler->addVital( name, &added ) );
+        ? filler->addWave( name, &added )
+        : filler->addVital( name, &added ) );
 
     //  if ( firstrun ) {
     //    output( ) << "  channel: " << name << " props: " << propmap.size( ) << std::endl;
@@ -218,7 +216,7 @@ namespace FormatConverter {
 
         char buffer[80];
         sprintf( buffer, "%d.%02d.%d %02d:%02d:%02d,%f",
-                pt->tm_mday, pt->tm_mon + 1, 1900 + pt->tm_year, pt->tm_hour, pt->tm_min, pt->tm_sec, 0.0 );
+            pt->tm_mday, pt->tm_mon + 1, 1900 + pt->tm_year, pt->tm_hour, pt->tm_min, pt->tm_sec, 0.0 );
         //std::cout << "  " << p.first << " (timestamp): " << buffer << std::endl;
         signal->setMeta( p.first, std::string( buffer ) );
       }
@@ -240,9 +238,9 @@ namespace FormatConverter {
     handleLateStarters( );
 
     while ( last_segment_read < tdmsfile->segments( ) ) {
-      std::unique_ptr<TDMS::listener> ear(this);
+      std::unique_ptr<TDMS::listener> ear( this );
       tdmsfile->loadSegment( last_segment_read, ear );
-      ear.release();
+      ear.release( );
       // all the data saving gets done by the listener, not here
 
       // if we have some signals, and all are "waiting",
@@ -269,8 +267,8 @@ namespace FormatConverter {
       SignalSaver& rec = x.second;
       // get our SignalData for this channel
       std::unique_ptr<SignalData>& signal = ( rec.iswave
-              ? filler->addWave( rec.name )
-              : filler->addVital( rec.name ) );
+          ? filler->addWave( rec.name )
+          : filler->addVital( rec.name ) );
       size_t freq = signal->metai( ).at( SignalData::READINGS_PER_CHUNK );
       size_t cnt = rec.leftovers.size( );
       for ( size_t i = cnt; i < freq; i++ ) {
@@ -284,7 +282,7 @@ namespace FormatConverter {
   }
 
   bool TdmsReader::writeSignalRow( std::vector<double>& doubles, const bool seenFloat,
-          const std::unique_ptr<SignalData>& signal, dr_time time ) {
+      const std::unique_ptr<SignalData>& signal, dr_time time ) {
 
     std::stringstream vals;
     if ( seenFloat ) {
@@ -311,25 +309,20 @@ namespace FormatConverter {
     }
 
     //output( ) << vals.str( ) << std::endl;
-    FormatConverter::DataRow row( time, vals.str( ) );
-    signal->add( row );
-
+    signal->add( DataRow::many( time, vals.str( ) ) );
     return true;
   }
 
-  SignalSaver::~SignalSaver( ) {
-  }
+  SignalSaver::~SignalSaver( ) { }
 
   SignalSaver::SignalSaver( const std::string& label, bool wave )
-  : seenfloat( false ), waiting( false ), iswave( wave ),
-  name( label ), lasttime( 0 ) {
-  }
+      : seenfloat( false ), waiting( false ), iswave( wave ),
+      name( label ), lasttime( 0 ) { }
 
   SignalSaver::SignalSaver( const SignalSaver& orig )
-  : seenfloat( orig.seenfloat ), waiting( orig.waiting ),
-  iswave( orig.iswave ), name( orig.name ), lasttime( orig.lasttime ),
-  leftovers( orig.leftovers ) {
-  }
+      : seenfloat( orig.seenfloat ), waiting( orig.waiting ),
+      iswave( orig.iswave ), name( orig.name ), lasttime( orig.lasttime ),
+      leftovers( orig.leftovers ) { }
 
   SignalSaver& SignalSaver::operator=(const SignalSaver& orig ) {
     if ( &orig != this ) {

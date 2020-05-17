@@ -19,18 +19,16 @@
 #include "SignalData.h"
 #include "SignalUtils.h"
 #include "FileNamer.h"
-namespace FormatConverter {
+namespace FormatConverter{
 
-  MatWriter::MatWriter( MatVersion ver ) : Writer( "mat" ), version( ver ) {
-  }
+  MatWriter::MatWriter( MatVersion ver ) : Writer( "mat" ), version( ver ) { }
 
-  MatWriter::MatWriter( const MatWriter& c ) : Writer( "mat" ) {
-  }
+  MatWriter::MatWriter( const MatWriter& c ) : Writer( "mat" ) { }
 
-  MatWriter::~MatWriter( ) {
-  }
+  MatWriter::~MatWriter( ) { }
 
   int MatWriter::initDataSet( ) {
+    output( ) << "Warning: the MatWriter may be out of date...please check the output" << std::endl;
     compress = ( 0 == compression( ) ? MAT_COMPRESSION_NONE : MAT_COMPRESSION_ZLIB );
 
     char fulldatetime[sizeof "Thu Nov 31 10:10:27 1997"];
@@ -56,8 +54,8 @@ namespace FormatConverter {
     }
 
     header << "  MAT-file, Platform: " << osname
-            << ", Created by: fmtcnv (rpb6eg@virginia.edu) on: "
-            << fulldatetime;
+        << ", Created by: fmtcnv (rpb6eg@virginia.edu) on: "
+        << fulldatetime;
 
     tempfileloc = filenamer( ).filenameNoExt( );
     matfile = Mat_CreateVer( tempfileloc.c_str( ), header.str( ).c_str( ), ver );
@@ -133,15 +131,15 @@ namespace FormatConverter {
     //      dims, strdata, 0 );
 
     // this is the code for writing cells, which seems more appropriate to me
-    size_t dims[] = {1, rows};
+    size_t dims[] = { 1, rows };
     matvar_t * var = Mat_VarCreate( label.c_str( ), MAT_C_CELL, MAT_T_CELL, 2,
-            dims, NULL, 0 );
+        dims, NULL, 0 );
 
     for ( size_t i = 0; i < rows; i++ ) {
-      size_t strdims[2] = {1, strings[i].size( )};
+      size_t strdims[2] = { 1, strings[i].size( ) };
       char * text = (char *) strings[i].c_str( );
       matvar_t * vart = Mat_VarCreate( NULL, MAT_C_CHAR, MAT_T_UTF8, 2, strdims,
-              text, 0 );
+          text, 0 );
       Mat_VarSetCell( var, i, vart );
       // does vart get free'd when var does?
     }
@@ -169,22 +167,22 @@ namespace FormatConverter {
       uoms.push_back( m.get( )->uom( ) );
     }
 
-    std::vector<std::vector < std::string>> syncd = SignalUtils::syncDatas( signals );
+    std::vector<std::vector <int>> syncd = SignalUtils::syncDatas( signals );
     const int rows = syncd.size( );
     const int cols = signals.size( );
 
-    size_t dims[2] = {(size_t) rows, (size_t) cols};
+    size_t dims[2] = { (size_t) rows, (size_t) cols };
 
-    int timestamps[rows] = {0};
+    int timestamps[rows] = { 0 };
     short vitals[rows * cols];
     int row = 0;
     timestamps[0] = earliest;
-    for ( std::vector<std::string> rowcols : syncd ) {
+    for ( std::vector<int>& rowcols : syncd ) {
       int col = 0;
-      for ( std::string valstr : rowcols ) {
+      for ( auto& rawval : rowcols ) {
         short val = ( scales[labels[col]] > 1
-                ? short( std::stof( valstr ) * scales[labels[col]] )
-                : short( std::stoi( valstr ) ) );
+            ? rawval * scales[labels[col]]
+            : static_cast<short> ( rawval ) );
 
         // WARNING: we're transposing these values
         // (because that's how matio wants them)!
@@ -196,7 +194,7 @@ namespace FormatConverter {
     }
 
     matvar_t * var = Mat_VarCreate( "vitals", MAT_C_INT16, MAT_T_INT16, 2, dims,
-            vitals, 0 );
+        vitals, 0 );
 
     Mat_VarWrite( matfile, var, compress );
     Mat_VarFree( var );
@@ -266,13 +264,13 @@ namespace FormatConverter {
     const size_t rows = signals[0]->size( ) * freq;
     const int cols = signals.size( );
 
-    size_t dims[2] = {rows, 1};
+    size_t dims[2] = { rows, 1 };
 
     // each wave gets its own variable; keep track so we can free them later
     std::vector<matvar_t *> vars;
     for ( int i = 0; i < cols; i++ ) {
       matvar_t * var = Mat_VarCreate( signals[i]->name( ).c_str( ),
-              MAT_C_INT16, MAT_T_INT16, 2, dims, NULL, 0 );
+          MAT_C_INT16, MAT_T_INT16, 2, dims, NULL, 0 );
       Mat_VarWriteInfo( matfile, var );
       vars.push_back( var );
     }
@@ -280,21 +278,22 @@ namespace FormatConverter {
     const size_t datachunksz = freq * 2000; // arbitrary, but on the big side
     std::vector<std::vector<short>> datas( cols );
 
-    int start[2] = {0, 0};
-    int edge[2] = {(int) datachunksz, 1};
-    int stride[2] = {1, 1};
+    int start[2] = { 0, 0 };
+    int edge[2] = { (int) datachunksz, 1 };
+    int stride[2] = { 1, 1 };
     for ( size_t col = 0; col < signals.size( ); col++ ) {
       std::unique_ptr<SignalData>& signal = signals[col];
       std::vector<short> data;
       data.reserve( datachunksz );
 
       start[0] = 0;
-      edge[0] = {(int) datachunksz};
+      edge[0] = { (int) datachunksz };
 
       while ( !signal->empty( ) ) {
         const auto& datarow = signal->pop( );
+        datarow->rescale( signal->scale( ) );
 
-        std::vector<short> slices = DataRow::shorts( datarow->data, signal->scale( ) );
+        std::vector<short> slices = datarow->shorts( );
         data.insert( data.end( ), slices.begin( ), slices.end( ) );
 
         if ( datachunksz == data.size( ) ) {
@@ -321,7 +320,7 @@ namespace FormatConverter {
     dims[0] = alltimes.size( );
 
     matvar_t * var = Mat_VarCreate( std::string( "wt" + sfx ).c_str( ),
-            MAT_C_INT32, MAT_T_INT32, 2, dims, &alltimes[0], 0 );
+        MAT_C_INT32, MAT_T_INT32, 2, dims, &alltimes[0], 0 );
     Mat_VarWrite( matfile, var, compress );
     Mat_VarFree( var );
 

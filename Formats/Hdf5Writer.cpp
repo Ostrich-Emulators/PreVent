@@ -244,11 +244,12 @@ namespace FormatConverter{
     size_t rowcount = 0;
     for ( size_t row = 0; row < rows; row++ ) {
       std::unique_ptr<FormatConverter::DataRow> datarow = data->pop( );
+      datarow->rescale( scale );
       if ( useInts ) {
-        ibuffer.push_back( datarow->ints( scale )[0] );
+        ibuffer.push_back( datarow->ints( )[0] );
       }
       else {
-        sbuffer.push_back( datarow->shorts( scale )[0] );
+        sbuffer.push_back( datarow->shorts( )[0] );
       }
       if ( !extras.empty( ) ) {
         for ( size_t i = 0; i < exc; i++ ) {
@@ -256,7 +257,7 @@ namespace FormatConverter{
           const std::string xkey = extras.at( i );
           if ( 0 != datarow->extras.count( xkey ) ) {
             const auto& x = datarow->extras.at( xkey );
-            val = (short) ( std::stoi( x ) );
+            val = static_cast<short> ( std::stoi( x ) );
           }
           if ( useInts ) {
             ibuffer.push_back( val );
@@ -318,7 +319,7 @@ namespace FormatConverter{
     H5::DSetCreatPropList props;
     if ( compression( ) > 0 ) {
       hsize_t chunkdims[] = { 0, 0 };
-      autochunk( dims, 2, sizeof (short ), chunkdims );
+      autochunk( dims, 2, sizeof ( short ), chunkdims );
       props.setChunk( 2, chunkdims );
       props.setShuffle( );
       props.setDeflate( compression( ) );
@@ -354,12 +355,13 @@ namespace FormatConverter{
 
     for ( size_t row = 0; row < rows; row++ ) {
       std::unique_ptr<FormatConverter::DataRow> datarow = data->pop( );
+      datarow->rescale( scale );
       if ( useInts ) {
-        std::vector<int> ints = datarow->ints( scale );
+        const auto& ints = datarow->ints( );
         ibuffer.insert( ibuffer.end( ), ints.begin( ), ints.end( ) );
       }
       else {
-        std::vector<short> ints = datarow->shorts( scale );
+        std::vector<short> ints = datarow->shorts( );
         sbuffer.insert( sbuffer.end( ), ints.begin( ), ints.end( ) );
       }
 
@@ -681,7 +683,6 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::writeVitalGroup( H5::Group& group, std::unique_ptr<SignalData>& data ) {
-
     output( ) << "Writing Vital: " << data->name( ) << std::endl;
 
     writeGroupAttrs( group, data );
@@ -714,7 +715,7 @@ namespace FormatConverter{
     // FIXME: if we can't fit in shorts, we're screwed
     while ( ( hi > shortmax || low < shortmin ) && scale > 0 ) {
       scale--;
-      powscale = std::pow( 10, data->scale( ) );
+      powscale = std::pow( 10, scale );
       hi = powscale * data->highwater( );
       low = ( data->lowwater( ) == SignalData::MISSING_VALUE
           ? data->lowwater( )
@@ -731,7 +732,7 @@ namespace FormatConverter{
       const int intmin = std::numeric_limits<int>::min( );
 
       int scale = data->scale( );
-      int powscale = std::pow( 10, data->scale( ) );
+      int powscale = std::pow( 10, scale );
       int hi = powscale * data->highwater( );
       int low = ( data->lowwater( ) == SignalData::MISSING_VALUE
           ? data->lowwater( )
@@ -743,7 +744,7 @@ namespace FormatConverter{
       // FIXME: if we can't fit in shorts, we're screwed
       while ( ( hi > intmax || low < intmin ) && scale > 0 ) {
         scale--;
-        powscale = std::pow( 10, data->scale( ) );
+        powscale = std::pow( 10, scale );
         hi = powscale * data->highwater( );
         low = ( data->lowwater( ) == SignalData::MISSING_VALUE
             ? data->lowwater( )
@@ -751,7 +752,6 @@ namespace FormatConverter{
         rescaled = true;
         //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
       }
-
 
       if ( hi > intmax || low < intmin ) {
         // this is "we're screwed" time
@@ -763,7 +763,6 @@ namespace FormatConverter{
     }
 
     if ( rescaled ) {
-
       data->scale( scale );
     }
 

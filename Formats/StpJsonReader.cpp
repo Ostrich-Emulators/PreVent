@@ -31,20 +31,17 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-namespace FormatConverter {
+namespace FormatConverter{
   const std::string StpJsonReader::HEADER = "HEADER";
   const std::string StpJsonReader::VITAL = "VITAL";
   const std::string StpJsonReader::WAVE = "WAVE";
   const std::string StpJsonReader::TIME = "TIME";
 
-  StpJsonReader::StpJsonReader( ) : Reader( "STPJSON" ), firstread( true ) {
-  }
+  StpJsonReader::StpJsonReader( ) : Reader( "STPJSON" ), firstread( true ) { }
 
-  StpJsonReader::StpJsonReader( const StpJsonReader& orig ) : Reader( orig ), firstread( orig.firstread ) {
-  }
+  StpJsonReader::StpJsonReader( const StpJsonReader& orig ) : Reader( orig ), firstread( orig.firstread ) { }
 
-  StpJsonReader::~StpJsonReader( ) {
-  }
+  StpJsonReader::~StpJsonReader( ) { }
 
   void StpJsonReader::finish( ) {
     stream->close( );
@@ -171,8 +168,8 @@ namespace FormatConverter {
           dataset->setUom( uom );
           dataset->setChunkIntervalAndSampleRate( 2000, 1 );
         }
-        FormatConverter::DataRow row( currentTime, val );
-        dataset->add( row );
+
+        dataset->add( DataRow::one( currentTime, val ) );
       }
       else if ( WAVE == firstword ) {
         state = jsonReaderState::JIN_WAVE;
@@ -193,8 +190,7 @@ namespace FormatConverter {
           dataset->setUom( uom );
         }
 
-        FormatConverter::DataRow row( currentTime, val );
-        dataset->add( row );
+        dataset->add( DataRow::many(currentTime, val) );
       }
       else if ( TIME == firstword ) {
         state = jsonReaderState::JIN_TIME;

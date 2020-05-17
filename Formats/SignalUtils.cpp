@@ -17,16 +17,13 @@
 #include <iostream>
 #include <fstream>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
-  SignalUtils::SignalUtils( ) {
-  }
+  SignalUtils::SignalUtils( ) { }
 
-  SignalUtils::SignalUtils( const SignalUtils& ) {
-  }
+  SignalUtils::SignalUtils( const SignalUtils& ) { }
 
-  SignalUtils::~SignalUtils( ) {
-  }
+  SignalUtils::~SignalUtils( ) { }
 
   std::string SignalUtils::trim( std::string & totrim ) {
     // ltrim
@@ -98,7 +95,7 @@ namespace FormatConverter {
     return earliest;
   }
 
-  std::vector<std::vector<std::string>> SignalUtils::syncDatas( std::vector<std::unique_ptr<SignalData> >&signals ) {
+  std::vector<std::vector<int>> SignalUtils::syncDatas( std::vector<std::unique_ptr<SignalData> >&signals ) {
 
     std::vector<std::unique_ptr<SignalData> > * working = &signals;
     std::vector<std::unique_ptr<SignalData> > tmp;
@@ -121,28 +118,27 @@ namespace FormatConverter {
       }
     }
 
-    std::vector<std::vector < std::string>> rows;
+    std::vector<std::vector<int>> rows;
     int rowcnt = ( *working->begin( ) )->size( );
     rows.reserve( rowcnt );
 
     for ( int rownum = 0; rownum < rowcnt; rownum++ ) {
       //std::cout << "ROW " << rownum << std::endl;
 
-      std::vector<std::string> rowcols;
-      rowcols.reserve( working->size( ) );
+      std::vector<int> rowcols( working->size( ) );
 
       for ( auto& m : *working ) {
         //std::cout << "  " << m.first;
         if ( m->empty( ) ) {
           std::cout << m->name( ) << " BUG! ran out of data before anyone else" << std::endl;
 
-          FormatConverter::DataRow dummy = dummyfill( m, 0 );
-          rowcols.push_back( dummy.data );
+          DataRow dummy = dummyfill( m, 0 );
+          rowcols.insert( rowcols.end( ), dummy.data.begin( ), dummy.data.end( ) );
         }
         else {
-          const std::unique_ptr<FormatConverter::DataRow>& row = m->pop( );
+          const auto& row = m->pop( );
           // std::cout << " row: " << row->time << " " << row->data << std::endl;
-          rowcols.push_back( row->data );
+          rowcols.insert( rowcols.end( ), row->data.begin( ), row->data.end( ) );
         }
       }
       rows.push_back( rowcols );
@@ -287,14 +283,7 @@ namespace FormatConverter {
   }
 
   FormatConverter::DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time ) {
-    std::string dummy = SignalData::MISSING_VALUESTR;
-
-    if ( signal->wave( ) ) {
-      for ( int i = 1; i < signal->hz( ); i++ ) {
-        dummy.append( "," ).append( SignalData::MISSING_VALUESTR );
-      }
-    }
-    return FormatConverter::DataRow( time, dummy );
+    return FormatConverter::DataRow( time, std::vector<int>( signal->hz( ), SignalData::MISSING_VALUE ) );
   }
 
   std::vector<dr_time> SignalUtils::alltimes( const SignalSet& ss ) {
@@ -339,15 +328,15 @@ namespace FormatConverter {
     return indexes;
   }
 
-  std::string SignalUtils::tosmallstring( double val, double scalefactor ) {
-    if ( SignalData::MISSING_VALUE == (short) val ) {
+  std::string SignalUtils::tosmallstring( double val, int scale ) {
+    if ( SignalData::MISSING_VALUE == static_cast<int> ( val ) ) {
       return SignalData::MISSING_VALUESTR;
     }
-    else if ( 1.0 == scalefactor ) {
-      return std::to_string( (int) val );
+    else if ( 0 == scale ) {
+      return std::to_string( static_cast<int> ( val ) );
     }
 
-    std::string valstr = std::to_string( val / scalefactor );
+    std::string valstr = std::to_string( val );
     auto lastNotZeroPosition = valstr.find_last_not_of( '0' );
     if ( lastNotZeroPosition != std::string::npos && lastNotZeroPosition + 1 < valstr.size( ) ) {
       //We leave 123 from 123.0000 or 123.3 from 123.300
@@ -389,6 +378,28 @@ namespace FormatConverter {
       cellvalue.erase( std::remove( cellvalue.begin( ), cellvalue.end( ), '\r' ), cellvalue.end( ) );
       rslt.push_back( SignalUtils::trim( cellvalue ) );
     }
+    return rslt;
+  }
+
+  std::vector<std::string_view> SignalUtils::splitcsv( const std::string_view& csvline, char delim ) {
+    std::vector<std::string_view> rslt;
+
+    size_t first = 0;
+    while ( first < csvline.size( ) ) {
+      const auto second = csvline.find( delim, first );
+      const std::string_view smallview = ( std::string::npos == second
+          ? csvline.substr( first )
+          : csvline.substr( first, second - first ) );
+
+      rslt.push_back( smallview );
+
+      if ( std::string::npos == second ) {
+        break;
+      }
+
+      first = second + 1;
+    }
+
     return rslt;
   }
 }

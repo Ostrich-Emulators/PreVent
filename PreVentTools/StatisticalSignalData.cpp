@@ -11,17 +11,14 @@
 namespace FormatConverter{
 
   StatisticalSignalData::StatisticalSignalData( const std::unique_ptr<SignalData>& data ) : SignalDataWrapper( data ),
-  total( 0 ), _count( 0 ), _min( std::numeric_limits<double>::max( ) ),
-  _max( std::numeric_limits<double>::min( ) ) {
-  }
+      total( 0 ), _count( 0 ), _min( std::numeric_limits<double>::max( ) ),
+      _max( std::numeric_limits<double>::min( ) ) { }
 
   StatisticalSignalData::StatisticalSignalData( SignalData * data ) : SignalDataWrapper( data ),
-  total( 0 ), _count( 0 ), _min( std::numeric_limits<double>::max( ) ),
-  _max( std::numeric_limits<double>::min( ) ) {
-  }
+      total( 0 ), _count( 0 ), _min( std::numeric_limits<double>::max( ) ),
+      _max( std::numeric_limits<double>::min( ) ) { }
 
-  StatisticalSignalData::~StatisticalSignalData( ) {
-  }
+  StatisticalSignalData::~StatisticalSignalData( ) { }
 
   double StatisticalSignalData::mean( ) const {
     if ( 0 == _count ) {
@@ -105,16 +102,7 @@ namespace FormatConverter{
   bool StatisticalSignalData::add( const FormatConverter::DataRow& row ) {
     SignalDataWrapper::add( row );
 
-    std::vector<double> values;
-    if ( wave( ) ) {
-      std::stringstream ss( row.data );
-      for ( std::string each; std::getline( ss, each, ',' ); ) {
-        values.push_back( std::stod( each ) );
-      }
-    }
-    else {
-      values.push_back( std::stod( row.data ) );
-    }
+    std::vector<double> values( row.doubles( ) );
 
     for ( auto val : values ) {
       if ( val != SignalData::MISSING_VALUE ) {

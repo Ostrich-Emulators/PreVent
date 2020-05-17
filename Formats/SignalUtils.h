@@ -56,7 +56,7 @@ namespace FormatConverter {
      * @param map the map to consume
      * @return essentially, a 2D vector
      */
-    static std::vector<std::vector<std::string>> syncDatas(
+    static std::vector<std::vector<int>> syncDatas(
         std::vector<std::unique_ptr<SignalData> >&map );
 
     static std::vector<std::unique_ptr<SignalData>> vectorize(
@@ -102,7 +102,7 @@ namespace FormatConverter {
      * @param scalefactor scaling multiplier
      * @return
      */
-    static std::string tosmallstring( double val, double scalefactor = 1.0 );
+    static std::string tosmallstring( double val, int scale = 0 );
 
     static std::vector<TimedData> loadAuxData( const std::string& file );
 
@@ -112,6 +112,7 @@ namespace FormatConverter {
      * @return
      */
     static std::vector<std::string> splitcsv( const std::string& csvline, char = ',' );
+    static std::vector<std::string_view> splitcsv( const std::string_view& csvline, char = ',' );
   private:
     SignalUtils( );
     SignalUtils( const SignalUtils& );

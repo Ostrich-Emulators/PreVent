@@ -15,20 +15,18 @@ namespace FormatConverter{
     int period = BasicSignalData::chunkInterval( );
     int mspervalue = period / BasicSignalData::readingsPerChunk( );
     int scale = BasicSignalData::scale( );
-    double scalefactor = std::pow( 10, scale );
 
-    std::vector<int> vals = row.ints( scale );
     dr_time time = row.time;
 
     if ( 0 == scale ) {
-      for ( auto x : vals ) {
+      for ( auto x : row.ints() ) {
         output << time << " " << x << std::endl;
         time += mspervalue;
       }
     }
     else {
-      for ( auto x : vals ) {
-        output << time << " " << SignalUtils::tosmallstring( (double) x, scalefactor ) << std::endl;
+      for ( auto& x : row.doubles() ) {
+        output << time << " " << SignalUtils::tosmallstring( x, scale ) << std::endl;
         time += mspervalue;
       }
     }

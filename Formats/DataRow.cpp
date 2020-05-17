@@ -19,6 +19,8 @@
 #include <vector>
 #include <iostream>
 #include <limits>
+#include <charconv>
+
 namespace FormatConverter{
 
   TimedData::TimedData( dr_time t, const std::string& v ) : time( t ), data( v ) { }
@@ -35,16 +37,126 @@ namespace FormatConverter{
 
   TimedData::~TimedData( ) { }
 
-  DataRow::DataRow( const dr_time& t, const std::string& d,
-      std::map<std::string, std::string> exts ) : TimedData( t, d ), extras( exts ) { }
+  const std::set<std::string> DataRow::hiloskips = {
+    { SignalData::MISSING_VALUESTR, "32768" }
+  };
 
-  DataRow::DataRow( const DataRow& orig ) : TimedData( orig ), extras( orig.extras ) { }
+  void DataRow::intify( const std::string_view& strval, size_t dotpos, int * val, int * scale ) {
+    if ( std::string::npos == dotpos ) {
+      *scale = 0;
+      std::from_chars( strval.data( ), strval.data( ) + strval.size( ), *val );
+    }
+    else {
+      int whole = 0;
+      int fraction = 0;
+      std::from_chars( strval.data( ), strval.data( ) + dotpos, whole );
+      std::from_chars( strval.data( ) + dotpos + 1, strval.data( ) - dotpos, fraction );
 
-  DataRow& DataRow::operator=(const DataRow& orig ) {
+      if ( 0 == fraction ) {
+        *scale = 0;
+        *val = whole;
+      }
+      else {
+        *scale = ( strval.length( ) - dotpos - 1 );
+        *val = ( whole * std::pow( 10, *scale ) + fraction );
+      }
+
+      if ( '-' == strval[0] ) {
+        *val *= -1;
+      }
+    }
+  }
+
+  DataRow DataRow::from( const dr_time& time, const std::string& data ) {
+    return ( std::string::npos == data.find( ',' )
+        ? one( time, data )
+        : many( time, data ) );
+  }
+
+  DataRow DataRow::one( const dr_time& time, const std::string& data ) {
+    if ( 0 != hiloskips.count( data ) ) {
+      return DataRow( time, SignalData::MISSING_VALUE );
+    }
+
+    size_t dotpos = data.find( '.' );
+    if ( std::string::npos == dotpos ) {
+      return DataRow( time, std::stoi( data ) );
+    }
+    else {
+      int val;
+      int scale;
+      intify( data, dotpos, &val, &scale );
+      return DataRow( time, val, scale );
+    }
+  }
+
+  DataRow DataRow::many( const dr_time& time, const std::string & data ) {
+    const std::string_view view( data );
+
+    // all values in this vector are at maxscale,
+    // so if that changes, we need to fix the vector
+    std::vector<int> vals;
+    int maxscale = 0;
+
+    size_t first = 0;
+    while ( first < view.size( ) ) {
+      const auto second = view.find( ',', first );
+      const std::string_view smallview = ( std::string::npos == second
+          ? view.substr( first )
+          : view.substr( first, second - first ) );
+
+      // might still be an integer if we have something like .000
+      int val;
+      int scale;
+      intify( smallview, smallview.find( '.' ), &val, &scale );
+      if ( scale > maxscale ) {
+        // fix all values in the vector before adding this one
+        int upgrade = std::pow( 10, scale - maxscale );
+        for ( auto& f : vals ) {
+          if ( SignalData::MISSING_VALUE != f ) {
+            f *= upgrade;
+          }
+        }
+        maxscale = scale;
+      }
+      else if ( scale < maxscale ) {
+        // fix this value to match maxscale
+        if ( val != SignalData::MISSING_VALUE ) {
+          val *= std::pow( 10, maxscale - scale );
+        }
+      }
+
+      vals.push_back( val );
+
+      if ( std::string::npos == second ) {
+        break;
+      }
+
+      first = second + 1;
+    }
+
+    return DataRow( time, vals, maxscale );
+  }
+
+  DataRow::DataRow( const dr_time& _time, const std::vector<int>& _data, int _scale,
+      std::map<std::string, std::string> _extras ) : time( _time ), data( _data.begin(), _data.end() ),
+      scale( _scale ), extras( _extras ) { }
+
+  DataRow::DataRow( const dr_time& _time, int _data, int _scale,
+      std::map<std::string, std::string> _extras ) : time( _time ), scale( _scale ),
+      extras( _extras ) {
+    data.push_back( _data );
+  }
+
+  DataRow::DataRow( const DataRow & orig ) : time( orig.time ), data( orig.data.begin(), orig.data.end() ),
+      scale( orig.scale ), extras( orig.extras ) { }
+
+  DataRow & DataRow::operator=(const DataRow & orig ) {
     if ( &orig != this ) {
       this->data = orig.data;
       this->time = orig.time;
       this->extras = orig.extras;
+      this->scale = orig.scale;
     }
 
     return *this;
@@ -54,103 +166,44 @@ namespace FormatConverter{
 
   void DataRow::clear( ) {
     time = 0;
-    data = "";
+    scale = 0;
+    data.clear( );
     extras.clear( );
   }
 
-  int DataRow::scale( const std::string& val, bool iswave ) {
-    if ( iswave ) {
-      int myscale = 0;
-      std::stringstream ss( val );
-      for ( std::string each; std::getline( ss, each, ',' ); ) {
-        int newscale = scale( each, false );
-        if ( newscale > myscale ) {
-          myscale = newscale;
-        }
-      }
-      return myscale;
-    }
-
-    // probably dumb, but we pretend the value is a filename, and that
-    // makes the extension the number of decimal places in the mantissa
-    size_t pos = val.find_last_of( '.', val.length( ) );
-    if ( val.npos == pos || ".0" == val.substr( pos ) ) {
-      return 0;
-    }
-
-    return val.length( ) - pos - 1; // -1 for the .
-  }
-
-  void DataRow::hilo( const std::string& data, double& highval, double& lowval ) {
-    std::stringstream stream( data );
-    for ( std::string each; std::getline( stream, each, ',' ); ) {
-      if ( !( SignalData::MISSING_VALUESTR == each || "32768" == each ) ) {
-        double v = std::stod( each );
-        if ( v > highval ) {
-          highval = v;
-        }
-        if ( v < lowval ) {
-          lowval = v;
-        }
+  void DataRow::rescale( int newscale ) {
+    int pow10 = std::pow( 10, newscale - scale );
+    for ( auto& val : data ) {
+      if ( val != SignalData::MISSING_VALUE ) {
+        val *= pow10;
       }
     }
   }
 
-  std::vector<int> DataRow::ints( int scale ) const {
-    return ints( data, scale );
+  const std::vector<int>& DataRow::ints( ) const {
+    return data;
   }
 
-  std::vector<short> DataRow::shorts( int scale ) const {
-    return shorts( data, scale );
+  std::vector<short> DataRow::shorts( ) const {
+    return std::vector<short>( data.begin( ), data.end( ) );
   }
 
-  std::vector<int> DataRow::ints( const std::string& data, int scale ) {
+  std::vector<double> DataRow::doubles( ) const {
+    std::vector<double> vec( data.size( ) );
 
-    const double scalefactor = std::pow( 10, scale );
-
-    std::stringstream stream( data );
-    std::vector<int> vals;
-    for ( std::string each; std::getline( stream, each, ',' ); ) {
-      if ( SignalData::MISSING_VALUESTR == each ) {
-        // don't scale missing numbers
-        vals.push_back( SignalData::MISSING_VALUE );
-      }
-      else if ( 0 == scale ) {
-        vals.push_back( std::stoi( each ) );
-      }
-      else {
-        double dbl = std::stod( each );
-        //      try{
-        vals.push_back( (int) ( dbl * scalefactor ) );
-        //      }
-        //      catch( std::invalid_argument x){
-        //        std::cout<<data<<std::endl;
-        //        std::cout<<"failed on: "<<each<<std::endl;
-        //      }
-      }
+    const double pow10 = std::pow( 10, scale );
+    for ( const auto& v : data ) {
+      vec.push_back( SignalData::MISSING_VALUE == v
+          ? SignalData::MISSING_VALUE
+          : v * pow10 );
     }
-    return vals;
+    return vec;
   }
 
-  std::vector<short> DataRow::shorts( const std::string& data, int scale ) {
-    const int scalefactor = std::pow( 10, scale );
-
-    std::stringstream stream( data );
-    std::vector<short> vals;
-    for ( std::string each; std::getline( stream, each, ',' ); ) {
-      if ( SignalData::MISSING_VALUESTR == each ) {
-        // don't scale missing values
-        vals.push_back( SignalData::MISSING_VALUE );
-      }
-      else if ( 0 == scale ) {
-        // FIXME: check against short limits?
-        int val = std::stoi( each );
-        vals.push_back( (short) val );
-      }
-      else {
-        vals.push_back( (short) ( std::stof( each ) * scalefactor ) );
-      }
-    }
-    return vals;
+  int DataRow::scaleOf( const std::string& value ) {
+    const size_t dotpos = value.find( '.' );
+    return (std::string::npos == dotpos
+        ? 0
+        : value.size( ) - dotpos );
   }
 }

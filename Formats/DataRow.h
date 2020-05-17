@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 #include "dr_time.h"
 namespace FormatConverter {
@@ -33,49 +34,59 @@ namespace FormatConverter {
     virtual ~TimedData( );
   };
 
-  class DataRow : public TimedData {
+  class DataRow {
   public:
-    DataRow( const dr_time& time = 0, const std::string& data = "",
+    /**
+     * Creates a new DataRow from the given string. The string is decoded into
+     * either a single data value, or a CSV string of values. This function is
+     * a convenience function to one(), and many(), depending on whether or not
+     * the data string contains a ,
+     * @param
+     * @param data
+     * @return
+     */
+    static DataRow from( const dr_time&, const std::string& data );
+    static DataRow one( const dr_time&, const std::string& data );
+    static DataRow many( const dr_time&, const std::string& data );
+
+    DataRow( const dr_time& time, const std::vector<int>& data, int scale = 0,
+        std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
+    DataRow( const dr_time& time, int data, int scale = 0,
         std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
     DataRow( const DataRow& orig );
     DataRow& operator=(const DataRow& orig );
+    virtual ~DataRow( );
 
     void clear( );
 
+    const std::vector<int>& ints( ) const;
+    std::vector<short> shorts( ) const;
+    std::vector<double> doubles( ) const;
+
     /**
-     * Converts the given data string (comma-separated or not) to integers by
-     * multiplying the each value by the scale.
+     * Copies this DataRow at a different scale
+     * @param newscale
      * @return
      */
-    static std::vector<int> ints( const std::string&, int scale = 0 );
-    static std::vector<short> shorts( const std::string&, int scale = 0 );
-
-    std::vector<int> ints( int scale = 0 ) const;
-    std::vector<short> shorts( int scale = 0 ) const;
+    DataRow newscale( int newscale ) const;
 
     /**
-     * Iterates through the given string and determines the highest and lowest vals
-     * higher/lower than the given values. That is, if a highval is 10, the vals
-     * contains 11, the highval is set to 11. If vals only contained 9, then highval
-     * would remain 10.
-     * @param highval
-     * @param lowval
+     * Updates values in this DataRow to the new scale (up or down)
+     * Note that rescaling down may lead to loss of precision
+     * @param newscale
      */
-    static void hilo( const std::string& vals, double& highval, double& lowval );
+    void rescale( int newscale );
 
-    virtual ~DataRow( );
+    static int scaleOf( const std::string& data );
 
-    /**
-     * Figures out the appropriate power of 10 to multiply a value (or csv) to
-     * convert it from a double to an integer.
-     *
-     * @param val the value string (will be converted to a float for comparison)
-     * @param iswave should this value be checked for comma-separated values?
-     * @return a power of 10 for small numbers, or a negative power for big numbers
-     */
-    static int scale( const std::string& val, bool iswave );
-
+    dr_time time;
+    std::vector<int> data;
+    int scale;
     std::map<std::string, std::string> extras;
+
+  private:
+    static const std::set<std::string> hiloskips;
+    static void intify( const std::string_view& data, size_t dotpos, int * val, int * scale );
   };
 }
 #endif /* DATAROW_H */

@@ -23,6 +23,8 @@
 #include <limits>
 #include <queue>
 #include <filesystem>
+#include <algorithm>
+#include <cmath>
 #include "config.h"
 
 namespace FormatConverter{
@@ -152,13 +154,23 @@ namespace FormatConverter{
       }
 #endif
       file = tmpfile( );
+      // std::string ffoo( "/tmp/cache-" );
+      // ffoo.append( name( ) );
+      // ffoo.append( wave( ) ? ".wave" : ".vital" );
+      // file = fopen( ffoo.c_str( ), "w+" );
     }
 
     while ( !data.empty( ) ) {
       std::unique_ptr<DataRow> a = std::move( data.front( ) );
       data.pop_front( );
 
-      ss << a->time << " " << a->data << " ";
+      if ( wave( ) && a->data.size( ) > 500 ) {
+        std::cout << "row data size: " << a->data.size( ) << std::endl;
+      }
+      ss << a->time << " " << a->scale << " " << a->data.size( );
+      for ( const auto& i : a->data ) {
+        ss << " " << i;
+      }
       if ( !a->extras.empty( ) ) {
         for ( const auto& x : a->extras ) {
           ss << "|" << x.first << "=" << x.second;
@@ -193,10 +205,27 @@ namespace FormatConverter{
     datacount++;
     livecount++;
 
-    int rowscale = DataRow::scale( row.data, iswave );
-    DataRow::hilo( row.data, highval, lowval );
-    int myscale = scale( );
-    if ( rowscale > myscale ) {
+    if ( datacount > 10000000 ) {
+      std::cout << "here: " << name( ) << std::endl;
+    }
+
+    int rowscale = row.scale;
+
+    double pow10 = std::pow( 10, rowscale );
+    int hiv = std::numeric_limits<int>::min( );
+    int lov = std::numeric_limits<int>::max( );
+    for ( auto& v : row.data ) {
+      hiv = std::max( hiv, v );
+      lov = std::min( lov, v );
+    }
+
+    double rowlo = (double) ( lov ) / pow10;
+    double rowhi = (double) ( hiv ) / pow10;
+
+    lowval = std::min( rowlo, lowval );
+    highval = std::max( rowhi, highval );
+
+    if ( rowscale > scale( ) ) {
       scale( rowscale );
     }
 
@@ -209,12 +238,9 @@ namespace FormatConverter{
     DataRow * lastins = new DataRow( row );
     data.push_back( std::unique_ptr<DataRow>( lastins ) );
 
-    if ( row.time > lastdata ) {
-      lastdata = row.time;
-    }
-    if ( row.time < firstdata ) {
-      firstdata = row.time;
-    }
+    lastdata = std::max( row.time, lastdata );
+    firstdata = std::min( row.time, firstdata );
+
     dates.push_front( row.time );
 
     return true;
@@ -230,7 +256,7 @@ namespace FormatConverter{
 
   int BasicSignalData::uncache( int max ) {
     int loop = 0;
-    const int BUFFSZ = 8192;
+    const int BUFFSZ = 1024 * 16;
     char buff[BUFFSZ];
 
     while ( loop < max ) {
@@ -251,10 +277,19 @@ namespace FormatConverter{
 
       std::stringstream ss( read );
       dr_time t;
-      std::string val;
+      int scale;
+      int counter;
 
       ss >> t;
-      ss >> val;
+      ss >> scale;
+      ss >>counter;
+      std::vector<int> vals;
+      vals.reserve( counter );
+      for ( auto i = 0; i < counter; i++ ) {
+        int v;
+        ss >> v;
+        vals.push_back( v );
+      }
 
       std::map<std::string, std::string> attrs;
       if ( !extras.empty( ) ) {
@@ -276,8 +311,7 @@ namespace FormatConverter{
         }
       }
 
-
-      data.push_back( std::unique_ptr<DataRow>( new DataRow( t, val, attrs ) ) );
+      data.push_back( std::unique_ptr<DataRow>( new DataRow( t, vals, scale, attrs ) ) );
       loop++;
     }
 

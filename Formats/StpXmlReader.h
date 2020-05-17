@@ -32,20 +32,23 @@ namespace FormatConverter {
     static const int INNAME;
     static const int INDETERMINATE;
 
-    StpXmlReader();
-    virtual ~StpXmlReader();
+    StpXmlReader( );
+    virtual ~StpXmlReader( );
 
   private:
-    StpXmlReader(const StpXmlReader& orig);
+    StpXmlReader( const StpXmlReader& orig );
 
-    static std::string resample(const std::string& data, int hz);
-    static bool waveIsOk(const std::string& wavedata);
+    static std::string resample( const std::string& data, int hz );
+    static bool waveIsOk( const std::string& wavedata );
 
-    virtual void start(const std::string& element, std::map<std::string, std::string>& attrs) override;
-    virtual void end(const std::string& element, const std::string& text) override;
-    virtual void comment(const std::string& text) override;
+    virtual void start( const std::string& element, std::map<std::string, std::string>& attrs ) override;
+    virtual void end( const std::string& element, const std::string& text ) override;
+    virtual void comment( const std::string& text ) override;
 
-    void setstate(int state);
+    void setstate( int state );
+
+    void addVital( const std::string& value );
+    void addWave( const std::string& value, int hz );
 
     time_t prevtime;
     time_t currvstime;

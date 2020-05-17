@@ -19,14 +19,11 @@
 #include "FileNamer.h"
 namespace FormatConverter{
 
-  WfdbWriter::WfdbWriter( ) : Writer( "hea" ) {
-  }
+  WfdbWriter::WfdbWriter( ) : Writer( "hea" ) { }
 
-  WfdbWriter::WfdbWriter( const WfdbWriter& ) : Writer( "hea" ) {
-  }
+  WfdbWriter::WfdbWriter( const WfdbWriter& ) : Writer( "hea" ) { }
 
-  WfdbWriter::~WfdbWriter( ) {
-  }
+  WfdbWriter::~WfdbWriter( ) { }
 
   int WfdbWriter::initDataSet( ) {
     currdir = getcwd( NULL, 0 );
@@ -60,6 +57,10 @@ namespace FormatConverter{
   }
 
   int WfdbWriter::drain( std::unique_ptr<SignalSet>& info ) {
+    output( ) << "Error: WFDB writing not yet implemented" << std::endl;
+    return -1;
+
+
     std::map<double, std::vector<std::unique_ptr < SignalData>>> freqgroups;
     for ( auto& ds : info->vitals( ) ) {
       double freq = ds->hz( );
@@ -126,52 +127,52 @@ namespace FormatConverter{
   }
 
   void WfdbWriter::syncAndWrite( double freq, std::vector<std::unique_ptr<SignalData>>&olddata ) {
+    std::vector<std::vector<int>> data = SignalUtils::syncDatas( olddata );
 
-    std::vector<std::vector < std::string>> data = SignalUtils::syncDatas( olddata );
+
+    
+    // FIXME: refactor all this stuff!
+
+
 
     const auto& first = ( olddata.begin( )->get( ) );
     if ( first->wave( ) ) {
-      int ifrq = ( olddata.begin( ) )->get( )->readingsPerChunk( );
+      //int ifrq = ( olddata.begin( ) )->get( )->readingsPerChunk( );
 
       // waveforms
 
-      // these are a little tricker than vitals, because each value is really
-      // ifrq comma-separated values in a string. We need to break the string
-      // apart, but also keep all the columns in sync. We do this by accumulating
-      // all the ifrq values for one row of data, then splitting each vector
-      // out individually
-      for ( std::vector<std::string> rowcols : data ) {
-        int cols = rowcols.size( );
-
-        WFDB_Sample samples[cols][ifrq] = { 0 };
-        for ( int col = 0; col < cols; col++ ) {
-          std::vector<int> slices = FormatConverter::DataRow::ints( rowcols[col] );
-          size_t numslices = slices.size( );
-          for ( size_t slice = 0; slice < numslices; slice++ ) {
-            samples[col][slice] = slices[slice];
-          }
-        }
-
-        // we have all the samples for one second of readings, so add them
-        // to our datafile one row at a time.
-        WFDB_Sample onerow[rowcols.size( )];
-        for ( int f = 0; f < ifrq; f++ ) {
-          for ( int c = 0; c < cols; c++ ) {
-            onerow[c] = samples[c][f];
-          }
-          putvec( &onerow[0] );
-        }
-      }
-    }
-    else {
-      // vital signs
-      for ( std::vector<std::string> row : data ) {
-        std::vector<WFDB_Sample> vec;
-        for ( std::string rowcols : row ) {
-          vec.push_back( std::stoi( rowcols ) );
-        }
-        putvec( &vec[0] );
-      }
+      //      for ( std::vector<int> rowcols : data ) {
+      //        int cols = rowcols.size( );
+      //
+      //        WFDB_Sample samples[cols][ifrq] = { 0 };
+      //        for ( int col = 0; col < cols; col++ ) {
+      //          std::vector<int> slices = FormatConverter::DataRow::ints( rowcols[col] );
+      //          size_t numslices = slices.size( );
+      //          for ( size_t slice = 0; slice < numslices; slice++ ) {
+      //            samples[col][slice] = slices[slice];
+      //          }
+      //        }
+      //
+      //        // we have all the samples for one second of readings, so add them
+      //        // to our datafile one row at a time.
+      //        WFDB_Sample onerow[rowcols.size( )];
+      //        for ( int f = 0; f < ifrq; f++ ) {
+      //          for ( int c = 0; c < cols; c++ ) {
+      //            onerow[c] = samples[c][f];
+      //          }
+      //          putvec( &onerow[0] );
+      //        }
+      //      }
+      //    }
+      //    else {
+      //      // vital signs
+      //      for ( std::vector<int> row : data ) {
+      //        std::vector<WFDB_Sample> vec;
+      //        for ( int rowcols : row ) {
+      //          vec.push_back( rowcols );
+      //        }
+      //        putvec( &vec[0] );
+      //      }
     }
   }
 }

@@ -479,8 +479,7 @@ namespace FormatConverter{
       // we call stoi to ensure we have an actual value
       // ...if an exception is thrown, just move on
       try {
-        std::stoi( xml->value );
-        vital->add( DataRow( xml->currentTime, xml->value ) );
+        vital->add( DataRow( xml->currentTime, std::stoi( xml->value ) ) );
       }
       catch ( std::exception& ex ) {
         // don't care

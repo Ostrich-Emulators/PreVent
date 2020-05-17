@@ -91,7 +91,7 @@ namespace FormatConverter {
       if ( signal ) {
         if ( readingdata ) {
           split( line, key, val, "," );
-          signal->add( DataRow( std::stol( key ), val ) );
+          signal->add( DataRow::from( std::stol( key ), val ) );
         }
         else {
           // not reading data yet, so we're setting

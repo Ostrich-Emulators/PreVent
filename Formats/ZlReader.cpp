@@ -32,24 +32,20 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   const std::string ZlReader::HEADER = "HEADER";
   const std::string ZlReader::VITAL = "VITAL";
   const std::string ZlReader::WAVE = "WAVE";
   const std::string ZlReader::TIME = "TIME";
 
-  ZlReader::ZlReader( ) : Reader( "Zl" ), firstread( true ) {
-  }
+  ZlReader::ZlReader( ) : Reader( "Zl" ), firstread( true ) { }
 
-  ZlReader::ZlReader( const std::string& name ) : Reader( name ), firstread( true ) {
-  }
+  ZlReader::ZlReader( const std::string& name ) : Reader( name ), firstread( true ) { }
 
-  ZlReader::ZlReader( const ZlReader& orig ) : Reader( orig ), firstread( orig.firstread ) {
-  }
+  ZlReader::ZlReader( const ZlReader& orig ) : Reader( orig ), firstread( orig.firstread ) { }
 
-  ZlReader::~ZlReader( ) {
-  }
+  ZlReader::~ZlReader( ) { }
 
   void ZlReader::finish( ) {
     stream->close( );
@@ -74,7 +70,7 @@ namespace FormatConverter {
       bool islibz = ( "-lz" == input );
 
       stream.reset( new StreamChunkReader( &( std::cin ), ( islibz || isgz ),
-              true, isgz ) );
+          true, isgz ) );
     }
     else {
       // we need to read the first byte of the input stream to decide if it's compressed
@@ -188,7 +184,7 @@ namespace FormatConverter {
           dataset->setUom( uom );
           dataset->setChunkIntervalAndSampleRate( 2000, 1 );
         }
-        dataset->add( FormatConverter::DataRow( currentTime, val ) );
+        dataset->add( DataRow::from( currentTime, val ) );
       }
       else if ( WAVE == firstword ) {
         state = zlReaderState::ZIN_WAVE;
@@ -209,7 +205,7 @@ namespace FormatConverter {
           dataset->setUom( uom );
         }
 
-        dataset->add( FormatConverter::DataRow( currentTime, val ) );
+        dataset->add( DataRow::from( currentTime, val ) );
       }
       else if ( TIME == firstword ) {
         state = zlReaderState::ZIN_TIME;
