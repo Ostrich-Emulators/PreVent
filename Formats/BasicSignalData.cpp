@@ -164,9 +164,6 @@ namespace FormatConverter{
       std::unique_ptr<DataRow> a = std::move( data.front( ) );
       data.pop_front( );
 
-      if ( wave( ) && a->data.size( ) > 500 ) {
-        std::cout << "row data size: " << a->data.size( ) << std::endl;
-      }
       ss << a->time << " " << a->scale << " " << a->data.size( );
       for ( const auto& i : a->data ) {
         ss << " " << i;
@@ -259,12 +256,13 @@ namespace FormatConverter{
     const int BUFFSZ = 1024 * 16;
     char buff[BUFFSZ];
 
+    std::string read;
     while ( loop < max ) {
       char * justread = std::fgets( buff, BUFFSZ, file );
       if ( NULL == justread ) {
         break;
       }
-      std::string read( justread );
+      read.assign( justread );
 
       // first things first: if we have attributes, cut them out 
       const size_t barpos = read.find( "|" );
@@ -282,11 +280,11 @@ namespace FormatConverter{
 
       ss >> t;
       ss >> scale;
-      ss >>counter;
+      ss >> counter;
       std::vector<int> vals;
       vals.reserve( counter );
+      int v;
       for ( auto i = 0; i < counter; i++ ) {
-        int v;
         ss >> v;
         vals.push_back( v );
       }
