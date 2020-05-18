@@ -653,7 +653,6 @@ namespace FormatConverter{
           std::vector<int> onerowdata( &datavals[dataidx], &datavals[dataidx + readingsperperiod] );
           signal->add( DataRow( time, onerowdata, scale ) );
           dataidx += readingsperperiod;
-
         }
         else {
           signal->add( DataRow( time, datavals[dataidx++], scale ) );
@@ -708,6 +707,8 @@ namespace FormatConverter{
     while ( startpos <= endpos ) { // stop looking if we can't find it
       hsize_t checkpos = startpos + ( endpos - startpos ) / 2;
       dr_time checktime = getTimeAtIndex( haystack, checkpos );
+      // std::cout << "timesearch: " << startpos << "-" << endpos << "=>"
+      //   << checkpos << " => " << checktime << std::endl;
 
       if ( startpos == endpos && checktime != needle ) {
         // no where else to look, but we didn't find our needle
@@ -718,16 +719,20 @@ namespace FormatConverter{
         if ( nullptr != found ) {
           *found = getTimeAtIndex( haystack, checkpos );
         }
+
+        if ( checkpos == endpos ) {
+          checkpos++;
+        }
         return checkpos;
       }
 
-      if ( checktime == needle ) {
+      if ( checktime == needle ) { // we found the time we want!
         if ( nullptr != found ) {
           *found = checktime;
         }
         return checkpos;
       }
-      else if ( checktime < needle ) {
+      else if ( checktime < needle ) { // the time we found is too small
         if ( checkpos < ROWS ) {
           startpos = checkpos + 1;
         }
@@ -739,7 +744,7 @@ namespace FormatConverter{
           return checkpos;
         }
       }
-      else {
+      else { // the time we found is too big
         if ( checkpos > 0 ) {
           endpos = checkpos - 1;
         }
