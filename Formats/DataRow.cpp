@@ -196,7 +196,7 @@ namespace FormatConverter{
     for ( const auto& v : data ) {
       vec.push_back( SignalData::MISSING_VALUE == v
           ? SignalData::MISSING_VALUE
-          : v * pow10 );
+          : v / pow10 );
     }
     return vec;
   }
