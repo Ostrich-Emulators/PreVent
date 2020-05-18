@@ -102,9 +102,7 @@ namespace FormatConverter{
   bool StatisticalSignalData::add( const FormatConverter::DataRow& row ) {
     SignalDataWrapper::add( row );
 
-    std::vector<double> values( row.doubles( ) );
-
-    for ( auto val : values ) {
+    for ( auto val : row.doubles( ) ) {
       if ( val != SignalData::MISSING_VALUE ) {
         total += val;
 
@@ -123,7 +121,7 @@ namespace FormatConverter{
       }
     }
 
-    _count += values.size( );
+    _count += row.data.size( );
     return true;
   }
 }

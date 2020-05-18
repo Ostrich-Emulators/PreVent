@@ -575,13 +575,13 @@ namespace FormatConverter{
 
       const int scale = metaint( data, SignalData::SCALE );
 
-      int readingsperperiod = metaint( data, SignalData::READINGS_PER_CHUNK );
-      int periodtime = metaint( data, SignalData::CHUNK_INTERVAL_MS );
+      const int readingsperperiod = metaint( data, SignalData::READINGS_PER_CHUNK );
+      const int periodtime = metaint( data, SignalData::CHUNK_INTERVAL_MS );
       signal->setChunkIntervalAndSampleRate( periodtime, readingsperperiod );
       signal->scale( scale );
-      bool doints = ( H5::PredType::STD_I32LE == data.getDataType( ) );
+      const bool doints = ( H5::PredType::STD_I32LE == data.getDataType( ) );
 
-      bool timeisindex = ( layoutVersion( file ) >= 40100
+      const bool timeisindex = ( layoutVersion( file ) >= 40100
           ? "index to Global_Times" == metastr( times, "Columns" )
           : false );
       std::vector<dr_time> realtimes;
@@ -649,7 +649,15 @@ namespace FormatConverter{
               : slabstopidx );
         }
 
-        signal->add( FormatConverter::DataRow( time, datavals, scale ) );
+        if ( signal->wave( ) ) {
+          std::vector<int> onerowdata( &datavals[dataidx], &datavals[dataidx + readingsperperiod] );
+          signal->add( DataRow( time, onerowdata, scale ) );
+          dataidx += readingsperperiod;
+
+        }
+        else {
+          signal->add( DataRow( time, datavals[dataidx++], scale ) );
+        }
       }
     }
     catch ( H5::FileIException& error ) {
@@ -777,25 +785,16 @@ namespace FormatConverter{
     dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
     ds.read( &dd, ds.getDataType( ), searchspace, dsspace );
 
-    //  for ( hsize_t i = startidx; i < endidx; i++ ) {
-    //    std::cout << "row " << i << ":";
-    //    for ( hsize_t j = 0; j < COLS; j++ ) {
-    //      std::cout << " " << dd[i][j];
-    //    }
-    //    std::cout << std::endl;
-    //  }
-
-    std::vector<int> values;
-    values.reserve( rowstoget );
+    std::vector<int> values( rowstoget );
     for ( hsize_t i = 0; i < rowstoget; i++ ) {
-      values.push_back( dd[i][0] );
+      values[i] = dd[i][0];
     }
 
     return values;
   }
 
   std::vector<int> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
-    hsize_t rowstoget = endrow - startrow;
+    const hsize_t rowstoget = endrow - startrow;
 
     hsize_t DIMS[2] = { };
     H5::DataSpace dsspace = ds.getSpace( );
@@ -806,31 +805,26 @@ namespace FormatConverter{
     //std::cout << "reading shorts " << ROWS << "," << COLS << std::endl;
 
     // we'll get everything in one read
-    hsize_t dim[] = { rowstoget, COLS };
-    hsize_t count[] = { rowstoget, COLS };
+    const hsize_t dim[] = { rowstoget, COLS };
+    const hsize_t count[] = { rowstoget, COLS };
 
     H5::DataSpace searchspace( 2, dim );
 
-    hsize_t offset[] = { startrow, 0 };
+    const hsize_t offset[] = { startrow, 0 };
     short dd[rowstoget][COLS] = { };
     dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
     ds.read( &dd, ds.getDataType( ), searchspace, dsspace );
 
-    std::vector<int> values;
-    values.reserve( rowstoget );
+    std::vector<int> values( rowstoget );
     for ( hsize_t i = 0; i < rowstoget; i++ ) {
-      values.push_back( (int) dd[i][0] );
+      values[i] = static_cast<int> ( dd[i][0] );
     }
-
-    //  for ( hsize_t cnt = startidx; cnt < endidx; cnt++ ) {
-    //    std::cout << "row " << cnt << ":" << values[cnt - startidx] << std::endl;
-    //  }
 
     return values;
   }
 
   std::vector<dr_time> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
-    hsize_t rowstoget = endrow - startrow;
+    const hsize_t rowstoget = endrow - startrow;
 
     hsize_t DIMS[2] = { };
     H5::DataSpace dsspace = ds.getSpace( );
@@ -841,22 +835,19 @@ namespace FormatConverter{
     //std::cout << "reading shorts " << ROWS << "," << COLS << std::endl;
 
     // we'll get everything in one read
-    hsize_t dim[] = { rowstoget, COLS };
-    hsize_t count[] = { rowstoget, COLS };
+    const hsize_t dim[] = { rowstoget, COLS };
+    const hsize_t count[] = { rowstoget, COLS };
 
     H5::DataSpace searchspace( 2, dim );
 
-    hsize_t offset[] = { startrow, 0 };
-    hsize_t stride[] = { 1, COLS };
+    const hsize_t offset[] = { startrow, 0 };
+    const hsize_t stride[] = { 1, COLS };
     dr_time times[rowstoget];
     dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
     ds.read( &times, ds.getDataType( ), searchspace, dsspace );
 
-    std::vector<dr_time> values;
-    values.reserve( rowstoget );
-    for ( hsize_t i = 0; i < rowstoget; i++ ) {
-      values.push_back( times[i] );
-    }
+    const int sizer = sizeof ( times ) / sizeof ( times[0] );
+    std::vector<dr_time> values( times, times + sizer );
 
     return values;
   }

@@ -139,7 +139,7 @@ namespace FormatConverter{
   }
 
   DataRow::DataRow( const dr_time& _time, const std::vector<int>& _data, int _scale,
-      std::map<std::string, std::string> _extras ) : time( _time ), data( _data.begin(), _data.end() ),
+      std::map<std::string, std::string> _extras ) : time( _time ), data( _data.begin( ), _data.end( ) ),
       scale( _scale ), extras( _extras ) { }
 
   DataRow::DataRow( const dr_time& _time, int _data, int _scale,
@@ -148,7 +148,7 @@ namespace FormatConverter{
     data.push_back( _data );
   }
 
-  DataRow::DataRow( const DataRow & orig ) : time( orig.time ), data( orig.data.begin(), orig.data.end() ),
+  DataRow::DataRow( const DataRow & orig ) : time( orig.time ), data( orig.data.begin( ), orig.data.end( ) ),
       scale( orig.scale ), extras( orig.extras ) { }
 
   DataRow & DataRow::operator=(const DataRow & orig ) {
@@ -189,7 +189,8 @@ namespace FormatConverter{
   }
 
   std::vector<double> DataRow::doubles( ) const {
-    std::vector<double> vec( data.size( ) );
+    std::vector<double> vec;
+    vec.reserve( data.size( ) );
 
     const double pow10 = std::pow( 10, scale );
     for ( const auto& v : data ) {

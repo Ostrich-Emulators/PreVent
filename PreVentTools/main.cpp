@@ -247,7 +247,7 @@ int main( int argc, char** argv ) {
       if ( fs::is_directory( p1 ) ) {
         for ( auto& f : fs::directory_iterator( p1 ) ) {
           std::string ext = f.path( ).extension( );
-          std::transform( ext.begin(), ext.end(), ext.begin(), ::toupper);
+          std::transform( ext.begin( ), ext.end( ), ext.begin( ), ::toupper );
           if ( ".STP" == ext ) {
             files.push_back( f.path( ) );
           }
@@ -259,8 +259,8 @@ int main( int argc, char** argv ) {
     }
 
     std::ostream& outstream = ( outfilename.empty( )
-    ? std::cout
-    : *( new std::ofstream( outfilename ) ) );
+        ? std::cout
+        : *( new std::ofstream( outfilename ) ) );
 
     for ( const auto& file : files ) {
       auto vector = StpGeReader::parseMetadata( file );
@@ -472,6 +472,10 @@ int main( int argc, char** argv ) {
 
     bool iswave = ( std::string::npos == path.find( "VitalSigns" ) );
     auto fmt = FormatConverter::Formats::guess( input );
+    if ( Format::UNRECOGNIZED == fmt ) {
+      std::cerr << "cannot guess file format; use a recognized suffix like .hdf5" << std::endl;
+      return -1;
+    }
     std::unique_ptr<Reader> rdr = Reader::get( fmt );
 
     StatisticalSignalData * descriptives = new StatisticalSignalData( new NullSignalData( "-", iswave ) );
