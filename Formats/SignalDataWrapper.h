@@ -72,7 +72,7 @@ namespace FormatConverter {
     virtual const std::map<std::string, std::string>& metas() const override;
     virtual const std::map<std::string, int>& metai() const override;
     virtual const std::map<std::string, double>& metad() const override;
-    virtual const std::deque<dr_time> times() const override;
+    virtual std::deque<dr_time> times() override;
     virtual std::vector<std::string> extras() const override;
     virtual void extras(const std::string& ext) override;
 

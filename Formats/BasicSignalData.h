@@ -44,7 +44,11 @@ namespace FormatConverter {
     virtual void setWave( bool wave = false ) override;
     virtual bool wave( ) const override;
 
-    virtual const std::deque<dr_time> times( ) const override;
+    /**
+     * Gets times for all data rows, from earliest to most recent
+     * @return
+     */
+    virtual std::deque<dr_time> times( ) override;
 
     virtual double highwater( ) const override;
     virtual double lowwater( ) const override;
@@ -88,9 +92,8 @@ namespace FormatConverter {
     dr_time firstdata;
     dr_time lastdata;
     size_t datacount;
-    size_t livecount; // how big is out data list in memory?
+    size_t livecount; // how many data rows are cached in memory (not disk)?
     std::deque<std::unique_ptr<FormatConverter::DataRow>> data;
-    std::deque<dr_time> dates;
     std::FILE * file;
     bool popping;
     bool iswave;

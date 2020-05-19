@@ -302,7 +302,7 @@ namespace FormatConverter{
   }
 
   std::vector<size_t> SignalUtils::index( const std::vector<dr_time>& alltimes,
-      const SignalData& signal ) {
+      SignalData& signal ) {
 
     std::cout << "signaltimes values: " << signal.times( ).size( ) << std::endl;
     std::deque<dr_time> signaltimes( signal.times( ).begin( ), signal.times( ).end( ) );

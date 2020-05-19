@@ -25,6 +25,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include "config.h"
 
 namespace FormatConverter{
@@ -104,7 +105,6 @@ namespace FormatConverter{
     livecount--;
     std::unique_ptr<DataRow> row = std::move( data.front( ) );
     data.pop_front( );
-    dates.pop_front( );
     return row;
   }
 
@@ -238,8 +238,6 @@ namespace FormatConverter{
     lastdata = std::max( row.time, lastdata );
     firstdata = std::min( row.time, firstdata );
 
-    dates.push_front( row.time );
-
     return true;
   }
 
@@ -316,8 +314,31 @@ namespace FormatConverter{
     return loop;
   }
 
-  const std::deque<dr_time> BasicSignalData::times( ) const {
-    return std::deque<dr_time>( dates.begin( ), dates.end( ) );
+  std::deque<dr_time> BasicSignalData::times( ) {
+    std::deque<dr_time> dates;
+    if ( nullptr != file ) {
+      // read the dates out of the file first
+      std::rewind( file );
+      const int BUFFSZ = 1024 * 16;
+      char buff[BUFFSZ];
+
+      std::string timer;
+      while ( nullptr != std::fgets( buff, BUFFSZ, file ) ) {
+        char * loc = strchr( buff, ' ' );
+        if ( nullptr != loc ) {
+          timer = std::string( buff, loc );
+          dates.push_back( stol( timer ) );
+        }
+      }
+      // when we get here, our file pointer has traveled back to the end of the file
+    }
+
+    // now add the dates currently in our cache
+    for ( auto it = data.rbegin( ); it != data.rend( ); ++it ) {
+      dates.push_back( ( *it )->time );
+    }
+
+    return dates;
   }
 
   void BasicSignalData::setMetadataFrom( const SignalData& model ) {

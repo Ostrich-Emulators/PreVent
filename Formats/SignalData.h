@@ -74,7 +74,7 @@ namespace FormatConverter {
      *
      * @return
      */
-    virtual const std::deque<dr_time> times( ) const = 0;
+    virtual std::deque<dr_time> times( ) = 0;
 
     virtual std::unique_ptr<FormatConverter::DataRow> pop( ) = 0;
     virtual void setWave( bool wave = false ) = 0;

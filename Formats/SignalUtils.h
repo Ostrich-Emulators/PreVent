@@ -80,7 +80,7 @@ namespace FormatConverter {
      * @return a vector the same size as alltimes
      */
     static std::vector<size_t> index( const std::vector<dr_time>& alltimes,
-        const SignalData& signal );
+        SignalData& signal );
 
     /**
      * Gets the earliest and latest timestamps from the SignalData.

@@ -244,6 +244,9 @@ namespace FormatConverter{
     size_t rowcount = 0;
     for ( size_t row = 0; row < rows; row++ ) {
       std::unique_ptr<FormatConverter::DataRow> datarow = data->pop( );
+      if ( !datarow ) {
+        output( ) << "wait! " << row << std::endl;
+      }
       datarow->rescale( scale );
       if ( useInts ) {
         ibuffer.push_back( datarow->ints( )[0] );
@@ -807,20 +810,21 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data ) {
-    std::deque<dr_time> vec = data->times( );
+    std::deque<dr_time> timevec = data->times( );
     // SignalData stores times from latest to earliest, so we need to reverse them
     std::vector<dr_time> times;
-    times.reserve( vec.size( ) );
+    times.reserve( timevec.size( ) );
 
     if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
       // convert dr_times to the index of the global times array
-      for ( auto it = vec.rbegin( ); it != vec.rend( ); ++it ) {
+      for ( auto it = timevec.begin( ); it != timevec.end( ); ++it ) {
         times.push_back( timesteplkp.at( *it ) );
       }
     }
     else {
-      times.insert( times.end( ), vec.rbegin( ), vec.rend( ) );
+      times.insert( times.end( ), timevec.begin( ), timevec.end( ) );
     }
+
     H5::DataSet ds = writeTimes( group, times );
 
     writeAttribute( ds, "Time Source", "raw" );
