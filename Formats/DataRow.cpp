@@ -14,6 +14,7 @@
 #include "DataRow.h"
 #include "Reader.h"
 #include "SignalData.h"
+#include "SignalUtils.h"
 #include <cmath>
 #include <sstream>
 #include <vector>
@@ -37,9 +38,7 @@ namespace FormatConverter{
 
   TimedData::~TimedData( ) { }
 
-  const std::set<std::string> DataRow::hiloskips = {
-    { SignalData::MISSING_VALUESTR, "32768" }
-  };
+  const std::set<std::string> DataRow::hiloskips = { SignalData::MISSING_VALUESTR, "32768" };
 
   void DataRow::intify( const std::string_view& strval, size_t dotpos, int * val, int * scale ) {
     if ( std::string::npos == dotpos ) {
@@ -67,30 +66,30 @@ namespace FormatConverter{
     }
   }
 
-  DataRow DataRow::from( const dr_time& time, const std::string& data ) {
+  std::unique_ptr<DataRow> DataRow::from( const dr_time& time, const std::string& data ) {
     return ( std::string::npos == data.find( ',' )
         ? one( time, data )
         : many( time, data ) );
   }
 
-  DataRow DataRow::one( const dr_time& time, const std::string& data ) {
+  std::unique_ptr<DataRow> DataRow::one( const dr_time& time, const std::string& data ) {
     if ( 0 != hiloskips.count( data ) ) {
-      return DataRow( time, SignalData::MISSING_VALUE );
+      return std::make_unique<DataRow>( time, SignalData::MISSING_VALUE );
     }
 
     size_t dotpos = data.find( '.' );
     if ( std::string::npos == dotpos ) {
-      return DataRow( time, std::stoi( data ) );
+      return std::make_unique<DataRow>( time, std::stoi( data ) );
     }
     else {
       int val;
       int scale;
       intify( data, dotpos, &val, &scale );
-      return DataRow( time, val, scale );
+      return std::make_unique<DataRow>( time, val, scale );
     }
   }
 
-  DataRow DataRow::many( const dr_time& time, const std::string & data ) {
+  std::unique_ptr<DataRow> DataRow::many( const dr_time& time, const std::string & data ) {
     const std::string_view view( data );
 
     // all values in this vector are at maxscale,
@@ -98,13 +97,7 @@ namespace FormatConverter{
     std::vector<int> vals;
     int maxscale = 0;
 
-    size_t first = 0;
-    while ( first < view.size( ) ) {
-      const auto second = view.find( ',', first );
-      const std::string_view smallview = ( std::string::npos == second
-          ? view.substr( first )
-          : view.substr( first, second - first ) );
-
+    for ( const auto& smallview : SignalUtils::splitcsv( data ) ) {
       // might still be an integer if we have something like .000
       int val;
       int scale;
@@ -127,15 +120,9 @@ namespace FormatConverter{
       }
 
       vals.push_back( val );
-
-      if ( std::string::npos == second ) {
-        break;
-      }
-
-      first = second + 1;
     }
 
-    return DataRow( time, vals, maxscale );
+    return std::make_unique<DataRow>( time, vals, maxscale );
   }
 
   DataRow::DataRow( const dr_time& _time, const std::vector<int>& _data, int _scale,

@@ -34,7 +34,7 @@ namespace FormatConverter {
     virtual ~BasicSignalData( );
 
     virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) override;
-    virtual bool add( const FormatConverter::DataRow& row ) override;
+    virtual bool add( std::unique_ptr<DataRow> row ) override;
     virtual size_t size( ) const override;
     virtual dr_time startTime( ) const override;
     virtual dr_time endTime( ) const override;

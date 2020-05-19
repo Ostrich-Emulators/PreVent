@@ -126,14 +126,14 @@ namespace FormatConverter{
             std::string data = j2[2];
 
             if ( waveIsOk( data ) ) {
-              DataRow row = DataRow::many( modtime( std::stol( timestr ) ), data );
+              auto row = DataRow::many( modtime( std::stol( timestr ) ), data );
 
               if ( added ) {
-                int readings = static_cast<int> ( row.data.size( ) );
+                int readings = static_cast<int> ( row->data.size( ) );
                 signal->setChunkIntervalAndSampleRate( 250, readings );
               }
 
-              signal->add( row );
+              signal->add( std::move( row ) );
             }
           }
         }
@@ -152,13 +152,13 @@ namespace FormatConverter{
             std::string timestr = j2[0];
             std::string data = j2[2];
             if ( waveIsOk( data ) ) {
-              DataRow row = DataRow::many( modtime( std::stol( timestr ) ), data );
+              auto row = DataRow::many( modtime( std::stol( timestr ) ), data );
               if ( added ) {
-                int readings = static_cast<int> ( row.data.size( ) );
+                int readings = static_cast<int> ( row->data.size( ) );
                 signal->setChunkIntervalAndSampleRate( 250, readings );
               }
 
-              signal->add( row );
+              signal->add( std::move( row ) );
             }
           }
         }

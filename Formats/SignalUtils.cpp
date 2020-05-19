@@ -132,8 +132,8 @@ namespace FormatConverter{
         if ( m->empty( ) ) {
           std::cout << m->name( ) << " BUG! ran out of data before anyone else" << std::endl;
 
-          DataRow dummy = dummyfill( m, 0 );
-          rowcols.insert( rowcols.end( ), dummy.data.begin( ), dummy.data.end( ) );
+          auto dummy = dummyfill( m, 0 );
+          rowcols.insert( rowcols.end( ), dummy->data.begin( ), dummy->data.end( ) );
         }
         else {
           const auto& row = m->pop( );
@@ -201,11 +201,10 @@ namespace FormatConverter{
         if ( currenttimes[i] ) {
           // we have a time to check
           if ( currenttimes[i]->time == earliest ) {
-            ret[i]->add( *currenttimes[i] );
+            ret[i]->add( std::move( currenttimes[i] ) );
 
             if ( data[i]->empty( ) ) {
               empties.insert( i );
-              currenttimes[i].release( );
             }
             else {
               currenttimes[i] = std::move( data[i]->pop( ) );
@@ -213,14 +212,12 @@ namespace FormatConverter{
           }
           else if ( currenttimes[i]->time > earliest ) {
             // don't have a datapoint for this time, so make a dummy one
-            FormatConverter::DataRow row( dummyfill( data[i], earliest ) );
-            ret[i]->add( row );
+            ret[i]->add( std::move( dummyfill( data[i], earliest ) ) );
           }
         }
         else {
           // ran out of times fo this signal, so make dummy data for this time
-          FormatConverter::DataRow row( dummyfill( data[i], earliest ) );
-          ret[i]->add( row );
+          ret[i]->add( std::move( dummyfill( data[i], earliest ) ) );
         }
       }
 
@@ -228,6 +225,7 @@ namespace FormatConverter{
       earliest = std::numeric_limits<dr_time>::max( );
       for ( size_t i = 0; i < data.size( ); i++ ) {
         if ( currenttimes[i] && currenttimes[i]->time < earliest ) {
+
           earliest = currenttimes[i]->time;
         }
       }
@@ -261,8 +259,7 @@ namespace FormatConverter{
 
     dr_time fillstart = nexttime;
     for (; nexttime < row->time - timestep; nexttime += timestep ) {
-      FormatConverter::DataRow row( dummyfill( signal, nexttime ) );
-      signal->add( row );
+      signal->add( std::move( dummyfill( signal, nexttime ) ) );
     }
 
     if ( nexttime != fillstart ) {
@@ -277,13 +274,12 @@ namespace FormatConverter{
     }
     else {
       std::cout << signal->name( ) << " added filler row at " << nexttime << std::endl;
-      FormatConverter::DataRow row( dummyfill( signal, nexttime ) );
-      signal->add( row );
+      signal->add( std::move( dummyfill( signal, nexttime ) ) );
     }
   }
 
-  FormatConverter::DataRow SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time ) {
-    return FormatConverter::DataRow( time, std::vector<int>( signal->hz( ), SignalData::MISSING_VALUE ) );
+  std::unique_ptr<DataRow> SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time ) {
+    return std::make_unique<DataRow>( time, std::vector<int>( signal->hz( ), SignalData::MISSING_VALUE ) );
   }
 
   std::vector<dr_time> SignalUtils::alltimes( const SignalSet& ss ) {
@@ -318,6 +314,7 @@ namespace FormatConverter{
       std::cout << "all: " << all << "\t front: " << signaltimes.front( ) << std::endl;
       indexes.push_back( currentIndex );
       if ( !signaltimes.empty( ) && signaltimes.front( ) == all ) {
+
         currentIndex += rowsPerTime;
         signaltimes.pop_front( );
       }
@@ -341,6 +338,7 @@ namespace FormatConverter{
     if ( lastNotZeroPosition != std::string::npos && lastNotZeroPosition + 1 < valstr.size( ) ) {
       //We leave 123 from 123.0000 or 123.3 from 123.300
       if ( valstr.at( lastNotZeroPosition ) == '.' ) {
+
         --lastNotZeroPosition;
       }
       valstr.erase( lastNotZeroPosition + 1, std::string::npos );
@@ -358,6 +356,7 @@ namespace FormatConverter{
         std::string text( "" );
         dr_time time = 0;
         if ( spaceidx != std::string::npos ) {
+
           text = line.substr( spaceidx + 1 );
           text = SignalUtils::trim( text );
           time = std::stol( line.substr( 0, spaceidx ) );
@@ -375,6 +374,7 @@ namespace FormatConverter{
     std::string cellvalue;
 
     while ( std::getline( ss, cellvalue, delim ) ) {
+
       cellvalue.erase( std::remove( cellvalue.begin( ), cellvalue.end( ), '\r' ), cellvalue.end( ) );
       rslt.push_back( SignalUtils::trim( cellvalue ) );
     }

@@ -100,7 +100,7 @@ namespace FormatConverter{
       }
 
       std::unique_ptr<SignalData>& signal = filler->addWave( label, &added );
-      signal->add( DataRow( currtime, datavals ) );
+      signal->add( std::make_unique<DataRow>( currtime, datavals ) );
       if ( added ) {
         signal->setChunkIntervalAndSampleRate( 2000, valsperdr );
         signal->setMeta( "Gain", gain );

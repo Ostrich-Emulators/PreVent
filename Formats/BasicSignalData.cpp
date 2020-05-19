@@ -190,7 +190,7 @@ namespace FormatConverter{
     return data.size( );
   }
 
-  bool BasicSignalData::add( const DataRow& row ) {
+  bool BasicSignalData::add( std::unique_ptr<DataRow> row ) {
 
     if ( livecount >= CACHE_LIMIT ) {
       // copy current data list to disk
@@ -202,16 +202,12 @@ namespace FormatConverter{
     datacount++;
     livecount++;
 
-    if ( datacount > 10000000 ) {
-      std::cout << "here: " << name( ) << std::endl;
-    }
-
-    int rowscale = row.scale;
+    int rowscale = row->scale;
 
     double pow10 = std::pow( 10, rowscale );
     int hiv = std::numeric_limits<int>::min( );
     int lov = std::numeric_limits<int>::max( );
-    for ( auto& v : row.data ) {
+    for ( auto& v : row->data ) {
       hiv = std::max( hiv, v );
       lov = std::min( lov, v );
     }
@@ -226,18 +222,15 @@ namespace FormatConverter{
       scale( rowscale );
     }
 
-    if ( !row.extras.empty( ) ) {
-      for ( const auto& x : row.extras ) {
+    if ( !row->extras.empty( ) ) {
+      for ( const auto& x : row->extras ) {
         extras( x.first );
       }
     }
 
-    DataRow * lastins = new DataRow( row );
-    data.push_back( std::unique_ptr<DataRow>( lastins ) );
-
-    lastdata = std::max( row.time, lastdata );
-    firstdata = std::min( row.time, firstdata );
-
+    lastdata = std::max( row->time, lastdata );
+    firstdata = std::min( row->time, firstdata );
+    data.push_back( std::move( row ) );
     return true;
   }
 
@@ -307,7 +300,7 @@ namespace FormatConverter{
         }
       }
 
-      data.push_back( std::unique_ptr<DataRow>( new DataRow( t, vals, scale, attrs ) ) );
+      data.push_back( std::make_unique<DataRow>( t, vals, scale, attrs ) );
       loop++;
     }
 

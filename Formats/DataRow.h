@@ -19,6 +19,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <memory>
 
 #include "dr_time.h"
 namespace FormatConverter {
@@ -45,9 +46,9 @@ namespace FormatConverter {
      * @param data
      * @return
      */
-    static DataRow from( const dr_time&, const std::string& data );
-    static DataRow one( const dr_time&, const std::string& data );
-    static DataRow many( const dr_time&, const std::string& data );
+    static std::unique_ptr<DataRow> from( const dr_time&, const std::string& data );
+    static std::unique_ptr<DataRow> one( const dr_time&, const std::string& data );
+    static std::unique_ptr<DataRow> many( const dr_time&, const std::string& data );
 
     DataRow( const dr_time& time, const std::vector<int>& data, int scale = 0,
         std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );

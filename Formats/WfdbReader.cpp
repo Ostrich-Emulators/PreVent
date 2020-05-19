@@ -21,17 +21,14 @@
 #include <sys/cygwin.h>
 #endif
 
-namespace FormatConverter {
+namespace FormatConverter{
 
-  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
-  }
+  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) { }
 
   WfdbReader::WfdbReader( const std::string& name ) : Reader( name ), extra_ms( 0 ),
-      basetimeset( false ), framecount( 0 ) {
-  }
+      basetimeset( false ), framecount( 0 ) { }
 
-  WfdbReader::~WfdbReader( ) {
-  }
+  WfdbReader::~WfdbReader( ) { }
 
   void WfdbReader::setBaseTime( const dr_time& basetime ) {
     _basetime = basetime;
@@ -294,7 +291,7 @@ namespace FormatConverter {
             currents[signalidx].resize( expected, SignalData::MISSING_VALUE );
           }
 
-          dataset->add( DataRow( curtime, currents[signalidx] ) );
+          dataset->add( std::make_unique<DataRow>( curtime, currents[signalidx] ) );
         }
       }
 

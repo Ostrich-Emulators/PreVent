@@ -15,9 +15,9 @@ namespace FormatConverter{
     ClippingSignalData( ClippingSignalSet& set, SignalData * signal )
         : SignalDataWrapper( signal ), parent( set ) { }
 
-    bool add( const FormatConverter::DataRow& row ) {
-      if ( parent.timeok( row.time ) ) {
-        return SignalDataWrapper::add( row );
+    bool add( std::unique_ptr<DataRow> row ) {
+      if ( parent.timeok( row->time ) ) {
+        return SignalDataWrapper::add( std::move( row ) );
       }
       return true;
     }

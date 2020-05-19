@@ -11,7 +11,7 @@ namespace FormatConverter{
   NullSignalData::~NullSignalData( ) {
   }
 
-  bool NullSignalData::add( const FormatConverter::DataRow& row ) {
+  bool NullSignalData::add( std::unique_ptr<DataRow> row ) {
     return true;
   }
 }

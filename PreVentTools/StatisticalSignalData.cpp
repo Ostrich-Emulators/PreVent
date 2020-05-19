@@ -99,10 +99,11 @@ namespace FormatConverter{
     return std::sqrt( variance( ) );
   }
 
-  bool StatisticalSignalData::add( const FormatConverter::DataRow& row ) {
-    SignalDataWrapper::add( row );
+  bool StatisticalSignalData::add( std::unique_ptr<DataRow> row ) {
+    DataRow * ptr = row.get( );
+    SignalDataWrapper::add( std::move( row ) );
 
-    for ( auto val : row.doubles( ) ) {
+    for ( auto val : ptr->doubles( ) ) {
       if ( val != SignalData::MISSING_VALUE ) {
         total += val;
 
@@ -121,7 +122,7 @@ namespace FormatConverter{
       }
     }
 
-    _count += row.data.size( );
+    _count += ptr->data.size( );
     return true;
   }
 }

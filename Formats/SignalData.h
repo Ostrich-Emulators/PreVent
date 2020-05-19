@@ -51,11 +51,11 @@ namespace FormatConverter {
 
     virtual std::unique_ptr<SignalData> shallowcopy( bool includedates = false ) = 0;
     /**
-     * Adds this DataRow to the signal data
+     * Adds this DataRow to the signal data.
      * @param row
      * @return false if an error occurred. else true
      */
-    virtual bool add( const FormatConverter::DataRow& row ) = 0;
+    virtual bool add( std::unique_ptr<DataRow> row ) = 0;
     virtual size_t size( ) const = 0;
     virtual dr_time startTime( ) const = 0;
     virtual dr_time endTime( ) const = 0;

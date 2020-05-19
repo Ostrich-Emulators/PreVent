@@ -126,7 +126,7 @@ namespace FormatConverter {
      * @param time
      * @return
      */
-    static FormatConverter::DataRow dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time );
+    static std::unique_ptr<DataRow> dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time );
   };
 }
 #endif /* SIGNALUTILS_H */

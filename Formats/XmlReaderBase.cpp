@@ -31,7 +31,7 @@
 #include <memory>
 #include <limits>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   bool XmlReaderBase::accumulateText = false;
   std::string XmlReaderBase::working;
@@ -51,8 +51,7 @@ namespace FormatConverter {
     tz_offset = reftm->tm_gmtoff;
   }
 
-  XmlReaderBase::~XmlReaderBase( ) {
-  }
+  XmlReaderBase::~XmlReaderBase( ) { }
 
   void XmlReaderBase::finish( ) {
     XML_ParserFree( parser );
@@ -95,7 +94,7 @@ namespace FormatConverter {
   void XmlReaderBase::setResult( ReadResult rslt ) {
     // if we're not breaking our output, then ignore End of Day and End of Patient
     if ( nonbreaking( ) &&
-            ( ReadResult::END_OF_DAY == rslt || ReadResult::END_OF_PATIENT == rslt ) ) {
+        ( ReadResult::END_OF_DAY == rslt || ReadResult::END_OF_PATIENT == rslt ) ) {
       return;
     }
     this->rslt = rslt;
@@ -141,8 +140,7 @@ namespace FormatConverter {
       infodata->setMetadataFrom( *savedsignal );
       int rows = savedsignal->size( );
       for ( int row = 0; row < rows; row++ ) {
-        const std::unique_ptr<FormatConverter::DataRow>& datarow = savedsignal->pop( );
-        infodata->add( *datarow );
+        infodata->add( savedsignal->pop( ) );
       }
     }
 
@@ -155,8 +153,7 @@ namespace FormatConverter {
       infodata->setMetadataFrom( *savedsignal );
       int rows = savedsignal->size( );
       for ( int row = 0; row < rows; row++ ) {
-        const std::unique_ptr<FormatConverter::DataRow>& datarow = savedsignal->pop( );
-        infodata->add( *datarow );
+        infodata->add( savedsignal->pop( ) );
       }
     }
 
@@ -179,9 +176,9 @@ namespace FormatConverter {
       if ( status != XML_STATUS_OK ) {
         XML_Error err = XML_GetErrorCode( parser );
         std::cerr << XML_ErrorString( err )
-                << " line: " << XML_GetCurrentLineNumber( parser )
-                << " column: " << XML_GetCurrentColumnNumber( parser )
-                << std::endl;
+            << " line: " << XML_GetCurrentLineNumber( parser )
+            << " column: " << XML_GetCurrentColumnNumber( parser )
+            << std::endl;
         return ReadResult::ERROR;
       }
       if ( ReadResult::NORMAL != rslt ) {
@@ -208,7 +205,7 @@ namespace FormatConverter {
     }
 
     if ( std::string::npos == timer.find( " " )
-            && std::string::npos == timer.find( "T" ) ) {
+        && std::string::npos == timer.find( "T" ) ) {
       // no space and no T---we must have a unix timestamp
       // and we believe Stp saves unix timestamps in UTC always
       // (regardless of valIsLocal)
@@ -217,10 +214,10 @@ namespace FormatConverter {
 
     // we have a local time that we need to convert
     std::string format = ( std::string::npos == timer.find( "T" )
-            ? "%m/%d/%Y %I:%M:%S %p" // STPXML time string
-            : "%Y-%m-%dT%H:%M:%S" ); // CPC time string
+        ? "%m/%d/%Y %I:%M:%S %p" // STPXML time string
+        : "%Y-%m-%dT%H:%M:%S" ); // CPC time string
 
-    tm mytime = {0,};
+    tm mytime = { 0, };
 
     strptime2( timer, format, &mytime );
     //output( ) << mytime.tm_hour << ":" << mytime.tm_min << ":" << mytime.tm_sec << std::endl;

@@ -244,9 +244,6 @@ namespace FormatConverter{
     size_t rowcount = 0;
     for ( size_t row = 0; row < rows; row++ ) {
       std::unique_ptr<FormatConverter::DataRow> datarow = data->pop( );
-      if ( !datarow ) {
-        output( ) << "wait! " << row << std::endl;
-      }
       datarow->rescale( scale );
       if ( useInts ) {
         ibuffer.push_back( datarow->ints( )[0] );
@@ -523,11 +520,15 @@ namespace FormatConverter{
     std::vector<dr_time> alltimes;
     alltimes.reserve( timecounter.size( ) );
 
+    const bool keeptimelkp = Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME );
+
     for ( auto& it : timecounter ) {
       for ( int i = 0; i < it.second; i++ ) {
         alltimes.push_back( it.first );
       }
-      timesteplkp.insert( std::make_pair( it.first, timesteplkp.size( ) ) );
+      if( keeptimelkp ){
+        timesteplkp.insert( std::make_pair( it.first, timesteplkp.size( ) ) );
+      }
     }
 
     // now we can make our dataset
@@ -666,7 +667,6 @@ namespace FormatConverter{
       writeWaveGroup( g, data );
     }
     else {
-
       writeVitalGroup( g, data );
     }
   }

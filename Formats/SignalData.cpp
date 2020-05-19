@@ -48,8 +48,7 @@ namespace FormatConverter {
   void SignalData::moveDataTo( std::unique_ptr<SignalData>& dest ) {
     size_t count = size( );
     for ( size_t i = 0; i < count; i++ ) {
-      std::unique_ptr<DataRow> dr = pop( );
-      dest->add( *dr );
+      dest->add( pop() );
     }
   }
 

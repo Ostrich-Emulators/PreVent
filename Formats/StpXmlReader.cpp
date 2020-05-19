@@ -193,8 +193,7 @@ namespace FormatConverter{
         filler->setMeta( "Patient Name", text );
       }
       else {
-
-        std::string pname = ( 0 == filler->metadata( ).count( "Patient Name" )
+        std::string pname( 0 == filler->metadata( ).count( "Patient Name" )
             ? ""
             : filler->metadata( ).at( "Patient Name" ) );
         if ( text != pname ) {
@@ -309,9 +308,9 @@ namespace FormatConverter{
         }
       }
 
-      DataRow row = DataRow::one( currvstime, value );
-      row.extras = attrs;
-      sig->add( row );
+      auto row = DataRow::one( currvstime, value );
+      row->extras = attrs;
+      sig->add( std::move( row ) );
       if ( !( 0 == recordtime || recordtime == currvstime ) ) {
         sig->recordEvent( "collection discrepancy", recordtime );
       }
@@ -356,7 +355,7 @@ namespace FormatConverter{
       }
     }
 
-    DataRow row = DataRow::many( currwavetime, wavepoints );
+    auto row = DataRow::many( currwavetime, wavepoints );
 
     // we want to keep attributes that mean something; not attributes
     // that are the same for every data point in this wave
@@ -366,8 +365,8 @@ namespace FormatConverter{
       keepattrs.erase( key );
     }
 
-    row.extras = keepattrs;
-    sig->add( row );
+    row->extras = keepattrs;
+    sig->add( std::move( row ) );
   }
 
   std::string StpXmlReader::resample( const std::string& data, int hz ) {
@@ -403,9 +402,11 @@ namespace FormatConverter{
 
   bool StpXmlReader::waveIsOk( const std::string& wavedata ) {
     // if all the values are -32768 or -32753, this isn't a valid reading
-    std::stringstream stream( wavedata );
-    for ( std::string each; std::getline( stream, each, ',' ); ) {
-      if ( !( "-32768" == each || "-32753" == each ) ) {
+    const std::string_view missing0( SignalData::MISSING_VALUESTR );
+    const std::string_view missing1( "-32753" );
+    std::string_view view( wavedata );
+    for ( auto substr : SignalUtils::splitcsv( view ) ) {
+      if ( !( missing0 == substr || missing1 == substr ) ) {
         return true;
       }
     }

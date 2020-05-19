@@ -429,7 +429,7 @@ namespace FormatConverter{
           signal->setChunkIntervalAndSampleRate( 2000, expectedValues[waveid] );
         }
 
-        signal->add( DataRow( startt, datapoints ) );
+        signal->add( std::make_unique<DataRow>( startt, datapoints ) );
       }
 
       datapoints.erase( datapoints.begin( ), datapoints.begin( ) + expectedValues[waveid] );
@@ -443,9 +443,9 @@ namespace FormatConverter{
     }
     else {
       std::cout << "still have " << sequencenums.size( ) << " seq numbers in the chute:" << std::endl;
-      for ( auto& x : sequencenums ) {
-        std::cout << "\tseqs: " << x.first << "\t" << x.second << std::endl;
-      }
+      //      for ( auto& x : sequencenums ) {
+      //        std::cout << "\tseqs: " << x.first << "\t" << x.second << std::endl;
+      //      }
 
 
       // if we have >7 sequence nums in our chute, and the first 8 all have the
@@ -1009,7 +1009,7 @@ namespace FormatConverter{
               sig->add( DataRow::from( currentTime, div10s( val, cfg.divBy10 ) ) );
             }
             else {
-              sig->add( DataRow( currentTime, val ) );
+              sig->add( std::make_unique<DataRow>( currentTime, val ) );
             }
           }
         }
@@ -1036,7 +1036,7 @@ namespace FormatConverter{
             }
             else {
 
-              sig->add( DataRow( currentTime, val ) );
+              sig->add( std::make_unique<DataRow>( currentTime, val ) );
             }
           }
         }
