@@ -502,7 +502,7 @@ namespace FormatConverter{
     // timecounter and signalcounter agree, then don't change timecounter.
     // if signalcounter is greater than timecounter, update timecounter
     std::map<dr_time, int> timecounter;
-    for ( const std::unique_ptr<SignalData>& m : data->allsignals( ) ) {
+    for ( auto m : data->allsignals( ) ) {
       std::map<dr_time, int> sigcounter;
 
       for ( auto& dr : m->times( ) ) {

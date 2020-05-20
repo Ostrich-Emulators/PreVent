@@ -133,8 +133,8 @@ namespace FormatConverter {
     return unitids.at( name );
   }
 
-  int Db::getOrAddSignal( const std::unique_ptr<SignalData>& data ) {
-    std::string name = data->name( );
+  int Db::getOrAddSignal( SignalData * data ) {
+    auto name = data->name( );
     double hz = data->hz( );
     auto pairkey = std::make_tuple( name, hz, data->wave( ) );
 
@@ -174,7 +174,7 @@ namespace FormatConverter {
     return signalids.at( pairkey );
   }
 
-  void Db::addSignal( int fileid, const std::unique_ptr<SignalData>& sig ) {
+  void Db::addSignal( int fileid, SignalData * sig ) {
     //CREATE TABLE file_signal (  file_id INTEGER,  signal_id INTEGER,  start INTEGER,  end INTEGER,  PRIMARY KEY( file_id, signal_id ));
     int sid = getOrAddSignal( sig );
     std::string sql = "INSERT INTO file_signal( file_id, signal_id, start, end ) VALUES( ?, ?, ?, ? )";
@@ -213,12 +213,12 @@ namespace FormatConverter {
     return bedids.at( pairkey );
   }
 
-  void Db::addOffsets( int fileid, const std::unique_ptr<SignalSet>& sig ) {
+  void Db::addOffsets( int fileid, SignalSet * sig ) {
     std::map<long, dr_time> offsets = sig->offsets( );
     if ( !offsets.empty( ) ) {
       sqlite3_stmt * stmt = nullptr;
       std::string sql = "INSERT INTO offset( file_id, time, offset ) VALUES ( ?, ?, ? )";
-      int rc = sqlite3_prepare_v2( ptr, sql.c_str( ), sql.length( ), &stmt, nullptr );
+      auto rc = sqlite3_prepare_v2( ptr, sql.c_str( ), sql.length( ), &stmt, nullptr );
       if ( rc != SQLITE_OK ) {
         sqlite3_finalize( stmt );
         throw std::domain_error( sqlite3_errmsg( ptr ) );
@@ -239,8 +239,8 @@ namespace FormatConverter {
     }
   }
 
-  void Db::onFileCompleted( const std::string& filename, const std::unique_ptr<SignalSet>& data ) {
-    bool quiet = FormatConverter::Options::asBool( FormatConverter::OptionsKey::QUIET );
+  void Db::onFileCompleted( const std::string& filename, SignalSet * data ) {
+    auto quiet = FormatConverter::Options::asBool( FormatConverter::OptionsKey::QUIET );
     if ( !quiet ) {
       std::cout << "updating database...";
     }
@@ -263,7 +263,7 @@ namespace FormatConverter {
     std::string sql
             = "INSERT INTO file( filename, bed_id, patient_id, start, end ) VALUES( ?, ?, ?, ?, ? )";
     sqlite3_stmt * stmt = nullptr;
-    int rc = sqlite3_prepare_v2( ptr, sql.c_str( ), sql.length( ), &stmt, nullptr );
+    auto rc = sqlite3_prepare_v2( ptr, sql.c_str( ), sql.length( ), &stmt, nullptr );
     if ( rc != SQLITE_OK ) {
       sqlite3_finalize( stmt );
       throw std::domain_error( sqlite3_errmsg( ptr ) );
@@ -298,8 +298,8 @@ namespace FormatConverter {
 
     addOffsets( fileid, data );
 
-    for ( const auto& signal : data->allsignals( ) ) {
-      addSignal( fileid, signal.get( ) );
+    for ( auto signal : data->allsignals( ) ) {
+      addSignal( fileid, signal );
     }
 
     exec( "COMMIT;" );

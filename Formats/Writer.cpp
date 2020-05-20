@@ -117,7 +117,7 @@ namespace FormatConverter{
         std::vector<std::string> files = closeDataSet( );
         for ( auto& outfile : files ) {
           for ( auto& l : listeners ) {
-            l->onFileCompleted( outfile, data );
+            l->onFileCompleted( outfile, data.get() );
           }
         }
 
@@ -149,7 +149,7 @@ namespace FormatConverter{
 
           for ( auto& outfile : files ) {
             for ( auto& l : listeners ) {
-              l->onFileCompleted( outfile, data );
+              l->onFileCompleted( outfile, data.get() );
             }
           }
         }

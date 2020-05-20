@@ -57,7 +57,7 @@ namespace FormatConverter {
 
     virtual void setMetadataFrom( const SignalSet& target ) override;
 
-    virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const override;
+    virtual std::vector<SignalData *> allsignals( ) const override;
 
     virtual const std::map<std::string, std::string>& metadata( ) const override;
 

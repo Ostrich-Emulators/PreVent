@@ -39,7 +39,7 @@ namespace FormatConverter {
     virtual const std::vector<std::unique_ptr<SignalData>>&vitals( ) const = 0;
     virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const = 0;
 
-    virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const = 0;
+    virtual std::vector<SignalData *>allsignals( ) const = 0;
 
     virtual const std::map<std::string, std::string>& metadata( ) const = 0;
 

@@ -32,8 +32,7 @@ namespace FormatConverter {
 
     void init(const std::string& fileloc);
 
-    virtual void onFileCompleted(const std::string& filename,
-            const std::unique_ptr<SignalSet>& data) override;
+    virtual void onFileCompleted(const std::string& filename, SignalSet * data) override;
     virtual void onConversionCompleted(const std::string& input,
             const std::vector<std::string>& outputs) override;
 
@@ -57,10 +56,10 @@ namespace FormatConverter {
     int getOrAddUnit(const std::string& name);
     int getOrAddBed(const std::string& name, const std::string& unitname);
     int getOrAddPatient(const std::string& name);
-    int getOrAddSignal(const std::unique_ptr<SignalData>& data);
+    int getOrAddSignal( SignalData * data);
     int addLookup(const std::string& sql, const std::string& name);
-    void addSignal(int fileid, const std::unique_ptr<SignalData>& sig);
-    void addOffsets(int fileid, const std::unique_ptr<SignalSet>& sig);
+    void addSignal(int fileid, SignalData * sig);
+    void addOffsets(int fileid, SignalSet * sig);
   };
 }
 #endif /* DB_H */

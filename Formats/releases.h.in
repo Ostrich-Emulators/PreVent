@@ -1,5 +1,6 @@
 4.2.3
   * Reduced memory usage for extremely large files
+  * Added native STP parser for Philips (experimental)
 
 4.2.2
   * Open DWC files from other directories

@@ -27,7 +27,7 @@ namespace FormatConverter {
     virtual ~ConversionListener() {
     }
 
-    virtual void onFileCompleted(const std::string& filename, const std::unique_ptr<SignalSet>& data) = 0;
+    virtual void onFileCompleted(const std::string& filename, SignalSet * data) = 0;
     virtual void onConversionCompleted(const std::string& input,
             const std::vector<std::string>& outputs) = 0;
   };

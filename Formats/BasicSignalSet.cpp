@@ -135,14 +135,14 @@ namespace FormatConverter{
     }
   }
 
-  std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> BasicSignalSet::allsignals( ) const {
-    std::vector<std::reference_wrapper<const std::unique_ptr < SignalData>>> vec;
+  std::vector<SignalData *> BasicSignalSet::allsignals( ) const {
+    std::vector<SignalData *> vec;
 
     for ( const auto& m : vitals( ) ) {
-      vec.push_back( std::cref( m ) );
+      vec.push_back( m.get( ) );
     }
     for ( const auto& m : waves( ) ) {
-      vec.push_back( std::cref( m ) );
+      vec.push_back( m.get( ) );
     }
 
     return vec;

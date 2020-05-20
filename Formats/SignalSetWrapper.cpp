@@ -79,7 +79,7 @@ namespace FormatConverter{
     set->clearOffsets( );
   }
 
-  std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>> SignalSetWrapper::allsignals( ) const {
+  std::vector<SignalData *> SignalSetWrapper::allsignals( ) const {
     return set->allsignals( );
   }
 

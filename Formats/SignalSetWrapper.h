@@ -61,7 +61,7 @@ namespace FormatConverter {
     virtual void addOffset( long seg, dr_time time ) override;
     virtual void clearOffsets( ) override;
 
-    virtual std::vector<std::reference_wrapper<const std::unique_ptr<SignalData>>>allsignals( ) const override;
+    virtual std::vector<SignalData *> allsignals( ) const override;
     virtual void clearMetas( ) override;
 
     virtual void setMetadataFrom( const SignalSet& target ) override;
