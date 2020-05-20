@@ -87,7 +87,7 @@ namespace FormatConverter{
       H5::Group data = file.openGroup( signal );
       //H5::DataSet data = root.openDataSet( "data" );
 
-      std::unique_ptr<SignalData> ss( new BasicSignalData( "-" ) );
+      auto ss = std::unique_ptr<SignalData>{ std::make_unique<BasicSignalData>( "-" ) };
       copymetas( ss, data, true );
 
       for ( const auto& a : ss->metas( ) ) {
@@ -356,7 +356,7 @@ namespace FormatConverter{
         short val = read[row][0];
 
         // FIXME: we better hope valsPerTime is always 1!
-        std::unique_ptr<DataRow> drow( new DataRow( times[row / valsPerTime], val, scale ) );
+        auto drow = std::make_unique<DataRow>( times[row / valsPerTime], val, scale );
         if ( COLS > 1 ) {
           for ( size_t c = 1; c < COLS; c++ ) {
             drow->extras[attrmap[c]] = std::to_string( read[row][c] );
@@ -373,7 +373,7 @@ namespace FormatConverter{
         int val = read[row][0];
 
         // FIXME: we better hope valsPerTime is always 1!
-        std::unique_ptr<DataRow> drow( new DataRow( times[row / valsPerTime], val, scale ) );
+        auto drow = std::make_unique<DataRow>( times[row / valsPerTime], val, scale );
         if ( COLS > 1 ) {
           for ( size_t c = 1; c < COLS; c++ ) {
             drow->extras[attrmap[c]] = std::to_string( read[row][c] );
@@ -432,7 +432,7 @@ namespace FormatConverter{
         values.push_back( val );
 
         if ( static_cast<size_t> ( valsPerTime ) == values.size( ) ) {
-          signal->add( std::make_unique<DataRow>(  times[timecounter++], values, scale ) );
+          signal->add( std::make_unique<DataRow>( times[timecounter++], values, scale ) );
           values.clear( );
         }
       }
@@ -650,11 +650,11 @@ namespace FormatConverter{
 
         if ( signal->wave( ) ) {
           std::vector<int> onerowdata( &datavals[dataidx], &datavals[dataidx + readingsperperiod] );
-          signal->add( std::make_unique<DataRow>(  time, onerowdata, scale ) );
+          signal->add( std::make_unique<DataRow>( time, onerowdata, scale ) );
           dataidx += readingsperperiod;
         }
         else {
-          signal->add( std::make_unique<DataRow>(  time, datavals[dataidx++], scale ) );
+          signal->add( std::make_unique<DataRow>( time, datavals[dataidx++], scale ) );
         }
       }
     }

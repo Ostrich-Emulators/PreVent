@@ -12,7 +12,7 @@ namespace FormatConverter {
   const std::string OffsetTimeSignalSet::COLLECTION_OFFSET = "Collection Time Offset";
 
   OffsetTimeSignalSet::OffsetTimeSignalSet( long offset_ms )
-  : SignalSetWrapper( new BasicSignalSet( ) ), offset_ms( offset_ms ) {
+  : SignalSetWrapper( std::make_unique<BasicSignalSet>()), offset_ms( offset_ms ) {
     SignalSetWrapper::setMeta( COLLECTION_OFFSET, std::to_string( offset_ms ) );
   }
 

@@ -311,7 +311,7 @@ int main( int argc, char** argv ) {
       continue;
     }
 
-    std::unique_ptr<SignalSet>data( new BasicSignalSet( ) );
+    auto data = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
     if ( Options::asBool( OptionsKey::LOCALIZED_TIME ) ) {
       data.reset( new TimezoneOffsetTimeSignalSet( data.release( ) ) );
     }

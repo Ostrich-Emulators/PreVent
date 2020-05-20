@@ -432,7 +432,7 @@ int main( int argc, char** argv ) {
       std::ostream& outstream = ( outfilename.empty( )
           ? std::cout
           : *( new std::ofstream( outfilename ) ) );
-      std::unique_ptr<SignalData> signal( new OutputSignalData( outstream ) );
+      auto signal = std::unique_ptr<SignalData>{ std::make_unique<OutputSignalData>( outstream ) };
 
       auto fmt = FormatConverter::Formats::guess( input );
       std::unique_ptr<Reader> rdr = Reader::get( fmt );
@@ -478,7 +478,7 @@ int main( int argc, char** argv ) {
     }
     std::unique_ptr<Reader> rdr = Reader::get( fmt );
 
-    StatisticalSignalData * descriptives = new StatisticalSignalData( new NullSignalData( "-", iswave ) );
+    StatisticalSignalData * descriptives = new StatisticalSignalData( std::make_unique<NullSignalData>( "-", iswave ) );
     std::unique_ptr<SignalData> signal( descriptives );
 
     if ( for_s > 0 ) {

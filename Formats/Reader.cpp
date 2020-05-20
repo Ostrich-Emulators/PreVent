@@ -35,25 +35,25 @@ namespace FormatConverter{
   std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
     switch ( fmt ) {
       case FormatConverter::WFDB:
-        return std::unique_ptr<Reader>( new WfdbReader( ) );
+        return std::make_unique<WfdbReader>( );
       case FormatConverter::DSZL:
-        return std::unique_ptr<Reader>( new ZlReader2( ) );
+        return std::make_unique<ZlReader2>( );
       case FormatConverter::STPGE:
-        return std::unique_ptr<Reader>( new StpGeReader( ) );
+        return std::make_unique<StpGeReader>( );
       case FormatConverter::STPP:
-        return std::unique_ptr<Reader>( new StpPhilipsReader( ) );
+        return std::make_unique<StpPhilipsReader>( );
       case FormatConverter::STPXML:
-        return std::unique_ptr<Reader>( new StpXmlReader( ) );
+        return std::make_unique<StpXmlReader>( );
       case FormatConverter::HDF5:
-        return std::unique_ptr<Reader>( new Hdf5Reader( ) );
+        return std::make_unique<Hdf5Reader>( );
       case FormatConverter::CPCXML:
-        return std::unique_ptr<Reader>( new CpcXmlReader( ) );
+        return std::make_unique<CpcXmlReader>( );
       case FormatConverter::STPJSON:
-        return std::unique_ptr<Reader>( new StpJsonReader( ) );
+        return std::make_unique<StpJsonReader>( );
       case FormatConverter::MEDI:
-        return std::unique_ptr<Reader>( new TdmsReader( ) );
+        return std::make_unique<TdmsReader>( );
       case FormatConverter::DWC:
-        return std::unique_ptr<Reader>( new DwcReader( ) );
+        return std::make_unique<DwcReader>( );
       default:
         throw "reader not yet implemented";
     }

@@ -26,20 +26,17 @@
 
 #include <algorithm>    // std::sort
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   H5Cat::H5Cat( const std::string& outfile ) : output( outfile ), doduration( false ),
-      havestart( false ), doclip( false ), duration_ms( 0 ), start( 0 ), end( 0 ) {
-  }
+      havestart( false ), doclip( false ), duration_ms( 0 ), start( 0 ), end( 0 ) { }
 
   H5Cat::H5Cat( const H5Cat& orig ) : output( orig.output ),
       doduration( orig.doduration ), havestart( orig.havestart ),
       doclip( orig.doclip ), duration_ms( orig.duration_ms ), start( orig.start ),
-      end( orig.end ) {
-  }
+      end( orig.end ) { }
 
-  H5Cat::~H5Cat( ) {
-  }
+  H5Cat::~H5Cat( ) { }
 
   void H5Cat::setClipping( const dr_time& starttime, const dr_time& endtime ) {
     start = starttime;
@@ -71,7 +68,7 @@ namespace FormatConverter {
     // it's a lot easier to store these things as SignalData objects
     // even though that will write extra temp files
     Hdf5Reader rdr;
-    std::unique_ptr<SignalSet> alldata( new BasicSignalSet( ) );
+    auto alldata = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
 
     if ( doclip ) {
       alldata.reset( new ClippingSignalSet( alldata.release( ), &start, &end ) );
@@ -79,7 +76,7 @@ namespace FormatConverter {
 
     for ( const auto& file : filesToCat ) {
       std::cout << "  " << file << std::endl;
-      std::unique_ptr<SignalSet> junk( new BasicSignalSet( ) );
+      auto junk = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
       rdr.prepare( file, junk );
       rdr.fill( alldata );
       rdr.finish( );

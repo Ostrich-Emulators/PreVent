@@ -41,7 +41,7 @@ namespace FormatConverter{
   }
 
   std::unique_ptr<ClippingSignalSet> ClippingSignalSet::duration( const dr_time& for_ms, dr_time * starttime ) {
-    std::unique_ptr<ClippingSignalSet> set( new ClippingSignalSet( starttime ) );
+    auto set = std::make_unique<ClippingSignalSet>( starttime );
     set->initForDuration( for_ms );
     return set;
   }

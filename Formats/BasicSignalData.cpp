@@ -56,7 +56,7 @@ namespace FormatConverter{
   }
 
   std::unique_ptr<SignalData> BasicSignalData::shallowcopy( bool includedates ) {
-    std::unique_ptr<BasicSignalData> copy( new BasicSignalData( label ) );
+    auto copy = std::make_unique<BasicSignalData>( label );
 
     if ( includedates ) {
       copy->firstdata = this->firstdata;

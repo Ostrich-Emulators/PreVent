@@ -26,10 +26,9 @@ namespace FormatConverter {
   public:
 
     explicit CircularBuffer( size_t size ) :
-    buffer( std::unique_ptr<T[]>( new T[size] ) ),
-    maxsize( size ), head( 0 ), tail( 0 ), _full( false ), _mark( 0 ),
-    _pushed( 0 ), _popped( 0 ) {
-    }
+        buffer( std::make_unique<T[]>( size ) ),
+        maxsize( size ), head( 0 ), tail( 0 ), _full( false ), _mark( 0 ),
+        _pushed( 0 ), _popped( 0 ) { }
 
     void push( T item ) {
       if ( _full ) {

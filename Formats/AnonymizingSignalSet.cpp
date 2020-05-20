@@ -15,7 +15,7 @@ namespace FormatConverter {
   const std::string AnonymizingSignalSet::DEFAULT_FILENAME_PATTERN = "%i-anonymized-storage.txt";
 
   AnonymizingSignalSet::AnonymizingSignalSet( FileNamer& filenamer )
-  : SignalSetWrapper( new BasicSignalSet( ) ), namer( filenamer ), timemod( TimeModifier::time( 0 ) ) {
+  : SignalSetWrapper( std::make_unique<BasicSignalSet>() ), namer( filenamer ), timemod( TimeModifier::time( 0 ) ) {
   }
 
   AnonymizingSignalSet::AnonymizingSignalSet( const std::unique_ptr<SignalSet>& w,

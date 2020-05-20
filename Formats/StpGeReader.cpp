@@ -1200,7 +1200,7 @@ namespace FormatConverter{
 
   std::vector<StpReaderBase::StpMetadata> StpGeReader::parseMetadata( const std::string& input ) {
     std::vector<StpReaderBase::StpMetadata> metas;
-    std::unique_ptr<SignalSet> info( new BasicSignalSet( ) );
+    auto info = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
     StpGeReader reader;
     reader.setNonbreaking( true );
     int failed = reader.prepare( input, info );

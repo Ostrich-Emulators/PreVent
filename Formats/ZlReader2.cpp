@@ -80,8 +80,8 @@ namespace FormatConverter{
       bool isgz = ( 0x1F == firstbyte && 0x8B == secondbyte );
 
       myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
-      signalToReaderLkp[signal] = std::unique_ptr<StreamChunkReader>( new StreamChunkReader( myfile,
-          ( islibz || isgz ), false, isgz ) );
+      signalToReaderLkp[signal] = std::make_unique<StreamChunkReader>( myfile,
+          ( islibz || isgz ), false, isgz );
     }
 
     return 0;

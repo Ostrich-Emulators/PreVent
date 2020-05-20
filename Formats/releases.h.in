@@ -1,6 +1,9 @@
+4.2.3
+  * Reduced memory usage for extremely large files
+
 4.2.2
   * Open DWC files from other directories
-	* Fixed occasional crash when caching signal data during read operations
+  * Fixed occasional crash when caching signal data during read operations
   * (Tools) Added --stp-metas
 
 4.2.1

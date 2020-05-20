@@ -15,13 +15,13 @@
 #include "FileNamer.h"
 #include "OffsetTimeSignalSet.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   const int Writer::DEFAULT_COMPRESSION = 6;
 
   Writer::Writer( const std::string& ext ) : compress( DEFAULT_COMPRESSION ),
-  bequiet( false ), extension( ext ),
-  namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
+      bequiet( false ), extension( ext ),
+      namer( std::make_unique<FileNamer>( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
     // figure out a string for our timezone by getting a reference time
     time_t reftime = std::time( nullptr );
     tm * reftm = localtime( &reftime );
@@ -30,31 +30,29 @@ namespace FormatConverter {
   }
 
   Writer::Writer( const Writer& w ) : compress( DEFAULT_COMPRESSION ), bequiet( false ),
-  extension( w.extension ), namer( new FileNamer( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ),
-  gmt_offset( w.gmt_offset ), timezone( w.timezone ) {
-  }
+      extension( w.extension ), namer( std::make_unique<FileNamer>( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ),
+      gmt_offset( w.gmt_offset ), timezone( w.timezone ) { }
 
-  Writer::~Writer( ) {
-  }
+  Writer::~Writer( ) { }
 
   std::unique_ptr<Writer> Writer::get( const FormatConverter::Format& fmt ) {
     switch ( fmt ) {
       case FormatConverter::HDF5:
-        return std::unique_ptr<Writer>( new Hdf5Writer( ) );
+        return std::make_unique<Hdf5Writer>( );
       case FormatConverter::WFDB:
-        return std::unique_ptr<Writer>( new WfdbWriter( ) );
+        return std::make_unique<WfdbWriter>( );
         //case DSZL:
-        //return std::unique_ptr<Writer>( new ZlWriter( ) );
+        //return std::make_unique<ZlWriter>();
       case FormatConverter::MAT73:
-        return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV7 ) );
+        return std::make_unique<MatWriter>( MatVersion::MV7 );
       case FormatConverter::MAT5:
-        return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV5 ) );
+        return std::make_unique<MatWriter>( MatVersion::MV5 );
       case FormatConverter::MAT4:
-        return std::unique_ptr<Writer>( new MatWriter( MatVersion::MV4 ) );
+        return std::make_unique<MatWriter>( MatVersion::MV4 );
       case FormatConverter::CSV:
-        return std::unique_ptr<Writer>( new CsvWriter( ) );
+        return std::make_unique<CsvWriter>( );
       case FormatConverter::NOOP:
-        return std::unique_ptr<Writer>( new NullWriter( ) );
+        return std::make_unique<NullWriter>( );
       default:
         throw "writer not yet implemented";
     }
@@ -85,7 +83,7 @@ namespace FormatConverter {
   }
 
   std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
-          std::unique_ptr<SignalSet>& data ) {
+      std::unique_ptr<SignalSet>& data ) {
     int patientno = 1;
 
     output( ) << "init data set" << std::endl;
@@ -174,7 +172,7 @@ namespace FormatConverter {
     listeners.push_back( l );
   }
 
-  class NullBuffer : public std::streambuf {
+  class NullBuffer : public std::streambuf{
   public:
 
     int overflow( int c ) {
@@ -189,7 +187,6 @@ namespace FormatConverter {
   }
 
   void Writer::filenamer( const FileNamer& p ) {
-
     namer.reset( new FileNamer( p ) );
   }
 

@@ -317,7 +317,7 @@ namespace FormatConverter{
 
   std::vector<StpReaderBase::StpMetadata> StpPhilipsReader::parseMetadata( const std::string& input ) {
     std::vector<StpReaderBase::StpMetadata> metas;
-    std::unique_ptr<SignalSet> info( new BasicSignalSet( ) );
+    auto info = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
     StpPhilipsReader reader;
     reader.setNonbreaking( true );
     int failed = reader.prepare( input, info );

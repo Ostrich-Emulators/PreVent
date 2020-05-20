@@ -81,7 +81,7 @@ namespace FormatConverter{
   }
 
   std::unique_ptr<SignalData> BasicSignalSet::createSignalData( const std::string& name, bool iswave ) {
-    return std::unique_ptr<SignalData>( new BasicSignalData( name, iswave ) );
+    return std::unique_ptr<SignalData>{ std::make_unique<BasicSignalData>( name, iswave ) };
   }
 
   std::unique_ptr<SignalData>& BasicSignalSet::addVital( const std::string& name, bool * added ) {
@@ -131,7 +131,7 @@ namespace FormatConverter{
       metamap[SignalData::TIMEZONE] = "UTC";
       metamap[SignalData::BUILD_NUM] = GIT_BUILD;
 
-      segs.clear();
+      segs.clear( );
     }
   }
 
@@ -197,8 +197,9 @@ namespace FormatConverter{
       data->setMeta( "Note on Min/Max", "Min and Max are raw values (not scaled)" );
     }
   }
-  void BasicSignalSet::addAuxillaryData( const std::string& name, const TimedData& data  ) {
-    aux[name].push_back(data);
+
+  void BasicSignalSet::addAuxillaryData( const std::string& name, const TimedData& data ) {
+    aux[name].push_back( data );
   }
 
   std::map<std::string, std::vector<TimedData>> BasicSignalSet::auxdata( ) {

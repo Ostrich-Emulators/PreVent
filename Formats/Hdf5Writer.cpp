@@ -70,18 +70,21 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::writeTimesAndDurationAttributes( H5::H5Object& loc, const dr_time& start, const dr_time& end ) {
-    time_t stime = ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
-        ? timesteplkp.at( start )
-        : ( start / 1000 ) );
-    time_t etime = ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
-        ? timesteplkp.at( end )
-        : ( end / 1000 ) );
+    const bool indexedtime = FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME );
 
-    if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
-      writeAttribute( loc, SignalData::STARTTIME, timesteplkp.at( start ) );
-      writeAttribute( loc, SignalData::ENDTIME, timesteplkp.at( end ) );
+    time_t stime;
+    time_t etime;
+    if ( indexedtime ) {
+      stime = timesteplkp.at( start );
+      etime = timesteplkp.at( end );
+
+      writeAttribute( loc, SignalData::STARTTIME, stime );
+      writeAttribute( loc, SignalData::ENDTIME, etime );
     }
     else {
+      stime = ( start / 1000 );
+      etime = ( end / 1000 );
+
       writeAttribute( loc, SignalData::STARTTIME, start );
       writeAttribute( loc, SignalData::ENDTIME, end );
     }
