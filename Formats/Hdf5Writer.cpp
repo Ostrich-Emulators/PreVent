@@ -307,6 +307,7 @@ namespace FormatConverter{
         ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
       }
     }
+    ds.close( );
   }
 
   void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data ) {
@@ -408,6 +409,8 @@ namespace FormatConverter{
         ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
       }
     }
+
+    ds.close( );
   }
 
   void Hdf5Writer::autochunk( hsize_t* dims, int rank, int bytesperelement, hsize_t* rslts ) {
@@ -510,8 +513,8 @@ namespace FormatConverter{
         if ( 0 == timecounter.count( it.first ) ) {
           timecounter[it.first] = it.second;
         }
-        else if ( timecounter[it.first] < sigcounter[it.first] ) {
-          timecounter[it.first] = sigcounter[it.first];
+        else if ( timecounter[it.first] < it.second ) {
+          timecounter[it.first] = it.second;
         }
       }
     }
@@ -526,7 +529,7 @@ namespace FormatConverter{
       for ( int i = 0; i < it.second; i++ ) {
         alltimes.push_back( it.first );
       }
-      if( keeptimelkp ){
+      if ( keeptimelkp ) {
         timesteplkp.insert( std::make_pair( it.first, timesteplkp.size( ) ) );
       }
     }
@@ -561,6 +564,9 @@ namespace FormatConverter{
       writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET, std::stoi( data->metadata( )
           .at( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) );
     }
+
+    ds.close();
+    events.close();
   }
 
   H5::Group Hdf5Writer::ensureGroupExists( H5::H5Object& obj, const std::string& s ) const {
@@ -624,6 +630,7 @@ namespace FormatConverter{
         else {
           H5::Group g = ensureGroupExists( grp, getDatasetName( vits ) );
           writeVitalGroup( g, vits );
+          g.close();
         }
       }
 
@@ -636,6 +643,7 @@ namespace FormatConverter{
         else {
           H5::Group g = ensureGroupExists( grp, getDatasetName( wavs ) );
           writeWaveGroup( g, wavs );
+          g.close();
         }
       }
 
@@ -843,6 +851,7 @@ namespace FormatConverter{
       writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET,
           data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
     }
+    ds.close();
   }
 
   void Hdf5Writer::writeAuxData( H5::Group& group, const std::string& name,
@@ -927,6 +936,9 @@ namespace FormatConverter{
         writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET,
             data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
       }
+
+      ds.close();
     }
+    eventgroup.close();
   }
 }

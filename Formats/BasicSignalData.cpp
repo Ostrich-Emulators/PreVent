@@ -212,8 +212,8 @@ namespace FormatConverter{
       lov = std::min( lov, v );
     }
 
-    double rowlo = (double) ( lov ) / pow10;
-    double rowhi = (double) ( hiv ) / pow10;
+    double rowlo = static_cast<double> ( lov ) / pow10;
+    double rowhi = static_cast<double> ( hiv ) / pow10;
 
     lowval = std::min( rowlo, lowval );
     highval = std::max( rowhi, highval );
