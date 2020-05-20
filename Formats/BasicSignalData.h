@@ -48,7 +48,7 @@ namespace FormatConverter {
      * Gets times for all data rows, from earliest to most recent
      * @return
      */
-    virtual std::deque<dr_time> times( ) override;
+    virtual std::vector<dr_time> times( ) override;
 
     virtual double highwater( ) const override;
     virtual double lowwater( ) const override;

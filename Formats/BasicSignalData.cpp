@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <charconv>
 #include "config.h"
 
 namespace FormatConverter{
@@ -307,8 +308,10 @@ namespace FormatConverter{
     return loop;
   }
 
-  std::deque<dr_time> BasicSignalData::times( ) {
-    std::deque<dr_time> dates;
+  std::vector<dr_time> BasicSignalData::times( ) {
+    std::vector<dr_time> dates;
+    dates.reserve( datacount );
+
     if ( nullptr != file ) {
       // read the dates out of the file first
       std::rewind( file );

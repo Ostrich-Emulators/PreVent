@@ -138,7 +138,7 @@ namespace FormatConverter{
     return signal->metad( );
   }
 
-  std::deque<dr_time> SignalDataWrapper::times( ) {
+  std::vector<dr_time> SignalDataWrapper::times( ) {
     return signal->times( );
   }
 

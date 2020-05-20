@@ -307,7 +307,6 @@ namespace FormatConverter{
         ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
       }
     }
-    ds.close( );
   }
 
   void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data ) {
@@ -409,8 +408,6 @@ namespace FormatConverter{
         ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
       }
     }
-
-    ds.close( );
   }
 
   void Hdf5Writer::autochunk( hsize_t* dims, int rank, int bytesperelement, hsize_t* rslts ) {
@@ -564,9 +561,6 @@ namespace FormatConverter{
       writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET, std::stoi( data->metadata( )
           .at( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) );
     }
-
-    ds.close();
-    events.close();
   }
 
   H5::Group Hdf5Writer::ensureGroupExists( H5::H5Object& obj, const std::string& s ) const {
@@ -630,7 +624,6 @@ namespace FormatConverter{
         else {
           H5::Group g = ensureGroupExists( grp, getDatasetName( vits ) );
           writeVitalGroup( g, vits );
-          g.close();
         }
       }
 
@@ -643,7 +636,6 @@ namespace FormatConverter{
         else {
           H5::Group g = ensureGroupExists( grp, getDatasetName( wavs ) );
           writeWaveGroup( g, wavs );
-          g.close();
         }
       }
 
@@ -818,19 +810,14 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data ) {
-    std::deque<dr_time> timevec = data->times( );
+    auto times = data->times( );
     // SignalData stores times from latest to earliest, so we need to reverse them
-    std::vector<dr_time> times;
-    times.reserve( timevec.size( ) );
 
     if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
       // convert dr_times to the index of the global times array
-      for ( auto it = timevec.begin( ); it != timevec.end( ); ++it ) {
-        times.push_back( timesteplkp.at( *it ) );
+      for ( auto it = times.begin( ); it != times.end( ); ++it ) {
+        *it = timesteplkp.at( *it );
       }
-    }
-    else {
-      times.insert( times.end( ), timevec.begin( ), timevec.end( ) );
     }
 
     H5::DataSet ds = writeTimes( group, times );
@@ -851,7 +838,6 @@ namespace FormatConverter{
       writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET,
           data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
     }
-    ds.close();
   }
 
   void Hdf5Writer::writeAuxData( H5::Group& group, const std::string& name,
@@ -895,7 +881,6 @@ namespace FormatConverter{
 
     H5::DataSet dsv = auxg.createDataSet( "data", st, space, props );
     dsv.write( vdata, st );
-    dsv.close( );
   }
 
   void Hdf5Writer::writeEvents( H5::Group& group, std::unique_ptr<SignalData>& data ) {
@@ -936,9 +921,6 @@ namespace FormatConverter{
         writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET,
             data->metai( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) );
       }
-
-      ds.close();
     }
-    eventgroup.close();
   }
 }
