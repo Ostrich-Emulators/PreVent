@@ -22,12 +22,12 @@ namespace FormatConverter {
 
   class NullReader : public Reader {
   public:
-    NullReader(const std::string& name);
-    virtual ~NullReader();
+    NullReader( const std::string& name );
+    virtual ~NullReader( );
 
-    int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
-    ReadResult fill(std::unique_ptr<SignalSet>& data,
-            const ReadResult& lastresult = ReadResult::FIRST_READ) override;
+    int prepare( const std::string& input, SignalSet * info ) override;
+    ReadResult fill( SignalSet * data,
+        const ReadResult& lastresult = ReadResult::FIRST_READ ) override;
   };
 }
 #endif /* NULLREADER_H */

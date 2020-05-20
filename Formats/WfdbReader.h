@@ -31,12 +31,12 @@ namespace FormatConverter {
 
   protected:
     WfdbReader( const std::string& name );
-    virtual int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
+    virtual int prepare( const std::string& input, SignalSet * info ) override;
     virtual void finish( ) override;
     void setBaseTime( const dr_time& time );
     int base_ms() const;
 
-    virtual ReadResult fill( std::unique_ptr<SignalSet>& data, const ReadResult& lastfill ) override;
+    virtual ReadResult fill( SignalSet * data, const ReadResult& lastfill ) override;
 
   protected:
     int sigcount;

@@ -49,7 +49,7 @@ namespace FormatConverter{
     signalToReaderLkp.clear( );
   }
 
-  int ZlReader2::prepare( const std::string& input, std::unique_ptr<SignalSet>& data ) {
+  int ZlReader2::prepare( const std::string& input, SignalSet * data ) {
     int rslt = Reader::prepare( input, data );
     if ( rslt != 0 ) {
       return rslt;
@@ -87,7 +87,7 @@ namespace FormatConverter{
     return 0;
   }
 
-  ReadResult ZlReader2::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
+  ReadResult ZlReader2::fill( SignalSet * info, const ReadResult& lastrr ) {
     // we need to loop through all our signals to fill the SignalSet
 
     // the format looks like this:

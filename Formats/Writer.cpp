@@ -96,7 +96,7 @@ namespace FormatConverter{
     }
 
     output( ) << "filling data" << std::endl;
-    ReadResult retcode = from->fill( data );
+    ReadResult retcode = from->fill( data.get() );
 
     int files = 1;
     while ( retcode != ReadResult::ERROR ) {
@@ -117,7 +117,7 @@ namespace FormatConverter{
         std::vector<std::string> files = closeDataSet( );
         for ( auto& outfile : files ) {
           for ( auto& l : listeners ) {
-            l->onFileCompleted( outfile, data.get() );
+            l->onFileCompleted( outfile, data.get( ) );
           }
         }
 
@@ -149,7 +149,7 @@ namespace FormatConverter{
 
           for ( auto& outfile : files ) {
             for ( auto& l : listeners ) {
-              l->onFileCompleted( outfile, data.get() );
+              l->onFileCompleted( outfile, data.get( ) );
             }
           }
         }
@@ -158,7 +158,7 @@ namespace FormatConverter{
 
       // carry on with next data chunk
       output( ) << "reading next file chunk" << std::endl;
-      retcode = from->fill( data, retcode );
+      retcode = from->fill( data.get(), retcode );
     }
 
     if ( ReadResult::ERROR == retcode ) {

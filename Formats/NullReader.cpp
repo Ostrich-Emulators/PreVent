@@ -17,11 +17,11 @@ namespace FormatConverter {
   NullReader::~NullReader( ) {
   }
 
-  int NullReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& info ) {
+  int NullReader::prepare( const std::string& filename, SignalSet * info ) {
     return 0;
   }
 
-  ReadResult NullReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
+  ReadResult NullReader::fill( SignalSet * info, const ReadResult& ) {
     return ReadResult::END_OF_FILE;
   }
 }

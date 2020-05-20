@@ -100,7 +100,7 @@ namespace FormatConverter{
     this->rslt = rslt;
   }
 
-  int XmlReaderBase::prepare( const std::string& fname, std::unique_ptr<SignalSet>& info ) {
+  int XmlReaderBase::prepare( const std::string& fname, SignalSet * info ) {
     int rr = Reader::prepare( fname, info );
     if ( 0 == rr ) {
       parser = XML_ParserCreate( NULL );
@@ -126,7 +126,7 @@ namespace FormatConverter{
     rdr->comment( SignalUtils::trim( comment ) );
   }
 
-  void XmlReaderBase::copySavedInto( std::unique_ptr<SignalSet>& tgt ) {
+  void XmlReaderBase::copySavedInto( SignalSet * tgt ) {
     // copy all our saved data into this new tgt signalset
     tgt->setMetadataFrom( saved );
     saved.clearMetas( );
@@ -160,11 +160,11 @@ namespace FormatConverter{
     saved.reset( false );
   }
 
-  ReadResult XmlReaderBase::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastfill ) {
+  ReadResult XmlReaderBase::fill( SignalSet * info, const ReadResult& lastfill ) {
     if ( ReadResult::END_OF_DAY == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
       copySavedInto( info );
     }
-    filler = info.get( );
+    filler = info;
     setResult( ReadResult::NORMAL );
 
     std::vector<char> buffer( READCHUNK, 0 );

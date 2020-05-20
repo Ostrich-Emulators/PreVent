@@ -39,7 +39,7 @@ namespace FormatConverter {
      * @param data reset this ReadInfo as well
      * @return 0 (success), -1 (error), -2 (fatal)
      */
-    virtual int prepare( const std::string& input, std::unique_ptr<SignalSet>& info );
+    virtual int prepare( const std::string& input, SignalSet * info );
 
     /**
      * Closes the current file/stream. This function must be called when
@@ -54,7 +54,7 @@ namespace FormatConverter {
      * @param lastresult the outcome of the previous call to fill()
      * @return the result code
      */
-    virtual ReadResult fill( std::unique_ptr<SignalSet>& read,
+    virtual ReadResult fill( SignalSet * read,
         const ReadResult& lastresult = ReadResult::FIRST_READ ) = 0;
 
     /**
@@ -116,7 +116,7 @@ namespace FormatConverter {
      * @return
      */
     virtual void splice( const std::string& inputfile, const std::string& path,
-        dr_time from, dr_time to, std::unique_ptr<SignalData>& signalToFill );
+        dr_time from, dr_time to, SignalData * signalToFill );
 
   protected:
     Reader( const Reader& );

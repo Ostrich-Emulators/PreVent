@@ -36,8 +36,8 @@ namespace FormatConverter {
     static std::vector<StpMetadata> parseMetadata( const std::string& input );
 
   protected:
-    virtual ReadResult fill( std::unique_ptr<SignalSet>&, const ReadResult& lastfill ) override;
-    virtual int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
+    virtual ReadResult fill( SignalSet *, const ReadResult& lastfill ) override;
+    virtual int prepare( const std::string& input, SignalSet * info ) override;
 
   private:
     static StpMetadata metaFromSignalSet( const std::unique_ptr<SignalSet>& );
@@ -68,7 +68,7 @@ namespace FormatConverter {
        * as necessary. Also, update the sequence counting and timer values
        * @param signals
        */
-      void flushone( std::unique_ptr<SignalSet>& signals );
+      void flushone( SignalSet * signals );
       bool empty( ) const;
 
       unsigned short currentseq( ) const;
@@ -266,16 +266,16 @@ namespace FormatConverter {
     static const std::map<int, std::string> WAVELABELS;
 
     StpGeReader( const StpGeReader& orig );
-    ChunkReadResult processOneChunk( std::unique_ptr<SignalSet>&, const size_t& maxread );
+    ChunkReadResult processOneChunk( SignalSet *, const size_t& maxread );
     dr_time popTime( );
 
-    static std::string wavelabel( int waveid, const std::unique_ptr<SignalSet>& );
+    static std::string wavelabel( int waveid, SignalSet * );
 
-    void readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize = 68 );
+    void readDataBlock( SignalSet * info, const std::vector<BlockConfig>& vitals, size_t blocksize = 68 );
     static std::string div10s( int val, unsigned int multiple = 1 );
 
     void unhandledBlockType( unsigned int type, unsigned int fmt ) const;
-    ChunkReadResult readWavesBlock( std::unique_ptr<SignalSet>& info, const size_t& maxread );
+    ChunkReadResult readWavesBlock( SignalSet * info, const size_t& maxread );
 
     /**
      * determines if the work buffer has at least one full segment in it

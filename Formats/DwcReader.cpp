@@ -55,7 +55,7 @@ namespace FormatConverter{
     return (tt * 1000 + ms );
   }
 
-  int DwcReader::prepare( const std::string& infoname, std::unique_ptr<SignalSet>& info ) {
+  int DwcReader::prepare( const std::string& infoname, SignalSet * info ) {
     std::string recordset( infoname.substr( 0, infoname.size( ) - 5 ) );
     int rslt = WfdbReader::prepare( recordset + ".hea", info );
     if ( 0 != rslt ) {
@@ -123,7 +123,7 @@ namespace FormatConverter{
     return rslt;
   }
 
-  ReadResult DwcReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult & lastrr ) {
+  ReadResult DwcReader::fill( SignalSet * info, const ReadResult & lastrr ) {
     dr_time lastcsvtime = 0;
     ReadResult rslt = ReadResult::NORMAL;
     std::string csvline;

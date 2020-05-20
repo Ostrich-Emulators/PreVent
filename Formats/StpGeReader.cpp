@@ -386,7 +386,7 @@ namespace FormatConverter{
     return sequencenums.empty( );
   }
 
-  void StpGeReader::WaveTracker::flushone( std::unique_ptr<SignalSet>& info ) {
+  void StpGeReader::WaveTracker::flushone( SignalSet * info ) {
     if ( empty( ) ) {
       std::cout << "no wave data to flush" << std::endl;
     }
@@ -493,7 +493,7 @@ namespace FormatConverter{
 
   StpGeReader::~StpGeReader( ) { }
 
-  int StpGeReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) {
+  int StpGeReader::prepare( const std::string& filename, SignalSet * data ) {
     int rslt = StpReaderBase::prepare( filename, data );
     if ( rslt != 0 ) {
       return rslt;
@@ -504,7 +504,7 @@ namespace FormatConverter{
     return 0;
   }
 
-  ReadResult StpGeReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
+  ReadResult StpGeReader::fill( SignalSet * info, const ReadResult& lastrr ) {
     //output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
     int cnt = readMore( );
@@ -604,7 +604,7 @@ namespace FormatConverter{
     return 0 == magiclong;
   }
 
-  StpGeReader::ChunkReadResult StpGeReader::processOneChunk( std::unique_ptr<SignalSet>& info,
+  StpGeReader::ChunkReadResult StpGeReader::processOneChunk( SignalSet * info,
       const size_t& maxread ) {
     // we are guaranteed to have a complete segment in the work buffer
     // and the work buffer head is pointing to the start of the segment
@@ -834,7 +834,7 @@ namespace FormatConverter{
     return time * 1000;
   }
 
-  StpGeReader::ChunkReadResult StpGeReader::readWavesBlock( std::unique_ptr<SignalSet>& info, const size_t& maxread ) {
+  StpGeReader::ChunkReadResult StpGeReader::readWavesBlock( SignalSet * info, const size_t& maxread ) {
     if ( 0x04 == work.read( ) ) {
       work.skip( ); // skip the 0x04
       auto oldseq = wavetracker.currentseq( );
@@ -972,7 +972,7 @@ namespace FormatConverter{
     return ChunkReadResult::OK;
   }
 
-  void StpGeReader::readDataBlock( std::unique_ptr<SignalSet>& info, const std::vector<BlockConfig>& vitals, size_t blocksize ) {
+  void StpGeReader::readDataBlock( SignalSet * info, const std::vector<BlockConfig>& vitals, size_t blocksize ) {
     size_t read = 0;
     for ( const auto& cfg : vitals ) {
       read += cfg.readcount;
@@ -1176,7 +1176,7 @@ namespace FormatConverter{
     return ok;
   }
 
-  std::string StpGeReader::wavelabel( int waveid, const std::unique_ptr<SignalSet>& info ) {
+  std::string StpGeReader::wavelabel( int waveid, SignalSet * info ) {
     std::string name = StpGeReader::WAVELABELS.at( waveid );
 
     if ( 28 == waveid ) {
@@ -1203,7 +1203,7 @@ namespace FormatConverter{
     auto info = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
     StpGeReader reader;
     reader.setNonbreaking( true );
-    int failed = reader.prepare( input, info );
+    int failed = reader.prepare( input, info.get( ) );
     if ( failed ) {
       std::cerr << "error while opening input file. error code: " << failed << std::endl;
       return metas;
@@ -1214,7 +1214,7 @@ namespace FormatConverter{
 
     bool okToContinue = true;
     while ( okToContinue ) {
-      last = reader.fill( info, last );
+      last = reader.fill( info.get(), last );
       switch ( last ) {
         case ReadResult::FIRST_READ:
           // NOTE: no break here

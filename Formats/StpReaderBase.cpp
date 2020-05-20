@@ -39,7 +39,7 @@ namespace FormatConverter{
     return metadataonly;
   }
 
-  int StpReaderBase::prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) {
+  int StpReaderBase::prepare( const std::string& filename, SignalSet * data ) {
     int rslt = Reader::prepare( filename, data );
     if ( rslt != 0 ) {
       return rslt;

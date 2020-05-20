@@ -52,7 +52,7 @@ namespace FormatConverter{
     stream.release( );
   }
 
-  int ZlReader::prepare( const std::string& input, std::unique_ptr<SignalSet>& data ) {
+  int ZlReader::prepare( const std::string& input, SignalSet * data ) {
     int rslt = Reader::prepare( input, data );
     if ( rslt != 0 ) {
       return rslt;
@@ -93,7 +93,7 @@ namespace FormatConverter{
     return 0;
   }
 
-  ReadResult ZlReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
+  ReadResult ZlReader::fill( SignalSet * info, const ReadResult& ) {
     // for this class we say a chunk is a full data set for one patient,
     // so read until we see another HEADER line in the text
     std::string onepatientdata = leftoverText + stream->readNextChunk( );
@@ -154,7 +154,7 @@ namespace FormatConverter{
     return retcode;
   }
 
-  void ZlReader::handleOneLine( const std::string& chunk, std::unique_ptr<SignalSet>& info ) {
+  void ZlReader::handleOneLine( const std::string& chunk, SignalSet * info ) {
     if ( HEADER == chunk ) {
       state = zlReaderState::ZIN_HEADER;
     }

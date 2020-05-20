@@ -30,18 +30,18 @@ namespace FormatConverter {
    */
   class ZlReader2 : public Reader {
   public:
-    ZlReader2();
-    ZlReader2(const std::string& name);
-    virtual ~ZlReader2();
+    ZlReader2( );
+    ZlReader2( const std::string& name );
+    virtual ~ZlReader2( );
 
-    static bool waveIsOk(const std::string& wavedata);
+    static bool waveIsOk( const std::string& wavedata );
   protected:
-    ReadResult fill(std::unique_ptr<SignalSet>&, const ReadResult& lastfill) override;
-    int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
-    void finish() override;
+    ReadResult fill( SignalSet *, const ReadResult& lastfill ) override;
+    int prepare( const std::string& input, SignalSet * info ) override;
+    void finish( ) override;
 
   private:
-    ZlReader2(const ZlReader2& orig);
+    ZlReader2( const ZlReader2& orig );
 
     bool firstread;
     dr_time currentTime;
@@ -56,7 +56,7 @@ namespace FormatConverter {
      * @param text
      * @return
      */
-    std::string normalizeText(const std::string& signalname, std::string text);
+    std::string normalizeText( const std::string& signalname, std::string text );
   };
 }
 #endif /* ZlReader2_H */

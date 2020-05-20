@@ -37,9 +37,9 @@ namespace FormatConverter {
     virtual ~StpJsonReader();
 
   protected:
-    ReadResult fill(std::unique_ptr<SignalSet>&, const ReadResult& lastfill) override;
+    ReadResult fill( SignalSet *, const ReadResult& lastfill) override;
 
-    int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
+    int prepare(const std::string& input, SignalSet * info) override;
     void finish() override;
 
   private:
@@ -52,8 +52,8 @@ namespace FormatConverter {
     jsonReaderState state;
     std::unique_ptr<FormatConverter::StreamChunkReader> stream;
 
-    void handleInputChunk(std::string& chunk, std::unique_ptr<SignalSet>& info);
-    void handleOneLine(const std::string& chunk, std::unique_ptr<SignalSet>& info);
+    void handleInputChunk(std::string& chunk, SignalSet * info);
+    void handleOneLine(const std::string& chunk, SignalSet * info);
 
     static const std::string HEADER;
     static const std::string VITAL;

@@ -81,13 +81,13 @@ namespace FormatConverter{
         : parseTime( std::string( xmldoc.substr( start, ( end - start ) ) ) );
   }
 
-  int StpPhilipsReader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) {
+  int StpPhilipsReader::prepare( const std::string& filename, SignalSet * data ) {
     int rslt = StpReaderBase::prepare( filename, data );
     wavewarning = false;
     return rslt;
   }
 
-  ReadResult StpPhilipsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
+  ReadResult StpPhilipsReader::fill( SignalSet * info, const ReadResult& lastrr ) {
     currentTime = 0;
     output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
@@ -320,7 +320,7 @@ namespace FormatConverter{
     auto info = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
     StpPhilipsReader reader;
     reader.setNonbreaking( true );
-    int failed = reader.prepare( input, info );
+    int failed = reader.prepare( input, info.get() );
     if ( failed ) {
       std::cerr << "error while opening input file. error code: " << failed << std::endl;
       return metas;
@@ -331,7 +331,7 @@ namespace FormatConverter{
 
     bool okToContinue = true;
     while ( okToContinue ) {
-      last = reader.fill( info, last );
+      last = reader.fill( info.get(), last );
       switch ( last ) {
         case ReadResult::FIRST_READ:
           // NOTE: no break here

@@ -26,7 +26,7 @@ namespace FormatConverter {
     StpReaderBase( const StpReaderBase& orig );
     virtual ~StpReaderBase( );
 
-    virtual int prepare( const std::string& filename, std::unique_ptr<SignalSet>& data ) override;
+    virtual int prepare( const std::string& filename, SignalSet * data ) override;
 
     virtual void setMetadataOnly( bool metasonly = true );
     virtual bool isMetadataOnly( ) const;

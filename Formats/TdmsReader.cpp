@@ -107,7 +107,7 @@ namespace FormatConverter{
     }
   }
 
-  int TdmsReader::prepare( const std::string& recordset, std::unique_ptr<SignalSet>& info ) {
+  int TdmsReader::prepare( const std::string& recordset, SignalSet * info ) {
     output( ) << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
     //TDMS::log::debug.debug_mode = true;
     int rslt = Reader::prepare( recordset, info );
@@ -226,9 +226,9 @@ namespace FormatConverter{
     signal->setChunkIntervalAndSampleRate( timeinc, freq );
   }
 
-  ReadResult TdmsReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastfill ) {
+  ReadResult TdmsReader::fill( SignalSet * info, const ReadResult& lastfill ) {
     int retcode = 0;
-    filler = info.get( );
+    filler = info;
     bool firstrun = ( ReadResult::FIRST_READ == lastfill );
 
     for ( const auto& o : *tdmsfile ) {

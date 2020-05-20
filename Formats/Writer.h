@@ -18,32 +18,32 @@ namespace FormatConverter {
 
   class Writer {
   public:
-    virtual ~Writer();
+    virtual ~Writer( );
     static const int DEFAULT_COMPRESSION;
-    static std::unique_ptr<Writer> get(const FormatConverter::Format& fmt);
+    static std::unique_ptr<Writer> get( const FormatConverter::Format& fmt );
 
-    void compression(int lev);
-    int compression() const;
-    void addListener(std::shared_ptr<ConversionListener> listener);
-    void quiet(bool = true);
-    void stopAfterFirstFile(bool onlyone = true);
-    void filenamer(const FormatConverter::FileNamer& namer);
-    FormatConverter::FileNamer& filenamer() const;
-    const std::string& ext() const;
+    void compression( int lev );
+    int compression( ) const;
+    void addListener( std::shared_ptr<ConversionListener> listener );
+    void quiet( bool = true );
+    void stopAfterFirstFile( bool onlyone = true );
+    void filenamer( const FormatConverter::FileNamer& namer );
+    FormatConverter::FileNamer& filenamer( ) const;
+    const std::string& ext( ) const;
 
-    virtual std::vector<std::string> write(std::unique_ptr<Reader>& from,
-            std::unique_ptr<SignalSet>& data);
+    virtual std::vector<std::string> write( std::unique_ptr<Reader>& from,
+        std::unique_ptr<SignalSet>& data );
 
   protected:
-    Writer(const std::string& extension);
-    std::ostream& output() const;
+    Writer( const std::string& extension );
+    std::ostream& output( ) const;
 
     /**
      * Lets subclasses initialize a new (possibly temporary) data file.
      * By default, does nothing
      * @return 0 (Success), -1 (Error)
      */
-    virtual int initDataSet();
+    virtual int initDataSet( );
 
     /**
      * Closes the current data file, and provides the final name for it. Datafiles
@@ -52,7 +52,7 @@ namespace FormatConverter {
      * to multiple files
      * @return 
      */
-    virtual std::vector<std::string> closeDataSet() = 0;
+    virtual std::vector<std::string> closeDataSet( ) = 0;
 
     /**
      * Drains the give ReadInfo's data. This function can be used for incrementally
@@ -60,13 +60,13 @@ namespace FormatConverter {
      * @param info The data to drain
      * @return 0 (success) -1 (error)
      */
-    virtual int drain(std::unique_ptr<SignalSet>& info) = 0;
+    virtual int drain( std::unique_ptr<SignalSet>& info ) = 0;
 
-    int tz_offset() const;
-    const std::string& tz_name() const;
+    int tz_offset( ) const;
+    const std::string& tz_name( ) const;
 
   private:
-    Writer(const Writer&);
+    Writer( const Writer& );
 
     std::vector<std::shared_ptr<ConversionListener>> listeners;
     int compress;

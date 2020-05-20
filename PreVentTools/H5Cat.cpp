@@ -77,8 +77,8 @@ namespace FormatConverter{
     for ( const auto& file : filesToCat ) {
       std::cout << "  " << file << std::endl;
       auto junk = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
-      rdr.prepare( file, junk );
-      rdr.fill( alldata );
+      rdr.prepare( file, junk.get() );
+      rdr.fill( alldata.get() );
       rdr.finish( );
     }
 

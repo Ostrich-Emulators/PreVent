@@ -28,7 +28,7 @@ namespace FormatConverter{
 
   Hdf5Reader::~Hdf5Reader( ) { }
 
-  int Hdf5Reader::prepare( const std::string& filename, std::unique_ptr<SignalSet>& info ) {
+  int Hdf5Reader::prepare( const std::string& filename, SignalSet * info ) {
     H5::Exception::dontPrint( );
     int rslt = Reader::prepare( filename, info );
     if ( 0 == rslt ) {
@@ -121,7 +121,7 @@ namespace FormatConverter{
     return true;
   }
 
-  ReadResult Hdf5Reader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
+  ReadResult Hdf5Reader::fill( SignalSet * info, const ReadResult& ) {
     H5::Group root = file.openGroup( "/" );
 
     for ( int i = 0; i < root.getNumAttrs( ); i++ ) {
@@ -236,7 +236,7 @@ namespace FormatConverter{
   }
 
   void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
-      const bool& iswave, std::unique_ptr<SignalSet>& info ) {
+      const bool& iswave, SignalSet * info ) {
     std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
 
     std::unique_ptr<SignalData>& signal = ( iswave
@@ -560,7 +560,7 @@ namespace FormatConverter{
   }
 
   void Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
-      dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
+      dr_time from, dr_time to, SignalData * signal ) {
     size_t typeo = path.find( "VitalSigns" );
 
     signal->setWave( std::string::npos == typeo );

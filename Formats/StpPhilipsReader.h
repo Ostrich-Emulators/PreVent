@@ -29,8 +29,8 @@ namespace FormatConverter {
     static std::vector<StpReaderBase::StpMetadata> parseMetadata( const std::string& input );
 
   protected:
-    virtual ReadResult fill( std::unique_ptr<SignalSet>&, const ReadResult& lastfill ) override;
-    virtual int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
+    virtual ReadResult fill( SignalSet *, const ReadResult& lastfill ) override;
+    virtual int prepare( const std::string& input, SignalSet * info ) override;
 
   private:
     static const std::string XML_HEADER;
@@ -81,7 +81,7 @@ namespace FormatConverter {
     std::map<std::string, std::string> elementClosings;
 
     struct xmlpassthru {
-      std::unique_ptr<SignalSet>& signals;
+      SignalSet * signals;
       ParseState state;
       std::string currentText;
       std::string currentPatientId;

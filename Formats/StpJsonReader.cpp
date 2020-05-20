@@ -48,7 +48,7 @@ namespace FormatConverter{
     stream.release( );
   }
 
-  int StpJsonReader::prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) {
+  int StpJsonReader::prepare( const std::string& input, SignalSet * info ) {
     int rslt = Reader::prepare( input, info );
     if ( 0 != rslt ) {
       return rslt;
@@ -76,7 +76,7 @@ namespace FormatConverter{
     return 0;
   }
 
-  ReadResult StpJsonReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& ) {
+  ReadResult StpJsonReader::fill( SignalSet * info, const ReadResult& ) {
     // for this class we say a chunk is a full data set for one patient,
     // so read until we see another HEADER line in the text
     std::string onepatientdata = leftoverText + stream->readNextChunk( );
@@ -138,7 +138,7 @@ namespace FormatConverter{
     return retcode;
   }
 
-  void StpJsonReader::handleOneLine( const std::string& chunk, std::unique_ptr<SignalSet>& info ) {
+  void StpJsonReader::handleOneLine( const std::string& chunk, SignalSet * info ) {
     if ( HEADER == chunk ) {
       state = jsonReaderState::JIN_HEADER;
     }

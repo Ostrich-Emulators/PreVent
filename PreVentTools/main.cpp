@@ -356,7 +356,7 @@ int main( int argc, char** argv ) {
 
     for ( int i = optind; i < argc; i++ ) {
       std::string input = argv[i];
-      std::unique_ptr<Reader> from = Reader::get( FormatConverter::Formats::guess( input ) );
+      auto from = Reader::get( FormatConverter::Formats::guess( input ) );
       from->setNonbreaking( true );
 
       std::unique_ptr<Writer> to = Writer::get( FormatConverter::Formats::guess( input ) );
@@ -366,12 +366,12 @@ int main( int argc, char** argv ) {
 
       std::unique_ptr<SignalSet>data( new AnonymizingSignalSet( to->filenamer( ) ) );
 
-      if ( from->prepare( input, data ) < 0 ) {
+      if ( from->prepare( input, data.get( ) ) < 0 ) {
         std::cerr << "could not prepare file for reading: " << input << std::endl;
         continue;
       }
       else {
-        std::vector<std::string> files = to->write( from, data );
+        auto files = to->write( from, data );
         from->finish( );
 
         for ( const auto& f : files ) {
@@ -436,7 +436,7 @@ int main( int argc, char** argv ) {
 
       auto fmt = FormatConverter::Formats::guess( input );
       std::unique_ptr<Reader> rdr = Reader::get( fmt );
-      rdr->splice( input, path, starttime, endtime, signal );
+      rdr->splice( input, path, starttime, endtime, signal.get( ) );
 
       if ( !outfilename.empty( ) ) {
         delete &outstream;
@@ -493,7 +493,7 @@ int main( int argc, char** argv ) {
       endtime = starttime + for_s * 1000;
     }
 
-    rdr->splice( input, path, starttime, endtime, signal );
+    rdr->splice( input, path, starttime, endtime, signal.get( ) );
 
     std::cout
         << "count: " << descriptives->count( ) << std::endl

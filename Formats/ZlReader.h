@@ -32,19 +32,19 @@ namespace FormatConverter {
 
   class ZlReader : public Reader {
   public:
-    ZlReader();
-    ZlReader(const std::string& name);
-    virtual ~ZlReader();
+    ZlReader( );
+    ZlReader( const std::string& name );
+    virtual ~ZlReader( );
 
   protected:
-    ReadResult fill(std::unique_ptr<SignalSet>&, const ReadResult& lastfill) override;
+    ReadResult fill( SignalSet *, const ReadResult& lastfill ) override;
 
-    int prepare(const std::string& input, std::unique_ptr<SignalSet>& info) override;
-    void finish() override;
+    int prepare( const std::string& input, SignalSet * info ) override;
+    void finish( ) override;
 
   private:
 
-    ZlReader(const ZlReader& orig);
+    ZlReader( const ZlReader& orig );
 
     bool firstread;
     std::string leftoverText;
@@ -52,8 +52,8 @@ namespace FormatConverter {
     zlReaderState state;
     std::unique_ptr<FormatConverter::StreamChunkReader> stream;
 
-    void handleInputChunk(std::string& chunk, std::unique_ptr<SignalSet>& info);
-    void handleOneLine(const std::string& chunk, std::unique_ptr<SignalSet>& info);
+    void handleInputChunk( std::string& chunk, SignalSet * info );
+    void handleOneLine( const std::string& chunk, SignalSet * info );
 
     static const std::string HEADER;
     static const std::string VITAL;

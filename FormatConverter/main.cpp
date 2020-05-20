@@ -268,8 +268,8 @@ int main( int argc, char** argv ) {
   }
 
   // FIXME: if we're localizing time, then offsetstr should be assumed to be localtime
-  dr_time offset = TimeParser::parse( offsetstr );
-  TimeModifier timemod = ( offsetIsDesiredDate
+  auto offset = TimeParser::parse( offsetstr );
+  auto timemod = ( offsetIsDesiredDate
       ? TimeModifier::time( offset )
       : TimeModifier::offset( offset ) );
 
@@ -303,7 +303,7 @@ int main( int argc, char** argv ) {
 
   int returncode = 0;
   // send the files through
-  for ( int i = optind; i < argc; i++ ) {
+  for ( auto i = optind; i < argc; i++ ) {
     // see if the file exists before we do anything
     struct stat buffer;
     if ( 0 != stat( argv[i], &buffer ) ) {
@@ -320,19 +320,19 @@ int main( int argc, char** argv ) {
       data.reset( new AnonymizingSignalSet( data.release( ), to->filenamer( ), timemod ) );
     }
 
-    std::string input( argv[i] );
+    auto input( argv[i] );
     to->filenamer( ).inputfilename( input );
     std::cout << "converting " << input
         << " from " << fromstr
         << " to " << tostr << std::endl;
 
-    if ( from->prepare( input, data ) < 0 ) {
+    if ( from->prepare( input, data.get() ) < 0 ) {
       std::cerr << "could not prepare file for reading" << std::endl;
       returncode = -1;
       continue;
     }
     else {
-      std::vector<std::string> files = to->write( from, data );
+      auto files = to->write( from, data );
       from->finish( );
 
       for ( const auto& f : files ) {

@@ -110,7 +110,7 @@ namespace FormatConverter{
     return extra_ms;
   }
 
-  int WfdbReader::prepare( const std::string& headername, std::unique_ptr<SignalSet>& info ) {
+  int WfdbReader::prepare( const std::string& headername, SignalSet * info ) {
     int rslt = Reader::prepare( headername, info );
     if ( 0 != rslt ) {
       return rslt;
@@ -205,7 +205,7 @@ namespace FormatConverter{
     wfdbquit( );
   }
 
-  ReadResult WfdbReader::fill( std::unique_ptr<SignalSet>& info, const ReadResult& lastrr ) {
+  ReadResult WfdbReader::fill( SignalSet * info, const ReadResult& lastrr ) {
     WFDB_Sample v[framecount];
     bool iswave = ( freqhz > 1 );
 

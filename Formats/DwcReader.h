@@ -31,8 +31,8 @@ namespace FormatConverter {
     virtual ~DwcReader( );
 
   protected:
-    int prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) override;
-    ReadResult fill( std::unique_ptr<SignalSet>& data, const ReadResult& lastfill ) override;
+    int prepare( const std::string& input,SignalSet * info ) override;
+    ReadResult fill( SignalSet * data, const ReadResult& lastfill ) override;
 
   private:
     static const size_t FIRST_VITAL_COL;

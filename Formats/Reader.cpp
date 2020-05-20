@@ -59,7 +59,7 @@ namespace FormatConverter{
     }
   }
 
-  int Reader::prepare( const std::string& input, std::unique_ptr<SignalSet>& info ) {
+  int Reader::prepare( const std::string& input, SignalSet * info ) {
     std::string timezone = ( 0 == info->metadata( ).count( SignalData::TIMEZONE )
         ? "UTC"
         : info->metadata( ).at( SignalData::TIMEZONE ) );
@@ -127,7 +127,7 @@ namespace FormatConverter{
   }
 
   void Reader::splice( const std::string& inputfile, const std::string& path,
-      dr_time from, dr_time to, std::unique_ptr<SignalData>& signal ) {
+      dr_time from, dr_time to, SignalData * signal ) {
     std::cerr << "this reader does not support splicing" << std::endl;
   }
 
