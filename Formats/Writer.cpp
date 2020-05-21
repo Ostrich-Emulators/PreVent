@@ -82,8 +82,7 @@ namespace FormatConverter{
     return *namer.get( );
   }
 
-  std::vector<std::string> Writer::write( std::unique_ptr<Reader>& from,
-      std::unique_ptr<SignalSet>& data ) {
+  std::vector<std::string> Writer::write( Reader * from, SignalSet * data ) {
     int patientno = 1;
 
     output( ) << "init data set" << std::endl;
@@ -96,7 +95,7 @@ namespace FormatConverter{
     }
 
     output( ) << "filling data" << std::endl;
-    ReadResult retcode = from->fill( data.get() );
+    ReadResult retcode = from->fill( data );
 
     int files = 1;
     while ( retcode != ReadResult::ERROR ) {
@@ -117,7 +116,7 @@ namespace FormatConverter{
         std::vector<std::string> files = closeDataSet( );
         for ( auto& outfile : files ) {
           for ( auto& l : listeners ) {
-            l->onFileCompleted( outfile, data.get( ) );
+            l->onFileCompleted( outfile, data );
           }
         }
 
@@ -149,7 +148,7 @@ namespace FormatConverter{
 
           for ( auto& outfile : files ) {
             for ( auto& l : listeners ) {
-              l->onFileCompleted( outfile, data.get( ) );
+              l->onFileCompleted( outfile, data );
             }
           }
         }
@@ -158,7 +157,7 @@ namespace FormatConverter{
 
       // carry on with next data chunk
       output( ) << "reading next file chunk" << std::endl;
-      retcode = from->fill( data.get(), retcode );
+      retcode = from->fill( data, retcode );
     }
 
     if ( ReadResult::ERROR == retcode ) {

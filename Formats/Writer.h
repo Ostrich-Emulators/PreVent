@@ -31,8 +31,7 @@ namespace FormatConverter {
     FormatConverter::FileNamer& filenamer( ) const;
     const std::string& ext( ) const;
 
-    virtual std::vector<std::string> write( std::unique_ptr<Reader>& from,
-        std::unique_ptr<SignalSet>& data );
+    virtual std::vector<std::string> write( Reader * from, SignalSet * data );
 
   protected:
     Writer( const std::string& extension );
@@ -60,7 +59,7 @@ namespace FormatConverter {
      * @param info The data to drain
      * @return 0 (success) -1 (error)
      */
-    virtual int drain( std::unique_ptr<SignalSet>& info ) = 0;
+    virtual int drain( SignalSet * info ) = 0;
 
     int tz_offset( ) const;
     const std::string& tz_name( ) const;

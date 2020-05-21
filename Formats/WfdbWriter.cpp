@@ -56,7 +56,7 @@ namespace FormatConverter{
     return files;
   }
 
-  int WfdbWriter::drain( std::unique_ptr<SignalSet>& info ) {
+  int WfdbWriter::drain( SignalSet * info ) {
     output( ) << "Error: WFDB writing not yet implemented" << std::endl;
     return -1;
 

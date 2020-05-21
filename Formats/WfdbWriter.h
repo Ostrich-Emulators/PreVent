@@ -25,20 +25,20 @@ namespace FormatConverter {
 
   class WfdbWriter : public Writer {
   public:
-    WfdbWriter();
-    virtual ~WfdbWriter();
+    WfdbWriter( );
+    virtual ~WfdbWriter( );
 
   protected:
-    int initDataSet();
-    std::vector<std::string> closeDataSet();
-    int drain(std::unique_ptr<SignalSet>&);
+    int initDataSet( );
+    std::vector<std::string> closeDataSet( );
+    int drain( SignalSet * );
 
   private:
-    WfdbWriter(const WfdbWriter& orig);
+    WfdbWriter( const WfdbWriter& orig );
 
-    int write(double freq, std::vector<std::unique_ptr<SignalData>>&data,
-            const std::string& filestart);
-    void syncAndWrite(double freq, std::vector<std::unique_ptr<SignalData>>&data);
+    int write( double freq, std::vector<std::unique_ptr<SignalData>>&data,
+        const std::string& filestart );
+    void syncAndWrite( double freq, std::vector<std::unique_ptr<SignalData>>&data );
 
     std::string fileloc;
     std::string currdir;

@@ -44,8 +44,7 @@ namespace FormatConverter {
     // and then use another one to generate a filename based on a new pattern.
     // then, we'll just write the saved data to that file
 
-    std::unique_ptr<SignalSet> uniquer( this );
-    std::string storagefile = namer.filename( uniquer );
+    std::string storagefile = namer.filename( this );
 
     size_t pos = storagefile.find_last_of( "/\\" );
 
@@ -54,8 +53,7 @@ namespace FormatConverter {
             ? ""
             : storagefile.substr( 0, pos + 1 ) ) + DEFAULT_FILENAME_PATTERN );
     myNamer.inputfilename( storagefile );
-    storagefile = myNamer.filename( uniquer );
-    uniquer.release( ); // don't delete /this/!
+    storagefile = myNamer.filename( this );
 
     std::ofstream myfile( storagefile );
     if ( myfile.is_open( ) ) {

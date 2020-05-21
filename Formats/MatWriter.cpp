@@ -81,8 +81,8 @@ namespace FormatConverter{
     return ret;
   }
 
-  int MatWriter::drain( std::unique_ptr<SignalSet>& info ) {
-    dataptr = info.get( );
+  int MatWriter::drain( SignalSet * info ) {
+    dataptr = info;
     filenamer( ).filename( info );
 
     std::vector<std::unique_ptr < SignalData>> vitvec;

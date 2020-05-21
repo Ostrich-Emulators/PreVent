@@ -27,7 +27,7 @@ namespace FormatConverter {
   protected:
     virtual std::vector<std::string> closeDataSet( ) override;
 
-    virtual int drain( std::unique_ptr<SignalSet>& info ) override;
+    virtual int drain( SignalSet * info ) override;
 
   };
 }

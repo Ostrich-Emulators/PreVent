@@ -16,7 +16,7 @@ namespace FormatConverter{
     return std::vector<std::string>( );
   }
 
-  int NullWriter::drain( std::unique_ptr<SignalSet>& info ) {
+  int NullWriter::drain( SignalSet * info ) {
     return 0;
   }
 }

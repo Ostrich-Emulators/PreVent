@@ -332,7 +332,7 @@ int main( int argc, char** argv ) {
       continue;
     }
     else {
-      auto files = to->write( from, data );
+      auto files = to->write( from.get(), data.get() );
       from->finish( );
 
       for ( const auto& f : files ) {

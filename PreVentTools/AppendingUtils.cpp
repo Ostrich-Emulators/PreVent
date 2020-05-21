@@ -47,10 +47,10 @@ namespace FormatConverter {
 
     try {
       ensureCustomDataGroupExists( );
-      std::unique_ptr<SignalData> signal = parseDataFile( datafile );
+      auto signal = parseDataFile( datafile );
 
       if ( signal ) {
-        writeSignal( signal );
+        writeSignal( signal.get() );
       }
       else {
         std::cerr << "No data to append" << std::endl;
@@ -137,7 +137,7 @@ namespace FormatConverter {
     return signal;
   }
 
-  int AppendingUtils::writeSignal( std::unique_ptr<SignalData>& data ) {
+  int AppendingUtils::writeSignal( SignalData * data ) {
     std::string groupname = DATAGROUP + "/" + Hdf5Writer::getDatasetName( data );
     if ( !file.exists( groupname ) ) {
       file.createGroup( groupname );

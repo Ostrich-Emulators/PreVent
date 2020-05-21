@@ -92,7 +92,7 @@ namespace FormatConverter{
     fn.inputfilename( "-" );
     wrt.filenamer( fn );
 
-    wrt.write( nullrdr, alldata );
+    wrt.write( nullrdr.get(), alldata.get() );
   }
 
   void H5Cat::cat( const std::string& outfile, std::vector<std::string>& filesToCat ) {

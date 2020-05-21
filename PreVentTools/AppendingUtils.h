@@ -64,7 +64,7 @@ DATA
     static std::unique_ptr<SignalData> parseDataFile( const std::string& datafile );
     static void split( const std::string& line, std::string& key, std::string& val,
         const std::string& delim = "=" );
-    int writeSignal( std::unique_ptr<SignalData>& signal );
+    int writeSignal( SignalData * signal );
   };
 }
 

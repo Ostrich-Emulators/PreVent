@@ -26,17 +26,17 @@ namespace FormatConverter {
 
   class CsvWriter : public Writer {
   public:
-    CsvWriter();
-    virtual ~CsvWriter();
+    CsvWriter( );
+    virtual ~CsvWriter( );
 
     static const int MISSING_VALUE;
 
   protected:
-    std::vector<std::string> closeDataSet();
-    int drain(std::unique_ptr<SignalSet>&);
+    std::vector<std::string> closeDataSet( );
+    int drain( SignalSet * );
 
   private:
-    CsvWriter(const CsvWriter& orig);
+    CsvWriter( const CsvWriter& orig );
   };
 }
 #endif /* CSVWRITER_H */

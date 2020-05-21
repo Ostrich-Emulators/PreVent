@@ -121,7 +121,7 @@ namespace FormatConverter{
     writeAttribute( loc, "Duration", duration );
   }
 
-  void Hdf5Writer::writeAttributes( H5::H5Object& ds, const std::unique_ptr<SignalData>& data ) {
+  void Hdf5Writer::writeAttributes( H5::H5Object& ds, SignalData * data ) {
     // writeTimesAndDurationAttributes( ds, data.startTime( ), data.endTime( ) );
     for ( const auto& m : data->metad( ) ) {
       writeAttribute( ds, m.first, m.second );
@@ -134,7 +134,7 @@ namespace FormatConverter{
     }
   }
 
-  std::string Hdf5Writer::getDatasetName( const std::unique_ptr<SignalData>& data ) {
+  std::string Hdf5Writer::getDatasetName( SignalData * data ) {
     return getDatasetName( data->name( ) );
   }
 
@@ -186,7 +186,7 @@ namespace FormatConverter{
         + std::to_string( H5_VERS_RELEASE ) );
   }
 
-  void Hdf5Writer::writeVital( H5::Group& group, std::unique_ptr<SignalData>& data ) {
+  void Hdf5Writer::writeVital( H5::Group& group, SignalData * data ) {
     // two sections of this function
     // 1: write attributes
     // 2: write data
@@ -312,7 +312,7 @@ namespace FormatConverter{
     }
   }
 
-  void Hdf5Writer::writeWave( H5::Group& group, std::unique_ptr<SignalData>& data ) {
+  void Hdf5Writer::writeWave( H5::Group& group, SignalData * data ) {
     const hsize_t rows = data->size( );
     const int scale = data->scale( );
     const int valsperrow = data->readingsPerChunk( );
@@ -472,7 +472,7 @@ namespace FormatConverter{
     }
   }
 
-  void Hdf5Writer::createEventsAndTimes( H5::H5File file, const std::unique_ptr<SignalSet>& data ) {
+  void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet * data ) {
     H5::Group events = ensureGroupExists( file, "Events" );
 
     std::map<long, dr_time> segmentsizes = data->offsets( );
@@ -572,32 +572,24 @@ namespace FormatConverter{
         : obj.createGroup( s ) );
   }
 
-  int Hdf5Writer::drain( std::unique_ptr<SignalSet>& info ) {
-    // WARNING: we're stripping the pointer of it's uniqueness here
-    dataptr = info.get( );
+  int Hdf5Writer::drain( SignalSet * info ) {
+    dataptr = info;
     return 0;
   }
 
   std::vector<std::string> Hdf5Writer::closeDataSet( ) {
-    // UH OH: we're making another unique_ptr to this dataptr,
-    // which is itself already owned by some other unique_ptr.
-    // we MUST release it prior to ending this function
-    std::unique_ptr<SignalSet> data( dataptr );
-
-    dr_time firstTime = data->earliest( );
-    dr_time lastTime = data->latest( );
+    dr_time firstTime = dataptr->earliest( );
+    dr_time lastTime = dataptr->latest( );
     std::vector<std::string> ret;
     if ( 0 == lastTime ) {
-      data.release( );
       // we don't have any data at all!
       return ret;
     }
 
-    std::string outy = filenamer( ).filename( data );
+    std::string outy = filenamer( ).filename( dataptr );
 
-    if ( data->vitals( ).empty( ) && data->waves( ).empty( ) ) {
+    if ( dataptr->vitals( ).empty( ) && dataptr->waves( ).empty( ) ) {
       std::cerr << "Nothing to write to " << outy << std::endl;
-      data.release( );
       return ret;
     }
 
@@ -607,38 +599,38 @@ namespace FormatConverter{
     try {
       H5::H5File file( outy, H5F_ACC_TRUNC );
 
-      createEventsAndTimes( file, data ); // also creates the timesteplkp
+      createEventsAndTimes( file, dataptr ); // also creates the timesteplkp
 
-      auto auxdata = data->auxdata( );
+      auto auxdata = dataptr->auxdata( );
       if ( !auxdata.empty( ) ) {
         for ( auto& fileaux : auxdata ) {
           writeAuxData( file, fileaux.first, fileaux.second );
         }
       }
 
-      writeFileAttributes( file, data->metadata( ), firstTime, lastTime );
+      writeFileAttributes( file, dataptr->metadata( ), firstTime, lastTime );
 
       H5::Group grp = ensureGroupExists( file, "VitalSigns" );
-      output( ) << "Writing " << data->vitals( ).size( ) << " Vitals" << std::endl;
-      for ( auto& vits : data->vitals( ) ) {
+      output( ) << "Writing " << dataptr->vitals( ).size( ) << " Vitals" << std::endl;
+      for ( auto& vits : dataptr->vitals( ) ) {
         if ( vits.get( )->empty( ) ) {
           output( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
         }
         else {
-          H5::Group g = ensureGroupExists( grp, getDatasetName( vits ) );
-          writeVitalGroup( g, vits );
+          H5::Group g = ensureGroupExists( grp, getDatasetName( vits.get() ) );
+          writeVitalGroup( g, vits.get() );
         }
       }
 
       grp = ensureGroupExists( file, "Waveforms" );
-      output( ) << "Writing " << data->waves( ).size( ) << " Waveforms" << std::endl;
-      for ( auto& wavs : data->waves( ) ) {
+      output( ) << "Writing " << dataptr->waves( ).size( ) << " Waveforms" << std::endl;
+      for ( auto& wavs : dataptr->waves( ) ) {
         if ( wavs->empty( ) ) {
           output( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
         }
         else {
-          H5::Group g = ensureGroupExists( grp, getDatasetName( wavs ) );
-          writeWaveGroup( g, wavs );
+          H5::Group g = ensureGroupExists( grp, getDatasetName( wavs.get() ) );
+          writeWaveGroup( g, wavs.get() );
         }
       }
 
@@ -660,12 +652,10 @@ namespace FormatConverter{
       output( ) << "error writing group: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
     }
 
-    data.release( );
-
     return ret;
   }
 
-  void Hdf5Writer::drain( H5::Group& g, std::unique_ptr<SignalData>& data ) {
+  void Hdf5Writer::drain( H5::Group& g, SignalData * data ) {
     if ( data->wave( ) ) {
       writeWaveGroup( g, data );
     }
@@ -674,7 +664,7 @@ namespace FormatConverter{
     }
   }
 
-  void Hdf5Writer::writeGroupAttrs( H5::Group& group, std::unique_ptr<SignalData>& data ) {
+  void Hdf5Writer::writeGroupAttrs( H5::Group& group, SignalData * data ) {
     writeTimesAndDurationAttributes( group, data->startTime( ), data->endTime( ) );
     writeAttribute( group, SignalData::LABEL, data->name( ) );
     writeAttribute( group, SignalData::TIMEZONE, data->metas( ).at( SignalData::TIMEZONE ) );
@@ -688,7 +678,7 @@ namespace FormatConverter{
     writeAttribute( group, SignalData::UOM, data->uom( ) );
   }
 
-  void Hdf5Writer::writeVitalGroup( H5::Group& group, std::unique_ptr<SignalData>& data ) {
+  void Hdf5Writer::writeVitalGroup( H5::Group& group, SignalData * data ) {
     output( ) << "Writing Vital: " << data->name( ) << std::endl;
 
     writeGroupAttrs( group, data );
@@ -700,7 +690,7 @@ namespace FormatConverter{
     }
   }
 
-  bool Hdf5Writer::rescaleForShortsIfNeeded( std::unique_ptr<SignalData>& data,
+  bool Hdf5Writer::rescaleForShortsIfNeeded( SignalData * data,
       bool& useIntsNotShorts ) const {
     bool rescaled = false;
     useIntsNotShorts = false;
@@ -775,7 +765,7 @@ namespace FormatConverter{
     return rescaled;
   }
 
-  void Hdf5Writer::writeWaveGroup( H5::Group& group, std::unique_ptr<SignalData>& data ) {
+  void Hdf5Writer::writeWaveGroup( H5::Group& group, SignalData * data ) {
 
     output( ) << "Writing Wave: " << data->name( );
     auto st = std::chrono::high_resolution_clock::now( );
@@ -812,7 +802,7 @@ namespace FormatConverter{
     return ds;
   }
 
-  void Hdf5Writer::writeTimes( H5::Group& group, std::unique_ptr<SignalData>& data ) {
+  void Hdf5Writer::writeTimes( H5::Group& group, SignalData * data ) {
     auto times = data->times( );
     // SignalData stores times from latest to earliest, so we need to reverse them
 
@@ -886,7 +876,7 @@ namespace FormatConverter{
     dsv.write( vdata, st );
   }
 
-  void Hdf5Writer::writeEvents( H5::Group& group, std::unique_ptr<SignalData>& data ) {
+  void Hdf5Writer::writeEvents( H5::Group& group, SignalData * data ) {
     std::vector<std::string> types = data->eventtypes( );
     if ( types.empty( ) ) {
       return;

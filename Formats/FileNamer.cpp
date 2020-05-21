@@ -95,7 +95,7 @@ namespace FormatConverter{
     return inputfile;
   }
 
-  std::string FileNamer::filenameNoExt( const std::unique_ptr<SignalSet>& data ) {
+  std::string FileNamer::filenameNoExt( SignalSet * data ) {
     // for now, always the same thing
     const size_t pos = lastname.rfind( "." );
     return lastname.substr( 0, pos );
@@ -105,7 +105,7 @@ namespace FormatConverter{
     offset = off;
   }
 
-  std::string FileNamer::filename( const std::unique_ptr<SignalSet>& data ) {
+  std::string FileNamer::filename( SignalSet * data ) {
     // we need to have data for all the conversion keys in here
 
     conversions["%s"] = getDateSuffix( data->earliest( ), "", offset );

@@ -32,26 +32,26 @@ namespace FormatConverter {
 
   class MatWriter : public Writer {
   public:
-    MatWriter(MatVersion version = MV5);
-    virtual ~MatWriter();
+    MatWriter( MatVersion version = MV5 );
+    virtual ~MatWriter( );
 
   protected:
-    int initDataSet();
-    std::vector<std::string> closeDataSet();
-    int drain(std::unique_ptr<SignalSet>&);
+    int initDataSet( );
+    std::vector<std::string> closeDataSet( );
+    int drain( SignalSet * );
 
   private:
-    MatWriter(const MatWriter& orig);
+    MatWriter( const MatWriter& orig );
 
     /**
      * Consumes the given data and writes to the file
      * @param data
      * @return
      */
-    int writeVitals(std::vector<std::unique_ptr<SignalData>>&data);
-    int writeWaves(double freq, std::vector<std::unique_ptr<SignalData>>&data);
+    int writeVitals( std::vector<std::unique_ptr<SignalData>>&data );
+    int writeWaves( double freq, std::vector<std::unique_ptr<SignalData>>&data );
 
-    int writeStrings(const std::string& label, std::vector<std::string>& strings);
+    int writeStrings( const std::string& label, std::vector<std::string>& strings );
 
     std::string tempfileloc;
     mat_t * matfile;

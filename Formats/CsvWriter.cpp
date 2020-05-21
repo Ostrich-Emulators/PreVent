@@ -35,7 +35,7 @@ namespace FormatConverter {
     return vec;
   }
 
-  int CsvWriter::drain( std::unique_ptr<SignalSet>& info ) {
+  int CsvWriter::drain( SignalSet * info ) {
     std::string filename = filenamer( ).filename( info );
     output( ) << "CsvWriter::drain() must be refactored dramatically" << std::endl;
     //  std::ofstream out( filename );
