@@ -23,11 +23,8 @@ namespace FormatConverter {
     BasicSignalSet( );
     virtual ~BasicSignalSet( );
 
-    virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) override;
-    virtual std::vector<std::unique_ptr<SignalData>>&waves( ) override;
-
-    virtual const std::vector<std::unique_ptr<SignalData>>&vitals( ) const override;
-    virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const override;
+    virtual std::vector<SignalData *> vitals( ) const override;
+    virtual std::vector<SignalData *> waves( ) const override;
 
     /**
      * Adds a new vital sign if it has not already been added. If it already
@@ -37,7 +34,7 @@ namespace FormatConverter {
      *  has been called for this vital
      * @return
      */
-    virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
+    virtual SignalData * addVital( const std::string& name, bool * added = nullptr ) override;
     /**
      * Adds a new waveform if it has not already been added. If it already
      * exists, the old dataset is returned
@@ -46,7 +43,7 @@ namespace FormatConverter {
      *  has been called for this vital
      * @return
      */
-    virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) override;
+    virtual SignalData * addWave( const std::string& name, bool * added = nullptr ) override;
     void reset( bool signalDataOnly = true ) override;
     dr_time earliest( const TimeCounter& tc = EITHER ) const override;
     dr_time latest( const TimeCounter& tc = EITHER ) const override;
@@ -74,8 +71,6 @@ namespace FormatConverter {
     virtual void addAuxillaryData( const std::string& name, const TimedData& data ) override;
     virtual std::map<std::string, std::vector<TimedData>> auxdata( ) override;
 
-
-  protected:
     /**
      * A function to actually make the (custom?) signal data object for
      * addWave() and addVital()
@@ -83,7 +78,8 @@ namespace FormatConverter {
      * @param iswave
      * @return
      */
-    virtual std::unique_ptr<SignalData> createSignalData( const std::string& name, bool iswave );
+    virtual std::unique_ptr<SignalData> _createSignalData( const std::string& name,
+        bool iswave, void * extra = nullptr ) override;
 
   private:
     BasicSignalSet( const BasicSignalSet& );

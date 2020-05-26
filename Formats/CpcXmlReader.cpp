@@ -99,7 +99,7 @@ namespace FormatConverter{
         datavals.push_back( val );
       }
 
-      std::unique_ptr<SignalData>& signal = filler->addWave( label, &added );
+      auto signal = filler->addWave( label, &added );
       signal->add( std::make_unique<DataRow>( currtime, datavals ) );
       if ( added ) {
         signal->setChunkIntervalAndSampleRate( 2000, valsperdr );
@@ -132,7 +132,7 @@ namespace FormatConverter{
       else {
         // in a vital
         bool added = false;
-        std::unique_ptr<SignalData>& signal = filler->addVital( label, &added );
+        auto signal = filler->addVital( label, &added );
         signal->add( DataRow::one( currtime, text ) );
 
         if ( added ) {

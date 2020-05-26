@@ -26,8 +26,8 @@ namespace FormatConverter {
     OffsetTimeSignalSet(SignalSet * w, long offset_ms = 0);
     ~OffsetTimeSignalSet();
 
-    virtual std::unique_ptr<SignalData>& addVital(const std::string& name, bool * added = nullptr) override;
-    virtual std::unique_ptr<SignalData>& addWave(const std::string& name, bool * added = nullptr) override;
+    virtual SignalData * addVital(const std::string& name, bool * added = nullptr) override;
+    virtual SignalData * addWave(const std::string& name, bool * added = nullptr) override;
     virtual void reset(bool signalDataOnly = false) override;
     virtual void complete() override;
 

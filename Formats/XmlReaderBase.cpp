@@ -132,10 +132,10 @@ namespace FormatConverter{
     saved.clearMetas( );
 
     for ( auto& m : saved.vitals( ) ) {
-      const std::unique_ptr<SignalData>& savedsignal = m;
+      SignalData * savedsignal = m;
 
       bool added = false;
-      std::unique_ptr<SignalData>& infodata = tgt->addVital( m->name( ), &added );
+      SignalData * infodata = tgt->addVital( m->name( ), &added );
 
       infodata->setMetadataFrom( *savedsignal );
       int rows = savedsignal->size( );
@@ -144,11 +144,9 @@ namespace FormatConverter{
       }
     }
 
-    for ( auto& m : saved.waves( ) ) {
-      const std::unique_ptr<SignalData>& savedsignal = m;
-
+    for ( auto& savedsignal : saved.waves( ) ) {
       bool added = false;
-      std::unique_ptr<SignalData>& infodata = tgt->addWave( m->name( ), &added );
+      SignalData * infodata = tgt->addWave( savedsignal->name( ), &added );
 
       infodata->setMetadataFrom( *savedsignal );
       int rows = savedsignal->size( );

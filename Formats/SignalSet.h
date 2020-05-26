@@ -33,12 +33,8 @@ namespace FormatConverter {
   public:
     SignalSet( );
     virtual ~SignalSet( );
-    virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) = 0;
-    virtual std::vector<std::unique_ptr<SignalData>>&waves( ) = 0;
-
-    virtual const std::vector<std::unique_ptr<SignalData>>&vitals( ) const = 0;
-    virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const = 0;
-
+    virtual std::vector<SignalData *>vitals( ) const = 0;
+    virtual std::vector<SignalData *>waves( ) const = 0;
     virtual std::vector<SignalData *>allsignals( ) const = 0;
 
     virtual const std::map<std::string, std::string>& metadata( ) const = 0;
@@ -47,20 +43,20 @@ namespace FormatConverter {
      * Adds a new vital sign if it has not already been added. If it already
      * exists, the old dataset is returned
      * @param name
-     * @param if not NULL, will be set to true if this is the first time this function
-     *  has been called for this vital
+     * @param added if not NULL, will be set to true if this is the first time
+     * this function has been called for this vital
      * @return
      */
-    virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) = 0;
+    virtual SignalData * addVital( const std::string& name, bool * added = nullptr ) = 0;
     /**
      * Adds a new waveform if it has not already been added. If it already
      * exists, the old dataset is returned
      * @param name
-     * @param if not NULL, will be set to true if this is the first time this function
-     *  has been called for this vital
+     * @param added if not NULL, will be set to true if this is the first time
+     * this function has been called for this vital
      * @return
      */
-    virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) = 0;
+    virtual SignalData * addWave( const std::string& name, bool * added = nullptr ) = 0;
     virtual void setMeta( const std::string& key, const std::string& val ) = 0;
     virtual void reset( bool signalDataOnly = true ) = 0;
     virtual void clearMetas( ) = 0;
@@ -73,6 +69,18 @@ namespace FormatConverter {
     virtual void complete( ) = 0;
     virtual void addAuxillaryData( const std::string& name, const TimedData& data ) = 0;
     virtual std::map<std::string, std::vector<TimedData>> auxdata( ) = 0;
+
+    /**
+     * An extension point to create the SignalData used by addVital and addWave.
+     * It is public so any wrappers can access the SignalData before it gets used
+     * by other callers
+     * @param name
+     * @param iswave
+     * @param data
+     * @return 
+     */
+    virtual std::unique_ptr<SignalData> _createSignalData( const std::string& name,
+        bool iswave = false, void * data = nullptr ) = 0;
   };
 }
 #endif /* SIGNALSET_H */

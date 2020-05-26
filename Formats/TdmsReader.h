@@ -68,8 +68,8 @@ namespace FormatConverter {
     std::map<std::string, SignalSaver> signalsavers;
     size_t last_segment_read;
 
-    bool writeSignalRow( std::vector<double>& doubles,
-        const bool seenFloat, const std::unique_ptr<SignalData>& signal, dr_time time );
+    bool writeSignalRow( std::vector<double>& doubles, const bool seenFloat,
+        SignalData * signal, dr_time time );
 
     void initSignal( const std::unique_ptr<TDMS::channel>&, bool first );
 

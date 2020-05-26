@@ -68,32 +68,11 @@ namespace FormatConverter{
     duration_ms = dur_ms;
   }
 
-  std::unique_ptr<SignalData>& ClippingSignalSet::addVital( const std::string& name, bool * added ) {
-    bool realadd;
-    std::unique_ptr<SignalData>& data = SignalSetWrapper::addVital( name, &realadd );
-    if ( realadd ) {
-      data.reset( new ClippingSignalData( *this, data.release( ) ) );
-    }
-
-    if ( nullptr != added ) {
-      added = &realadd;
-    }
-
-    return data;
-  }
-
-  std::unique_ptr<SignalData>& ClippingSignalSet::addWave( const std::string& name, bool * added ) {
-    bool realadd;
-    std::unique_ptr<SignalData>& data = SignalSetWrapper::addWave( name, &realadd );
-    if ( realadd ) {
-      data.reset( new ClippingSignalData( *this, data.release( ) ) );
-    }
-
-    if ( nullptr != added ) {
-      added = &realadd;
-    }
-
-    return data;
+  std::unique_ptr<SignalData> ClippingSignalSet::_createSignalData( const std::string& name,
+      bool iswave, void * extra ) {
+    auto ret = SignalSetWrapper::_createSignalData( name, iswave, extra );
+    ret.reset( new ClippingSignalData( *this, ret.release() ) );
+    return ret;
   }
 
   bool ClippingSignalSet::timeok( const dr_time& time ) {

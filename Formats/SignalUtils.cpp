@@ -37,7 +37,7 @@ namespace FormatConverter{
     return totrim;
   }
 
-  dr_time SignalUtils::firstlast( const std::map<std::string, std::unique_ptr<SignalData>>&map,
+  dr_time SignalUtils::firstlast( const std::map<std::string, SignalData *> map,
       dr_time * first, dr_time * last ) {
 
     dr_time earliest = std::numeric_limits<dr_time>::max( );
@@ -66,7 +66,7 @@ namespace FormatConverter{
     return earliest;
   }
 
-  dr_time SignalUtils::firstlast( const std::vector<std::unique_ptr<SignalData>>&signals,
+  dr_time SignalUtils::firstlast( const std::vector<SignalData *> signals,
       dr_time * first, dr_time * last ) {
 
     dr_time earliest = std::numeric_limits<dr_time>::max( );
@@ -95,83 +95,87 @@ namespace FormatConverter{
     return earliest;
   }
 
-  std::vector<std::vector<int>> SignalUtils::syncDatas( std::vector<std::unique_ptr<SignalData> >&signals ) {
+  std::vector<std::vector<int>> SignalUtils::syncDatas( std::vector<SignalData *> data ) {
 
-    std::vector<std::unique_ptr<SignalData> > * working = &signals;
-    std::vector<std::unique_ptr<SignalData> > tmp;
+    auto ret = std::vector<std::vector<int>>( data.size( ) );
 
-    // figure out if the data is already synced
     dr_time earliest;
     dr_time latest;
-    const size_t size = signals[0]->size( );
-    firstlast( signals, &earliest, &latest );
-    for ( const auto& m : signals ) {
-      // check that every signal has the same start time, end time, and # datapoints
-      // if not, we need to sync them
-      if ( !( m->startTime( ) == earliest
-          && m->endTime( ) == latest
-          && m->size( ) == size ) ) {
-        //std::cout << "syncing signals" << std::endl;
-        tmp = sync( signals );
-        working = &tmp;
-        break;
-      }
+    firstlast( data, &earliest, &latest );
+
+    std::unique_ptr<DataRow> currenttimes[data.size( )];
+    for ( size_t i = 0; i < data.size( ); i++ ) {
+      // load the first row for each signal into our current array
+      currenttimes[i] = data[i]->pop( );
     }
 
-    std::vector<std::vector<int>> rows;
-    int rowcnt = ( *working->begin( ) )->size( );
-    rows.reserve( rowcnt );
+    std::set<int> empties;
+    while ( empties.size( ) < data.size( ) ) {
 
-    for ( int rownum = 0; rownum < rowcnt; rownum++ ) {
-      //std::cout << "ROW " << rownum << std::endl;
+      // see if any of our current times match our "earliest" time
+      // if they do, add it to the SignalData and replace that time with
+      // a new datarow
+      for ( size_t i = 0; i < data.size( ); i++ ) {
+        if ( currenttimes[i] ) {
+          // we have a time to check
+          if ( currenttimes[i]->time == earliest ) {
+            const auto& ints = currenttimes[i]->ints( );
+            ret[i].insert( ret[i].end( ), ints.begin( ), ints.end( ) );
 
-      std::vector<int> rowcols( working->size( ) );
-
-      for ( auto& m : *working ) {
-        //std::cout << "  " << m.first;
-        if ( m->empty( ) ) {
-          std::cout << m->name( ) << " BUG! ran out of data before anyone else" << std::endl;
-
-          auto dummy = dummyfill( m, 0 );
-          rowcols.insert( rowcols.end( ), dummy->data.begin( ), dummy->data.end( ) );
+            if ( data[i]->empty( ) ) {
+              empties.insert( i );
+            }
+            else {
+              currenttimes[i] = std::move( data[i]->pop( ) );
+            }
+          }
+          else if ( currenttimes[i]->time > earliest ) {
+            // don't have a datapoint for this time, so make a dummy one
+            const auto& ints = dummyfill( data[i], earliest )->ints( );
+            ret[i].insert( ret[i].end( ), ints.begin( ), ints.end( ) );
+          }
         }
         else {
-          const auto& row = m->pop( );
-          // std::cout << " row: " << row->time << " " << row->data << std::endl;
-          rowcols.insert( rowcols.end( ), row->data.begin( ), row->data.end( ) );
+          // ran out of times fo this signal, so make dummy data for this time
+          const auto& ints = dummyfill( data[i], earliest )->ints( );
+          ret[i].insert( ret[i].end( ), ints.begin( ), ints.end( ) );
         }
       }
-      rows.push_back( rowcols );
+
+      // go through again and figure out which is our new earliest time
+      earliest = std::numeric_limits<dr_time>::max( );
+      for ( size_t i = 0; i < data.size( ); i++ ) {
+        if ( currenttimes[i] && currenttimes[i]->time < earliest ) {
+          earliest = currenttimes[i]->time;
+        }
+      }
     }
 
-    return rows;
+    return ret;
   }
 
-  std::map<std::string, std::unique_ptr<SignalData>> SignalUtils::mapify(
-      std::vector<std::unique_ptr<SignalData>>&data ) {
-    std::map<std::string, std::unique_ptr < SignalData>> map;
+  std::map<std::string, SignalData *> SignalUtils::mapify( std::vector<SignalData *> data ) {
+    std::map<std::string, SignalData *> map;
     for ( auto& s : data ) {
-      map[s->name( )] = std::move( s );
+      map[s->name( )] = s;
     }
 
     return map;
 
   }
 
-  std::vector<std::unique_ptr<SignalData>> SignalUtils::vectorize(
-      std::map<std::string, std::unique_ptr<SignalData>>&data ) {
-    std::vector<std::unique_ptr < SignalData>> vec;
+  std::vector<SignalData *> SignalUtils::vectorize( std::map<std::string, SignalData *> data ) {
+    auto vec = std::vector<SignalData *>( );
     for ( auto& m : data ) {
-      vec.push_back( std::move( m.second ) );
+      vec.push_back( m.second );
     }
 
     return vec;
   }
 
-  std::vector<std::unique_ptr<SignalData>> SignalUtils::sync(
-      std::vector<std::unique_ptr<SignalData> >& data ) {
+  std::vector<std::unique_ptr<SignalData>> SignalUtils::sync( std::vector<SignalData *> data ) {
 
-    std::vector<std::unique_ptr < SignalData>> ret;
+    auto ret = std::vector<std::unique_ptr < SignalData >> ( );
 
     dr_time earliest;
     dr_time latest;
@@ -183,7 +187,7 @@ namespace FormatConverter{
     //        << s->endTime( ) << "\t" << s->size( ) << std::endl;
     //  }
 
-    std::unique_ptr<FormatConverter::DataRow> currenttimes[data.size( )];
+    std::unique_ptr<DataRow> currenttimes[data.size( )];
     for ( size_t i = 0; i < data.size( ); i++ ) {
       ret.push_back( data[i]->shallowcopy( ) );
 
@@ -225,87 +229,25 @@ namespace FormatConverter{
       earliest = std::numeric_limits<dr_time>::max( );
       for ( size_t i = 0; i < data.size( ); i++ ) {
         if ( currenttimes[i] && currenttimes[i]->time < earliest ) {
-
           earliest = currenttimes[i]->time;
         }
       }
     }
 
-    //  for ( auto& x : ret ) {
-    //    std::cout << x.first << " " << x.second->size( ) << " rows" << std::endl;
-    //  }
-
     return ret;
   }
 
-  void SignalUtils::fillGap( std::unique_ptr<SignalData>& signal, std::unique_ptr<FormatConverter::DataRow>& row,
-      dr_time& nexttime, const int& timestep ) {
-    if ( row->time == nexttime ) {
-      return;
-    }
-
-    // STP time sometimes drifts forward (and backward?)
-    // so if our timestep is 2s, and we get 3s, just move it back 1s
-    // HOWEVER: we might get this situation where we have a gap AND a drift
-    // concurrently. In this situation, make the best guess we can
-
-    // easy case: 1 second time drift
-    if ( 2 == timestep && row->time == nexttime + 1 ) {
-      std::cout << signal->name( ) << " correcting time drift "
-          << row->time << " to " << nexttime << std::endl;
-      row->time = nexttime;
-      return;
-    }
-
-    dr_time fillstart = nexttime;
-    for (; nexttime < row->time - timestep; nexttime += timestep ) {
-      signal->add( std::move( dummyfill( signal, nexttime ) ) );
-    }
-
-    if ( nexttime != fillstart ) {
-      std::cout << signal->name( ) << " added filler rows from " << fillstart
-          << " to " << nexttime << std::endl;
-    }
-
-    if ( 2 == timestep && row->time == nexttime + 1 ) {
-      std::cout << signal->name( ) << " correcting time drift after filling data "
-          << row->time << " to " << ( row->time - 1 ) << std::endl;
-      row->time -= 1;
-    }
-    else {
-      std::cout << signal->name( ) << " added filler row at " << nexttime << std::endl;
-      signal->add( std::move( dummyfill( signal, nexttime ) ) );
-    }
-  }
-
-  std::unique_ptr<DataRow> SignalUtils::dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time ) {
+  std::unique_ptr<DataRow> SignalUtils::dummyfill( SignalData * signal, const dr_time& time ) {
     return std::make_unique<DataRow>( time, std::vector<int>( signal->hz( ), SignalData::MISSING_VALUE ) );
-  }
-
-  std::vector<dr_time> SignalUtils::alltimes( const SignalSet& ss ) {
-    std::set<dr_time> times;
-    for ( const auto& signal : ss.vitals( ) ) {
-      times.insert( signal.get( )->times( ).begin( ), signal.get( )->times( ).end( ) );
-    }
-    for ( const auto& signal : ss.waves( ) ) {
-      times.insert( signal.get( )->times( ).begin( ), signal.get( )->times( ).end( ) );
-    }
-
-    std::vector<dr_time> vec( times.begin( ), times.end( ) );
-    std::sort( vec.begin( ), vec.end( ) );
-
-    return vec;
   }
 
   std::vector<size_t> SignalUtils::index( const std::vector<dr_time>& alltimes,
       SignalData& signal ) {
 
-    std::cout << "signaltimes values: " << signal.times( ).size( ) << std::endl;
     std::deque<dr_time> signaltimes( signal.times( ).begin( ), signal.times( ).end( ) );
     std::sort( signaltimes.begin( ), signaltimes.end( ) );
     const double hz = signal.hz( );
     const int rowsPerTime = ( hz < 1.0 ? 1 : (int) hz );
-    std::cout << "signaltimes values (2): " << signaltimes.size( ) << std::endl;
 
     std::vector<size_t> indexes;
 

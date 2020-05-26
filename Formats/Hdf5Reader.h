@@ -61,11 +61,11 @@ namespace FormatConverter {
     static int metaint( const H5::H5Object& loc, const std::string& attrname );
     static int metaint( const H5::Attribute& attr );
 
-    static void copymetas( std::unique_ptr<SignalData>& signal, H5::H5Object& dataset,
+    static void copymetas( SignalData * signal, H5::H5Object& dataset,
         bool includeIgnorables = false );
-    void fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
+    void fillVital( SignalData * signal, H5::DataSet& dataset,
         const std::vector<dr_time>& times, int valsPerTime, int timeinterval, int scale ) const;
-    void fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
+    void fillWave( SignalData * signal, H5::DataSet& dataset,
         const std::vector<dr_time>& tmes, int valsPerTime, int scale ) const;
     std::map<std::string, std::vector<TimedData>> readAuxData( H5::Group& auxparent );
     void readDataSet( H5::Group& dataAndTimeGroup, const bool& iswave,

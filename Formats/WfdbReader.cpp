@@ -173,7 +173,7 @@ namespace FormatConverter{
       sigcount = isigopen( (char *) ( cutup.c_str( ) ), siginfo, sigcount );
 
       for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
-        std::unique_ptr<SignalData>& dataset = ( iswave
+        auto dataset = ( iswave
             ? info->addWave( siginfo[signalidx].desc )
             : info->addVital( siginfo[signalidx].desc ) );
 
@@ -270,7 +270,7 @@ namespace FormatConverter{
         size_t expected = freqhz * siginfo[signalidx].spf;
         if ( !currents[signalidx].empty( ) ) {
           bool added = false;
-          std::unique_ptr<SignalData>& dataset = ( iswave
+          auto dataset = ( iswave
               ? info->addWave( siginfo[signalidx].desc, &added )
               : info->addVital( siginfo[signalidx].desc, &added ) );
 

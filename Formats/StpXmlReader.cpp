@@ -293,7 +293,7 @@ namespace FormatConverter{
     bool added = false;
     try {
       std::stof( value );
-      std::unique_ptr<SignalData>& sig = filler->addVital( label, &added );
+      auto sig = filler->addVital( label, &added );
 
       if ( added ) {
         if ( isphilips ) {
@@ -324,7 +324,7 @@ namespace FormatConverter{
 
   void StpXmlReader::addWave( const std::string& wavepoints, int hz ) {
     bool first = false;
-    std::unique_ptr<SignalData>& sig = filler->addWave( label, &first );
+    auto sig = filler->addWave( label, &first );
     if ( first ) {
       if ( v8 ) {
 

@@ -97,7 +97,7 @@ namespace FormatConverter{
       std::vector<std::string> parts = SignalUtils::splitcsv( firstline, ' ' );
       if ( !( parts.empty( ) || "#" == parts[0] || "dummy" == parts[0] ) ) {
         auto name = parts[4].substr( 1, parts[4].length( ) - 2 );
-        auto& signal = info->addWave( name );
+        auto signal = info->addWave( name );
         for ( size_t pos = 5; pos < parts.size( ); pos++ ) {
           auto part = parts[pos];
           size_t eqpos = part.find( "=" );
@@ -150,7 +150,7 @@ namespace FormatConverter{
 
         for ( auto& m : vitvals ) {
           bool added = false;
-          auto& signal = info->addVital( m.first, &added );
+          auto signal = info->addVital( m.first, &added );
           if ( added ) {
             signal->setChunkIntervalAndSampleRate( interval, 1 );
           }
@@ -178,7 +178,7 @@ namespace FormatConverter{
 
       for ( auto& map : annomap ) {
         const auto name = map.first;
-        auto& wave = info->addWave( name );
+        auto wave = info->addWave( name );
         for ( auto& map : map.second ) {
           size_t cnt = 0;
           for ( auto& td : map.second ) {

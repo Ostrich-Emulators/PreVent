@@ -39,7 +39,7 @@ namespace FormatConverter{
     SignalSaver& rec = signalsavers.at( channelname );
 
     // get our SignalData for this channel
-    std::unique_ptr<SignalData>& signal = ( rec.iswave
+    auto signal = ( rec.iswave
         ? filler->addWave( rec.name )
         : filler->addVital( rec.name ) );
     int timeinc = signal->chunkInterval( );
@@ -169,7 +169,7 @@ namespace FormatConverter{
 
     // figure out if this is a wave or a vital
     bool added = false;
-    std::unique_ptr<SignalData>& signal = ( iswave
+    auto signal = ( iswave
         ? filler->addWave( name, &added )
         : filler->addVital( name, &added ) );
 
@@ -266,7 +266,7 @@ namespace FormatConverter{
     for ( auto&x : signalsavers ) {
       SignalSaver& rec = x.second;
       // get our SignalData for this channel
-      std::unique_ptr<SignalData>& signal = ( rec.iswave
+      auto signal = ( rec.iswave
           ? filler->addWave( rec.name )
           : filler->addVital( rec.name ) );
       size_t freq = signal->metai( ).at( SignalData::READINGS_PER_CHUNK );
@@ -282,7 +282,7 @@ namespace FormatConverter{
   }
 
   bool TdmsReader::writeSignalRow( std::vector<double>& doubles, const bool seenFloat,
-      const std::unique_ptr<SignalData>& signal, dr_time time ) {
+      SignalData * signal, dr_time time ) {
 
     std::stringstream vals;
     if ( seenFloat ) {

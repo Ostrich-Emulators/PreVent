@@ -6,6 +6,7 @@
 
 #include "SignalSetWrapper.h"
 #include <iostream>
+#include "SignalData.h"
 
 namespace FormatConverter{
 
@@ -28,29 +29,19 @@ namespace FormatConverter{
     return set->metadata( );
   }
 
-  std::unique_ptr<SignalData>& SignalSetWrapper::addVital( const std::string& name,
-      bool * added ) {
+  SignalData * SignalSetWrapper::addVital( const std::string& name, bool * added ) {
     return set->addVital( name, added );
   }
 
-  std::unique_ptr<SignalData>& SignalSetWrapper::addWave( const std::string& name,
-      bool * added ) {
+  SignalData * SignalSetWrapper::addWave( const std::string& name, bool * added ) {
     return set->addWave( name, added );
   }
 
-  std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::vitals( ) {
+  std::vector<SignalData *> SignalSetWrapper::vitals( ) const {
     return set->vitals( );
   }
 
-  std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::waves( ) {
-    return set->waves( );
-  }
-
-  const std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::vitals( ) const {
-    return set->vitals( );
-  }
-
-  const std::vector<std::unique_ptr<SignalData>>&SignalSetWrapper::waves( ) const {
+  std::vector<SignalData *> SignalSetWrapper::waves( ) const {
     return set->waves( );
   }
 
@@ -101,5 +92,10 @@ namespace FormatConverter{
 
   std::map<std::string, std::vector<TimedData>> SignalSetWrapper::auxdata( ) {
     return set->auxdata();
+  }
+
+  std::unique_ptr<SignalData> SignalSetWrapper::_createSignalData( const std::string& name,
+        bool iswave , void * extra ){
+    return set->_createSignalData( name, iswave, extra );
   }
 }

@@ -29,9 +29,9 @@ namespace FormatConverter {
   OffsetTimeSignalSet::~OffsetTimeSignalSet( ) {
   }
 
-  std::unique_ptr<SignalData>& OffsetTimeSignalSet::addVital( const std::string& name, bool * added ) {
+  SignalData * OffsetTimeSignalSet::addVital( const std::string& name, bool * added ) {
     bool realadd;
-    std::unique_ptr<SignalData>& data = SignalSetWrapper::addVital( name, &realadd );
+    auto data = SignalSetWrapper::addVital( name, &realadd );
     if ( realadd ) {
       data->setMeta( COLLECTION_OFFSET, (int) offset_ms );
     }
@@ -43,9 +43,9 @@ namespace FormatConverter {
     return data;
   }
 
-  std::unique_ptr<SignalData>& OffsetTimeSignalSet::addWave( const std::string& name, bool * added ) {
+  SignalData * OffsetTimeSignalSet::addWave( const std::string& name, bool * added ) {
     bool realadd;
-    std::unique_ptr<SignalData>& data = SignalSetWrapper::addWave( name, &realadd );
+    auto data = SignalSetWrapper::addWave( name, &realadd );
     if ( realadd ) {
       data->setMeta( COLLECTION_OFFSET, (int) offset_ms );
     }

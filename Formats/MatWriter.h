@@ -48,8 +48,8 @@ namespace FormatConverter {
      * @param data
      * @return
      */
-    int writeVitals( std::vector<std::unique_ptr<SignalData>>&data );
-    int writeWaves( double freq, std::vector<std::unique_ptr<SignalData>>&data );
+    int writeVitals( std::vector<SignalData *> data );
+    int writeWaves( double freq, std::vector<SignalData *> data );
 
     int writeStrings( const std::string& label, std::vector<std::string>& strings );
 

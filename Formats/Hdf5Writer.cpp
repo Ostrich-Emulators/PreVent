@@ -613,12 +613,12 @@ namespace FormatConverter{
       H5::Group grp = ensureGroupExists( file, "VitalSigns" );
       output( ) << "Writing " << dataptr->vitals( ).size( ) << " Vitals" << std::endl;
       for ( auto& vits : dataptr->vitals( ) ) {
-        if ( vits.get( )->empty( ) ) {
+        if ( vits->empty( ) ) {
           output( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
         }
         else {
-          H5::Group g = ensureGroupExists( grp, getDatasetName( vits.get() ) );
-          writeVitalGroup( g, vits.get() );
+          H5::Group g = ensureGroupExists( grp, getDatasetName( vits ) );
+          writeVitalGroup( g, vits );
         }
       }
 
@@ -629,8 +629,8 @@ namespace FormatConverter{
           output( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
         }
         else {
-          H5::Group g = ensureGroupExists( grp, getDatasetName( wavs.get() ) );
-          writeWaveGroup( g, wavs.get() );
+          H5::Group g = ensureGroupExists( grp, getDatasetName( wavs ) );
+          writeWaveGroup( g, wavs );
         }
       }
 

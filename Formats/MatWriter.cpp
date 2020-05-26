@@ -85,16 +85,11 @@ namespace FormatConverter{
     dataptr = info;
     filenamer( ).filename( info );
 
-    std::vector<std::unique_ptr < SignalData>> vitvec;
-    for ( auto&x : dataptr->vitals( ) ) {
-      vitvec.push_back( std::move( x ) );
-    }
+    writeVitals( dataptr->vitals( ) );
 
-    writeVitals( vitvec );
-
-    std::map<double, std::vector<std::unique_ptr < SignalData>>> freqgroups;
+    std::map<double, std::vector < SignalData *>> freqgroups;
     for ( auto& ds : info->waves( ) ) {
-      freqgroups[ds->hz( )].push_back( std::move( ds ) );
+      freqgroups[ds->hz( )].push_back( ds );
     }
 
     for ( auto& ds : freqgroups ) {
@@ -149,25 +144,25 @@ namespace FormatConverter{
     return ok;
   }
 
-  int MatWriter::writeVitals( std::vector<std::unique_ptr<SignalData>>&signals ) {
+  int MatWriter::writeVitals( std::vector<SignalData *>signals ) {
     dr_time earliest;
     dr_time latest;
 
     SignalUtils::firstlast( signals, &earliest, &latest );
 
-    float freq = ( *signals.begin( ) ).get( )->hz( );
+    float freq = ( *signals.begin( ) )->hz( );
     const int timestep = ( freq < 1 ? 1 / freq : 1 );
 
     std::vector<std::string> labels;
     std::vector<std::string> uoms;
     std::map<std::string, int> scales;
     for ( auto& m : signals ) {
-      labels.push_back( m.get( )->name( ) );
-      scales[m.get( )->name( )] = m.get( )->scale( );
-      uoms.push_back( m.get( )->uom( ) );
+      labels.push_back( m->name( ) );
+      scales[m->name( )] = m->scale( );
+      uoms.push_back( m->uom( ) );
     }
 
-    std::vector<std::vector <int>> syncd = SignalUtils::syncDatas( signals );
+    auto syncd = SignalUtils::syncDatas( signals );
     const int rows = syncd.size( );
     const int cols = signals.size( );
 
@@ -227,7 +222,7 @@ namespace FormatConverter{
     return 0;
   }
 
-  int MatWriter::writeWaves( double freq, std::vector<std::unique_ptr<SignalData>>&oldsignals ) {
+  int MatWriter::writeWaves( double freq, std::vector<SignalData *> oldsignals ) {
     dr_time earliest;
     dr_time latest;
 
@@ -235,14 +230,18 @@ namespace FormatConverter{
 
     // FIXME: need to sync times
     output( ) << "need to sync times first!" << std::endl;
-    std::vector<std::unique_ptr < SignalData>> signals = SignalUtils::sync( oldsignals );
-    SignalUtils::firstlast( signals, &earliest, &latest );
+    auto signals = SignalUtils::sync( oldsignals );
+    auto signalvec = std::vector<SignalData *>( );
+    for ( const auto& s : signals ) {
+      signalvec.push_back( s.get( ) );
+    }
+    SignalUtils::firstlast( signalvec, &earliest, &latest );
 
-    std::vector<dr_time> alltimes64( signals[0]->times( ).rbegin( ), signals[0]->times( ).rend( ) );
+    auto alltimes64 = signals[0]->times( );
     std::vector<int> alltimes;
     alltimes.reserve( alltimes64.size( ) );
     for ( dr_time& t64 : alltimes64 ) {
-      alltimes.push_back( (int) t64 );
+      alltimes.push_back( static_cast<int> ( t64 ) );
     }
 
     std::vector<std::string> labels;

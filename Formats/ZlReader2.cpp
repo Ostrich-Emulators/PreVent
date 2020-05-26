@@ -111,7 +111,7 @@ namespace FormatConverter{
       // for now, just read in the whole file
 
       bool added;
-      std::unique_ptr<SignalData>& signal = info->addWave( x.first, &added );
+      SignalData * signal = info->addWave( x.first, &added );
 
       std::string data = normalizeText( x.first, x.second->readNextChunk( ) );
       while ( ReadResult::NORMAL == x.second->rr ) {

@@ -61,15 +61,15 @@ namespace FormatConverter{
     return -1;
 
 
-    std::map<double, std::vector<std::unique_ptr < SignalData>>> freqgroups;
-    for ( auto& ds : info->vitals( ) ) {
+    std::map<double, std::vector < SignalData *>> freqgroups;
+    for ( auto ds : info->vitals( ) ) {
       double freq = ds->hz( );
-      freqgroups[freq].push_back( std::move( ds ) );
+      freqgroups[freq].push_back( ds );
     }
 
     for ( auto& ds : info->waves( ) ) {
       double freq = ds->hz( );
-      freqgroups[freq].push_back( std::move( ds ) );
+      freqgroups[freq].push_back( ds );
     }
 
     for ( auto& ds : freqgroups ) {
@@ -79,14 +79,14 @@ namespace FormatConverter{
     return 0;
   }
 
-  int WfdbWriter::write( double freq, std::vector<std::unique_ptr<SignalData>>&data,
+  int WfdbWriter::write( double freq, std::vector<SignalData *> data,
       const std::string& namestart ) {
     setsampfreq( freq );
 
     sigmap.clear( );
     for ( auto& signal : data ) {
-      const std::string& name = signal.get( )->name( );
-      sigmap[name].units = (char *) signal.get( )->uom( ).c_str( );
+      const std::string& name = signal->name( );
+      sigmap[name].units = (char *) signal->uom( ).c_str( );
       sigmap[name].group = 0;
       sigmap[name].desc = (char *) name.c_str( );
       sigmap[name].fmt = 16;
@@ -126,16 +126,14 @@ namespace FormatConverter{
     return 0;
   }
 
-  void WfdbWriter::syncAndWrite( double freq, std::vector<std::unique_ptr<SignalData>>&olddata ) {
+  void WfdbWriter::syncAndWrite( double freq, std::vector<SignalData *> olddata ) {
     std::vector<std::vector<int>> data = SignalUtils::syncDatas( olddata );
 
-
-    
     // FIXME: refactor all this stuff!
 
 
 
-    const auto& first = ( olddata.begin( )->get( ) );
+    auto first = olddata[0];
     if ( first->wave( ) ) {
       //int ifrq = ( olddata.begin( ) )->get( )->readingsPerChunk( );
 

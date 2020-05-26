@@ -470,7 +470,7 @@ namespace FormatConverter{
     xmlpassthru * xml = (xmlpassthru*) data;
     if ( NUMERIC_CMPD == el ) {
       bool added = false;
-      auto& vital = xml->signals->addVital( xml->label, &added );
+      auto vital = xml->signals->addVital( xml->label, &added );
       if ( added ) {
         vital->setUom( xml->uom );
         vital->setChunkIntervalAndSampleRate( 1024, 1 );

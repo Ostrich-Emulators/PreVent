@@ -30,30 +30,31 @@ namespace FormatConverter{
     return *this;
   }
 
-  std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::vitals( ) {
-    return vits;
+  std::vector<SignalData *> BasicSignalSet::vitals( ) const {
+    std::vector<SignalData *> vec;
+    for ( const auto& signal : vits ) {
+      vec.push_back( signal.get( ) );
+    }
+    return vec;
   }
 
-  std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::waves( ) {
-    return wavs;
-  }
-
-  const std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::vitals( ) const {
-    return vits;
-  }
-
-  const std::vector<std::unique_ptr<SignalData>>&BasicSignalSet::waves( ) const {
-    return wavs;
+  std::vector<SignalData *> BasicSignalSet::waves( ) const {
+    std::vector<SignalData *> vec;
+    vec.reserve( wavs.size( ) );
+    for ( const auto& signal : wavs ) {
+      vec.push_back( signal.get( ) );
+    }
+    return vec;
   }
 
   dr_time BasicSignalSet::earliest( const TimeCounter& type ) const {
     dr_time early = std::numeric_limits<dr_time>::max( );
 
     if ( TimeCounter::VITAL == type || TimeCounter::EITHER == type ) {
-      early = SignalUtils::firstlast( vits );
+      early = SignalUtils::firstlast( vitals( ) );
     }
     if ( TimeCounter::WAVE == type || TimeCounter::EITHER == type ) {
-      dr_time w = SignalUtils::firstlast( wavs );
+      dr_time w = SignalUtils::firstlast( waves( ) );
       if ( w < early ) {
         early = w;
       }
@@ -66,12 +67,12 @@ namespace FormatConverter{
     dr_time last = 0;
 
     if ( TimeCounter::VITAL == type || TimeCounter::EITHER == type ) {
-      SignalUtils::firstlast( vits, nullptr, &last );
+      SignalUtils::firstlast( vitals( ), nullptr, &last );
     }
 
     if ( TimeCounter::WAVE == type || TimeCounter::EITHER == type ) {
       dr_time w;
-      SignalUtils::firstlast( wavs, nullptr, &w );
+      SignalUtils::firstlast( waves( ), nullptr, &w );
       if ( w > last ) {
         last = w;
       }
@@ -80,46 +81,47 @@ namespace FormatConverter{
     return last;
   }
 
-  std::unique_ptr<SignalData> BasicSignalSet::createSignalData( const std::string& name, bool iswave ) {
+  std::unique_ptr<SignalData> BasicSignalSet::_createSignalData( const std::string& name,
+      bool iswave, void * extra ) {
     return std::unique_ptr<SignalData>{ std::make_unique<BasicSignalData>( name, iswave ) };
   }
 
-  std::unique_ptr<SignalData>& BasicSignalSet::addVital( const std::string& name, bool * added ) {
+  SignalData * BasicSignalSet::addVital( const std::string& name, bool * added ) {
     for ( auto& x : vits ) {
       if ( x->name( ) == name ) {
         if ( nullptr != added ) {
           *added = false;
         }
-        return x;
+        return x.get( );
       }
     }
 
-    vits.push_back( createSignalData( name, false ) );
+    vits.push_back( _createSignalData( name, false ) );
 
     if ( nullptr != added ) {
       *added = true;
     }
 
-    return vits[vits.size( ) - 1];
+    return vits[vits.size( ) - 1].get( );
   }
 
-  std::unique_ptr<SignalData>& BasicSignalSet::addWave( const std::string& name, bool * added ) {
+  SignalData * BasicSignalSet::addWave( const std::string& name, bool * added ) {
     for ( auto& x : wavs ) {
       if ( x->name( ) == name ) {
         if ( nullptr != added ) {
           *added = false;
         }
-        return x;
+        return x.get( );
       }
     }
 
-    wavs.push_back( createSignalData( name, true ) );
+    wavs.push_back( _createSignalData( name, true ) );
 
     if ( nullptr != added ) {
       *added = true;
     }
 
-    return wavs[wavs.size( ) - 1];
+    return wavs[wavs.size( ) - 1].get( );
   }
 
   void BasicSignalSet::reset( bool signalDataOnly ) {
@@ -139,10 +141,10 @@ namespace FormatConverter{
     std::vector<SignalData *> vec;
 
     for ( const auto& m : vitals( ) ) {
-      vec.push_back( m.get( ) );
+      vec.push_back( m );
     }
     for ( const auto& m : waves( ) ) {
-      vec.push_back( m.get( ) );
+      vec.push_back( m );
     }
 
     return vec;

@@ -174,7 +174,7 @@ namespace FormatConverter{
         std::getline( points, val, '|' );
 
         bool added;
-        std::unique_ptr<SignalData>& dataset = info->addVital( vital, &added );
+        SignalData * dataset = info->addVital( vital, &added );
 
         if ( val.empty( ) ) {
           output( ) << "empty val? " << chunk << std::endl;
@@ -197,7 +197,7 @@ namespace FormatConverter{
         std::getline( points, val, '|' );
 
         bool first;
-        std::unique_ptr<SignalData>& dataset = info->addWave( wavename, &first );
+        SignalData * dataset = info->addWave( wavename, &first );
         points >> wavename >> uom >> val;
 
         if ( first ) {

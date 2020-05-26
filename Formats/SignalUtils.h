@@ -46,32 +46,20 @@ namespace FormatConverter {
      * @return a vector of SignalDatas, where each member has the same start and 
      * end times
      */
-    static std::vector<std::unique_ptr<SignalData>> sync(
-        std::vector<std::unique_ptr<SignalData> >&map );
+    static std::vector<std::unique_ptr<SignalData>> sync( std::vector<SignalData *> map );
     /**
      * Consumes the signal data and creates vector data data points such that the
      * outside vector is the timestep, and the inside vector is each signal's
-     * data value (as a string, since only the caller knows how to convert the
-     * values).
-     * @param map the map to consume
+     * data value(s). Note: The scale of the datapoints can be retrieved from
+     * the SignalData.
+     * @param vec the signals to consume
      * @return essentially, a 2D vector
      */
-    static std::vector<std::vector<int>> syncDatas(
-        std::vector<std::unique_ptr<SignalData> >&map );
+    static std::vector<std::vector<int>> syncDatas( std::vector<SignalData *> vec );
 
-    static std::vector<std::unique_ptr<SignalData>> vectorize(
-        std::map<std::string, std::unique_ptr<SignalData>>&data );
+    static std::vector<SignalData *> vectorize( std::map<std::string, SignalData *> data );
 
-    static std::map<std::string, std::unique_ptr<SignalData>> mapify(
-        std::vector<std::unique_ptr<SignalData>>&data );
-
-    /**
-     * Gets all times in the given SignalSet. This is the superset of all 
-     * SignalData's timeseries.
-     * @param ss
-     * @return 
-     */
-    static std::vector<dr_time> alltimes( const SignalSet& ss );
+    static std::map<std::string, SignalData *> mapify( std::vector<SignalData *> data );
 
     /**
      * Creates a vector with index positions for the given signal's data.
@@ -89,9 +77,9 @@ namespace FormatConverter {
      * @param latest the latest date in the SignalData
      * @return the earliest date
      */
-    static dr_time firstlast( const std::map<std::string, std::unique_ptr<SignalData>>&map,
+    static dr_time firstlast( const std::map<std::string, SignalData *> map,
         dr_time * first = nullptr, dr_time * last = nullptr );
-    static dr_time firstlast( const std::vector<std::unique_ptr<SignalData>>&map,
+    static dr_time firstlast( const std::vector<SignalData *> map,
         dr_time * first = nullptr, dr_time * last = nullptr );
 
 
@@ -117,8 +105,6 @@ namespace FormatConverter {
     SignalUtils( );
     SignalUtils( const SignalUtils& );
 
-    static void fillGap( std::unique_ptr<SignalData>& data,
-        std::unique_ptr<FormatConverter::DataRow>& row, dr_time& nexttime, const int& timestep );
     /**
      * Creates a valid "dummy" DataRow for the given signal. (Wave forms need
      * a series of missing values, while vitals only need one.)
@@ -126,7 +112,7 @@ namespace FormatConverter {
      * @param time
      * @return
      */
-    static std::unique_ptr<DataRow> dummyfill( std::unique_ptr<SignalData>& signal, const dr_time& time );
+    static std::unique_ptr<DataRow> dummyfill( SignalData * signal, const dr_time& time );
   };
 }
 #endif /* SIGNALUTILS_H */

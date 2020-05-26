@@ -424,7 +424,7 @@ namespace FormatConverter{
 
       if ( waveok ) {
         bool first = false;
-        auto& signal = info->addWave( wavelabel( waveid, info ), &first );
+        auto signal = info->addWave( wavelabel( waveid, info ), &first );
         if ( first ) {
           signal->setChunkIntervalAndSampleRate( 2000, expectedValues[waveid] );
         }
@@ -999,7 +999,7 @@ namespace FormatConverter{
           }
 
           if ( okval ) {
-            auto& sig = info->addVital( cfg.label, &added );
+            auto sig = info->addVital( cfg.label, &added );
             if ( added ) {
               sig->setChunkIntervalAndSampleRate( 2000, 1 );
               sig->setUom( cfg.uom );
@@ -1025,7 +1025,7 @@ namespace FormatConverter{
           }
 
           if ( okval ) {
-            auto& sig = info->addVital( cfg.label, &added );
+            auto sig = info->addVital( cfg.label, &added );
             if ( added ) {
               sig->setChunkIntervalAndSampleRate( 2000, 1 );
               sig->setUom( cfg.uom );

@@ -33,7 +33,7 @@ namespace FormatConverter {
      *  has been called for this vital
      * @return
      */
-    virtual std::unique_ptr<SignalData>& addVital( const std::string& name, bool * added = nullptr ) override;
+    virtual SignalData * addVital( const std::string& name, bool * added = nullptr ) override;
     /**
      * Adds a new waveform if it has not already been added. If it already
      * exists, the old dataset is returned
@@ -42,13 +42,10 @@ namespace FormatConverter {
      *  has been called for this vital
      * @return
      */
-    virtual std::unique_ptr<SignalData>& addWave( const std::string& name, bool * added = nullptr ) override;
+    virtual SignalData * addWave( const std::string& name, bool * added = nullptr ) override;
 
-    virtual std::vector<std::unique_ptr<SignalData>>&vitals( ) override;
-    virtual std::vector<std::unique_ptr<SignalData>>&waves( ) override;
-
-    virtual const std::vector<std::unique_ptr<SignalData>>&vitals( ) const override;
-    virtual const std::vector<std::unique_ptr<SignalData>>&waves( ) const override;
+    virtual std::vector<SignalData *> vitals( ) const override;
+    virtual std::vector<SignalData *> waves( ) const override;
 
     virtual void reset( bool signalDataOnly = true ) override;
     virtual void setMeta( const std::string& key, const std::string& val ) override;
@@ -71,6 +68,8 @@ namespace FormatConverter {
     virtual void addAuxillaryData( const std::string& name, const TimedData& data ) override;
     virtual std::map<std::string, std::vector<TimedData>> auxdata( ) override;
 
+    virtual std::unique_ptr<SignalData> _createSignalData( const std::string& name,
+        bool iswave = false, void * extra = nullptr ) override;
 
   private:
     SignalSet * set;

@@ -88,7 +88,7 @@ namespace FormatConverter{
       //H5::DataSet data = root.openDataSet( "data" );
 
       auto ss = std::unique_ptr<SignalData>{ std::make_unique<BasicSignalData>( "-" ) };
-      copymetas( ss, data, true );
+      copymetas( ss.get(), data, true );
 
       for ( const auto& a : ss->metas( ) ) {
         maps[a.first] = a.second;
@@ -239,7 +239,7 @@ namespace FormatConverter{
       const bool& iswave, SignalSet * info ) {
     std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
 
-    std::unique_ptr<SignalData>& signal = ( iswave
+    auto signal = ( iswave
         ? info->addWave( name )
         : info->addVital( name ) );
     int timeinterval = 2000;
@@ -325,7 +325,7 @@ namespace FormatConverter{
     return datamap;
   }
 
-  void Hdf5Reader::fillVital( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
+  void Hdf5Reader::fillVital( SignalData * signal, H5::DataSet& dataset,
       const std::vector<dr_time>& times, int timeinterval, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
     hsize_t DIMS[2] = { };
@@ -386,7 +386,7 @@ namespace FormatConverter{
     signal->scale( scale );
   }
 
-  void Hdf5Reader::fillWave( std::unique_ptr<SignalData>& signal, H5::DataSet& dataset,
+  void Hdf5Reader::fillWave( SignalData * signal, H5::DataSet& dataset,
       const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
     hsize_t DIMS[2] = { };
@@ -447,7 +447,7 @@ namespace FormatConverter{
     }
   }
 
-  void Hdf5Reader::copymetas( std::unique_ptr<SignalData>& signal,
+  void Hdf5Reader::copymetas( SignalData * signal,
       H5::H5Object & dataset, bool includeIgnorables ) {
     hsize_t cnt = dataset.getNumAttrs( );
 
