@@ -804,8 +804,6 @@ namespace FormatConverter{
 
   void Hdf5Writer::writeTimes( H5::Group& group, SignalData * data ) {
     auto times = data->times( );
-    // SignalData stores times from latest to earliest, so we need to reverse them
-
     if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
       // convert dr_times to the index of the global times array
       for ( auto it = times.begin( ); it != times.end( ); ++it ) {

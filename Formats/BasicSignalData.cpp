@@ -330,7 +330,7 @@ namespace FormatConverter{
     }
 
     // now add the dates currently in our cache
-    for ( auto it = data.rbegin( ); it != data.rend( ); ++it ) {
+    for ( auto it = data.begin( ); it != data.end( ); ++it ) {
       dates.push_back( ( *it )->time );
     }
 
