@@ -51,17 +51,32 @@ namespace FormatConverter{
       std::from_chars( strval.data( ), strval.data( ) + dotpos, whole );
       std::from_chars( strval.data( ) + dotpos + 1, strval.data( ) - dotpos, fraction );
 
+
+      // -0.5 will show up as 0 (whole), 5 (fraction), so we need to know if
+      // we have a negative sign up front.
+      // however, -1.1 will show up as -1 (whole), 1 (fraction), so we can't
+      // just negate everything
+      bool isneg = ( '-' == strval[0] );
+
       if ( 0 == fraction ) {
         *scale = 0;
         *val = whole;
       }
       else {
         *scale = ( strval.length( ) - dotpos - 1 );
-        *val = ( whole * std::pow( 10, *scale ) + fraction );
-      }
 
-      if ( '-' == strval[0] ) {
-        *val *= -1;
+        if ( 0 == whole ) {
+          *val = isneg ? -fraction : fraction;
+        }
+        else {
+          int whp = whole * std::pow( 10, *scale );
+          if ( isneg ) {
+            *val = whp - fraction;
+          }
+          else {
+            *val = whp + fraction;
+          }
+        }
       }
     }
   }
