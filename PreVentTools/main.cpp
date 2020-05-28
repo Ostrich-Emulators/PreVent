@@ -371,7 +371,7 @@ int main( int argc, char** argv ) {
         continue;
       }
       else {
-        auto files = to->write( from.get(), data.get() );
+        auto files = to->write( from.get( ), data.get( ) );
         from->finish( );
 
         for ( const auto& f : files ) {
@@ -426,6 +426,9 @@ int main( int argc, char** argv ) {
     }
   }
   else if ( print ) {
+    if ( "/" == path ) {
+      helpAndExit( argv[0], "--path is required for --print" );
+    }
     for ( int i = optind; i < argc; i++ ) {
       std::string input = argv[i];
 
@@ -435,11 +438,16 @@ int main( int argc, char** argv ) {
       auto signal = std::unique_ptr<SignalData>{ std::make_unique<OutputSignalData>( outstream ) };
 
       auto fmt = FormatConverter::Formats::guess( input );
-      std::unique_ptr<Reader> rdr = Reader::get( fmt );
-      rdr->splice( input, path, starttime, endtime, signal.get( ) );
+      if ( Format::UNRECOGNIZED == fmt ) {
+        std::cerr << "Skipping unrecognized format or file: " << input << std::endl;
+      }
+      else {
+        std::unique_ptr<Reader> rdr = Reader::get( fmt );
+        rdr->splice( input, path, starttime, endtime, signal.get( ) );
 
-      if ( !outfilename.empty( ) ) {
-        delete &outstream;
+        if ( !outfilename.empty( ) ) {
+          delete &outstream;
+        }
       }
     }
   }

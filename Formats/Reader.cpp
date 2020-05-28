@@ -55,7 +55,7 @@ namespace FormatConverter{
       case FormatConverter::DWC:
         return std::make_unique<DwcReader>( );
       default:
-        throw "reader not yet implemented";
+        throw std::runtime_error( "reader not yet implemented" );
     }
   }
 

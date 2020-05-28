@@ -54,7 +54,7 @@ namespace FormatConverter{
       case FormatConverter::NOOP:
         return std::make_unique<NullWriter>( );
       default:
-        throw "writer not yet implemented";
+        throw std::runtime_error( "writer not yet implemented" );
     }
   }
 

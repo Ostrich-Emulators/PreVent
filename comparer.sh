@@ -14,12 +14,12 @@ CHECKWAVES=true
 echo "Vitals:"
 $PREVENT $F1 --vitals | cut -c13- | while read signal ; do
   printf "  %12s" "$signal..."
-  SIG1=/tmp/$signal-v-one.txt
-  SIG2=/tmp/$signal-v-two.txt
-  
+  SIG1=$(echo "/tmp/$signal-v-one.txt" | tr [:space:] '_' )
+  SIG2=$(echo "/tmp/$signal-v-two.txt" | tr [:space:] '_' )
+    
   rm -rf $SIG1 $SIG2
-  $PREVENT $F1 --print --path /VitalSigns/$signal --output $SIG1 
-  $PREVENT $F2 --print --path /VitalSigns/$signal --output $SIG2
+  $PREVENT $F1 --print --path "/VitalSigns/$signal" --output $SIG1 
+  $PREVENT $F2 --print --path "/VitalSigns/$signal" --output $SIG2
   if [ $? -ne 0 ]; then
     echo "$F2 is missing $signal!"
   else
@@ -39,12 +39,12 @@ if [ $CHECKWAVES ] ; then
   echo "Waves:" 
   $PREVENT $F1 --waves | cut -c12- | while read signal ; do
     printf "  %10s" "$signal..."
-    SIG1=/tmp/$signal-w-one.txt
-    SIG2=/tmp/$signal-w-two.txt
+  SIG1=$(echo "/tmp/$signal-w-one.txt" | tr [:space:] '_' )
+  SIG2=$(echo "/tmp/$signal-w-two.txt" | tr [:space:] '_' )
   
     rm -rf $SIG1 $SIG2
-    $PREVENT $F1 --print --path /Waveforms/$signal --output $SIG1 
-    $PREVENT $F2 --print --path /Waveforms/$signal --output $SIG2
+    $PREVENT $F1 --print --path "/Waveforms/$signal" --output $SIG1 
+    $PREVENT $F2 --print --path "/Waveforms/$signal" --output $SIG2
     if [ $? -ne 0 ]; then
       echo "$F2 is missing $signal!"
     else
