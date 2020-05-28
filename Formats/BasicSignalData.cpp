@@ -160,11 +160,11 @@ namespace FormatConverter{
         std::filesystem::create_directories( tmpdir );
       }
 #endif
-      // file = tmpfile( );
-      std::string ffoo( "/tmp/cache-" );
-      ffoo.append( name( ) );
-      ffoo.append( wave( ) ? ".wave" : ".vital" );
-      file = fopen( ffoo.c_str( ), "wb+" );
+      file = tmpfile( );
+      // std::string ffoo( "/tmp/cache-" );
+      // ffoo.append( name( ) );
+      // ffoo.append( wave( ) ? ".wave" : ".vital" );
+      // file = fopen( ffoo.c_str( ), "wb+" );
     }
 
     const auto SIZEOFTIME = sizeof ( dr_time );
@@ -282,6 +282,7 @@ namespace FormatConverter{
     int scale;
     int counter;
     int offset;
+    int ok = 0;
     std::map<std::string, std::string> attrs;
 
     const auto SIZEOFTIME = sizeof ( dr_time );
@@ -290,14 +291,18 @@ namespace FormatConverter{
     while ( loop < max ) {
       attrs.clear( );
 
-      std::fread( &t, SIZEOFTIME, 1, file );
-      std::fread( &offset, SIZEOFINT, 1, file );
+      ok += std::fread( &t, SIZEOFTIME, 1, file );
+      ok += std::fread( &offset, SIZEOFINT, 1, file );
       auto offset_start = std::ftell( file );
-      std::fread( &scale, SIZEOFINT, 1, file );
-      std::fread( &counter, SIZEOFINT, 1, file );
+      ok += std::fread( &scale, SIZEOFINT, 1, file );
+      ok += std::fread( &counter, SIZEOFINT, 1, file );
 
       auto vals = std::vector<int>( counter );
-      std::fread( &vals[0], SIZEOFINT, counter, file );
+      ok += std::fread( &vals[0], SIZEOFINT, counter, file );
+
+      if ( ok < counter + 4 ) {
+        std::cerr << "error reading cache file for signal: " << label << std::endl;
+      }
 
       if ( static_cast<int> ( std::ftell( file ) - offset_start ) < offset ) {
 
