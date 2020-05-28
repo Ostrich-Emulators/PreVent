@@ -88,7 +88,7 @@ namespace FormatConverter{
       //H5::DataSet data = root.openDataSet( "data" );
 
       auto ss = std::unique_ptr<SignalData>{ std::make_unique<BasicSignalData>( "-" ) };
-      copymetas( ss.get(), data, true );
+      copymetas( ss.get( ), data, true );
 
       for ( const auto& a : ss->metas( ) ) {
         maps[a.first] = a.second;
@@ -829,6 +829,25 @@ namespace FormatConverter{
 
   std::vector<dr_time> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
     const hsize_t rowstoget = endrow - startrow;
+
+    const auto MAX_GET = 1024 * 512;
+    if ( rowstoget > MAX_GET ) {
+      auto ret = std::vector<dr_time>( );
+      ret.reserve( rowstoget );
+      auto start2 = startrow;
+      while ( start2 < endrow ) {
+        auto end2 = start2 + MAX_GET;
+        if ( end2 > endrow ) {
+          end2 = endrow;
+        }
+
+        auto tmprows = slabreadt( ds, start2, end2 );
+        ret.insert( ret.end( ), tmprows.begin( ), tmprows.end( ) );
+        start2 = end2;
+      }
+      return ret;
+    }
+
 
     hsize_t DIMS[2] = { };
     H5::DataSpace dsspace = ds.getSpace( );
