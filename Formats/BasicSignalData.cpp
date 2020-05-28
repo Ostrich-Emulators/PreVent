@@ -28,6 +28,7 @@
 #include <cstring>
 #include <charconv>
 #include "config.h"
+#include "SignalUtils.h"
 
 namespace FormatConverter{
 
@@ -141,7 +142,12 @@ namespace FormatConverter{
       return true;
     }
 
-    std::stringstream ss;
+    if ( "HR" == name( ) ) {
+      int x = 0;
+      if ( x > 1 ) {
+        std::cout << "wait" << std::endl;
+      }
+    }
 
     if ( nullptr == file ) {
 #ifdef __CYGWIN__
@@ -154,35 +160,59 @@ namespace FormatConverter{
         std::filesystem::create_directories( tmpdir );
       }
 #endif
-      file = tmpfile( );
-      // std::string ffoo( "/tmp/cache-" );
-      // ffoo.append( name( ) );
-      // ffoo.append( wave( ) ? ".wave" : ".vital" );
-      // file = fopen( ffoo.c_str( ), "w+" );
+      // file = tmpfile( );
+      std::string ffoo( "/tmp/cache-" );
+      ffoo.append( name( ) );
+      ffoo.append( wave( ) ? ".wave" : ".vital" );
+      file = fopen( ffoo.c_str( ), "wb+" );
     }
 
+    const auto SIZEOFTIME = sizeof ( dr_time );
+    const auto SIZEOFINT = sizeof ( int );
+
     while ( !data.empty( ) ) {
+      std::stringstream ss;
+      std::string extradata;
+      int ok = 0;
       std::unique_ptr<DataRow> a = std::move( data.front( ) );
       data.pop_front( );
+      const auto DATACOUNT = static_cast<int> ( a->ints( ).size( ) );
 
-      ss << a->time << " " << a->scale << " " << a->data.size( );
-      for ( const auto& i : a->data ) {
-        ss << " " << i;
-      }
       if ( !a->extras.empty( ) ) {
         for ( const auto& x : a->extras ) {
           ss << "|" << x.first << "=" << x.second;
         }
+        ss << '\n';
+        extradata.assign( ss.str( ) );
       }
-      ss << "\n";
+
+      // the offset is the where the next record starts, which doesn't include
+      // this row's time (because it's already written) or the size itself
+      // (because it will already have been read). We're left with the
+      // ints for scale and each datapoint, plus an int for data point count
+      int nextrecord_offset =
+          DATACOUNT * SIZEOFINT // values array
+          + SIZEOFINT // scale
+          + SIZEOFINT // data count
+          ;
+      nextrecord_offset += extradata.size( ); // extradata
+
+      ok += std::fwrite( &a->time, SIZEOFTIME, 1, file );
+      ok += std::fwrite( &nextrecord_offset, SIZEOFINT, 1, file );
+      ok += std::fwrite( &a->scale, SIZEOFINT, 1, file );
+      ok += std::fwrite( &DATACOUNT, SIZEOFINT, 1, file );
+      ok += std::fwrite( a->data.data( ), SIZEOFINT, DATACOUNT, file );
+
+      if ( !extradata.empty( ) ) {
+        std::fputs( extradata.c_str( ), file );
+      }
+
+      if ( ok != DATACOUNT + 4 ) {
+        return false;
+      }
     }
 
-    int ok = std::fputs( ss.str( ).c_str( ), file );
-    if ( ok < 0 ) {
-      return false;
-    }
-
-    fflush( file );
+    std::fflush( file ); // for windows 
     livecount = 0;
     return true;
   }
@@ -248,56 +278,45 @@ namespace FormatConverter{
     const int BUFFSZ = 1024 * 16;
     char buff[BUFFSZ];
 
-    std::string read;
+    dr_time t;
+    int scale;
+    int counter;
+    int offset;
+    std::map<std::string, std::string> attrs;
+
+    const auto SIZEOFTIME = sizeof ( dr_time );
+    const auto SIZEOFINT = sizeof ( int );
+
     while ( loop < max ) {
-      char * justread = std::fgets( buff, BUFFSZ, file );
-      if ( NULL == justread ) {
-        break;
-      }
-      read.assign( justread );
+      attrs.clear( );
 
-      // first things first: if we have attributes, cut them out 
-      const size_t barpos = read.find( "|" );
-      std::string extras;
-      if ( std::string::npos != barpos ) {
-        // we have attributes!
-        extras = read.substr( barpos + 1 );
-        read = read.substr( 0, barpos );
-      }
+      std::fread( &t, SIZEOFTIME, 1, file );
+      std::fread( &offset, SIZEOFINT, 1, file );
+      auto offset_start = std::ftell( file );
+      std::fread( &scale, SIZEOFINT, 1, file );
+      std::fread( &counter, SIZEOFINT, 1, file );
 
-      std::stringstream ss( read );
-      dr_time t;
-      int scale;
-      int counter;
+      auto vals = std::vector<int>( counter );
+      std::fread( &vals[0], SIZEOFINT, counter, file );
 
-      ss >> t;
-      ss >> scale;
-      ss >> counter;
-      std::vector<int> vals;
-      vals.reserve( counter );
-      int v;
-      for ( auto i = 0; i < counter; i++ ) {
-        ss >> v;
-        vals.push_back( v );
-      }
+      if ( static_cast<int> ( std::ftell( file ) - offset_start ) < offset ) {
 
-      std::map<std::string, std::string> attrs;
-      if ( !extras.empty( ) ) {
-        // split on |, then split again on "="
-        std::string token;
-        std::stringstream extrastream( extras );
-        while ( std::getline( extrastream, token, '|' ) ) {
-          // now split on =
-          int eqpos = token.find( "=" );
-          std::string key = token.substr( 0, eqpos );
-          std::string val = token.substr( eqpos + 1 );
+        char * justread = std::fgets( buff, BUFFSZ, file );
+        if ( nullptr != justread ) {
+          auto extras = std::string_view( justread );
 
-          // strip the \n if it's there
-          const size_t newlinepos = val.rfind( "\n" );
-          if ( std::string::npos != newlinepos ) {
-            val = val.substr( 0, newlinepos );
+          // split on |, then split again on "="
+          auto pieces = SignalUtils::splitcsv( extras, '|' );
+          for ( const auto& keyandval : pieces ) {
+            auto kv = SignalUtils::splitcsv( keyandval, '=' );
+            if ( 2 == kv.size( ) ) {
+              auto newlinepos = kv[1].rfind( '\n' );
+              if ( std::string::npos != newlinepos ) {
+                kv[1].remove_suffix( 1 );
+              }
+              attrs[std::string( kv[0] )] = std::string( kv[1] );
+            }
           }
-          attrs[key] = val;
         }
       }
 
@@ -315,15 +334,18 @@ namespace FormatConverter{
     if ( nullptr != file ) {
       // read the dates out of the file first
       std::rewind( file );
-      const int BUFFSZ = 1024 * 16;
-      char buff[BUFFSZ];
+      dr_time timer;
+      size_t offset = 0;
+      const auto SIZET = sizeof (dr_time );
+      const auto SIZEI = sizeof (int );
 
-      std::string timer;
-      while ( nullptr != std::fgets( buff, BUFFSZ, file ) ) {
-        char * loc = strchr( buff, ' ' );
-        if ( nullptr != loc ) {
-          timer = std::string( buff, loc );
-          dates.push_back( stol( timer ) );
+      while ( std::fread( &timer, SIZET, 1, file ) > 0 ) {
+        auto ok = std::fread( &offset, SIZEI, 1, file );
+        dates.push_back( timer );
+        auto ok2 = std::fseek( file, offset, SEEK_CUR );
+
+        if ( ok < 1 || ok2 != 0 ) {
+          std::cout << "blamo!" << std::endl;
         }
       }
       // when we get here, our file pointer has traveled back to the end of the file
