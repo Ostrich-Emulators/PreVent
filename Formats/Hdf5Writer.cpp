@@ -690,79 +690,24 @@ namespace FormatConverter{
     }
   }
 
-  bool Hdf5Writer::rescaleForShortsIfNeeded( SignalData * data,
-      bool& useIntsNotShorts ) const {
-    bool rescaled = false;
+  bool Hdf5Writer::rescaleForShortsIfNeeded( SignalData * data, bool& useIntsNotShorts ) const {
     useIntsNotShorts = false;
 
-    const short int shortmax = std::numeric_limits<short>::max( );
-    const short int shortmin = std::numeric_limits<short>::min( );
+    const auto SHORTMAX = std::numeric_limits<short>::max( );
+    const auto SHORTMIN = std::numeric_limits<short>::min( );
 
-    int scale = data->scale( );
     int powscale = std::pow( 10, data->scale( ) );
-    int hi = powscale * data->highwater( );
-    int low = ( data->lowwater( ) == SignalData::MISSING_VALUE
-        ? data->lowwater( )
-        : powscale * data->lowwater( ) );
-    //std::cerr << " high/low water marks: " << data.highwater( ) << "/" << data.lowwater( ) << "(scale: " << data.scale( ) << ")" << std::endl;
-    //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
+    auto hi = powscale * data->highwater( );
+    auto low = powscale * data->lowwater( );
 
-    // keep reducing the scale until we fit in shorts
-    // FIXME: if we can't fit in shorts, we're screwed
-    while ( ( hi > shortmax || low < shortmin ) && scale > 0 ) {
-      scale--;
-      powscale = std::pow( 10, scale );
-      hi = powscale * data->highwater( );
-      low = ( data->lowwater( ) == SignalData::MISSING_VALUE
-          ? data->lowwater( )
-          : powscale * data->lowwater( ) );
-      rescaled = true;
-      //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
+    if ( hi < SHORTMAX && low > SHORTMIN ) {
+      useIntsNotShorts = false;
+      return false;
     }
-
-    if ( hi > shortmax || low < shortmin ) {
-      rescaled = false;
-      // can't get values into short limits, so try ints
-      //std::cerr << " ERROR: cannot coerce values to be in range";
-      const int intmax = std::numeric_limits<int>::max( );
-      const int intmin = std::numeric_limits<int>::min( );
-
-      int scale = data->scale( );
-      int powscale = std::pow( 10, scale );
-      int hi = powscale * data->highwater( );
-      int low = ( data->lowwater( ) == SignalData::MISSING_VALUE
-          ? data->lowwater( )
-          : powscale * data->lowwater( ) );
-      //std::cerr << " high/low water marks: " << data.highwater( ) << "/" << data.lowwater( ) << "(scale: " << data.scale( ) << ")" << std::endl;
-      //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
-
-      // keep reducing the scale until we fit in shorts
-      // FIXME: if we can't fit in shorts, we're screwed
-      while ( ( hi > intmax || low < intmin ) && scale > 0 ) {
-        scale--;
-        powscale = std::pow( 10, scale );
-        hi = powscale * data->highwater( );
-        low = ( data->lowwater( ) == SignalData::MISSING_VALUE
-            ? data->lowwater( )
-            : powscale * data->lowwater( ) );
-        rescaled = true;
-        //std::cerr << " high/low calcs: " << hi << "/" << low << "(scale: " << scale << ")" << std::endl;
-      }
-
-      if ( hi > intmax || low < intmin ) {
-        // this is "we're screwed" time
-        std::cerr << " ERROR: cannot coerce values to be in range";
-      }
-      else {
-        useIntsNotShorts = true;
-      }
+    else {
+      useIntsNotShorts = true;
+      return false;
     }
-
-    if ( rescaled ) {
-      data->scale( scale );
-    }
-
-    return rescaled;
   }
 
   void Hdf5Writer::writeWaveGroup( H5::Group& group, SignalData * data ) {

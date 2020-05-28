@@ -238,19 +238,25 @@ namespace FormatConverter{
     double pow10 = std::pow( 10, rowscale );
     int hiv = std::numeric_limits<int>::min( );
     int lov = std::numeric_limits<int>::max( );
+    bool check_scale = false;
     for ( auto& v : row->data ) {
-      hiv = std::max( hiv, v );
-      lov = std::min( lov, v );
+      if ( v != SignalData::MISSING_VALUE ) {
+        hiv = std::max( hiv, v );
+        lov = std::min( lov, v );
+        check_scale = true;
+      }
     }
 
-    double rowlo = static_cast<double> ( lov ) / pow10;
-    double rowhi = static_cast<double> ( hiv ) / pow10;
+    if ( check_scale ) {
+      double rowlo = static_cast<double> ( lov ) / pow10;
+      double rowhi = static_cast<double> ( hiv ) / pow10;
 
-    lowval = std::min( rowlo, lowval );
-    highval = std::max( rowhi, highval );
+      lowval = std::min( rowlo, lowval );
+      highval = std::max( rowhi, highval );
 
-    if ( rowscale > scale( ) ) {
-      scale( rowscale );
+      if ( rowscale > scale( ) ) {
+        scale( rowscale );
+      }
     }
 
     if ( !row->extras.empty( ) ) {
