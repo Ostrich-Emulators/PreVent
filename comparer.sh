@@ -7,7 +7,7 @@ fi
 
 F1=$1
 F2=$2
-PREVENT=~/devl/uva/PreVentTools/preventtools
+PREVENT=PreVentTools/preventtools
 
 CHECKWAVES=true
 

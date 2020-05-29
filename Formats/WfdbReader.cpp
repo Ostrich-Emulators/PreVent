@@ -129,7 +129,6 @@ namespace FormatConverter{
       return -1;
     }
 
-    std::cout << "size returned is: " << size << std::endl;
     char * cygpath = (char *) malloc( size );
     if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, wfdbdir.c_str( ),
         cygpath, size ) ) {
