@@ -1,7 +1,7 @@
 4.3.0
   * Reduced memory usage for extremely large files
   * Improved runtime performance
-  * Fixed rounding error in TDMS files
+  * Fixed rounding error in TDMS, DWC files
   * Added native STP parser for Philips (experimental)
 
 4.2.2
