@@ -473,15 +473,14 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::createEventsAndTimes( H5::H5File file, const SignalSet * data ) {
-    H5::Group events = ensureGroupExists( file, "Events" );
+    auto events = ensureGroupExists( file, "Events" );
 
-    std::map<long, dr_time> segmentsizes = data->offsets( );
+    auto segmentsizes = data->offsets( );
     if ( !segmentsizes.empty( ) ) {
       hsize_t dims[] = { segmentsizes.size( ), 2 };
       H5::DataSpace space( 2, dims );
 
-      H5::DataSet ds = events.createDataSet( "Segment_Offsets",
-          H5::PredType::STD_I64LE, space );
+      auto ds = events.createDataSet( "Segment_Offsets", H5::PredType::STD_I64LE, space );
       long long indexes[segmentsizes.size( ) * 2] = { 0 };
       int row = 0;
       for ( const auto& e : segmentsizes ) {
@@ -503,7 +502,7 @@ namespace FormatConverter{
     // if signalcounter is greater than timecounter, update timecounter
     std::map<dr_time, int> timecounter;
     for ( auto m : data->allsignals( ) ) {
-      std::map<dr_time, int> sigcounter;
+      auto sigcounter = std::map<dr_time, int>{ };
 
       for ( auto& dr : m->times( ) ) {
         sigcounter[dr] = ( 0 == sigcounter.count( dr ) ? 1 : sigcounter[dr] + 1 );
@@ -520,10 +519,10 @@ namespace FormatConverter{
     }
 
     // convert our map to a vector with the appropriate duplicates
-    std::vector<dr_time> alltimes;
+    auto alltimes = std::vector<dr_time>{ };
     alltimes.reserve( timecounter.size( ) );
 
-    const bool keeptimelkp = Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME );
+    const auto keeptimelkp = Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME );
 
     for ( auto& it : timecounter ) {
       for ( int i = 0; i < it.second; i++ ) {
@@ -547,7 +546,7 @@ namespace FormatConverter{
       props.setDeflate( compression( ) );
     }
 
-    H5::DataSet ds = events.createDataSet( "Global_Times", H5::PredType::STD_I64LE, space, props );
+    auto ds = events.createDataSet( "Global_Times", H5::PredType::STD_I64LE, space, props );
     ds.write( &alltimes[0], H5::PredType::STD_I64LE );
     writeAttribute( ds, "Columns", "timestamp (ms)" );
 
@@ -578,8 +577,8 @@ namespace FormatConverter{
   }
 
   std::vector<std::string> Hdf5Writer::closeDataSet( ) {
-    dr_time firstTime = dataptr->earliest( );
-    dr_time lastTime = dataptr->latest( );
+    auto firstTime = dataptr->earliest( );
+    auto lastTime = dataptr->latest( );
     std::vector<std::string> ret;
     if ( 0 == lastTime ) {
       // we don't have any data at all!
@@ -610,14 +609,14 @@ namespace FormatConverter{
 
       writeFileAttributes( file, dataptr->metadata( ), firstTime, lastTime );
 
-      H5::Group grp = ensureGroupExists( file, "VitalSigns" );
+      auto grp = ensureGroupExists( file, "VitalSigns" );
       output( ) << "Writing " << dataptr->vitals( ).size( ) << " Vitals" << std::endl;
       for ( auto& vits : dataptr->vitals( ) ) {
         if ( vits->empty( ) ) {
           output( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
         }
         else {
-          H5::Group g = ensureGroupExists( grp, getDatasetName( vits ) );
+          auto g = ensureGroupExists( grp, getDatasetName( vits ) );
           writeVitalGroup( g, vits );
         }
       }
@@ -629,7 +628,7 @@ namespace FormatConverter{
           output( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
         }
         else {
-          H5::Group g = ensureGroupExists( grp, getDatasetName( wavs ) );
+          auto g = ensureGroupExists( grp, getDatasetName( wavs ) );
           writeWaveGroup( g, wavs );
         }
       }

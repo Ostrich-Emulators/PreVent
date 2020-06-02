@@ -20,6 +20,10 @@ namespace FormatConverter{
     return *this;
   }
 
+  size_t TimeRange::size( ) const {
+    return end - start;
+  }
+
   dr_time TimeRange::curr( ) const {
     return current;
   }

@@ -25,6 +25,7 @@ namespace FormatConverter {
     TimeRange& operator++( );
     virtual ~TimeRange( );
 
+    size_t size( ) const;
     dr_time curr( ) const;
     dr_time next( );
 

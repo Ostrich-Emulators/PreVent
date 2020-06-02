@@ -620,7 +620,7 @@ namespace FormatConverter{
 
       hsize_t dataidx = 0;
       std::vector<int> datavals;
-      for ( size_t i = 0; i < ( toidx - fromidx ); i++ ) {
+      for ( size_t i = 0; i < realtimes->size(); i++ ) {
         dr_time time = realtimes->next( );
 
         // if we can't process a whole sample, get more data to process
