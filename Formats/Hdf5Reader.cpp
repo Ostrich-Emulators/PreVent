@@ -583,7 +583,7 @@ namespace FormatConverter{
       const bool timeisindex = ( layoutVersion( file ) >= 40100
           ? "index to Global_Times" == metastr( times, "Columns" )
           : false );
-      std::vector<dr_time> realtimes;
+      std::unique_ptr<TimeRange> realtimes;
       dr_time foundFrom = false;
       dr_time foundTo = false;
       hsize_t fromidx;
@@ -620,8 +620,8 @@ namespace FormatConverter{
 
       hsize_t dataidx = 0;
       std::vector<int> datavals;
-      for ( size_t i = 0; i < realtimes.size( ); i++ ) {
-        dr_time time = realtimes[i];
+      for ( size_t i = 0; i < ( toidx - fromidx ); i++ ) {
+        dr_time time = realtimes->next( );
 
         // if we can't process a whole sample, get more data to process
         if ( dataidx + readingsperperiod > datavals.size( ) ) {
@@ -827,25 +827,12 @@ namespace FormatConverter{
     return values;
   }
 
-  std::vector<dr_time> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
+  std::vector<dr_time> Hdf5Reader::slabreadt_small( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
     const hsize_t rowstoget = endrow - startrow;
 
     const auto MAX_GET = 1024 * 512;
     if ( rowstoget > MAX_GET ) {
-      auto ret = std::vector<dr_time>( );
-      ret.reserve( rowstoget );
-      auto start2 = startrow;
-      while ( start2 < endrow ) {
-        auto end2 = start2 + MAX_GET;
-        if ( end2 > endrow ) {
-          end2 = endrow;
-        }
-
-        auto tmprows = slabreadt( ds, start2, end2 );
-        ret.insert( ret.end( ), tmprows.begin( ), tmprows.end( ) );
-        start2 = end2;
-      }
-      return ret;
+      throw new std::runtime_error( "too many times requested" );
     }
 
 
@@ -873,5 +860,26 @@ namespace FormatConverter{
     std::vector<dr_time> values( times, times + sizer );
 
     return values;
+  }
+
+  std::unique_ptr<TimeRange> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
+    FILE * cache = tmpfile( );
+    auto range = std::make_unique<TimeRange>( startrow, endrow, cache );
+
+    const auto MAX_GET = 1024 * 512;
+    auto start2 = startrow;
+    while ( start2 < endrow ) {
+      auto end2 = start2 + MAX_GET;
+      if ( end2 > endrow ) {
+        end2 = endrow;
+      }
+
+      auto tmprows = slabreadt_small( ds, start2, end2 );
+      std::fwrite( tmprows.data( ), sizeof ( dr_time ), tmprows.size( ), cache );
+      start2 = end2;
+    }
+
+    std::rewind( cache );
+    return range;
   }
 }

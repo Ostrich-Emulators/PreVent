@@ -64,6 +64,7 @@ StpJsonReader.cpp
 StpXmlReader.cpp
 StreamChunkReader.cpp
 TdmsReader.cpp
+TimeRange.cpp
 TimezoneOffsetTimeSignalSet.cpp
 WfdbReader.cpp
 WfdbWriter.cpp
@@ -138,6 +139,7 @@ StpJsonReader.h
 StpXmlReader.h
 StreamChunkReader.h
 TdmsReader.h
+TimeReader.h
 TimezoneOffsetTimeSignalSet.h
 WfdbReader.h
 WfdbWriter.h

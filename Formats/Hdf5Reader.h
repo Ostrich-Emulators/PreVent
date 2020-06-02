@@ -15,6 +15,7 @@
 #define HDF5READER_H
 
 #include "Reader.h"
+#include "TimeRange.h"
 
 #include <H5Cpp.h>
 #include <map>
@@ -46,7 +47,7 @@ namespace FormatConverter {
      * @return
      */
     virtual void splice( const std::string& inputfile, const std::string& path,
-				dr_time from, dr_time to, SignalData * signal ) override;
+        dr_time from, dr_time to, SignalData * signal ) override;
 
   private:
     Hdf5Reader( const Hdf5Reader& );
@@ -115,7 +116,16 @@ namespace FormatConverter {
      * @param endidx the index after the last row to retrieve
      * @return
      */
-    static std::vector<dr_time> slabreadt( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
+    static std::unique_ptr<TimeRange> slabreadt( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
+    /**
+     * Reads a small (<512K) number of dates into a vector. If the number is >512K,
+     * throws an exception
+     * @param data
+     * @param startidx
+     * @param endidx
+     * @return
+     */
+    static std::vector<dr_time> slabreadt_small( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
 
     H5::H5File file;
   };
