@@ -584,14 +584,12 @@ namespace FormatConverter{
           ? "index to Global_Times" == metastr( times, "Columns" )
           : false );
       std::unique_ptr<TimeRange> realtimes;
-      dr_time foundFrom = false;
-      dr_time foundTo = false;
       hsize_t fromidx;
       hsize_t toidx;
 
       if ( timeisindex ) {
-        fromidx = getIndexForTime( globaltimes, from, &foundFrom );
-        toidx = getIndexForTime( globaltimes, to, &foundTo );
+        fromidx = getIndexForTime( globaltimes, from, true );
+        toidx = getIndexForTime( globaltimes, to, false );
         realtimes = slabreadt( globaltimes, fromidx, toidx );
 
         // we fall through this block, and now we just want the indexes that
@@ -600,8 +598,8 @@ namespace FormatConverter{
         to = toidx;
       }
 
-      fromidx = getIndexForTime( times, from, &foundFrom );
-      toidx = getIndexForTime( times, to, &foundTo );
+      fromidx = getIndexForTime( times, from, true );
+      toidx = getIndexForTime( times, to, false );
       //output( ) << from << "\tidx: " << fromidx << "\tfound? " << foundFrom << std::endl;
       //output( ) << to << "\tidx: " << toidx << "\tfound? " << foundTo << std::endl;
       if ( !timeisindex ) {
@@ -620,7 +618,7 @@ namespace FormatConverter{
 
       hsize_t dataidx = 0;
       std::vector<int> datavals;
-      for ( size_t i = 0; i < realtimes->size(); i++ ) {
+      for ( size_t i = 0; i < realtimes->size( ); i++ ) {
         dr_time time = realtimes->next( );
 
         // if we can't process a whole sample, get more data to process
@@ -691,7 +689,7 @@ namespace FormatConverter{
     return checktime;
   }
 
-  hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, dr_time * found ) {
+  hsize_t Hdf5Reader::getIndexForTime( H5::DataSet& haystack, dr_time needle, bool leftmost ) {
 
     hsize_t DIMS[2] = { };
     H5::DataSpace dsspace = haystack.getSpace( );
@@ -701,63 +699,33 @@ namespace FormatConverter{
 
     // we'll do a binary search to get our number (or at least close to it!)
     hsize_t startpos = 0;
-    hsize_t endpos = ROWS - 1;
+    hsize_t endpos = ROWS;
 
-    while ( startpos <= endpos ) { // stop looking if we can't find it
-      hsize_t checkpos = startpos + ( endpos - startpos ) / 2;
-      dr_time checktime = getTimeAtIndex( haystack, checkpos );
-      // std::cout << "timesearch: " << startpos << "-" << endpos << "=>"
-      //   << checkpos << " => " << checktime << std::endl;
+    while ( startpos < endpos ) {
+      int checkpos = std::floor( ( endpos + startpos ) / 2.0 );
+      auto checktime = getTimeAtIndex( haystack, checkpos );
 
-      if ( startpos == endpos && checktime != needle ) {
-        // no where else to look, but we didn't find our needle
-
-        if ( checktime < needle && checkpos < ROWS - 1 ) {
-          checkpos++;
-        }
-        if ( nullptr != found ) {
-          *found = getTimeAtIndex( haystack, checkpos );
-        }
-
-        if ( checkpos == endpos ) {
-          checkpos++;
-        }
-        return checkpos;
-      }
-
-      if ( checktime == needle ) { // we found the time we want!
-        if ( nullptr != found ) {
-          *found = checktime;
-        }
-        return checkpos;
-      }
-      else if ( checktime < needle ) { // the time we found is too small
-        if ( checkpos < ROWS ) {
+      if ( leftmost ) {
+        if ( checktime < needle ) {
           startpos = checkpos + 1;
         }
         else {
-          // didn't find the needle, but we're out of places to look
-          if ( nullptr != found ) {
-            *found = checktime;
-          }
-          return checkpos;
+          endpos = checkpos;
         }
       }
-      else { // the time we found is too big
-        if ( checkpos > 0 ) {
-          endpos = checkpos - 1;
+      else {
+        if ( checktime > needle ) {
+          endpos = checkpos;
         }
         else {
-          // didn't find the needle, but we're out of places to look
-          if ( nullptr != found ) {
-            *found = checktime;
-          }
-          return checkpos;
+          startpos = checkpos + 1;
         }
       }
     }
 
-    return 0; // should never get here
+    return ( leftmost
+        ? startpos
+        : endpos );
   }
 
   /**

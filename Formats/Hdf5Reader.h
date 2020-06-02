@@ -87,10 +87,10 @@ namespace FormatConverter {
      * not exist in the dataset, return the index where it *would* be if it existed
      * @param haystack
      * @param needle
-     * @param foundtime the time that was found at the returned index
+     * @param leftmost if true, return the time leftmost time
      * @return
      */
-    static hsize_t getIndexForTime( H5::DataSet& haystack, dr_time needle, dr_time * foundtime = nullptr );
+    static hsize_t getIndexForTime( H5::DataSet& haystack, dr_time needle, bool leftmost );
     static dr_time getTimeAtIndex( H5::DataSet& haystack, hsize_t index );
 
     /**
