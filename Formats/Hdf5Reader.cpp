@@ -803,7 +803,6 @@ namespace FormatConverter{
       throw new std::runtime_error( "too many times requested" );
     }
 
-
     hsize_t DIMS[2] = { };
     H5::DataSpace dsspace = ds.getSpace( );
     dsspace.getSimpleExtentDims( DIMS );
@@ -831,7 +830,7 @@ namespace FormatConverter{
   }
 
   std::unique_ptr<TimeRange> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
-    FILE * cache = tmpfile( );
+    FILE * cache = tmpfile( ); // will be released by TimeRange
     auto range = std::make_unique<TimeRange>( startrow, endrow, cache );
 
     const auto MAX_GET = 1024 * 512;
