@@ -101,6 +101,9 @@ namespace FormatConverter {
      */
     static std::vector<std::string> splitcsv( const std::string& csvline, char = ',' );
     static std::vector<std::string_view> splitcsv( const std::string_view& csvline, char = ',' );
+
+    static FILE * tmpf();
+
   private:
     SignalUtils( );
     SignalUtils( const SignalUtils& );

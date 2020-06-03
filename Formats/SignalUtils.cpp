@@ -5,6 +5,7 @@
  */
 
 #include "SignalUtils.h"
+#include "TimeRange.h"
 
 #include "SignalData.h"
 #include "DataRow.h"
@@ -244,7 +245,11 @@ namespace FormatConverter{
   std::vector<size_t> SignalUtils::index( const std::vector<dr_time>& alltimes,
       SignalData& signal ) {
 
-    std::deque<dr_time> signaltimes( signal.times( ).begin( ), signal.times( ).end( ) );
+    auto range = signal.times( );
+    auto signaltimes = std::deque<dr_time>{ };
+    for ( auto t : *( range.get( ) ) ) {
+      signaltimes.push_back( t );
+    }
     std::sort( signaltimes.begin( ), signaltimes.end( ) );
     const double hz = signal.hz( );
     const int rowsPerTime = ( hz < 1.0 ? 1 : (int) hz );
@@ -343,5 +348,23 @@ namespace FormatConverter{
     }
 
     return rslt;
+  }
+
+  FILE * SignalUtils::tmpf( ) {
+#ifdef __CYGWIN__
+    // Cygwin seems to crash if you try to write to a file created
+    // by tmpfile() if the temp directory doesn't actually exist,
+    // so make sure we create it ahead of time
+    std::filesystem::path p = std::filesystem::path( std::tmpnam( nullptr ) );
+    auto tmpdir = p.parent_path( );
+    if ( !std::filesystem::exists( tmpdir ) ) {
+      std::filesystem::create_directories( tmpdir );
+    }
+#endif
+    return tmpfile( );
+    // std::string ffoo( "/tmp/cache-" );
+    // ffoo.append( name( ) );
+    // ffoo.append( wave( ) ? ".wave" : ".vital" );
+    // file = fopen( ffoo.c_str( ), "wb+" );
   }
 }

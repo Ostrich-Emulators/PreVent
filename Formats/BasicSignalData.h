@@ -48,7 +48,7 @@ namespace FormatConverter {
      * Gets times for all data rows, from earliest to most recent
      * @return
      */
-    virtual std::vector<dr_time> times( ) override;
+    virtual std::unique_ptr<TimeRange> times( ) override;
 
     virtual double highwater( ) const override;
     virtual double lowwater( ) const override;
@@ -95,6 +95,7 @@ namespace FormatConverter {
     size_t livecount; // how many data rows are cached in memory (not disk)?
     std::deque<std::unique_ptr<FormatConverter::DataRow>> data;
     std::FILE * file;
+
     bool popping;
     bool iswave;
     double highval;

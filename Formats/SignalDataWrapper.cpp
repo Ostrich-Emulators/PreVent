@@ -6,6 +6,7 @@
 
 #include "DataRow.h"
 #include "SignalDataWrapper.h"
+#include "TimeRange.h"
 #include <iostream>
 
 namespace FormatConverter{
@@ -138,7 +139,7 @@ namespace FormatConverter{
     return signal->metad( );
   }
 
-  std::vector<dr_time> SignalDataWrapper::times( ) {
+  std::unique_ptr<TimeRange> SignalDataWrapper::times( ) {
     return signal->times( );
   }
 

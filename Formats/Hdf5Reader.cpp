@@ -618,9 +618,7 @@ namespace FormatConverter{
 
       hsize_t dataidx = 0;
       std::vector<int> datavals;
-      for ( size_t i = 0; i < realtimes->size( ); i++ ) {
-        dr_time time = realtimes->next( );
-
+      for ( auto time : *realtimes ) {
         // if we can't process a whole sample, get more data to process
         if ( dataidx + readingsperperiod > datavals.size( ) ) {
           //        std::cout << "start/stop/cur idx: " << slabstartidx << "/" << slabstopidx
@@ -702,7 +700,7 @@ namespace FormatConverter{
     hsize_t endpos = ROWS;
 
     while ( startpos < endpos ) {
-      int checkpos = std::floor( ( endpos + startpos ) / 2.0 );
+      auto checkpos = std::floor( ( endpos + startpos ) / 2.0 );
       auto checktime = getTimeAtIndex( haystack, checkpos );
 
       if ( leftmost ) {
@@ -830,8 +828,7 @@ namespace FormatConverter{
   }
 
   std::unique_ptr<TimeRange> Hdf5Reader::slabreadt( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
-    FILE * cache = tmpfile( ); // will be released by TimeRange
-    auto range = std::make_unique<TimeRange>( startrow, endrow, cache );
+    auto range = std::make_unique <TimeRange>( );
 
     const auto MAX_GET = 1024 * 512;
     auto start2 = startrow;
@@ -842,11 +839,10 @@ namespace FormatConverter{
       }
 
       auto tmprows = slabreadt_small( ds, start2, end2 );
-      std::fwrite( tmprows.data( ), sizeof ( dr_time ), tmprows.size( ), cache );
+      range->push_back( tmprows );
       start2 = end2;
     }
 
-    std::rewind( cache );
     return range;
   }
 }

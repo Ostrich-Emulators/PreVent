@@ -19,6 +19,8 @@
 #include "SignalData.h"
 #include "SignalUtils.h"
 #include "FileNamer.h"
+#include "TimeRange.h"
+
 namespace FormatConverter{
 
   MatWriter::MatWriter( MatVersion ver ) : Writer( "mat" ), version( ver ) { }
@@ -239,8 +241,8 @@ namespace FormatConverter{
 
     auto alltimes64 = signals[0]->times( );
     std::vector<int> alltimes;
-    alltimes.reserve( alltimes64.size( ) );
-    for ( dr_time& t64 : alltimes64 ) {
+    alltimes.reserve( alltimes64->size( ) );
+    for ( auto t64 : *( alltimes64.get( ) ) ) {
       alltimes.push_back( static_cast<int> ( t64 ) );
     }
 

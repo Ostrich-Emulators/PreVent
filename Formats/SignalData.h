@@ -27,6 +27,7 @@
 namespace FormatConverter {
   class DataRow;
   class TimedData;
+  class TimeRange;
 
   class SignalData {
   public:
@@ -74,7 +75,7 @@ namespace FormatConverter {
      *
      * @return
      */
-    virtual std::vector<dr_time> times( ) = 0;
+    virtual std::unique_ptr<TimeRange> times( ) = 0;
 
     virtual std::unique_ptr<FormatConverter::DataRow> pop( ) = 0;
     virtual void setWave( bool wave = false ) = 0;

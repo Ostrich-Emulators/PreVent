@@ -14,6 +14,8 @@
 #include "BasicSignalData.h"
 #include "DataRow.h"
 #include "Options.h"
+#include "SignalUtils.h"
+#include "TimeRange.h"
 
 #include <string>
 #include <iostream>
@@ -28,7 +30,6 @@
 #include <cstring>
 #include <charconv>
 #include "config.h"
-#include "SignalUtils.h"
 
 namespace FormatConverter{
 
@@ -150,21 +151,7 @@ namespace FormatConverter{
     }
 
     if ( nullptr == file ) {
-#ifdef __CYGWIN__
-      // Cygwin seems to crash if you try to write to a file created
-      // by tmpfile() if the temp directory doesn't actually exist,
-      // so make sure we create it ahead of time
-      std::filesystem::path p = std::filesystem::path( std::tmpnam( nullptr ) );
-      auto tmpdir = p.parent_path( );
-      if ( !std::filesystem::exists( tmpdir ) ) {
-        std::filesystem::create_directories( tmpdir );
-      }
-#endif
-      file = tmpfile( );
-      // std::string ffoo( "/tmp/cache-" );
-      // ffoo.append( name( ) );
-      // ffoo.append( wave( ) ? ".wave" : ".vital" );
-      // file = fopen( ffoo.c_str( ), "wb+" );
+      file = SignalUtils::tmpf( );
     }
 
     const auto SIZEOFTIME = sizeof ( dr_time );
@@ -338,21 +325,32 @@ namespace FormatConverter{
     return loop;
   }
 
-  std::vector<dr_time> BasicSignalData::times( ) {
-    std::vector<dr_time> dates;
-    dates.reserve( datacount );
+  std::unique_ptr<TimeRange> BasicSignalData::times( ) {
+    auto range = std::make_unique<TimeRange>();
+
+    const auto SLABSIZE = 1024 * 64;
+    auto dates = std::vector<dr_time>{ };
+    dates.reserve( SLABSIZE );
+
+    const auto SIZET = sizeof (dr_time );
+    const auto SIZEI = sizeof (int );
 
     if ( nullptr != file ) {
       // read the dates out of the file first
       std::rewind( file );
       dr_time timer;
       size_t offset = 0;
-      const auto SIZET = sizeof (dr_time );
-      const auto SIZEI = sizeof (int );
 
       while ( std::fread( &timer, SIZET, 1, file ) > 0 ) {
         auto ok = std::fread( &offset, SIZEI, 1, file );
         dates.push_back( timer );
+
+        // push our date slab to the file
+        if ( dates.size( ) > SLABSIZE ) {
+          range->push_back( dates );
+          dates.clear( );
+        }
+
         auto ok2 = std::fseek( file, offset, SEEK_CUR );
 
         if ( ok < 1 || ok2 != 0 ) {
@@ -366,8 +364,8 @@ namespace FormatConverter{
     for ( auto it = data.begin( ); it != data.end( ); ++it ) {
       dates.push_back( ( *it )->time );
     }
-
-    return dates;
+    range->push_back( dates );
+    return range;
   }
 
   void BasicSignalData::setMetadataFrom( const SignalData& model ) {

@@ -27,6 +27,7 @@
 #include "H5public.h"
 #include "TimezoneOffsetTimeSignalSet.h"
 #include "Options.h"
+#include "TimeRange.h"
 
 namespace FormatConverter{
   const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.1";
@@ -503,8 +504,9 @@ namespace FormatConverter{
     std::map<dr_time, int> timecounter;
     for ( auto m : data->allsignals( ) ) {
       auto sigcounter = std::map<dr_time, int>{ };
+      auto times = m->times( );
 
-      for ( auto& dr : m->times( ) ) {
+      for ( auto dr : *times ) {
         sigcounter[dr] = ( 0 == sigcounter.count( dr ) ? 1 : sigcounter[dr] + 1 );
       }
 
@@ -746,16 +748,41 @@ namespace FormatConverter{
     return ds;
   }
 
-  void Hdf5Writer::writeTimes( H5::Group& group, SignalData * data ) {
-    auto times = data->times( );
-    if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
-      // convert dr_times to the index of the global times array
-      for ( auto it = times.begin( ); it != times.end( ); ++it ) {
-        *it = timesteplkp.at( *it );
-      }
+  H5::DataSet Hdf5Writer::writeTimes( H5::Group& group, TimeRange * times ) {
+    hsize_t dims[] = { times->size( ), 1 };
+    H5::DataSpace space( 2, dims );
+
+    H5::DSetCreatPropList props;
+    if ( compression( ) > 0 ) {
+      hsize_t chunkdims[] = { 0, 0 };
+      autochunk( dims, 2, sizeof (long ), chunkdims );
+      props.setChunk( 2, chunkdims );
+      props.setShuffle( );
+      props.setDeflate( compression( ) );
     }
 
-    H5::DataSet ds = writeTimes( group, times );
+    H5::DataSet ds = group.createDataSet( "time", H5::PredType::STD_I64LE, space, props );
+    ds.write( &times[0], H5::PredType::STD_I64LE );
+
+    return ds;
+  }
+
+  void Hdf5Writer::writeTimes( H5::Group& group, SignalData * data ) {
+    auto times = data->times( ).get( );
+    H5::DataSet ds;
+    if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
+      // convert dr_times to the index of the global times array
+      auto timeidxs = std::vector<dr_time>{ };
+      timeidxs.reserve( times->size( ) );
+
+      for ( auto it : *times ) {
+        timeidxs.push_back( timesteplkp.at( it ) );
+      }
+      ds = writeTimes( group, timeidxs );
+    }
+    else {
+      ds = writeTimes( group, times );
+    }
 
     writeAttribute( ds, "Time Source", "raw" );
     writeAttribute( ds, "Columns", FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME )
