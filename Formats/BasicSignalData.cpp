@@ -361,7 +361,7 @@ namespace FormatConverter{
     }
 
     // now add the dates currently in our cache
-    for ( auto it = data.begin( ); it != data.end( ); ++it ) {
+    for ( auto it = data.begin( ); it != data.end( ); it++ ) {
       dates.push_back( ( *it )->time );
     }
     range->push_back( dates );

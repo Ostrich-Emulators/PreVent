@@ -9,16 +9,15 @@
 #include <iostream>
 
 namespace FormatConverter{
+  const int TimeRange::CACHE_LIMIT = 1024 * 384; // totally arbitrary, about 3MB data
 
-  TimeRange::TimeRangeIterator::TimeRangeIterator( TimeRange * o, size_t cnt ) : owner( o ), pos( cnt ) {
-    std::fseek( owner->cache, pos * sizeof (dr_time ), SEEK_SET );
-    std::fread( &curr, sizeof ( dr_time ), 1, owner->cache );
-  }
+  TimeRange::TimeRangeIterator::TimeRangeIterator( TimeRange * o, size_t cnt )
+      : owner( o ), idx( cnt ) { }
 
   TimeRange::TimeRangeIterator& TimeRange::TimeRangeIterator::operator=(const TimeRangeIterator& orig ) {
     if ( this != &orig ) {
       this->owner = orig.owner;
-      this->pos = orig.pos;
+      this->idx = orig.idx;
     }
     return *this;
   }
@@ -26,24 +25,12 @@ namespace FormatConverter{
   TimeRange::TimeRangeIterator::~TimeRangeIterator( ) { }
 
   TimeRange::TimeRangeIterator& TimeRange::TimeRangeIterator::operator++( ) {
-    pos++;
-    std::fseek( owner->cache, pos * sizeof (dr_time ), SEEK_SET );
-    std::fread( &curr, sizeof ( dr_time ), 1, owner->cache );
-    return *this;
-  }
-
-  TimeRange::TimeRangeIterator& TimeRange::TimeRangeIterator::operator--( ) {
-    pos--;
-    if ( pos < 0 ) {
-      pos = 0;
-    }
-    std::fseek( owner->cache, pos * sizeof (dr_time ), SEEK_SET );
-    std::fread( &curr, sizeof ( dr_time ), 1, owner->cache );
+    idx++;
     return *this;
   }
 
   bool TimeRange::TimeRangeIterator::operator==( TimeRangeIterator& other ) const {
-    return ( this->owner == other.owner && this->pos == other.pos );
+    return ( this->owner == other.owner && this->idx == other.idx );
   }
 
   bool TimeRange::TimeRangeIterator::operator!=( TimeRangeIterator& other ) const {
@@ -51,10 +38,11 @@ namespace FormatConverter{
   }
 
   dr_time TimeRange::TimeRangeIterator::operator*( ) {
-    return curr;
+    return owner->time_at( idx );
   }
 
-  TimeRange::TimeRange( ) : cache( SignalUtils::tmpf( ) ), sizer( 0 ) { }
+  TimeRange::TimeRange( ) : cache( SignalUtils::tmpf( ) ), sizer( 0 ),
+      memrange( 0, 0 ), dirty( false ) { }
 
   TimeRange::~TimeRange( ) {
     std::fclose( cache );
@@ -73,12 +61,57 @@ namespace FormatConverter{
   }
 
   void TimeRange::push_back( const std::vector<dr_time>& vec ) {
-    std::fwrite( vec.data( ), sizeof ( dr_time ), vec.size( ), cache );
+    times.insert( times.end( ), vec.begin( ), vec.end( ) );
     sizer += vec.size( );
+    memrange.second += vec.size( );
+    dirty = true;
+    cache_if_needed( );
   }
 
   void TimeRange::push_back( dr_time t ) {
-    std::fwrite( &t, sizeof ( dr_time ), 1, cache );
+    times.push_back( t );
     sizer++;
+    memrange.second++;
+    dirty = true;
+    cache_if_needed( );
+  }
+
+  bool TimeRange::cache_if_needed( bool force ) {
+    if ( times.size( ) >= CACHE_LIMIT || force ) {
+      std::fwrite( times.data( ), sizeof ( dr_time ), times.size( ), cache );
+      times.clear( );
+      memrange.first = sizer;
+      memrange.second = sizer;
+      dirty = false;
+    }
+
+    return true;
+  }
+
+  void TimeRange::uncache( size_t fromidx ) {
+    if ( dirty ) {
+      cache_if_needed( true );
+    }
+
+    const auto SIZE = sizeof (dr_time );
+    auto filepos = fromidx * SIZE;
+    times.clear( );
+    std::fseek( cache, filepos, SEEK_SET );
+    auto reads = std::fread( times.data( ), SIZE, CACHE_LIMIT, cache );
+    memrange.first = fromidx;
+    memrange.second = fromidx + reads;
+  }
+
+  dr_time TimeRange::time_at( size_t pos ) {
+    if ( pos > sizer ) {
+      return std::numeric_limits<dr_time>::max( );
+    }
+
+    if ( pos < memrange.first || pos >= memrange.second ) {
+      // time isn't in the memory cache, so we need to uncache it
+      uncache( pos );
+    }
+
+    return times[pos - memrange.first];
   }
 }

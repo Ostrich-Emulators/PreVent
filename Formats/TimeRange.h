@@ -23,6 +23,7 @@ namespace FormatConverter {
 
   class TimeRange {
   public:
+    static const int CACHE_LIMIT;
 
     class TimeRangeIterator {
     public:
@@ -30,25 +31,24 @@ namespace FormatConverter {
       using value_type = dr_time;
       using pointer = const dr_time*;
       using reference = const dr_time&;
-      using iterator_category = std::bidirectional_iterator_tag;
+      //using iterator_category = std::bidirectional_iterator_tag;
+      using iterator_category = std::forward_iterator_tag;
 
       TimeRangeIterator( TimeRange * owner, size_t pos );
       TimeRangeIterator& operator=(const TimeRangeIterator&);
       virtual ~TimeRangeIterator( );
 
       TimeRangeIterator& operator++( );
-      TimeRangeIterator& operator--( );
       bool operator==( TimeRangeIterator& other ) const;
       bool operator!=( TimeRangeIterator& other ) const;
       dr_time operator*( );
 
     private:
       TimeRange * owner;
-      dr_time curr;
-      size_t pos;
+      size_t idx;
     };
 
-    TimeRange();
+    TimeRange( );
     virtual ~TimeRange( );
 
     TimeRangeIterator begin( );
@@ -60,9 +60,16 @@ namespace FormatConverter {
     size_t size( ) const;
 
   private:
+    dr_time time_at( size_t idx );
+    bool cache_if_needed( bool force = false );
+    void uncache( size_t fromidx );
+
     TimeRange& operator=(const TimeRange&);
     FILE * cache;
     size_t sizer;
+    std::vector<dr_time> times;
+    std::pair<size_t, size_t> memrange;
+    bool dirty;
   };
 }
 #endif /* TIMERANGE_H */
