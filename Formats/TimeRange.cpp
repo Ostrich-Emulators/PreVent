@@ -9,7 +9,7 @@
 #include <iostream>
 
 namespace FormatConverter{
-  const int TimeRange::CACHE_LIMIT = 1024 * 384; // totally arbitrary, about 3MB data
+  const size_t TimeRange::CACHE_LIMIT = 1024 * 384; // totally arbitrary, about 3MB data
 
   TimeRange::TimeRangeIterator::TimeRangeIterator( TimeRange * o, size_t cnt )
       : owner( o ), idx( cnt ) { }
@@ -113,5 +113,17 @@ namespace FormatConverter{
     }
 
     return times[pos - memrange.first];
+  }
+
+  void TimeRange::fill( std::vector<dr_time>& vec, size_t startidx, size_t stopidx ) {
+    if ( stopidx >= sizer ) {
+      stopidx = sizer;
+    }
+    const auto diff = stopidx - startidx;
+    vec.reserve( vec.size( ) + diff );
+
+    for (; startidx < stopidx; startidx++ ) {
+      vec.push_back( time_at( startidx ) );
+    }
   }
 }

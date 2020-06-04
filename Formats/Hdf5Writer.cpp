@@ -738,27 +738,11 @@ namespace FormatConverter{
     output( ) << " (complete in " << dur.count( ) << "s)" << std::endl;
   }
 
-  H5::DataSet Hdf5Writer::writeTimes( H5::Group& group, std::vector<dr_time>& times ) {
-    hsize_t dims[] = { times.size( ), 1 };
-    H5::DataSpace space( 2, dims );
-
-    H5::DSetCreatPropList props;
-    if ( compression( ) > 0 ) {
-      hsize_t chunkdims[] = { 0, 0 };
-      autochunk( dims, 2, sizeof (long ), chunkdims );
-      props.setChunk( 2, chunkdims );
-      props.setShuffle( );
-      props.setDeflate( compression( ) );
-    }
-
-    H5::DataSet ds = group.createDataSet( "time", H5::PredType::STD_I64LE, space, props );
-    ds.write( &times[0], H5::PredType::STD_I64LE );
-
-    return ds;
-  }
-
   H5::DataSet Hdf5Writer::writeTimes( H5::Group& group, TimeRange * times ) {
-    hsize_t dims[] = { times->size( ), 1 };
+    const auto ROWS = times->size( );
+
+    const auto SLABSIZE = std::min( ROWS, TimeRange::CACHE_LIMIT );
+    hsize_t dims[] = { ROWS, 1 };
     H5::DataSpace space( 2, dims );
 
     H5::DSetCreatPropList props;
@@ -771,7 +755,26 @@ namespace FormatConverter{
     }
 
     H5::DataSet ds = group.createDataSet( "time", H5::PredType::STD_I64LE, space, props );
-    ds.write( &times[0], H5::PredType::STD_I64LE );
+    hsize_t offset[] = { 0, 0 };
+    hsize_t count[] = { 0, 1 };
+
+    size_t startidx = 0;
+    auto buffer = std::vector<dr_time>( );
+    while ( startidx < ROWS ) {
+      const auto ADDS = std::min( startidx + SLABSIZE, ROWS );
+      auto endidx = startidx + ADDS;
+
+      offset[0] += count[0];
+      count[0] = ADDS;
+      space.selectHyperslab( H5S_SELECT_SET, count, offset );
+
+      H5::DataSpace memspace( 2, count );
+      times->fill( buffer, startidx, endidx );
+
+      ds.write( buffer.data( ), H5::PredType::STD_I64LE, memspace, space );
+      buffer.clear( );
+      startidx += ADDS;
+    }
 
     return ds;
   }
@@ -781,16 +784,14 @@ namespace FormatConverter{
     H5::DataSet ds;
     if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
       // convert dr_times to the index of the global times array
-      auto timeidxs = std::vector<dr_time>{ };
-      timeidxs.reserve( times->size( ) );
-
+      auto timeidxs = std::make_unique<TimeRange>( );
       for ( auto it : *times ) {
-        timeidxs.push_back( timesteplkp.at( it ) );
+        timeidxs->push_back( timesteplkp.at( it ) );
       }
-      ds = writeTimes( group, timeidxs );
+      ds = writeTimes( group, timeidxs.get( ) );
     }
     else {
-      ds = writeTimes( group, times.get() );
+      ds = writeTimes( group, times.get( ) );
     }
 
     writeAttribute( ds, "Time Source", "raw" );
@@ -821,8 +822,7 @@ namespace FormatConverter{
     H5::Group parent = ensureGroupExists( group, "Auxillary_Data" );
     H5::Group auxg = ensureGroupExists( parent, getDatasetName( name ) );
 
-    std::vector<dr_time> times;
-    times.reserve( sz );
+    auto times = std::make_unique<TimeRange>( );
 
     // HDF5 seems to have trouble writing a vector of strings, so
     // we'll just load the data into an array of char *s.
@@ -830,11 +830,11 @@ namespace FormatConverter{
 
     size_t c = 0;
     for ( const auto& t : data ) {
-      times.push_back( t.time );
+      times->push_back( t.time );
       vdata[c++] = t.data.c_str( );
     }
 
-    writeTimes( auxg, times );
+    writeTimes( auxg, times.get() );
 
     hsize_t dims[] = { sz, 1 };
     H5::DataSpace space( 2, dims );

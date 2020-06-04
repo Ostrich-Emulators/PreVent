@@ -71,7 +71,6 @@ namespace FormatConverter {
     void writeWaveGroup( H5::Group& group, SignalData * data );
     void writeTimes( H5::Group& group, SignalData * data );
     H5::DataSet writeTimes( H5::Group& group, TimeRange * data );
-    H5::DataSet writeTimes( H5::Group& group, std::vector<dr_time>& data );
     void writeEvents( H5::Group& group, SignalData * data );
     void writeAuxData( H5::Group& group, const std::string& name, const std::vector<TimedData>& data );
     void writeGroupAttrs( H5::Group& group, SignalData * data );

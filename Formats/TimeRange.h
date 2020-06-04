@@ -23,7 +23,7 @@ namespace FormatConverter {
 
   class TimeRange {
   public:
-    static const int CACHE_LIMIT;
+    static const size_t CACHE_LIMIT;
 
     class TimeRangeIterator {
     public:
@@ -58,6 +58,14 @@ namespace FormatConverter {
     void push_back( dr_time t );
 
     size_t size( ) const;
+    /**
+     * Appends the values from this time range to the given vector. The vector
+     * is not otherwise altered during this function
+     * @param vec the vector to fill with values
+     * @param startidx the first time index to add (inclusive)
+     * @param stop the index to stop at (exclusive)
+     */
+    void fill( std::vector<dr_time>& vec, size_t startidx, size_t stopidx );
 
   private:
     dr_time time_at( size_t idx );
