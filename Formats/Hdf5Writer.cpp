@@ -502,9 +502,10 @@ namespace FormatConverter{
     // timecounter and signalcounter agree, then don't change timecounter.
     // if signalcounter is greater than timecounter, update timecounter
     std::map<dr_time, int> timecounter;
+
     for ( auto m : data->allsignals( ) ) {
       auto sigcounter = std::map<dr_time, int>{ };
-      auto times = m->times( );
+      auto& times = timecache.at( m );
 
       for ( auto dr : *times ) {
         sigcounter[dr] = ( 0 == sigcounter.count( dr ) ? 1 : sigcounter[dr] + 1 );
@@ -578,6 +579,13 @@ namespace FormatConverter{
     return 0;
   }
 
+  void Hdf5Writer::createTimeCache( ) {
+    timecache.clear( );
+    for ( auto sig : dataptr->allsignals( ) ) {
+      timecache[sig] = sig->times( );
+    }
+  }
+
   std::vector<std::string> Hdf5Writer::closeDataSet( ) {
     auto firstTime = dataptr->earliest( );
     auto lastTime = dataptr->latest( );
@@ -600,6 +608,7 @@ namespace FormatConverter{
     try {
       H5::H5File file( outy, H5F_ACC_TRUNC );
 
+      createTimeCache( );
       createEventsAndTimes( file, dataptr ); // also creates the timesteplkp
 
       auto auxdata = dataptr->auxdata( );
@@ -768,7 +777,7 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::writeTimes( H5::Group& group, SignalData * data ) {
-    auto times = data->times( ).get( );
+    auto& times = timecache.at( data );
     H5::DataSet ds;
     if ( FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
       // convert dr_times to the index of the global times array
@@ -781,7 +790,7 @@ namespace FormatConverter{
       ds = writeTimes( group, timeidxs );
     }
     else {
-      ds = writeTimes( group, times );
+      ds = writeTimes( group, times.get() );
     }
 
     writeAttribute( ds, "Time Source", "raw" );

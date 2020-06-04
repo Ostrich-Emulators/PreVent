@@ -86,9 +86,10 @@ namespace FormatConverter {
      * @return true, if the data was rescaled
      */
     bool rescaleForShortsIfNeeded( SignalData * data, bool& useIntsNotShorts ) const;
-    void createTimesteps( );
+    void createTimeCache( );
     SignalSet * dataptr;
     std::map<dr_time, long> timesteplkp;
+    std::map<SignalData *, std::unique_ptr<TimeRange>> timecache;
   };
 }
 #endif /* HDF5WRITER_H */
