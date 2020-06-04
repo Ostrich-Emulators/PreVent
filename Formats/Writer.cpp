@@ -83,12 +83,12 @@ namespace FormatConverter{
   }
 
   std::vector<std::string> Writer::write( Reader * from, SignalSet * data ) {
-    int patientno = 1;
+    auto patientno = 1;
 
     output( ) << "init data set" << std::endl;
     namer->patientOrdinal( patientno );
-    int initrslt = initDataSet( );
-    std::vector<std::string> list;
+    auto initrslt = initDataSet( );
+    auto list = std::vector<std::string>{ };
     if ( initrslt < 0 ) {
       std::cerr << "cannot init dataset: " + namer->last( ) << std::endl;
       return list;
