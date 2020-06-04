@@ -40,23 +40,26 @@ namespace FormatConverter{
 
   const std::set<std::string> DataRow::hiloskips = { SignalData::MISSING_VALUESTR, "32768" };
 
-  void DataRow::intify( const std::string_view& strval, size_t dotpos, int * val, int * scale ) {
+  void DataRow::intify( const std::string_view& _strval, size_t dotpos, int * val, int * scale ) {
     if ( std::string::npos == dotpos ) {
       *scale = 0;
-      std::from_chars( strval.data( ), strval.data( ) + strval.size( ), *val );
+      std::from_chars( _strval.data( ), _strval.data( ) + _strval.size( ), *val );
     }
     else {
+      bool isneg = ( '-' == _strval[0] );
+
+      // -0.5 will show up as 0 (whole), 5 (fraction), so we need to know if
+      // we have a negative sign up front. If we do, ignore it while converting
+      // to an (always positive) int, but then multiply by -1 at the end;
+
+      auto strval = ( isneg
+          ? _strval.substr( 1 )
+          : _strval );
+
       int whole = 0;
       int fraction = 0;
       std::from_chars( strval.data( ), strval.data( ) + dotpos, whole );
       std::from_chars( strval.data( ) + dotpos + 1, strval.data( ) - dotpos, fraction );
-
-
-      // -0.5 will show up as 0 (whole), 5 (fraction), so we need to know if
-      // we have a negative sign up front.
-      // however, -1.1 will show up as -1 (whole), 1 (fraction), so we can't
-      // just negate everything
-      bool isneg = ( '-' == strval[0] );
 
       if ( 0 == fraction ) {
         *scale = 0;
@@ -64,19 +67,15 @@ namespace FormatConverter{
       }
       else {
         *scale = ( strval.length( ) - dotpos - 1 );
+        *val = fraction;
 
-        if ( 0 == whole ) {
-          *val = isneg ? -fraction : fraction;
+        if ( 0 != whole ) {
+          *val += whole * std::pow( 10, *scale );
         }
-        else {
-          int whp = whole * std::pow( 10, *scale );
-          if ( isneg ) {
-            *val = whp - fraction;
-          }
-          else {
-            *val = whp + fraction;
-          }
-        }
+      }
+
+      if ( isneg ) {
+        *val *= -1;
       }
     }
   }
@@ -112,7 +111,7 @@ namespace FormatConverter{
     std::vector<int> vals;
     int maxscale = 0;
 
-    for ( const auto& smallview : SignalUtils::splitcsv( data ) ) {
+    for ( const auto& smallview : SignalUtils::splitcsv( view ) ) {
       // might still be an integer if we have something like .000
       int val;
       int scale;
