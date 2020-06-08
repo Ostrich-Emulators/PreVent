@@ -761,7 +761,7 @@ namespace FormatConverter{
     size_t startidx = 0;
     auto buffer = std::vector<dr_time>( );
     while ( startidx < ROWS ) {
-      const auto ADDS = std::min( startidx + SLABSIZE, ROWS );
+      const auto ADDS = std::min( SLABSIZE, ROWS - startidx );
       auto endidx = startidx + ADDS;
 
       offset[0] += count[0];
@@ -834,7 +834,7 @@ namespace FormatConverter{
       vdata[c++] = t.data.c_str( );
     }
 
-    writeTimes( auxg, times.get() );
+    writeTimes( auxg, times.get( ) );
 
     hsize_t dims[] = { sz, 1 };
     H5::DataSpace space( 2, dims );
