@@ -497,60 +497,48 @@ namespace FormatConverter{
     // in a signal, we want duplicates in our time list. However, if two signals
     // have the same time, we don't want duplicates
 
-    // our algorithm: keep a running count of each signal's time occurences.
-    // after each signal, merge them with our "true" timecounter. Basically, if
-    // timecounter and signalcounter agree, then don't change timecounter.
-    // if signalcounter is greater than timecounter, update timecounter
-    std::map<dr_time, int> timecounter;
-
+    // our algorithm: iterate over all the times for all signals, and add the
+    // lowest time to the dataset, then move the iterators with the lowest time
+    auto begins = std::vector<TimeRange::TimeRangeIterator>{ };
+    auto ends = std::vector<TimeRange::TimeRangeIterator>{ };
     for ( auto m : data->allsignals( ) ) {
-      auto sigcounter = std::map<dr_time, int>{ };
-      auto& times = timecache.at( m );
+      begins.push_back( timecache.at( m )->begin( ) );
+      ends.push_back( timecache.at( m )->end( ) );
+    }
 
-      for ( auto dr : *times ) {
-        sigcounter[dr] = ( 0 == sigcounter.count( dr ) ? 1 : sigcounter[dr] + 1 );
-      }
+    auto lowest = std::numeric_limits<dr_time>::max( );
+    auto globals = std::make_unique<TimeRange>( );
+    auto empties = std::set<int>( );
 
-      for ( auto& it : sigcounter ) {
-        if ( 0 == timecounter.count( it.first ) ) {
-          timecounter[it.first] = it.second;
+    while ( empties.size( ) != begins.size( ) ) {
+
+      for ( size_t i = 0; i < begins.size( ); i++ ) {
+        if ( 0 == empties.count( i ) ) {
+          //figure out what our lowest value is
+          if ( *begins[i] < lowest ) {
+            lowest = *begins[i];
+          }
         }
-        else if ( timecounter[it.first] < it.second ) {
-          timecounter[it.first] = it.second;
+      }
+
+      // add the lowest value to the global time range
+      globals->push_back( lowest );
+
+      // go through the iterators again, advancing the ones that match the lowest value
+      for ( size_t i = 0; i < begins.size( ); i++ ) {
+        if ( 0 == empties.count( i ) ) {
+          if ( *begins[i] == lowest ) {
+            begins[i]++;
+          }
+          if ( begins[i] == ends[i] ) {
+            empties.insert( i );
+          }
         }
       }
     }
 
-    // convert our map to a vector with the appropriate duplicates
-    auto alltimes = std::vector<dr_time>{ };
-    alltimes.reserve( timecounter.size( ) );
-
-    const auto keeptimelkp = Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME );
-
-    for ( auto& it : timecounter ) {
-      for ( int i = 0; i < it.second; i++ ) {
-        alltimes.push_back( it.first );
-      }
-      if ( keeptimelkp ) {
-        timesteplkp.insert( std::make_pair( it.first, timesteplkp.size( ) ) );
-      }
-    }
-
-    // now we can make our dataset
-    hsize_t dims[] = { alltimes.size( ), 1 };
-    H5::DataSpace space( 2, dims );
-
-    H5::DSetCreatPropList props;
-    if ( compression( ) > 0 ) {
-      hsize_t chunkdims[] = { 0, 0 };
-      autochunk( dims, 2, sizeof ( long ), chunkdims );
-      props.setChunk( 2, chunkdims );
-      props.setShuffle( );
-      props.setDeflate( compression( ) );
-    }
-
-    auto ds = events.createDataSet( "Global_Times", H5::PredType::STD_I64LE, space, props );
-    ds.write( &alltimes[0], H5::PredType::STD_I64LE );
+    // our globals time range should now have all times and the appropriate duplicates
+    auto ds = writeTimes( events, globals.get( ), "Global_Times" );
     writeAttribute( ds, "Columns", "timestamp (ms)" );
 
     //for ( auto x : data->metadata( ) ) {
@@ -565,6 +553,13 @@ namespace FormatConverter{
     if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
       writeAttribute( ds, OffsetTimeSignalSet::COLLECTION_OFFSET, std::stoi( data->metadata( )
           .at( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) );
+    }
+
+    // finally, if we're using indexed time, create the mapping
+    if ( Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME ) ) {
+      for ( auto time : *globals ) {
+        timesteplkp.insert( std::make_pair( time, timesteplkp.size( ) ) );
+      }
     }
   }
 
@@ -738,7 +733,7 @@ namespace FormatConverter{
     output( ) << " (complete in " << dur.count( ) << "s)" << std::endl;
   }
 
-  H5::DataSet Hdf5Writer::writeTimes( H5::Group& group, TimeRange * times ) {
+  H5::DataSet Hdf5Writer::writeTimes( H5::Group& group, TimeRange * times, const std::string& dsname ) {
     const auto ROWS = times->size( );
 
     const auto SLABSIZE = std::min( ROWS, TimeRange::CACHE_LIMIT );
@@ -754,7 +749,7 @@ namespace FormatConverter{
       props.setDeflate( compression( ) );
     }
 
-    H5::DataSet ds = group.createDataSet( "time", H5::PredType::STD_I64LE, space, props );
+    H5::DataSet ds = group.createDataSet( dsname, H5::PredType::STD_I64LE, space, props );
     hsize_t offset[] = { 0, 0 };
     hsize_t count[] = { 0, 1 };
 

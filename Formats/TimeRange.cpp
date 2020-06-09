@@ -29,6 +29,12 @@ namespace FormatConverter{
     return *this;
   }
 
+  TimeRange::TimeRangeIterator TimeRange::TimeRangeIterator::operator++( int ) {
+    auto tmp = TimeRangeIterator( this->owner, idx );
+    idx++;
+    return tmp;
+  }
+
   bool TimeRange::TimeRangeIterator::operator==( TimeRangeIterator& other ) const {
     return ( this->owner == other.owner && this->idx == other.idx );
   }

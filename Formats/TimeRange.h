@@ -39,6 +39,7 @@ namespace FormatConverter {
       virtual ~TimeRangeIterator( );
 
       TimeRangeIterator& operator++( );
+      TimeRangeIterator operator++( int );
       bool operator==( TimeRangeIterator& other ) const;
       bool operator!=( TimeRangeIterator& other ) const;
       dr_time operator*( );
