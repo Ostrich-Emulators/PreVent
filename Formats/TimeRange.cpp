@@ -7,9 +7,10 @@
 #include "TimeRange.h"
 #include "SignalUtils.h"
 #include <iostream>
+#include "Options.h"
 
 namespace FormatConverter{
-  const size_t TimeRange::CACHE_LIMIT = 1024 * 384; // totally arbitrary, about 3MB data
+  const size_t TimeRange::DEFAULT_CACHE_LIMIT = 1024 * 384; // totally arbitrary, about 3MB data
 
   TimeRange::TimeRangeIterator::TimeRangeIterator( TimeRange * o, size_t cnt )
       : owner( o ), idx( cnt ) { }
@@ -29,7 +30,7 @@ namespace FormatConverter{
     return *this;
   }
 
-  TimeRange::TimeRangeIterator TimeRange::TimeRangeIterator::operator++( int ) {
+  TimeRange::TimeRangeIterator TimeRange::TimeRangeIterator::operator++(int) {
     auto tmp = TimeRangeIterator( this->owner, idx );
     idx++;
     return tmp;
@@ -47,8 +48,8 @@ namespace FormatConverter{
     return owner->time_at( idx );
   }
 
-  TimeRange::TimeRange( ) : cache( SignalUtils::tmpf( ) ), sizer( 0 ),
-      memrange( 0, 0 ), dirty( false ) { }
+  TimeRange::TimeRange( ) : cache( FormatConverter::Options::asBool( FormatConverter::OptionsKey::NOCACHE ) ? nullptr : SignalUtils::tmpf( ) ),
+      sizer( 0 ), memrange( 0, 0 ), dirty( false ) { }
 
   TimeRange::~TimeRange( ) {
     std::fclose( cache );
@@ -83,7 +84,7 @@ namespace FormatConverter{
   }
 
   bool TimeRange::cache_if_needed( bool force ) {
-    if ( times.size( ) >= CACHE_LIMIT || force ) {
+    if ( nullptr != cache && ( times.size( ) >= DEFAULT_CACHE_LIMIT || force ) ) {
       std::fwrite( times.data( ), sizeof ( dr_time ), times.size( ), cache );
       times.clear( );
       memrange.first = sizer;
@@ -103,7 +104,7 @@ namespace FormatConverter{
     auto filepos = fromidx * SIZE;
     times.clear( );
     std::fseek( cache, filepos, SEEK_SET );
-    auto reads = std::fread( times.data( ), SIZE, CACHE_LIMIT, cache );
+    auto reads = std::fread( times.data( ), SIZE, DEFAULT_CACHE_LIMIT, cache );
     memrange.first = fromidx;
     memrange.second = fromidx + reads;
   }

@@ -23,7 +23,7 @@ namespace FormatConverter {
 
   class TimeRange {
   public:
-    static const size_t CACHE_LIMIT;
+    static const size_t DEFAULT_CACHE_LIMIT;
 
     class TimeRangeIterator {
     public:

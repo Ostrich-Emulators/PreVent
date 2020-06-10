@@ -85,7 +85,7 @@ namespace FormatConverter {
      * @param count the desired elements to uncache
      * @return the number uncached, or 0 if there is no cache, or it's empty
      */
-    int uncache( int count = CACHE_LIMIT );
+    int uncache( int count = DEFAULT_CACHE_LIMIT );
     bool cache( );
 
     const std::string label;
@@ -101,7 +101,7 @@ namespace FormatConverter {
     double highval;
     double lowval;
     bool nocache;
-    static const int CACHE_LIMIT;
+    static const int DEFAULT_CACHE_LIMIT;
 
     std::map<std::string, std::string> metadatas;
     std::map<std::string, int> metadatai;

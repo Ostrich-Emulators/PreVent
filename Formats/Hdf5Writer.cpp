@@ -736,7 +736,7 @@ namespace FormatConverter{
   H5::DataSet Hdf5Writer::writeTimes( H5::Group& group, TimeRange * times, const std::string& dsname ) {
     const auto ROWS = times->size( );
 
-    const auto SLABSIZE = std::min( ROWS, TimeRange::CACHE_LIMIT );
+    const auto SLABSIZE = std::min( ROWS, TimeRange::DEFAULT_CACHE_LIMIT );
     hsize_t dims[] = { ROWS, 1 };
     H5::DataSpace space( 2, dims );
 

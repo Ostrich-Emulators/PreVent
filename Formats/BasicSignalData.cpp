@@ -33,7 +33,7 @@
 
 namespace FormatConverter{
 
-  const int BasicSignalData::CACHE_LIMIT = 30000;
+  const int BasicSignalData::DEFAULT_CACHE_LIMIT = 30000;
 
   BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
       : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
@@ -210,7 +210,7 @@ namespace FormatConverter{
 
   bool BasicSignalData::add( std::unique_ptr<DataRow> row ) {
 
-    if ( livecount >= CACHE_LIMIT ) {
+    if ( livecount >= DEFAULT_CACHE_LIMIT ) {
       // copy current data list to disk
       if ( !cache( ) ) {
         return false;
