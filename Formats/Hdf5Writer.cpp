@@ -506,11 +506,11 @@ namespace FormatConverter{
       ends.push_back( timecache.at( m )->end( ) );
     }
 
-    auto lowest = std::numeric_limits<dr_time>::max( );
     auto globals = std::make_unique<TimeRange>( );
     auto empties = std::set<int>( );
 
     while ( empties.size( ) != begins.size( ) ) {
+      auto lowest = std::numeric_limits<dr_time>::max( );
 
       for ( size_t i = 0; i < begins.size( ); i++ ) {
         if ( 0 == empties.count( i ) ) {
