@@ -29,14 +29,17 @@
 #include "Options.h"
 #include "TimeRange.h"
 
-namespace FormatConverter{
+namespace FormatConverter {
   const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.1";
 
-  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) { }
+  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
+  }
 
-  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) { }
+  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) {
+  }
 
-  Hdf5Writer::~Hdf5Writer( ) { }
+  Hdf5Writer::~Hdf5Writer( ) {
+  }
 
   void Hdf5Writer::writeAttribute( H5::H5Object& loc,
       const std::string& attr, const std::string& val ) {
@@ -502,8 +505,11 @@ namespace FormatConverter{
     auto begins = std::vector<TimeRange::TimeRangeIterator>{ };
     auto ends = std::vector<TimeRange::TimeRangeIterator>{ };
     for ( auto m : data->allsignals( ) ) {
-      begins.push_back( timecache.at( m )->begin( ) );
-      ends.push_back( timecache.at( m )->end( ) );
+      // no sense in checking times on signals without data
+      if ( !m->empty( ) ) {
+        begins.push_back( timecache.at( m )->begin( ) );
+        ends.push_back( timecache.at( m )->end( ) );
+      }
     }
 
     auto globals = std::make_unique<TimeRange>( );
