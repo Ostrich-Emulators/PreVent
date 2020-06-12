@@ -52,7 +52,9 @@ namespace FormatConverter{
       sizer( 0 ), memrange( 0, 0 ), dirty( false ) { }
 
   TimeRange::~TimeRange( ) {
-    std::fclose( cache );
+    if ( nullptr != cache ) {
+      std::fclose( cache );
+    }
   }
 
   size_t TimeRange::size( ) const {
