@@ -64,7 +64,6 @@ StpJsonReader.cpp
 StpXmlReader.cpp
 StreamChunkReader.cpp
 TdmsReader.cpp
-TimeRange.cpp
 TimezoneOffsetTimeSignalSet.cpp
 WfdbReader.cpp
 WfdbWriter.cpp
@@ -121,6 +120,7 @@ CpcXmlReader.h
 CsvWriter.h
 DataRow.h
 dr_time.h
+FileCachingVector.h
 FileNamer.h
 Formats.h
 Hdf5Reader.h
@@ -139,6 +139,7 @@ StpJsonReader.h
 StpXmlReader.h
 StreamChunkReader.h
 TdmsReader.h
+TimeRange.h
 TimeReader.h
 TimezoneOffsetTimeSignalSet.h
 WfdbReader.h

@@ -29,17 +29,14 @@
 #include "Options.h"
 #include "TimeRange.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
   const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.1";
 
-  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
-  }
+  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) { }
 
-  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) {
-  }
+  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) { }
 
-  Hdf5Writer::~Hdf5Writer( ) {
-  }
+  Hdf5Writer::~Hdf5Writer( ) { }
 
   void Hdf5Writer::writeAttribute( H5::H5Object& loc,
       const std::string& attr, const std::string& val ) {
@@ -502,8 +499,8 @@ namespace FormatConverter {
 
     // our algorithm: iterate over all the times for all signals, and add the
     // lowest time to the dataset, then move the iterators with the lowest time
-    auto begins = std::vector<TimeRange::TimeRangeIterator>{ };
-    auto ends = std::vector<TimeRange::TimeRangeIterator>{ };
+    auto begins = std::vector<TimeRange::FileCachingVectorIterator>{ };
+    auto ends = std::vector<TimeRange::FileCachingVectorIterator>{ };
     for ( auto m : data->allsignals( ) ) {
       // no sense in checking times on signals without data
       if ( !m->empty( ) ) {
