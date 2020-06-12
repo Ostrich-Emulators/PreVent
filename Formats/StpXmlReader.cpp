@@ -401,12 +401,28 @@ namespace FormatConverter{
   }
 
   bool StpXmlReader::waveIsOk( const std::string& wavedata ) {
-    // if all the values are -32768 or -32753, this isn't a valid reading
-    const std::string_view missing0( SignalData::MISSING_VALUESTR );
-    const std::string_view missing1( "-32753" );
+    static const auto nogoods = std::set<std::string_view>{
+      "-32753",
+      "-32754",
+      "-32755",
+      "-32756",
+      "-32757",
+      "-32758",
+      "-32759",
+      "-32760",
+      "-32761",
+      "-32762",
+      "-32763",
+      "-32764",
+      "-32765",
+      "-32766",
+      "-32767",
+      "-32768"
+    };
+    // if all the values are between -32768 and -32753, this isn't a valid reading
     std::string_view view( wavedata );
     for ( auto substr : SignalUtils::splitcsv( view ) ) {
-      if ( !( missing0 == substr || missing1 == substr ) ) {
+      if ( 0 == nogoods.count( substr ) ) {
         return true;
       }
     }
