@@ -25,18 +25,18 @@ namespace FormatConverter {
 
   template <class T> class FileCachingVector {
   public:
-    class FileCachingVectorIterator {
+    class iterator {
     public:
       using difference_type = T;
       using value_type = T;
       using pointer = const T*;
       using reference = const T&;
-      //using iterator_category = std::bidirectional_iterator_tag;
-      using iterator_category = std::forward_iterator_tag;
+      using iterator_category = std::bidirectional_iterator_tag;
+      //using iterator_category = std::forward_iterator_tag;
 
-      FileCachingVectorIterator( FileCachingVector * owner, size_t pos ) : owner( owner ), idx( pos ) { }
+      iterator( FileCachingVector * owner, size_t pos ) : owner( owner ), idx( pos ) { }
 
-      FileCachingVectorIterator& operator=(const FileCachingVectorIterator& orig ) {
+      iterator& operator=(const iterator& orig ) {
         if ( this != &orig ) {
           this->owner = orig.owner;
           this->idx = orig.idx;
@@ -44,24 +44,35 @@ namespace FormatConverter {
         return *this;
       }
 
-      virtual ~FileCachingVectorIterator( ) { }
+      virtual ~iterator( ) { }
 
-      FileCachingVectorIterator& operator++( ) {
+      iterator& operator++( ) {
         idx++;
         return *this;
       }
 
-      FileCachingVectorIterator operator++(int) {
-        auto tmp = FileCachingVectorIterator( this->owner, idx );
+      iterator operator++(int) {
+        auto tmp = iterator( this->owner, idx );
         idx++;
         return tmp;
       }
 
-      bool operator==( FileCachingVectorIterator& other ) const {
+      iterator& operator--( ) {
+        idx--;
+        return *this;
+      }
+
+      iterator operator--(int) {
+        auto tmp = iterator( this->owner, idx );
+        idx--;
+        return tmp;
+      }
+
+      bool operator==( iterator& other ) const {
         return ( this->owner == other.owner && this->idx == other.idx );
       }
 
-      bool operator!=( FileCachingVectorIterator& other ) const {
+      bool operator!=( iterator& other ) const {
         return !operator==( other );
       }
 
@@ -85,12 +96,12 @@ namespace FormatConverter {
       }
     }
 
-    FileCachingVectorIterator begin( ) {
-      return FileCachingVectorIterator( this, 0 );
+    iterator begin( ) {
+      return iterator( this, 0 );
     }
 
-    FileCachingVectorIterator end( ) {
-      return FileCachingVectorIterator( this, sizer + 1 );
+    iterator end( ) {
+      return iterator( this, sizer + 1 );
     }
 
     void push_back( const std::vector<T>& vec ) {

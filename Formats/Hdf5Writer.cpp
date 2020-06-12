@@ -499,8 +499,8 @@ namespace FormatConverter{
 
     // our algorithm: iterate over all the times for all signals, and add the
     // lowest time to the dataset, then move the iterators with the lowest time
-    auto begins = std::vector<TimeRange::FileCachingVectorIterator>{ };
-    auto ends = std::vector<TimeRange::FileCachingVectorIterator>{ };
+    auto begins = std::vector<TimeRange::iterator>{ };
+    auto ends = std::vector<TimeRange::iterator>{ };
     for ( auto m : data->allsignals( ) ) {
       // no sense in checking times on signals without data
       if ( !m->empty( ) ) {
