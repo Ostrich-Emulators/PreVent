@@ -31,6 +31,12 @@ namespace FormatConverter{
       auto cachers = std::vector<std::unique_ptr < BSICache >> ( );
       cachers.reserve( headers.size( ) );
       for ( auto h : headers ) {
+        if ( '\"' == h[0] ) {
+          h = h.substr( 1 );
+        }
+        if ( '\"' == h[h.length( ) - 1] ) {
+          h = h.substr( 0, h.length( ) - 1 );
+        }
         cachers.push_back( std::make_unique<BSICache>( h.empty( ) ? "unnamed" : h ) );
       }
 
