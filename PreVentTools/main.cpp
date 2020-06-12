@@ -44,6 +44,8 @@
 #include "AppendingUtils.h"
 #include "StpGeReader.h"
 
+#include "BSIConverter.h"
+
 using namespace FormatConverter;
 namespace fs = std::filesystem;
 
@@ -66,6 +68,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
       << std::endl << "\t-D or --statistics or --stats\tcalculates descriptive statistics"
       << std::endl << "\t-P or --append <file>\tappends extra data to file (implies --clobber)"
+      << std::endl << "\t-b or --bsi \tcreates BSI-formatted HDF5 file from CSV"
       << std::endl << "\t--stp-metas\tprint metadata from STP file or directory of STP files"
       << std::endl;
   exit( 1 );
@@ -87,6 +90,7 @@ struct option longopts[] = {
   { "vitals", no_argument, NULL, 'V' },
   { "cat", no_argument, NULL, 'c' },
   { "stats", no_argument, NULL, 'D' },
+  { "bsi", no_argument, NULL, 'b' },
   { "statistics", no_argument, NULL, 'D' },
   { "append", required_argument, NULL, 'P' },
   { "stp-metas", no_argument, NULL, 'Q' },
@@ -145,8 +149,9 @@ int main( int argc, char** argv ) {
   bool needsoutput = false;
   bool stpmeta = false;
   std::vector<std::string> appendfiles;
+  bool dobsi = false;
 
-  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WVDP:Q", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WVDP:Qb", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'o':
         outfilename = optarg;
@@ -212,6 +217,9 @@ int main( int argc, char** argv ) {
         for_s = std::stoi( optarg );
         dotime = true;
         break;
+      case 'b':
+        dobsi = true;
+        break;
       case ':':
         std::cerr << "missing option argument" << std::endl;
         helpAndExit( argv[0] );
@@ -238,6 +246,20 @@ int main( int argc, char** argv ) {
       ss << "will not overwrite " << outfilename << " (use --clobber)";
       helpAndExit( argv[0], ss.str( ) );
     }
+  }
+
+  if ( dobsi ) {
+    BSIConverter conv;
+    for ( int i = optind; i < argc; i++ ) {
+      fs::path f = argv[i];
+
+      auto ext = std::string{ f.extension( ) };
+      std::transform( ext.begin( ), ext.end( ), ext.begin( ), ::toupper );
+      if ( ".CSV" == ext ) {
+        conv.convert( f );
+      }
+    }
+    return 0;
   }
 
   if ( stpmeta ) {

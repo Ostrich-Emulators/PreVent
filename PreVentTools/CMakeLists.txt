@@ -5,6 +5,8 @@ main.cpp
 OutputSignalData.cpp
 StatisticalSignalData.cpp
 AppendingUtils.cpp
+BSIConverter.cpp
+BSICache.cpp
 )
 
 target_link_libraries(preventtools formats stdc++fs)
