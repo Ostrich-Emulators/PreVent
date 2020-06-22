@@ -72,26 +72,13 @@ namespace FormatConverter{
 
     // we pretty much always get a datatype of float, even though
     // not all the data IS float, by the way
-
-    double intpart;
     while ( rec.leftovers.size( ) >= freq ) {
       std::vector<double> doubles;
       doubles.reserve( freq );
       for ( size_t i = 0; i < freq; i++ ) {
         double d = rec.leftovers.front( );
         rec.leftovers.pop_front( );
-        bool nan = isnan( d );
-        doubles.push_back( nan ? SignalData::MISSING_VALUE : d );
-
-        if ( nan ) {
-          // TDMS files write out missing values to keep all the times contiguous
-        }
-        else if ( !rec.seenfloat ) {
-          double fraction = std::modf( d, &intpart );
-          if ( 0 != fraction ) {
-            rec.seenfloat = true;
-          }
-        }
+        doubles.push_back( d );
       }
 
       writeSignalRow( doubles, rec.seenfloat, signal, rec.lasttime );
@@ -284,32 +271,7 @@ namespace FormatConverter{
   bool TdmsReader::writeSignalRow( std::vector<double>& doubles, const bool seenFloat,
       SignalData * signal, dr_time time ) {
 
-    std::stringstream vals;
-    if ( seenFloat ) {
-      // tdms file seems to use 3 decimal places for everything
-      // so make sure we don't have extra 0s running around
-      vals << std::setprecision( 3 ) << std::fixed;
-    }
-
-    if ( SignalData::MISSING_VALUE == doubles[0] ) {
-      vals << SignalData::MISSING_VALUESTR;
-    }
-    else {
-      vals << doubles[0];
-    }
-
-    for ( size_t i = 1; i < doubles.size( ); i++ ) {
-      vals << ",";
-      if ( SignalData::MISSING_VALUE == doubles[i] ) {
-        vals << SignalData::MISSING_VALUESTR;
-      }
-      else {
-        vals << doubles[i];
-      }
-    }
-
-    //output( ) << vals.str( ) << std::endl;
-    signal->add( DataRow::many( time, vals.str( ) ) );
+    signal->add( std::make_unique<DataRow>( time, doubles ) );
     return true;
   }
 

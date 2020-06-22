@@ -16,11 +16,13 @@
 #include "SignalData.h"
 #include "SignalUtils.h"
 #include <cmath>
+#include <math.h>
 #include <sstream>
 #include <vector>
 #include <iostream>
 #include <limits>
 #include <charconv>
+#include <iomanip>
 
 namespace FormatConverter{
 
@@ -151,6 +153,56 @@ namespace FormatConverter{
 
   DataRow::DataRow( const DataRow & orig ) : time( orig.time ), data( orig.data.begin( ), orig.data.end( ) ),
       scale( orig.scale ), extras( orig.extras ) { }
+
+  DataRow::DataRow( const dr_time& _time, const std::vector<double>& _data,
+      std::map<std::string, std::string> _extras ) : time( _time ), scale( 0 ), extras( _extras ) {
+    data.reserve( _data.size( ) );
+
+    // if we have all ints, there's no reason to handle fractions
+    bool seenfloat = false;
+    double intpart;
+    for ( auto d : _data ) {
+      double fraction = std::modf( d, &intpart );
+      if ( fraction != 0 ) {
+        seenfloat = true;
+        break;
+      }
+    }
+
+    if ( seenfloat ) {
+      int maxscale = 0;
+      for ( auto d : _data ) {
+        auto valstr = std::stringstream( );
+        valstr << std::setprecision( 6 ) << std::fixed << d;
+        int val;
+        int tscale;
+        auto smallview = std::string_view( valstr.str( ) );
+        intify( smallview, smallview.find( '.' ), &val, &tscale );
+        if ( tscale > maxscale ) {
+          // fix all values in the vector before adding this one
+          int upgrade = std::pow( 10, scale - maxscale );
+          for ( auto& f : data ) {
+            if ( SignalData::MISSING_VALUE != f ) {
+              f *= upgrade;
+            }
+          }
+          maxscale = tscale;
+        }
+        else if ( tscale < maxscale ) {
+          // fix this value to match maxscale
+          if ( val != SignalData::MISSING_VALUE ) {
+            val *= std::pow( 10, maxscale - scale );
+          }
+        }
+        data.push_back( val );
+      }
+
+      scale = maxscale;
+    }
+    else {
+      data.insert( data.end( ), _data.begin( ), _data.end( ) );
+    }
+  }
 
   DataRow & DataRow::operator=(const DataRow & orig ) {
     if ( &orig != this ) {

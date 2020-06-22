@@ -54,6 +54,9 @@ namespace FormatConverter {
         std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
     DataRow( const dr_time& time, int data, int scale = 0,
         std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
+    DataRow( const dr_time& time, const std::vector<double>& data,
+        std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
+
     DataRow( const DataRow& orig );
     DataRow& operator=(const DataRow& orig );
     virtual ~DataRow( );
@@ -78,6 +81,11 @@ namespace FormatConverter {
      */
     void rescale( int newscale );
 
+    /**
+     * Finds the scale of a single data value (not a CSV)
+     * @param data
+     * @return
+     */
     static int scaleOf( const std::string& data );
 
     dr_time time;
