@@ -144,7 +144,7 @@ The file itself contains metadata useful for understanding/troubleshooting the d
 * **Layout Version** A number that denotes how the data is organized in the file. Should the layout change between versions, this number will orient the user/other tools to the actual format.
 * **HDF5 Version** The HDF5 version for this file.
 
-The file metadata, and all signal Datasets contain timing information. At the file level, this metadata are the "global" values for all Datasets (e.g., Start Time is the earliest start time of all the signals). Signals are not required to start and/or stop at the same time. 
+The file metadata, and all signal Datasets contain timing information. At the file level, this metadata are the "global" values for all Datasets (e.g., Start Time is the earliest start time of all the signals). Signals are not required to start and/or stop at the same time. Times need not be contiguous, though it is expected they will be sorted chronologically from earliest to latest.
 * **Duration** The total duration for this Dataset 
 * **Start Time** The earliest time value contained in the Dataset
 * **Start Date/Time** an ISO8601 version of Start Time
