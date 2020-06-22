@@ -20,6 +20,20 @@ MEDI                    | X                |
 PreVent Tools comprises two tools at this time: `formatconverter` is a command-line tool for converting between formats, while `preventtools` provides several useful tools for working with the data. `preventtools` primarily works with the native HDF5 format.
 
 
+<!--https://ecotrust-canada.github.io/markdown-toc/-->
+# TOC
+- [PreVent Tools](#prevent-tools)
+- [Using/Building](#usingbuilding)
+- [Formatconverter](#formatconverter)
+  * [Features](#features)
+  * [Command-Line options](#command-line-options)
+    + [File Naming Format String](#file-naming-format-string)
+  * [HDF5 Native Format](#hdf5-native-format)
+    + [Events](#events)
+    + [Signals](#signals)
+      - [Data](#data)
+      - [Time](#time)
+
 
 # Using/Building
 
