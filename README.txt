@@ -13,6 +13,6 @@ handy:
 * hdf5-tools
 
 This package uses CMake. To install the software:
-# cmake CMakeLists.txt
+# cmake -DCMAKE_BUILD_TYPE=Release CMakeLists.txt
 # make
 # sudo make install
