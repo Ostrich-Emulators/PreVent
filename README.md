@@ -130,25 +130,25 @@ The file itself contains metadata useful for understanding/troubleshooting the d
 * **Layout Version** A number that denotes how the data is organized in the file. Should the layout change between versions, this number will orient the user/other tools to the actual format.
 * **HDF5 Version** The HDF5 version for this file.
 
-The file metadata, and all signal datasets contain timing information. At the file level, this metadata are the "global" values for all datasets (e.g., Start Time is the earliest start time of all the signals). Signals are not required to start and/or stop at the same time. 
-* **Duration** The total duration for this dataset 
-* **Start Time** The earliest time value contained in the dataset
+The file metadata, and all signal Datasets contain timing information. At the file level, this metadata are the "global" values for all Datasets (e.g., Start Time is the earliest start time of all the signals). Signals are not required to start and/or stop at the same time. 
+* **Duration** The total duration for this Dataset 
+* **Start Time** The earliest time value contained in the Dataset
 * **Start Date/Time** an ISO8601 version of Start Time
-* **End Time** The last time value contained in the dataset
+* **End Time** The last time value contained in the Dataset
 * **End Date/Time** an ISO8601 version of End Time
 * **Timezone** The timezone of Start Time and End Time
 
 If the source input format supports metadata or attributes, these are duplicated in the file's metadata.
 
-Lastly, every Dataset has a **Columns** attribute that describes the data each column of the dataset. An example of this attribute might be "timestamp (ms), segment offset", telling the user that the first column is a timestamp, and the second is something called "segment offset." All dataset columns have the same data type.
+Lastly, every Dataset has a **Columns** attribute that describes the data each column of the Dataset. An example of this attribute might be "timestamp (ms), segment offset", telling the user that the first column is a timestamp, and the second is something called "segment offset." All Dataset columns have the same data type.
 
 ### Events
-The Events Group contains one main dataset: _Global_Times_. This is a dataset containing a list of all times in the other datasets. This dataset is generally useful in conjunction with the `--time-step` option.
+The Events Group contains one main Dataset: _Global_Times_. This is a Dataset containing a list of all times in the other Datasets. This Dataset is generally useful in conjunction with the `--time-step` option.
   
 _Segment_Offsets_ may also exist in the _Events_ group. This is auxillary data provided by the STP XML reader.
 
 ### Signals
-_VitalSigns_ and _Waveforms_ use the same structure, so they are described together here. A signal Group comprises two datasets: _data_ and _time_, plus metadata specific to the signal:
+_VitalSigns_ and _Waveforms_ use the same structure, so they are described together here. A signal Group comprises two Datasets: _data_ and _time_, plus metadata specific to the signal:
 * **Data Label** The name of the signal. Signal names are cleaned to make the Dataset name easily useable by other tools. Things like spaces or punctuation are removed. This attribute provides the "raw" name of the signal.
 * **Unit of Measure** The unit of the data points
 * **Sample Period (ms)** What is the duration of a single unit of time?
