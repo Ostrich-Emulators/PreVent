@@ -622,15 +622,17 @@ namespace FormatConverter{
         }
       }
 
-      grp = ensureGroupExists( file, "Waveforms" );
-      output( ) << "Writing " << dataptr->waves( ).size( ) << " Waveforms" << std::endl;
-      for ( auto& wavs : dataptr->waves( ) ) {
-        if ( wavs->empty( ) ) {
-          output( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
-        }
-        else {
-          H5::Group g = ensureGroupExists( grp, getDatasetName( wavs ) );
-          writeWaveGroup( g, wavs );
+      if ( !this->skipwaves( ) ) {
+        grp = ensureGroupExists( file, "Waveforms" );
+        output( ) << "Writing " << dataptr->waves( ).size( ) << " Waveforms" << std::endl;
+        for ( auto& wavs : dataptr->waves( ) ) {
+          if ( wavs->empty( ) ) {
+            output( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
+          }
+          else {
+            H5::Group g = ensureGroupExists( grp, getDatasetName( wavs ) );
+            writeWaveGroup( g, wavs );
+          }
         }
       }
 

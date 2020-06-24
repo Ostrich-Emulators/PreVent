@@ -87,13 +87,15 @@ namespace FormatConverter{
 
     writeVitals( dataptr->vitals( ) );
 
-    std::map<double, std::vector < SignalData *>> freqgroups;
-    for ( auto& ds : info->waves( ) ) {
-      freqgroups[ds->hz( )].push_back( ds );
-    }
+    if ( !this->skipwaves( ) ) {
+      std::map<double, std::vector < SignalData *>> freqgroups;
+      for ( auto& ds : info->waves( ) ) {
+        freqgroups[ds->hz( )].push_back( ds );
+      }
 
-    for ( auto& ds : freqgroups ) {
-      writeWaves( ds.first, ds.second );
+      for ( auto& ds : freqgroups ) {
+        writeWaves( ds.first, ds.second );
+      }
     }
 
     return 0;

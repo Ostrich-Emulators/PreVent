@@ -14,6 +14,7 @@
 #include "ConversionListener.h"
 #include "FileNamer.h"
 #include "OffsetTimeSignalSet.h"
+#include "Options.h"
 
 namespace FormatConverter{
 
@@ -199,5 +200,9 @@ namespace FormatConverter{
 
   const std::string& Writer::tz_name( ) const {
     return timezone;
+  }
+
+  bool Writer::skipwaves( ) const {
+    return Options::asBool( OptionsKey::SKIP_WAVES );
   }
 }

@@ -52,7 +52,7 @@ namespace FormatConverter {
 
     class WaveTracker {
     public:
-      WaveTracker( );
+      WaveTracker();
       virtual ~WaveTracker( );
 
       WaveSequenceResult newseq( const unsigned short& seqnum, dr_time time );

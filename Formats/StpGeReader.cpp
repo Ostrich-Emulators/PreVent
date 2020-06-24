@@ -422,7 +422,7 @@ namespace FormatConverter{
         }
       }
 
-      if ( waveok && !this->skipwaves() ) {
+      if ( waveok ) {
         bool first = false;
         auto signal = info->addWave( wavelabel( waveid, info ), &first );
         if ( first ) {
@@ -810,7 +810,9 @@ namespace FormatConverter{
 
       // waves are always ok (?)
       //ChunkReadResult rslt = readWavesBlock( info );
-      readWavesBlock( info, maxread );
+      if( !this->skipwaves() ){
+        readWavesBlock( info, maxread );
+      }
       return ChunkReadResult::OK;
     }
     catch ( const std::runtime_error & err ) {
