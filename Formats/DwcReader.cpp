@@ -159,9 +159,14 @@ namespace FormatConverter{
       }
     }
 
-    ReadResult rr = ( numerics.eof( ) || ReadResult::ERROR != rslt
-        ? WfdbReader::fill( info, lastrr )
-        : ReadResult::ERROR );
+    ReadResult rr = rslt;
+    if ( numerics.eof( ) ) {
+      rr = ReadResult::END_OF_FILE;
+    }
+
+    if( !this->skipwaves() || ReadResult::ERROR == rslt ){
+      rr = WfdbReader::fill( info, lastrr );
+    }
 
     dr_time last = ( ReadResult::END_OF_FILE == rr
         ? std::numeric_limits<long>::max( )

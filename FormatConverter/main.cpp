@@ -47,6 +47,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-C or --no-cache"
       << std::endl << "\t-T or --time-step (store timing information as offset from start of file"
       << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
+      << std::endl << "\t-w or --skip-waves"
       << std::endl << "\t-R or --release (show release information and exit)"
       << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, stpp, cpcxml, stpjson, tdms, medi, dwc, zl"
       << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
@@ -93,6 +94,7 @@ struct option longopts[] = {
   { "no-cache", no_argument, NULL, 'C' },
   { "release", no_argument, NULL, 'R' },
   { "time-step", no_argument, NULL, 'T' },
+  { "skip-waves", no_argument, NULL, 'w' },
   { 0, 0, 0, 0 }
 };
 
@@ -114,7 +116,7 @@ int main( int argc, char** argv ) {
   bool stopatone = false;
   int compression = Writer::DEFAULT_COMPRESSION;
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1CTZ:S:R", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1CTZ:S:Rw", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -130,6 +132,9 @@ int main( int argc, char** argv ) {
         break;
       case 'T':
         Options::set( OptionsKey::INDEXED_TIME );
+        break;
+      case 'w':
+        Options::set( OptionsKey::SKIP_WAVES );
         break;
       case 's':
         sqlitedb = optarg;

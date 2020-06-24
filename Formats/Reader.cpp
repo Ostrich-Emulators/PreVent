@@ -11,6 +11,7 @@
 #include "StpGeReader.h"
 #include "StpPhilipsReader.h"
 #include "DwcReader.h"
+#include "Options.h"
 
 #include <iostream>       // std::cout, std::ios
 #include <sstream>        // std::istringstream
@@ -20,7 +21,7 @@
 
 namespace FormatConverter{
 
-  Reader::Reader( const std::string& name ) : largefile( false ), rdrname( name ),
+  Reader::Reader( const std::string& name ) : rdrname( name ),
       quiet( false ), onefile( false ), local_time( false ), timemod( TimeModifier::passthru( ) ) { }
 
   Reader::Reader( const Reader& r ) : rdrname( "x" ), quiet( r.quiet ),
@@ -83,6 +84,10 @@ namespace FormatConverter{
 
   bool Reader::nonbreaking( ) const {
     return onefile;
+  }
+
+  bool Reader::skipwaves( ) const {
+    return Options::asBool( OptionsKey::SKIP_WAVES );
   }
 
   void Reader::localizeTime( bool local ) {
