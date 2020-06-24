@@ -113,6 +113,7 @@ Long Option | Short Option | Valid Arguments {Default} | Description
 --anonymize| -a  | | Attempt to anonymize the output files
 --release| -R | | Show release information and exit
 --pattern | -p | format string | Set the output file naming pattern
+--skip-waves | -w | | Skip waves during reading and writing files
 
 ### File Naming Format String
 Because each input file can generate multiple output files, it is necessary to specify how those files should be named. This is accomplished using format specifiers within a string. The specifiers are:
