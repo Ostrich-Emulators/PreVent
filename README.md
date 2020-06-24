@@ -33,6 +33,7 @@ PreVent Tools comprises two tools at this time: `formatconverter` is a command-l
     + [Signals](#signals)
       - [Data](#data)
       - [Time](#time)
+    + [Calculated and Auxillary Data](#calculated-and-auxillary-data)
 
 
 # Using/Building
@@ -135,7 +136,7 @@ The default output filename pattern is `%d%i.%t`, that is, the output filename i
 ## HDF5 Native Format
 The "native" output format for formatconverter is HDF5. We consider this "native" because it is the most feature-rich output format, and creates the smallest on-disk files. [HDF5](https://www.hdfgroup.org/solutions/hdf5/) is a flexible data format that is essentially a filesystem within a file. Data is organized in Groups and Datasets, an approach that is perfect for storing physiological data. 
 
-The formatconverter's native format consists of three main Groups: _Events_, _VitalSigns_, and _Waveforms_, though _VitalSigns_ and _Waveforms_ use the exact same structure, and are separated merely for ease of use.
+The formatconverter's native format consists of three main Groups: _Events_, _VitalSigns_, and _Waveforms_, though _VitalSigns_ and _Waveforms_ use the exact same structure, and are separated merely for ease of use. Two other groups, _Calculated_Data_ and _Auxillary_Data_ may be present at the root level as well.
 
 The file itself contains metadata useful for understanding/troubleshooting the data:
 * **Build Number** The formatconverter that generated the file
@@ -180,4 +181,8 @@ As with the file metadata, if an input format supports per-signal metadata, it i
 #### Time
 The _time_ Dataset contains the timing information the data points in _data_. It is always a single-column of long numbers. _time_ contains a single attribute to help users/tools interpret the data: **Time Source** is either _raw_ or _indexed_. If it is _raw_, the times in the column are actual times. If _indexed_, the times are index numbers to _Events/Global_Times_
 
+### Calculated and Auxillary Data
+Both _Calculated_Data_ and _Auxillary_Data_ Groups have the same basic structure as Signal Groups--_data_ and _time_ Datasets-- but with different semantics. The _Calculated_Data_ Group is used for separating data that has been added after the initial conversion. Very often, it is useful to convert a file, and then calculate some other values (e.g. RR intervals) based on it. This data goes in the _Calculated_Data_ Group. Note that _Calculated_Data's_ times are not required to be present in the _Events/Global_Times_ Dataset.
+
+The _Auxillary_Data_ Dataset is to support input formats that provide time series that are neither vitals or waveforms. For example, DWC has a "Wall Times" Dataset. _Auxillary_Data's_ _data_ Dataset differs from other _data_ Datasets because its data type is string instead on integer. In addition to the root level, each signal can have an arbitrary number of auxillary Datasets.
 
