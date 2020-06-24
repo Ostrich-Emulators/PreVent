@@ -422,7 +422,7 @@ namespace FormatConverter{
         }
       }
 
-      if ( waveok ) {
+      if ( waveok && !this->skipwaves() ) {
         bool first = false;
         auto signal = info->addWave( wavelabel( waveid, info ), &first );
         if ( first ) {
