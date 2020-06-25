@@ -12,3 +12,6 @@ nbproject
 *.pdf
 stp-work
 testfiles
+gmon.out
+callgrind*
+*.hdf5
