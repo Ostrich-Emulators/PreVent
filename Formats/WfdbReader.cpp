@@ -213,6 +213,7 @@ namespace FormatConverter{
     WFDB_Sample v[framecount];
     bool iswave = ( freqhz > 1 );
 
+    output()<<"fill0"<<std::endl;
     if ( ReadResult::FIRST_READ == lastrr ) {
       // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
       // for what timer is
@@ -237,6 +238,7 @@ namespace FormatConverter{
     }
 
     while ( true ) {
+      output()<<"loop"<<std::endl;
       std::map<int, std::vector<int>> currents;
       for ( int i = 0; i < sigcount; i++ ) {
         currents[i].reserve( freqhz * siginfo[sigcount].spf );
