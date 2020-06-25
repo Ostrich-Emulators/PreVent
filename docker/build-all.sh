@@ -19,25 +19,30 @@ docker build -t ry99/prevent --file .dockerfile-${VERSION} .
 docker build -t ry99/prevent-cnv --file .dockerfile-multiconvert-${VERSION} .
 docker build -t ry99/prevent-tools --file .dockerfile-tools-${VERSION} .
 
-IMAGEID=$(docker image ls|grep 'prevent ' | cut -c43-54)
+IMAGEID=$(docker image ls|grep 'prevent ' | cut -c42-54)
+echo "prevent image: ${IMAGEID}"
 docker tag $IMAGEID "ry99/prevent:latest" 
-docker tag $IMAGEID "ry99/prevent:$VERSION"
+docker tag $IMAGEID "ry99/prevent:${VERSION}"
 
-IMAGEID=$(docker image ls|grep 'prevent-cnv' | cut -c43-54)
+IMAGEID=$(docker image ls|grep 'prevent-cnv' | cut -c42-54)
+echo "prevent-cnv image: ${IMAGEID}"
 docker tag $IMAGEID "ry99/prevent-cnv:latest"
-docker tag $IMAGEID "ry99/prevent-cnv:$VERSION"
+docker tag $IMAGEID "ry99/prevent-cnv:${VERSION}"
 
-IMAGEID=$(docker image ls|grep 'prevent-tool' | cut -c43-54)
+IMAGEID=$(docker image ls|grep 'prevent-tool' | cut -c42-54)
+echo "prevent-tools image: ${IMAGEID}"
 docker tag $IMAGEID "ry99/prevent-tools:latest"
-docker tag $IMAGEID "ry99/prevent-tools:$VERSION"
+docker tag $IMAGEID "ry99/prevent-tools:${VERSION}"
 
 echo
 echo 
 echo "Now run these:"
 echo "docker push ry99/prevent:latest"
-echo "docker push ry99/prevent:$VERSION"
+echo "docker push ry99/prevent:${VERSION}"
 echo "docker push ry99/prevent-cnv:latest"
-echo "docker push ry99/prevent-cnv:$VERSION"
+echo "docker push ry99/prevent-cnv:${VERSION}"
 echo "docker push ry99/prevent-tools:latest"
-echo "docker push ry99/prevent-tools:$VERSION"
+echo "docker push ry99/prevent-tools:${VERSION}"
+
+
 
