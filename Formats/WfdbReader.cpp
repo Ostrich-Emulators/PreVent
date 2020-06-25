@@ -237,8 +237,8 @@ namespace FormatConverter{
       }
     }
 
+    output()<<"looping"<<std::endl;
     while ( true ) {
-      output()<<"loop"<<std::endl;
       std::map<int, std::vector<int>> currents;
       for ( int i = 0; i < sigcount; i++ ) {
         currents[i].reserve( freqhz * siginfo[sigcount].spf );
