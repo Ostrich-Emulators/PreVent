@@ -290,7 +290,12 @@ namespace FormatConverter{
             currents[signalidx].resize( expected, SignalData::MISSING_VALUE );
           }
 
-          dataset->add( std::make_unique<DataRow>( curtime, currents[signalidx] ) );
+          bool write = ( iswave
+              ? !this->skipwaves( )
+              : true );
+          if ( write ) {
+            dataset->add( std::make_unique<DataRow>( curtime, currents[signalidx] ) );
+          }
         }
       }
 

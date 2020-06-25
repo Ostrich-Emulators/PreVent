@@ -810,7 +810,9 @@ namespace FormatConverter{
 
       // waves are always ok (?)
       //ChunkReadResult rslt = readWavesBlock( info );
-      readWavesBlock( info, maxread );
+      if( !this->skipwaves() ){
+        readWavesBlock( info, maxread );
+      }
       return ChunkReadResult::OK;
     }
     catch ( const std::runtime_error & err ) {

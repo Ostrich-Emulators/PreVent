@@ -186,7 +186,7 @@ namespace FormatConverter{
         }
         dataset->add( DataRow::from( currentTime, val ) );
       }
-      else if ( WAVE == firstword ) {
+      else if ( WAVE == firstword && !this->skipwaves() ) {
         state = zlReaderState::ZIN_WAVE;
         std::stringstream points( chunk.substr( pos + 1 ) );
         std::string wavename;

@@ -25,7 +25,8 @@ namespace FormatConverter {
     QUIET,
     ANONYMIZE,
     LOCALIZED_TIME,
-    NO_BREAK
+    NO_BREAK,
+    SKIP_WAVES
   };
 
   class Options {

@@ -512,6 +512,9 @@ namespace FormatConverter{
       //        vals.append( std::to_string( val ) );
       //      }
       //
+
+      // FIXME: check this->skipwaves()
+
       //      wave->add( DataRow( xml->currentTime, vals ) );
       //      //std::cout << "save wave data: " << xml->currentTime << " " << xml->label << " (" << xml->sampleperiod << ") " << xml->value << std::endl;
     }

@@ -37,6 +37,8 @@ namespace FormatConverter {
     Writer( const std::string& extension );
     std::ostream& output( ) const;
 
+    bool skipwaves() const;
+
     /**
      * Lets subclasses initialize a new (possibly temporary) data file.
      * By default, does nothing

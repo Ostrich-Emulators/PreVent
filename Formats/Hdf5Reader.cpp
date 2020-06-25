@@ -167,11 +167,11 @@ namespace FormatConverter{
       }
     }
     catch ( H5::FileIException& error ) {
-      output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
+      output( ) << "/: " << error.getDetailMsg( ) << std::endl;
     }
     // catch failure caused by the DataSet operations
     catch ( H5::DataSetIException& error ) {
-      output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
+      output( ) << "/: " << error.getDetailMsg( ) << std::endl;
     }
 
 
@@ -192,21 +192,23 @@ namespace FormatConverter{
       output( ) << "/VitalSigns: " << error.getDetailMsg( ) << std::endl;
     }
 
-    try {
-      H5::Group wgroup = file.openGroup( "/Waveforms" );
-      for ( size_t i = 0; i < wgroup.getNumObjs( ); i++ ) {
-        std::string wave = wgroup.getObjnameByIdx( i );
-        H5::Group dataAndTimeGroup = wgroup.openGroup( wave );
-        readDataSet( dataAndTimeGroup, true, info );
+    if ( !this->skipwaves( ) ) {
+      try {
+        H5::Group wgroup = file.openGroup( "/Waveforms" );
+        for ( size_t i = 0; i < wgroup.getNumObjs( ); i++ ) {
+          std::string wave = wgroup.getObjnameByIdx( i );
+          H5::Group dataAndTimeGroup = wgroup.openGroup( wave );
+          readDataSet( dataAndTimeGroup, true, info );
+        }
+        wgroup.close( );
       }
-      wgroup.close( );
-    }
-    catch ( H5::FileIException& error ) {
-      output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
-    }
-    // catch failure caused by the DataSet operations
-    catch ( H5::DataSetIException& error ) {
-      output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
+      catch ( H5::FileIException& error ) {
+        output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
+      }
+      // catch failure caused by the DataSet operations
+      catch ( H5::DataSetIException& error ) {
+        output( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
+      }
     }
 
     return ReadResult::END_OF_FILE;

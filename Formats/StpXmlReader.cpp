@@ -16,6 +16,7 @@
 #include "StpXmlReader.h"
 #include "SignalData.h"
 #include "SignalUtils.h"
+#include "Options.h"
 
 #include <iostream>
 #include <fstream>
@@ -52,7 +53,7 @@ namespace FormatConverter{
   StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ), prevtime( 0 ),
       currvstime( 0 ), lastvstime( 0 ), currwavetime( 0 ), lastwavetime( 0 ),
       recordtime( 0 ), currsegidx( 0 ), warnMissingName( true ), warnJunkData( true ),
-      v8( false ), isphilips( false ), isix( false ), warnedix( false ), skipwave( false ),
+      v8( false ), isphilips( false ), isix( false ), warnedix( false ), skipthiswave( false ),
       skipvital( false ), state( INDETERMINATE ) { }
 
   StpXmlReader::StpXmlReader( const StpXmlReader& orig ) : XmlReaderBase( orig ) { }
@@ -110,8 +111,8 @@ namespace FormatConverter{
         currwavetime = time( attributes[0 == attributes.count( "CollectionTime" ) ? "Time" : "CollectionTime"], true, &oktime );
       }
 
-      skipwave = !oktime;
-      if ( skipwave ) {
+      skipthiswave = ( this->skipwaves( ) || !oktime );
+      if ( skipthiswave ) {
         currwavetime = savetime;
         return;
       }
@@ -232,7 +233,7 @@ namespace FormatConverter{
       }
     }
     else if ( INWAVE == state ) {
-      if ( skipwave ) {
+      if ( skipthiswave || this->skipwaves( ) ) {
         return;
       }
 
@@ -323,6 +324,10 @@ namespace FormatConverter{
   }
 
   void StpXmlReader::addWave( const std::string& wavepoints, int hz ) {
+    if ( this->skipwaves( ) ) {
+      return;
+    }
+
     bool first = false;
     auto sig = filler->addWave( label, &first );
     if ( first ) {
