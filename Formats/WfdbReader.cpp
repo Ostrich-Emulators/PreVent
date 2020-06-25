@@ -123,6 +123,7 @@ namespace FormatConverter{
     path += wfdbdir;
 
 #ifdef __CYGWIN__
+    std::cout << "wfdbdir: " << wfdbdir << std::endl;
     size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, wfdbdir.c_str( ), NULL, 0 );
     if ( size < 0 ) {
       std::cerr << "cannot resolve path: " << path << std::endl;
@@ -132,14 +133,17 @@ namespace FormatConverter{
     char * cygpath = (char *) malloc( size );
     if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, wfdbdir.c_str( ),
         cygpath, size ) ) {
+      std::cout << "error converting path!" << std::endl;
       perror( "cygwin_conv_path" );
       return -1;
     }
+    std::cout << "cygpath: " << cygpath << std::endl;
 
     path.clear( );
     path.append( ". " ).append( cygpath );
     free( cygpath );
 
+    std::cout << "setting wfdb path to: " << path << std::endl;
 #endif
     setwfdb( (char *) path.c_str( ) );
 
@@ -151,6 +155,7 @@ namespace FormatConverter{
     }
 
     sigcount = isigopen( (char *) cutup.c_str( ), NULL, 0 );
+    std::cout << "signal count: " << sigcount << std::endl;
     if ( sigcount > 0 ) {
       WFDB_Frequency wffreqhz = getifreq( );
       bool iswave = ( wffreqhz > 1 );
