@@ -63,7 +63,7 @@ namespace FormatConverter {
     bool isphilips;
     bool isix;
     bool warnedix;
-    bool skipwave;
+    bool skipthiswave;
     bool skipvital;
 
     int state;

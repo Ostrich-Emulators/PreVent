@@ -67,13 +67,15 @@ namespace FormatConverter{
       freqgroups[freq].push_back( ds );
     }
 
-    for ( auto& ds : info->waves( ) ) {
-      double freq = ds->hz( );
-      freqgroups[freq].push_back( ds );
-    }
+    if ( !this->skipwaves( ) ) {
+      for ( auto& ds : info->waves( ) ) {
+        double freq = ds->hz( );
+        freqgroups[freq].push_back( ds );
+      }
 
-    for ( auto& ds : freqgroups ) {
-      write( ds.first, ds.second, filenamer( ).filenameNoExt( info ) );
+      for ( auto& ds : freqgroups ) {
+        write( ds.first, ds.second, filenamer( ).filenameNoExt( info ) );
+      }
     }
 
     return 0;

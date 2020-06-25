@@ -82,6 +82,37 @@ namespace FormatConverter{
     }
   }
 
+  void DataRow::intify( const std::string_view& data, std::vector<int>& vals, int * datascale ) {
+    int maxscale = 0;
+
+    for ( const auto& smallview : SignalUtils::splitcsv( data ) ) {
+      // might still be an integer if we have something like .000
+      int val;
+      int scale;
+      intify( smallview, smallview.find( '.' ), &val, &scale );
+      if ( scale > maxscale ) {
+        // fix all values in the vector before adding this one
+        const int upgrade = std::pow( 10, scale - maxscale );
+        for ( auto& f : vals ) {
+          if ( SignalData::MISSING_VALUE != f ) {
+            f *= upgrade;
+          }
+        }
+        maxscale = scale;
+      }
+      else if ( scale < maxscale ) {
+        // fix this value to match maxscale
+        if ( val != SignalData::MISSING_VALUE ) {
+          val *= std::pow( 10, maxscale - scale );
+        }
+      }
+
+      vals.push_back( val );
+    }
+
+    *datascale = maxscale;
+  }
+
   std::unique_ptr<DataRow> DataRow::from( const dr_time& time, const std::string& data ) {
     return ( std::string::npos == data.find( ',' )
         ? one( time, data )
@@ -106,38 +137,9 @@ namespace FormatConverter{
   }
 
   std::unique_ptr<DataRow> DataRow::many( const dr_time& time, const std::string & data ) {
-    const std::string_view view( data );
-
-    // all values in this vector are at maxscale,
-    // so if that changes, we need to fix the vector
     std::vector<int> vals;
-    int maxscale = 0;
-
-    for ( const auto& smallview : SignalUtils::splitcsv( view ) ) {
-      // might still be an integer if we have something like .000
-      int val;
-      int scale;
-      intify( smallview, smallview.find( '.' ), &val, &scale );
-      if ( scale > maxscale ) {
-        // fix all values in the vector before adding this one
-        int upgrade = std::pow( 10, scale - maxscale );
-        for ( auto& f : vals ) {
-          if ( SignalData::MISSING_VALUE != f ) {
-            f *= upgrade;
-          }
-        }
-        maxscale = scale;
-      }
-      else if ( scale < maxscale ) {
-        // fix this value to match maxscale
-        if ( val != SignalData::MISSING_VALUE ) {
-          val *= std::pow( 10, maxscale - scale );
-        }
-      }
-
-      vals.push_back( val );
-    }
-
+    int maxscale;
+    intify( std::string_view( data ), vals, &maxscale );
     return std::make_unique<DataRow>( time, vals, maxscale );
   }
 
@@ -154,14 +156,16 @@ namespace FormatConverter{
   DataRow::DataRow( const DataRow & orig ) : time( orig.time ), data( orig.data.begin( ), orig.data.end( ) ),
       scale( orig.scale ), extras( orig.extras ) { }
 
-  DataRow::DataRow( const dr_time& _time, const std::vector<double>& _data,
-      std::map<std::string, std::string> _extras ) : time( _time ), scale( 0 ), extras( _extras ) {
-    data.reserve( _data.size( ) );
+  DataRow::DataRow( const dr_time& _time, const std::vector<double>& doubles,
+      std::map<std::string, std::string> _extras, int maxprecision )
+      : time( _time ), scale( 0 ), extras( _extras ) {
+
+    data.reserve( doubles.size( ) );
 
     // if we have all ints, there's no reason to handle fractions
     bool seenfloat = false;
     double intpart;
-    for ( auto d : _data ) {
+    for ( auto d : doubles ) {
       double fraction = std::modf( d, &intpart );
       if ( fraction != 0 ) {
         seenfloat = true;
@@ -170,37 +174,30 @@ namespace FormatConverter{
     }
 
     if ( seenfloat ) {
-      int maxscale = 0;
-      for ( auto d : _data ) {
-        auto valstr = std::stringstream( );
-        valstr << std::setprecision( 6 ) << std::fixed << d;
-        int val;
-        int tscale;
-        auto smallview = std::string_view( valstr.str( ) );
-        intify( smallview, smallview.find( '.' ), &val, &tscale );
-        if ( tscale > maxscale ) {
-          // fix all values in the vector before adding this one
-          int upgrade = std::pow( 10, scale - maxscale );
-          for ( auto& f : data ) {
-            if ( SignalData::MISSING_VALUE != f ) {
-              f *= upgrade;
-            }
-          }
-          maxscale = tscale;
-        }
-        else if ( tscale < maxscale ) {
-          // fix this value to match maxscale
-          if ( val != SignalData::MISSING_VALUE ) {
-            val *= std::pow( 10, maxscale - scale );
-          }
-        }
-        data.push_back( val );
+      std::stringstream vals;
+      vals << std::setprecision( maxprecision ) << std::fixed;
+
+      if ( SignalData::MISSING_VALUE == doubles[0] || isnan( doubles[0] ) ) {
+        vals << SignalData::MISSING_VALUESTR;
+      }
+      else {
+        vals << doubles[0];
       }
 
-      scale = maxscale;
+      for ( size_t i = 1; i < doubles.size( ); i++ ) {
+        vals << ",";
+        if ( SignalData::MISSING_VALUE == doubles[i] || isnan( doubles[i] ) ) {
+          vals << SignalData::MISSING_VALUESTR;
+        }
+        else {
+          vals << doubles[i];
+        }
+      }
+
+      intify( vals.str(), data, &scale );
     }
     else {
-      data.insert( data.end( ), _data.begin( ), _data.end( ) );
+      data.insert( data.end( ), doubles.begin( ), doubles.end( ) );
     }
   }
 

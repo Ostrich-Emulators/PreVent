@@ -3,6 +3,7 @@
   * Improved runtime performance
   * Fixed rounding error in TDMS, DWC files
   * Added native STP parser for Philips (experimental)
+  * Added --skip-waves option
 
 4.2.2
   * Open DWC files from other directories

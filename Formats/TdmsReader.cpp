@@ -271,7 +271,12 @@ namespace FormatConverter{
   bool TdmsReader::writeSignalRow( std::vector<double>& doubles, const bool seenFloat,
       SignalData * signal, dr_time time ) {
 
+    if( signal->wave() && this->skipwaves() ){
+      return true;
+    }
+
     signal->add( std::make_unique<DataRow>( time, doubles ) );
+
     return true;
   }
 

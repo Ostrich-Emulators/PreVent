@@ -123,6 +123,7 @@ namespace FormatConverter{
     path += wfdbdir;
 
 #ifdef __CYGWIN__
+    std::cout << "wfdbdir: " << wfdbdir << std::endl;
     size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, wfdbdir.c_str( ), NULL, 0 );
     if ( size < 0 ) {
       std::cerr << "cannot resolve path: " << path << std::endl;
@@ -132,14 +133,17 @@ namespace FormatConverter{
     char * cygpath = (char *) malloc( size );
     if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, wfdbdir.c_str( ),
         cygpath, size ) ) {
+      std::cout << "error converting path!" << std::endl;
       perror( "cygwin_conv_path" );
       return -1;
     }
+    std::cout << "cygpath: " << cygpath << std::endl;
 
     path.clear( );
     path.append( ". " ).append( cygpath );
     free( cygpath );
 
+    std::cout << "setting wfdb path to: " << path << std::endl;
 #endif
     setwfdb( (char *) path.c_str( ) );
 
@@ -151,6 +155,7 @@ namespace FormatConverter{
     }
 
     sigcount = isigopen( (char *) cutup.c_str( ), NULL, 0 );
+    std::cout << "signal count: " << sigcount << std::endl;
     if ( sigcount > 0 ) {
       WFDB_Frequency wffreqhz = getifreq( );
       bool iswave = ( wffreqhz > 1 );
@@ -208,6 +213,7 @@ namespace FormatConverter{
     WFDB_Sample v[framecount];
     bool iswave = ( freqhz > 1 );
 
+    output()<<"fill0"<<std::endl;
     if ( ReadResult::FIRST_READ == lastrr ) {
       // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
       // for what timer is
@@ -232,6 +238,7 @@ namespace FormatConverter{
     }
 
     while ( true ) {
+      output()<<"loop"<<std::endl;
       std::map<int, std::vector<int>> currents;
       for ( int i = 0; i < sigcount; i++ ) {
         currents[i].reserve( freqhz * siginfo[sigcount].spf );
@@ -290,7 +297,12 @@ namespace FormatConverter{
             currents[signalidx].resize( expected, SignalData::MISSING_VALUE );
           }
 
-          dataset->add( std::make_unique<DataRow>( curtime, currents[signalidx] ) );
+          bool write = ( iswave
+              ? !this->skipwaves( )
+              : true );
+          if ( write ) {
+            dataset->add( std::make_unique<DataRow>( curtime, currents[signalidx] ) );
+          }
         }
       }
 

@@ -122,6 +122,7 @@ namespace FormatConverter {
     Reader( const Reader& );
 
     bool nonbreaking( ) const;
+    bool skipwaves( ) const;
 
     std::ostream& output( ) const;
 
@@ -129,7 +130,6 @@ namespace FormatConverter {
     dr_time modtime( const dr_time& time );
 
   private:
-    bool largefile;
     const std::string rdrname;
     bool quiet;
     bool anon;

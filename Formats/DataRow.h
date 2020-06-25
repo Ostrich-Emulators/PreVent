@@ -55,7 +55,8 @@ namespace FormatConverter {
     DataRow( const dr_time& time, int data, int scale = 0,
         std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
     DataRow( const dr_time& time, const std::vector<double>& data,
-        std::map<std::string, std::string> extras = std::map<std::string, std::string>( ) );
+        std::map<std::string, std::string> extras = std::map<std::string, std::string>( ),
+        int maxprecision = 3 );
 
     DataRow( const DataRow& orig );
     DataRow& operator=(const DataRow& orig );
@@ -95,7 +96,23 @@ namespace FormatConverter {
 
   private:
     static const std::set<std::string> hiloskips;
+
+    /**
+     * Converts a string to a single integer value 
+     * @param data
+     * @param dotpos
+     * @param val
+     * @param scale
+     */
     static void intify( const std::string_view& data, size_t dotpos, int * val, int * scale );
+
+    /**
+     * Converts a string into multiple integers, and loads them into the given vector
+     * @param data
+     * @param vec
+     * @param scale
+     */
+    static void intify( const std::string_view& data, std::vector<int>& vec, int * scale );
   };
 }
 #endif /* DATAROW_H */
