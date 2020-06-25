@@ -140,7 +140,6 @@ StpXmlReader.h
 StreamChunkReader.h
 TdmsReader.h
 TimeRange.h
-TimeReader.h
 TimezoneOffsetTimeSignalSet.h
 WfdbReader.h
 WfdbWriter.h

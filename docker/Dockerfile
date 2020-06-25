@@ -1,10 +1,10 @@
-FROM ubuntu:19.10
+FROM ubuntu:20.04
 LABEL maintainer="Ryan Bobko <ryan@ostrich-emulators.com>", \
 BUILD_SIGNATURE="PreVent Format Converter", \
-version="4.2.2"
+version="XXVERSIONXX"
 
 RUN apt-get update
-RUN apt-get install -y \
+RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y \
 	vim \
 	curl \
 	git \
@@ -15,7 +15,7 @@ RUN apt-get install -y \
 	libhdf5-dev \
 	libexpat-dev
 
-COPY docker-base-setup.sh /tmp
+COPY .docker-base-setup-XXVERSIONXX.sh /tmp/docker-base-setup.sh
 
 RUN /tmp/docker-base-setup.sh
 ENTRYPOINT ["/usr/bin/formatconverter"]
