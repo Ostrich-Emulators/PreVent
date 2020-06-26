@@ -240,7 +240,7 @@ namespace FormatConverter{
       }
     }
 
-    for ( auto i = 0; i < framecount; i++ ) {
+    for ( size_t i = 0; i < framecount; i++ ) {
       output( ) << "framesignal[" << i << "]: " << framesignal[i] << std::endl;
     }
 
