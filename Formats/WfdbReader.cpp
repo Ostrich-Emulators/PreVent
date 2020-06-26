@@ -154,6 +154,7 @@ namespace FormatConverter{
       cutup = cutup.substr( lastslash + 1 );
     }
 
+    output()<<"prep 0"<<std::endl;
     sigcount = isigopen( (char *) cutup.c_str( ), NULL, 0 );
     std::cout << "signal count: " << sigcount << std::endl;
     if ( sigcount > 0 ) {
@@ -201,6 +202,7 @@ namespace FormatConverter{
       std::cerr << "could not open/read .hea file: " << headername << std::endl;
       return -1;
     }
+    output()<<"prep 1"<<std::endl;
     return 0;
   }
 
@@ -213,7 +215,7 @@ namespace FormatConverter{
     WFDB_Sample v[framecount];
     bool iswave = ( freqhz > 1 );
 
-    output()<<"fill0"<<std::endl;
+    output()<<"fill 0"<<std::endl;
     if ( ReadResult::FIRST_READ == lastrr ) {
       // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
       // for what timer is
@@ -221,6 +223,7 @@ namespace FormatConverter{
           ? basetime( )
           : convert( mstimstr( 0 ) ) );
     }
+    output()<<"fill 1"<<std::endl;
 
     int retcode = 0;
     ReadResult rslt = ReadResult::NORMAL;
@@ -236,6 +239,12 @@ namespace FormatConverter{
         sigidx++;
       }
     }
+
+    for ( auto i = 0; i < framecount; i++ ) {
+      output( ) << "framesignal[" << i << "]: " << framesignal[i] << std::endl;
+    }
+
+    output( ) << "looping" << std::endl;
 
     while ( true ) {
       output()<<"loop"<<std::endl;
