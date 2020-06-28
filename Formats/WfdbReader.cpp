@@ -213,7 +213,7 @@ namespace FormatConverter{
     WFDB_Sample v[framecount];
     bool iswave = ( freqhz > 1 );
 
-    output()<<"fill0"<<std::endl;
+    output( ) << "fill0" << std::endl;
     if ( ReadResult::FIRST_READ == lastrr ) {
       // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
       // for what timer is
@@ -237,13 +237,21 @@ namespace FormatConverter{
       }
     }
 
-    output()<<"looping"<<std::endl;
+    std::map<int, std::vector<int>> currents;
+    for ( int i = 0; i < sigcount; i++ ) {
+      currents[i].reserve( freqhz * siginfo[sigcount].spf );
+    }
+
+    output( ) << "looping" << std::endl;
     while ( true ) {
-      std::map<int, std::vector<int>> currents;
+
+      // get ready for the new data
       for ( int i = 0; i < sigcount; i++ ) {
+        currents[i].clear( );
         currents[i].reserve( freqhz * siginfo[sigcount].spf );
       }
 
+      // we fill one whole DataRow at a time
       for ( size_t i = 0; i < freqhz; i++ ) {
         retcode = getframe( v );
         if ( retcode < 0 ) {
@@ -276,7 +284,7 @@ namespace FormatConverter{
         size_t expected = freqhz * siginfo[signalidx].spf;
         if ( !currents[signalidx].empty( ) ) {
           bool added = false;
-          auto dataset = ( iswave
+              auto dataset = ( iswave
               ? info->addWave( siginfo[signalidx].desc, &added )
               : info->addVital( siginfo[signalidx].desc, &added ) );
 
@@ -294,7 +302,7 @@ namespace FormatConverter{
           if ( currents[signalidx].size( ) < expected ) {
             output( ) << "filling in " << ( expected - currents[signalidx].size( ) )
                 << " values for wave " << siginfo[signalidx].desc << std::endl;
-            currents[signalidx].resize( expected, SignalData::MISSING_VALUE );
+                currents[signalidx].resize( expected, SignalData::MISSING_VALUE );
           }
 
           bool write = ( iswave
@@ -308,7 +316,7 @@ namespace FormatConverter{
 
       dr_time oldtime = curtime;
 
-      curtime += interval;
+          curtime += interval;
       if ( isRollover( oldtime, curtime ) ) {
         rslt = ReadResult::END_OF_DAY;
         break;

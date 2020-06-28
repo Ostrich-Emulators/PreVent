@@ -23,7 +23,7 @@
 #include <ctime>
 #include "Writer.h"
 #include "dr_time.h"
-#include "SignalSet.h"
+#include "DataRow.h"
 
 namespace FormatConverter {
   class SignalSet;
@@ -54,6 +54,8 @@ namespace FormatConverter {
      */
     void drain( H5::Group& g, SignalData * );
 
+    static H5::Group ensureGroupExists( H5::H5Object& obj, const std::string& s );
+
   protected:
     std::vector<std::string> closeDataSet( );
     int drain( SignalSet * );
@@ -75,7 +77,6 @@ namespace FormatConverter {
     void writeAuxData( H5::Group& group, const std::string& name, const std::vector<TimedData>& data );
     void writeGroupAttrs( H5::Group& group, SignalData * data );
     void createEventsAndTimes( H5::H5File, const SignalSet * data );
-    H5::Group ensureGroupExists( H5::H5Object& obj, const std::string& s ) const;
 
     /**
      * Rescale the data to fit in shorts

@@ -19,6 +19,7 @@
 #include <cmath>
 
 #include "config.h"
+#include "SignalSet.h"
 #include "Hdf5Writer.h"
 #include "SignalData.h"
 #include "DataRow.h"
@@ -566,7 +567,7 @@ namespace FormatConverter{
     }
   }
 
-  H5::Group Hdf5Writer::ensureGroupExists( H5::H5Object& obj, const std::string& s ) const {
+  H5::Group Hdf5Writer::ensureGroupExists( H5::H5Object& obj, const std::string& s ) {
     return ( obj.exists( s )
         ? obj.openGroup( s )
         : obj.createGroup( s ) );

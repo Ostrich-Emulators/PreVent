@@ -79,6 +79,7 @@ StpPhilipsReader.cpp
 DwcReader.cpp
 NullWriter.cpp
 NullSignalData.cpp
+AutonWriter.cpp
 generated/config.h
 generated/releases.h
 )
@@ -156,5 +157,6 @@ strict_fstream.hpp
 CircularBuffer.h
 NullWriter.h
 NullSignalData.h
+AutonWriter.h
 generated/releases.h
 DESTINATION ${include_dest} )

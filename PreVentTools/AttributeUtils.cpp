@@ -9,6 +9,7 @@
 #include <iostream>
 #include <deque>
 #include "Hdf5Writer.h"
+#include "DataRow.h"
 
 namespace FormatConverter {
 
