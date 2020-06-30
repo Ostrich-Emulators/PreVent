@@ -4,11 +4,12 @@
   * Fixed rounding error in TDMS, DWC files
   * Added native STP parser for Philips (experimental)
   * Added --skip-waves option
+  * Added --tmpdir option
 
 4.2.2
   * Open DWC files from other directories
   * Fixed occasional crash when caching signal data during read operations
-  * (Tools) Added --stp-metas
+  * (Tools) Added --stp-metas option
 
 4.2.1
   * Added support for DWC composite data files
