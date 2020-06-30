@@ -1,3 +1,6 @@
+4.3.1
+  * Added AutonLab format ("au")
+
 4.3.0
   * Reduced memory usage for extremely large files
   * Improved runtime performance
