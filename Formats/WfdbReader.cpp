@@ -16,6 +16,7 @@
 #include <libgen.h>
 #include <cstring>
 #include <unistd.h>
+#include <filesystem>
 
 #ifdef __CYGWIN__
 #include <sys/cygwin.h>
@@ -148,11 +149,9 @@ namespace FormatConverter{
     setwfdb( (char *) path.c_str( ) );
 
     // the record name is just the basename of the file
-    size_t lastslash = headername.rfind( dirsep );
-    std::string cutup( headername );
-    if ( std::string::npos != lastslash ) {
-      cutup = cutup.substr( lastslash + 1 );
-    }
+    auto fspath = std::filesystem::path{ headername };
+    auto recordname = fspath.filename( ).stem( );
+    auto cutup = std::string{ recordname };
 
     sigcount = isigopen( (char *) cutup.c_str( ), NULL, 0 );
     std::cout << "signal count: " << sigcount << std::endl;
@@ -176,6 +175,8 @@ namespace FormatConverter{
 
       sigcount = isigopen( (char *) ( cutup.c_str( ) ), siginfo, sigcount );
 
+      int nativeok = 0;
+
       for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
         auto dataset = ( iswave
             ? info->addWave( siginfo[signalidx].desc )
@@ -194,6 +195,17 @@ namespace FormatConverter{
         dataset->setMeta( "wfdb-spf", siginfo[signalidx].spf );
         dataset->setMeta( "wfdb-adcres", siginfo[signalidx].adcres );
         framecount += siginfo[signalidx].spf;
+
+        if ( 16 == siginfo[signalidx].fmt ) {
+          nativeok++;
+        }
+      }
+
+      usenative = ( nativeok == sigcount );
+
+      if ( usenative ) {
+        // close the signal files...we're going to read them ourselves (finger's crossed!)
+        isigopen( (char *) cutup.c_str( ), NULL, 0 );
       }
     }
 
@@ -210,10 +222,16 @@ namespace FormatConverter{
   }
 
   ReadResult WfdbReader::fill( SignalSet * info, const ReadResult& lastrr ) {
+    return usenative
+        ? fill_nativeread( info, lastrr )
+        : fill_wfdblib( info, lastrr );
+  }
+
+  ReadResult WfdbReader::fill_wfdblib( SignalSet * info, const ReadResult& lastrr ) {
     WFDB_Sample v[framecount];
     bool iswave = ( freqhz > 1 );
 
-    output()<<"fill0"<<std::endl;
+    output( ) << "fill0" << std::endl;
     if ( ReadResult::FIRST_READ == lastrr ) {
       // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
       // for what timer is
@@ -238,7 +256,7 @@ namespace FormatConverter{
     }
 
     while ( true ) {
-      output()<<"loop"<<std::endl;
+      output( ) << "loop" << std::endl;
       std::map<int, std::vector<int>> currents;
       for ( int i = 0; i < sigcount; i++ ) {
         currents[i].reserve( freqhz * siginfo[sigcount].spf );
@@ -319,5 +337,9 @@ namespace FormatConverter{
     }
 
     return rslt;
+  }
+
+  ReadResult WfdbReader::fill_nativeread( SignalSet * info, const ReadResult& lastrr ) {
+    return lastrr;
   }
 }

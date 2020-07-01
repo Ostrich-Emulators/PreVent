@@ -9,6 +9,7 @@
 #include "SignalData.h"
 #include "SignalUtils.h"
 
+#include <filesystem>
 #include <iostream>
 #include <iterator>
 
@@ -56,15 +57,17 @@ namespace FormatConverter{
   }
 
   int DwcReader::prepare( const std::string& infoname, SignalSet * info ) {
-    std::string recordset( infoname.substr( 0, infoname.size( ) - 5 ) );
-    int rslt = WfdbReader::prepare( recordset + ".hea", info );
+    auto fspath = std::filesystem::path{ infoname };
+    auto recordset = fspath.replace_extension( ".hea" );
+    auto basename = recordset.parent_path( ).append( recordset.stem( ).string( ) ).string( );
+    int rslt = WfdbReader::prepare( recordset.string( ), info );
     if ( 0 != rslt ) {
       return rslt;
     }
 
     // recordset should be a directory containing a .hea file, a .numerics.csv
     // file, and optionally a .clock.txt file
-    std::string clockfile( recordset + ".clock.txt" );
+    auto clockfile = basename + ".clock.txt";
     clocktimes = SignalUtils::loadAuxData( clockfile );
     if ( !clocktimes.empty( ) ) {
       dr_time basetime = converttime( clocktimes[0].data );
@@ -78,8 +81,7 @@ namespace FormatConverter{
     }
 
     // read the vitals out of the CSV, too
-    std::string numsfile( recordset + ".numerics.csv" );
-
+    auto numsfile = basename + ".numerics.csv";
     numerics.open( numsfile );
     if ( !numerics.good( ) ) {
       std::cerr << "no numerics file found" << std::endl;
@@ -111,6 +113,7 @@ namespace FormatConverter{
             else if ( "anno_file" == key ) {
               dr_time offsetter = basetime( );
               for ( auto& a : SignalUtils::loadAuxData( val ) ) {
+
                 a.time += offsetter;
                 annomap[name][val].push_back( a );
               }
@@ -164,7 +167,7 @@ namespace FormatConverter{
       rr = ReadResult::END_OF_FILE;
     }
 
-    if( !this->skipwaves() || ReadResult::ERROR == rslt ){
+    if ( !this->skipwaves( ) || ReadResult::ERROR == rslt ) {
       rr = WfdbReader::fill( info, lastrr );
     }
 
@@ -188,6 +191,7 @@ namespace FormatConverter{
           size_t cnt = 0;
           for ( auto& td : map.second ) {
             if ( td.time <= last ) {
+
               cnt++;
               wave->addAuxillaryData( map.first, td );
             }
