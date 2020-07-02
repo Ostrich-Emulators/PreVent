@@ -142,6 +142,7 @@ namespace FormatConverter{
 
     path.clear( );
     path.append( ". " ).append( cygpath );
+    wfdbdir = cygpath;
     free( cygpath );
 
     std::cout << "setting wfdb path to: " << path << std::endl;
@@ -204,8 +205,17 @@ namespace FormatConverter{
       usenative = ( nativeok == sigcount );
 
       if ( usenative ) {
+        for ( auto f : sigfiles ) {
+          std::fclose( f );
+        }
+        sigfiles.clear( );
+
         // close the signal files...we're going to read them ourselves (finger's crossed!)
         isigopen( (char *) cutup.c_str( ), NULL, 0 );
+        for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
+          auto datafile = std::filesystem::path( wfdbdir ) / siginfo[signalidx].fname;
+          sigfiles.push_back( std::fopen( datafile.string( ).c_str( ), "rb" ) );
+        }
       }
     }
 
@@ -218,10 +228,23 @@ namespace FormatConverter{
 
   void WfdbReader::finish( ) {
     delete [] siginfo;
+
+    for ( auto f : sigfiles ) {
+      std::fclose( f );
+    }
+
     wfdbquit( );
   }
 
   ReadResult WfdbReader::fill( SignalSet * info, const ReadResult& lastrr ) {
+    if ( ReadResult::FIRST_READ == lastrr ) {
+      // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
+      // for what timer is
+      curtime = ( basetimeset
+          ? basetime( )
+          : convert( mstimstr( 0 ) ) );
+    }
+
     return usenative
         ? fill_nativeread( info, lastrr )
         : fill_wfdblib( info, lastrr );
@@ -230,15 +253,6 @@ namespace FormatConverter{
   ReadResult WfdbReader::fill_wfdblib( SignalSet * info, const ReadResult& lastrr ) {
     WFDB_Sample v[framecount];
     bool iswave = ( freqhz > 1 );
-
-    output( ) << "fill0" << std::endl;
-    if ( ReadResult::FIRST_READ == lastrr ) {
-      // see https://www.physionet.org/physiotools/wpg/strtim.htm#timstr-and-strtim
-      // for what timer is
-      curtime = ( basetimeset
-          ? basetime( )
-          : convert( mstimstr( 0 ) ) );
-    }
 
     int retcode = 0;
     ReadResult rslt = ReadResult::NORMAL;
@@ -256,7 +270,6 @@ namespace FormatConverter{
     }
 
     while ( true ) {
-      output( ) << "loop" << std::endl;
       std::map<int, std::vector<int>> currents;
       for ( int i = 0; i < sigcount; i++ ) {
         currents[i].reserve( freqhz * siginfo[sigcount].spf );
@@ -324,7 +337,7 @@ namespace FormatConverter{
         }
       }
 
-      dr_time oldtime = curtime;
+      auto oldtime = curtime;
 
       curtime += interval;
       if ( isRollover( oldtime, curtime ) ) {
@@ -340,6 +353,54 @@ namespace FormatConverter{
   }
 
   ReadResult WfdbReader::fill_nativeread( SignalSet * info, const ReadResult& lastrr ) {
-    return lastrr;
+    ReadResult rslt = ReadResult::NORMAL;
+    bool iswave = ( freqhz > 1 );
+
+    const auto SHORTSIZE = sizeof (short );
+
+    while ( true ) {
+      for ( size_t i = 0; i < sigfiles.size( ); i++ ) {
+        size_t expected = freqhz * siginfo[i].spf;
+        bool added = false;
+        auto dataset = ( iswave
+            ? info->addWave( siginfo[i].desc, &added )
+            : info->addVital( siginfo[i].desc, &added ) );
+
+        if ( added ) {
+          dataset->setChunkIntervalAndSampleRate( interval, expected );
+          if ( 1024 == interval ) {
+            dataset->setMeta( "Notes", "The frequency from the input file was multiplied by 1.024" );
+          }
+
+          if ( NULL != siginfo[i].units ) {
+            dataset->setUom( siginfo[i].units );
+          }
+        }
+
+        auto buffer = std::vector<short>( expected, SignalData::MISSING_VALUE );
+        auto read = std::fread( buffer.data( ), SHORTSIZE, buffer.size( ), sigfiles[i] );
+        if ( read < expected ) {
+          // didn't read enough, so we're at eof
+          rslt = ReadResult::END_OF_FILE;
+        }
+        if ( read > 0 ) {
+          auto intbuff = std::vector<int>( buffer.begin( ), buffer.end( ) );
+          dataset->add( std::make_unique<DataRow>( curtime, intbuff ) );
+        }
+      }
+
+      auto oldtime = curtime;
+
+      curtime += interval;
+      if ( isRollover( oldtime, curtime ) ) {
+        rslt = ReadResult::END_OF_DAY;
+        break;
+      }
+      else if ( ReadResult::END_OF_FILE == rslt ) {
+        break;
+      }
+    }
+
+    return rslt;
   }
 }

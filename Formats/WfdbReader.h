@@ -47,6 +47,7 @@ namespace FormatConverter {
     int extra_ms;
     bool basetimeset;
     size_t framecount;
+    std::vector<FILE *> sigfiles;
 
   private:
     bool usenative;
