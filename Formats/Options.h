@@ -26,13 +26,13 @@ namespace FormatConverter {
     ANONYMIZE,
     LOCALIZED_TIME,
     NO_BREAK,
-    SKIP_WAVES
+    SKIP_WAVES,
+    TMPDIR,
   };
 
   class Options {
   public:
     virtual ~Options( );
-
 
     static void set( OptionsKey key, const std::string& val );
     static void set( OptionsKey key, bool val = true );

@@ -27,6 +27,7 @@
 
 namespace FormatConverter {
   class DataRow;
+  class CachefileData;
 
   class BasicSignalData : public SignalData {
   public:
@@ -94,7 +95,7 @@ namespace FormatConverter {
     size_t datacount;
     size_t livecount; // how many data rows are cached in memory (not disk)?
     std::deque<std::unique_ptr<FormatConverter::DataRow>> data;
-    std::FILE * file;
+    std::unique_ptr<CachefileData> cachefile;
 
     bool popping;
     bool iswave;

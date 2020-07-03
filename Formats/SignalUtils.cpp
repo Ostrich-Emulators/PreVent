@@ -17,15 +17,21 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+
+#include <stdio.h>
+#include <stdlib.h>
 #include <filesystem>
 
-namespace FormatConverter{
+namespace FormatConverter {
 
-  SignalUtils::SignalUtils( ) { }
+  SignalUtils::SignalUtils( ) {
+  }
 
-  SignalUtils::SignalUtils( const SignalUtils& ) { }
+  SignalUtils::SignalUtils( const SignalUtils& ) {
+  }
 
-  SignalUtils::~SignalUtils( ) { }
+  SignalUtils::~SignalUtils( ) {
+  }
 
   std::string SignalUtils::trim( std::string & totrim ) {
     // ltrim
@@ -351,21 +357,22 @@ namespace FormatConverter{
     return rslt;
   }
 
-  FILE * SignalUtils::tmpf( ) {
-#ifdef __CYGWIN__
-    // Cygwin seems to crash if you try to write to a file created
-    // by tmpfile() if the temp directory doesn't actually exist,
-    // so make sure we create it ahead of time
-    std::filesystem::path p = std::filesystem::path( std::tmpnam( nullptr ) );
-    auto tmpdir = p.parent_path( );
-    if ( !std::filesystem::exists( tmpdir ) ) {
-      std::filesystem::create_directories( tmpdir );
+  std::unique_ptr<CachefileData> SignalUtils::tmpf( ) {
+    auto tmpdir = Options::get( OptionsKey::TMPDIR );
+    auto tmppath = std::filesystem::path{ tmpdir };
+    tmppath /= "fmtcnv-XXXXXX";
+    auto filename = tmppath.string( );
+    auto fd = mkstemp( filename.data( ) );
+    return std::make_unique<CachefileData>( filename, fdopen( fd, "wb+" ) );
+  }
+
+  CachefileData::CachefileData( const std::string& name, FILE * f ) : filename( name ), file( f ) {
+  }
+
+  CachefileData::~CachefileData( ) {
+    if ( nullptr != file ) {
+      std::fclose( file );
+      std::remove( filename.data() );
     }
-#endif
-    return tmpfile( );
-    // std::string ffoo( "/tmp/cache-" );
-    // ffoo.append( name( ) );
-    // ffoo.append( wave( ) ? ".wave" : ".vital" );
-    // file = fopen( ffoo.c_str( ), "wb+" );
   }
 }

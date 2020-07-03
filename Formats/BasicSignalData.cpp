@@ -31,14 +31,14 @@
 #include <charconv>
 #include "config.h"
 
-namespace FormatConverter{
+namespace FormatConverter {
 
   const int BasicSignalData::DEFAULT_CACHE_LIMIT = 30000;
 
   BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
       : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
-      datacount( 0 ), livecount( 0 ), file( nullptr ), popping( false ), iswave( wavedata ),
-      highval( -std::numeric_limits<double>::max( ) ),
+      datacount( 0 ), livecount( 0 ), popping( false ),
+      iswave( wavedata ), highval( -std::numeric_limits<double>::max( ) ),
       lowval( std::numeric_limits<double>::max( ) ),
       nocache( FormatConverter::Options::asBool( FormatConverter::OptionsKey::NOCACHE ) ) {
     scale( 0 );
@@ -52,9 +52,6 @@ namespace FormatConverter{
 
   BasicSignalData::~BasicSignalData( ) {
     data.clear( );
-    if ( nullptr != file ) {
-      std::fclose( file );
-    }
   }
 
   std::unique_ptr<SignalData> BasicSignalData::shallowcopy( bool includedates ) {
@@ -95,12 +92,11 @@ namespace FormatConverter{
       startPopping( );
     }
 
-    if ( nullptr != file && data.empty( ) ) {
+    if ( cachefile && data.empty( ) ) {
       int lines = uncache( );
       livecount += lines;
       if ( 0 == lines ) {
-        std::fclose( file );
-        file = nullptr;
+        cachefile.reset( );
       }
     }
 
@@ -121,11 +117,11 @@ namespace FormatConverter{
 
   bool BasicSignalData::startPopping( ) {
     popping = true;
-    if ( nullptr != file ) {
+    if ( cachefile ) {
       if ( !cache( ) ) { // copy any extra rows to disk
         return false;
       }
-      std::rewind( file );
+      std::rewind( cachefile->file );
     }
     return true;
   }
@@ -143,15 +139,8 @@ namespace FormatConverter{
       return true;
     }
 
-    if ( "HR" == name( ) ) {
-      int x = 0;
-      if ( x > 1 ) {
-        std::cout << "wait" << std::endl;
-      }
-    }
-
-    if ( nullptr == file ) {
-      file = SignalUtils::tmpf( );
+    if ( !cachefile ) {
+      cachefile = SignalUtils::tmpf( );
     }
 
     const auto SIZEOFTIME = sizeof ( dr_time );
@@ -184,14 +173,14 @@ namespace FormatConverter{
           ;
       nextrecord_offset += extradata.size( ); // extradata
 
-      ok += std::fwrite( &a->time, SIZEOFTIME, 1, file );
-      ok += std::fwrite( &nextrecord_offset, SIZEOFINT, 1, file );
-      ok += std::fwrite( &a->scale, SIZEOFINT, 1, file );
-      ok += std::fwrite( &DATACOUNT, SIZEOFINT, 1, file );
-      ok += std::fwrite( a->data.data( ), SIZEOFINT, DATACOUNT, file );
+      ok += std::fwrite( &a->time, SIZEOFTIME, 1, cachefile->file );
+      ok += std::fwrite( &nextrecord_offset, SIZEOFINT, 1, cachefile->file );
+      ok += std::fwrite( &a->scale, SIZEOFINT, 1, cachefile->file );
+      ok += std::fwrite( &DATACOUNT, SIZEOFINT, 1, cachefile->file );
+      ok += std::fwrite( a->data.data( ), SIZEOFINT, DATACOUNT, cachefile->file );
 
       if ( !extradata.empty( ) ) {
-        std::fputs( extradata.c_str( ), file );
+        std::fputs( extradata.c_str( ), cachefile->file );
       }
 
       if ( ok != DATACOUNT + 4 ) {
@@ -199,7 +188,7 @@ namespace FormatConverter{
       }
     }
 
-    std::fflush( file ); // for windows 
+    std::fflush( cachefile->file ); // for windows
     livecount = 0;
     return true;
   }
@@ -284,22 +273,22 @@ namespace FormatConverter{
     while ( loop < max ) {
       attrs.clear( );
 
-      ok += std::fread( &t, SIZEOFTIME, 1, file );
-      ok += std::fread( &offset, SIZEOFINT, 1, file );
-      auto offset_start = std::ftell( file );
-      ok += std::fread( &scale, SIZEOFINT, 1, file );
-      ok += std::fread( &counter, SIZEOFINT, 1, file );
+      ok += std::fread( &t, SIZEOFTIME, 1, cachefile->file );
+      ok += std::fread( &offset, SIZEOFINT, 1, cachefile->file );
+      auto offset_start = std::ftell( cachefile->file );
+      ok += std::fread( &scale, SIZEOFINT, 1, cachefile->file );
+      ok += std::fread( &counter, SIZEOFINT, 1, cachefile->file );
 
       auto vals = std::vector<int>( counter );
-      ok += std::fread( &vals[0], SIZEOFINT, counter, file );
+      ok += std::fread( &vals[0], SIZEOFINT, counter, cachefile->file );
 
       if ( ok < counter + 4 ) {
         std::cerr << "error reading cache file for signal: " << label << std::endl;
       }
 
-      if ( static_cast<int> ( std::ftell( file ) - offset_start ) < offset ) {
+      if ( static_cast<int> ( std::ftell( cachefile->file ) - offset_start ) < offset ) {
 
-        char * justread = std::fgets( buff, BUFFSZ, file );
+        char * justread = std::fgets( buff, BUFFSZ, cachefile->file );
         if ( nullptr != justread ) {
           auto extras = std::string_view( justread );
 
@@ -326,7 +315,7 @@ namespace FormatConverter{
   }
 
   std::unique_ptr<TimeRange> BasicSignalData::times( ) {
-    auto range = std::make_unique<TimeRange>();
+    auto range = std::make_unique<TimeRange>( );
 
     const auto SLABSIZE = 1024 * 64;
     auto dates = std::vector<dr_time>{ };
@@ -335,14 +324,14 @@ namespace FormatConverter{
     const auto SIZET = sizeof (dr_time );
     const auto SIZEI = sizeof (int );
 
-    if ( nullptr != file ) {
+    if ( cachefile ) {
       // read the dates out of the file first
-      std::rewind( file );
+      std::rewind( cachefile->file );
       dr_time timer;
       size_t offset = 0;
 
-      while ( std::fread( &timer, SIZET, 1, file ) > 0 ) {
-        auto ok = std::fread( &offset, SIZEI, 1, file );
+      while ( std::fread( &timer, SIZET, 1, cachefile->file ) > 0 ) {
+        auto ok = std::fread( &offset, SIZEI, 1, cachefile->file );
         dates.push_back( timer );
 
         // push our date slab to the file
@@ -351,7 +340,7 @@ namespace FormatConverter{
           dates.clear( );
         }
 
-        auto ok2 = std::fseek( file, offset, SEEK_CUR );
+        auto ok2 = std::fseek( cachefile->file, offset, SEEK_CUR );
 
         if ( ok < 1 || ok2 != 0 ) {
           std::cout << "blamo!" << std::endl;

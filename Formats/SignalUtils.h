@@ -27,6 +27,15 @@ namespace FormatConverter {
   class DataRow;
   class TimedData;
 
+  class CachefileData {
+  public:
+    CachefileData( const std::string& filename = "", FILE * f = nullptr );
+    virtual ~CachefileData( );
+
+    std::string filename;
+    FILE * file;
+  };
+
   class SignalUtils {
   public:
     virtual ~SignalUtils( );
@@ -102,7 +111,12 @@ namespace FormatConverter {
     static std::vector<std::string> splitcsv( const std::string& csvline, char = ',' );
     static std::vector<std::string_view> splitcsv( const std::string_view& csvline, char = ',' );
 
-    static FILE * tmpf();
+    /**
+     * Creates a new file following the given template (template MUST contain XXXXXX)
+     * @param createdname
+     * @return
+     */
+    static std::unique_ptr<CachefileData> tmpf();
 
   private:
     SignalUtils( );

@@ -87,13 +87,10 @@ namespace FormatConverter {
 
     static const inline size_t DEFAULT_CACHE_LIMIT = 1024 * 384;
 
-    FileCachingVector( ) : cache( FormatConverter::Options::asBool( FormatConverter::OptionsKey::NOCACHE ) ? nullptr : SignalUtils::tmpf( ) ),
+    FileCachingVector( ) : cachedata( FormatConverter::Options::asBool( FormatConverter::OptionsKey::NOCACHE ) ? nullptr : SignalUtils::tmpf( ) ),
         sizer( 0 ), memrange( 0, 0 ), dirty( false ) { }
 
     virtual ~FileCachingVector( ) {
-      if ( nullptr != cache ) {
-        std::fclose( cache );
-      }
     }
 
     iterator begin( ) {
@@ -159,8 +156,8 @@ namespace FormatConverter {
     }
 
     virtual bool cache_if_needed( bool force = false ) {
-      if ( nullptr != cache && ( values.size( ) >= DEFAULT_CACHE_LIMIT || force ) ) {
-        std::fwrite( values.data( ), sizeof ( dr_time ), values.size( ), cache );
+      if ( cachedata && ( values.size( ) >= DEFAULT_CACHE_LIMIT || force ) ) {
+        std::fwrite( values.data( ), sizeof ( dr_time ), values.size( ), cachedata->file );
         values.clear( );
         memrange.first = sizer;
         memrange.second = sizer;
@@ -178,13 +175,13 @@ namespace FormatConverter {
       const auto SIZE = sizeof (dr_time );
       auto filepos = fromidx * SIZE;
       values.clear( );
-      std::fseek( cache, filepos, SEEK_SET );
-      auto reads = std::fread( values.data( ), SIZE, DEFAULT_CACHE_LIMIT, cache );
+      std::fseek( cachedata->file, filepos, SEEK_SET );
+      auto reads = std::fread( values.data( ), SIZE, DEFAULT_CACHE_LIMIT, cachedata->file );
       memrange.first = fromidx;
       memrange.second = fromidx + reads;
     }
 
-    FILE * cache;
+    std::unique_ptr<CachefileData> cachedata;
     size_t sizer;
     std::vector<T> values;
     std::pair<size_t, size_t> memrange;
