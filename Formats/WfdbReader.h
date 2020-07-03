@@ -34,11 +34,10 @@ namespace FormatConverter {
     virtual int prepare( const std::string& input, SignalSet * info ) override;
     virtual void finish( ) override;
     void setBaseTime( const dr_time& time );
-    int base_ms() const;
+    int base_ms( ) const;
 
     virtual ReadResult fill( SignalSet * data, const ReadResult& lastfill ) override;
 
-  protected:
     int sigcount;
     WFDB_Siginfo * siginfo;
     int interval;
@@ -48,6 +47,12 @@ namespace FormatConverter {
     int extra_ms;
     bool basetimeset;
     size_t framecount;
+    std::vector<FILE *> sigfiles;
+
+  private:
+    bool usenative;
+    ReadResult fill_wfdblib( SignalSet * data, const ReadResult& lastfill );
+    ReadResult fill_nativeread( SignalSet * data, const ReadResult& lastfill );
   };
 }
 #endif /* WFDBREADER_H */
