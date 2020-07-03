@@ -124,7 +124,6 @@ namespace FormatConverter{
     path += wfdbdir;
 
 #ifdef __CYGWIN__
-    std::cout << "wfdbdir: " << wfdbdir << std::endl;
     size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, wfdbdir.c_str( ), NULL, 0 );
     if ( size < 0 ) {
       std::cerr << "cannot resolve path: " << path << std::endl;

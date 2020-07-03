@@ -49,7 +49,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-T or --time-step (store timing information as offset from start of file"
       << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
       << std::endl << "\t-w or --skip-waves"
-      << std::endl << "\t-m or --tmpdir <directory>"
+//      << std::endl << "\t-m or --tmpdir <directory>"
       << std::endl << "\t-R or --release (show release information and exit)"
       << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, stpp, cpcxml, stpjson, tdms, medi, dwc, zl"
       << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
@@ -76,45 +76,43 @@ void helpAndExit( char * progname, std::string msg = "" ) {
   exit( 1 );
 }
 
-void settmpdir( const std::string tmpdir ) {
-
-#ifdef __CYGWIN__
-  size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, tmpdir.c_str( ), NULL, 0 );
-  if ( size < 0 ) {
-    std::cerr << "cannot resolve path: " << tmpdir << std::endl;
-    return -1;
-  }
-
-  char * cygpath = (char *) malloc( size );
-  if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, tmpdir.c_str( ), cygpath, size ) ) {
-    std::cout << "error converting path!" << std::endl;
-    perror( "cygwin_conv_path" );
-    return -1;
-  }
-  std::cout << "cygpath: " << cygpath << std::endl;
-  tmpdir.assign( cypath );
-
-#endif
-
-  setenv( "TMP", tmpdir.c_str( ), 1 );
-  setenv( "TMPDIR", tmpdir.c_str( ), 1 );
-
-  // make sure the path exists (just in case!)
-  auto p = std::filesystem::path{ tmpdir };
-  if ( !std::filesystem::exists( tmpdir ) ) {
-    try {
-      std::filesystem::create_directories( tmpdir );
-    }
-    catch ( std::runtime_error& x ) {
-      std::cerr << "could not set tmpdir: " << x.what( ) << std::endl;
-      exit( 2 );
-    }
-  }
-
-#ifdef __CYGWIN__
-  free( cygpath );
-#endif
-}
+//void settmpdir( std::string tmpdir ) {
+//#ifdef __CYGWIN__
+//  size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, tmpdir.c_str( ), NULL, 0 );
+//  if ( size < 0 ) {
+//    std::cerr << "cannot resolve path: " << tmpdir << std::endl;
+//    return -1;
+//  }
+//
+//  char * cygpath = (char *) malloc( size );
+//  if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, tmpdir.c_str( ), cygpath, size ) ) {
+//    std::cout << "error converting path!" << std::endl;
+//    perror( "cygwin_conv_path" );
+//    return -1;
+//  }
+//  std::cout << "cygpath: " << cygpath << std::endl;
+//  tmpdir = cygpath;
+//#endif
+//
+//  setenv( "TMP", tmpdir.c_str( ), 1 );
+//  setenv( "TMPDIR", tmpdir.c_str( ), 1 );
+//
+//  // make sure the path exists (just in case!)
+//  auto p = std::filesystem::path{ tmpdir };
+//  if ( !std::filesystem::exists( tmpdir ) ) {
+//    try {
+//      std::filesystem::create_directories( tmpdir );
+//    }
+//    catch ( std::runtime_error& x ) {
+//      std::cerr << "could not set tmpdir: " << x.what( ) << std::endl;
+//      exit( 2 );
+//    }
+//  }
+//
+//#ifdef __CYGWIN__
+//  free( cygpath );
+//#endif
+//}
 
 struct option longopts[] = {
   { "from", required_argument, NULL, 'f' },
@@ -189,9 +187,9 @@ int main( int argc, char** argv ) {
         offsetstr = optarg;
         offsetIsDesiredDate = false;
         break;
-      case 'm':
-        settmpdir( optarg );
-        break;
+//      case 'm':
+//        settmpdir( optarg );
+//        break;
       case 'S':
         offsetstr = optarg;
         offsetIsDesiredDate = true;

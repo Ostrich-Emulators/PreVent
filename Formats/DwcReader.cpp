@@ -18,7 +18,7 @@ namespace FormatConverter{
   const size_t DwcReader::TIME_COL = 1;
   const size_t DwcReader::DATE_COL = 0;
 
-  DwcReader::DwcReader( ) : WfdbReader( "UM WFDB" ) { }
+  DwcReader::DwcReader( ) : WfdbReader( "DWC" ) { }
 
   DwcReader::~DwcReader( ) { }
 
