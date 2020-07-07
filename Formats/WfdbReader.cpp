@@ -22,14 +22,17 @@
 #include <sys/cygwin.h>
 #endif
 
-namespace FormatConverter{
+namespace FormatConverter {
 
-  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) { }
+  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
+  }
 
   WfdbReader::WfdbReader( const std::string& name ) : Reader( name ), extra_ms( 0 ),
-      basetimeset( false ), framecount( 0 ) { }
+      basetimeset( false ), framecount( 0 ) {
+  }
 
-  WfdbReader::~WfdbReader( ) { }
+  WfdbReader::~WfdbReader( ) {
+  }
 
   void WfdbReader::setBaseTime( const dr_time& basetime ) {
     _basetime = basetime;
@@ -117,40 +120,32 @@ namespace FormatConverter{
       return rslt;
     }
 
-    std::string path( ". " );
-    char header_c[headername.size( ) + 1];
-    strncpy( header_c, headername.c_str( ), headername.size( ) + 1 );
-    std::string wfdbdir( dirname( header_c ) );
-    path += wfdbdir;
-
+    auto headerpath = std::filesystem::path{ headername };
 #ifdef __CYGWIN__
-    size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, wfdbdir.c_str( ), NULL, 0 );
+    size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, headername.c_str( ), NULL, 0 );
     if ( size < 0 ) {
-      std::cerr << "cannot resolve path: " << path << std::endl;
+      std::cerr << "cannot resolve path: " << headername << std::endl;
       return -1;
     }
 
     char * cygpath = (char *) malloc( size );
-    if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, wfdbdir.c_str( ),
+    if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, headername.c_str( ),
         cygpath, size ) ) {
       std::cout << "error converting path!" << std::endl;
       perror( "cygwin_conv_path" );
       return -1;
     }
-    std::cout << "cygpath: " << cygpath << std::endl;
-
-    path.clear( );
-    path.append( ". " ).append( cygpath );
-    wfdbdir = cygpath;
+    //std::cout << "cygpath: " << cygpath << std::endl;
+    headerpath.assign( cygpath );
     free( cygpath );
 
-    std::cout << "setting wfdb path to: " << path << std::endl;
 #endif
-    setwfdb( (char *) path.c_str( ) );
+    auto path = ". " + headerpath.parent_path().string( );
+    output( ) << "wfdb path: " << path << std::endl;
+    setwfdb( path.data() );
 
     // the record name is just the basename of the file
-    auto fspath = std::filesystem::path{ headername };
-    auto recordname = fspath.filename( ).stem( );
+    auto recordname = headerpath.filename( ).stem( );
     auto cutup = std::string{ recordname };
 
     sigcount = isigopen( (char *) cutup.c_str( ), NULL, 0 );
@@ -212,7 +207,7 @@ namespace FormatConverter{
         // close the signal files...we're going to read them ourselves (finger's crossed!)
         isigopen( (char *) cutup.c_str( ), NULL, 0 );
         for ( int signalidx = 0; signalidx < sigcount; signalidx++ ) {
-          auto datafile = std::filesystem::path( wfdbdir ) / siginfo[signalidx].fname;
+          auto datafile = headerpath.parent_path( ) / siginfo[signalidx].fname;
           sigfiles.push_back( std::fopen( datafile.string( ).c_str( ), "rb" ) );
         }
       }
@@ -268,7 +263,7 @@ namespace FormatConverter{
       }
     }
 
-    output()<<"looping"<<std::endl;
+    output( ) << "looping" << std::endl;
     while ( true ) {
       std::map<int, std::vector<int>> currents;
       for ( int i = 0; i < sigcount; i++ ) {
