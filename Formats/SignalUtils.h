@@ -18,8 +18,12 @@
 #include <string>
 #include <memory>
 #include <vector>
-
+#include <filesystem>
 #include "dr_time.h"
+
+#ifdef __CYGWIN__
+#include <sys/cygwin.h>
+#endif
 
 namespace FormatConverter {
   class SignalSet;
@@ -117,6 +121,15 @@ namespace FormatConverter {
      * @return
      */
     static std::unique_ptr<CachefileData> tmpf();
+
+    /**
+     * Converts a user-entered path into a canonical format. This is a noop
+     * everywhere except CYGWIN, where it converts from Windows paths to
+     * C++ paths
+     * @param userpath
+     * @return
+     */
+    static std::filesystem::path canonicalizePath( const std::string& userpath );
 
   private:
     SignalUtils( );

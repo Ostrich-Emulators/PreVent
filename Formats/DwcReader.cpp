@@ -13,14 +13,16 @@
 #include <iostream>
 #include <iterator>
 
-namespace FormatConverter{
+namespace FormatConverter {
   const size_t DwcReader::FIRST_VITAL_COL = 4;
   const size_t DwcReader::TIME_COL = 1;
   const size_t DwcReader::DATE_COL = 0;
 
-  DwcReader::DwcReader( ) : WfdbReader( "DWC" ) { }
+  DwcReader::DwcReader( ) : WfdbReader( "DWC" ) {
+  }
 
-  DwcReader::~DwcReader( ) { }
+  DwcReader::~DwcReader( ) {
+  }
 
   dr_time DwcReader::converttime( const std::string& timeline ) {
     struct tm timeinfo;
@@ -57,7 +59,7 @@ namespace FormatConverter{
   }
 
   int DwcReader::prepare( const std::string& infoname, SignalSet * info ) {
-    auto fspath = std::filesystem::path{ infoname };
+    auto fspath = SignalUtils::canonicalizePath( infoname );
     auto recordset = fspath.replace_extension( ".hea" );
     auto basename = recordset.parent_path( ).append( recordset.stem( ).string( ) ).string( );
     int rslt = WfdbReader::prepare( recordset.string( ), info );
@@ -112,7 +114,8 @@ namespace FormatConverter{
             }
             else if ( "anno_file" == key ) {
               dr_time offsetter = basetime( );
-              for ( auto& a : SignalUtils::loadAuxData( val ) ) {
+              auto afile = recordset.parent_path( ).append( val );
+              for ( auto& a : SignalUtils::loadAuxData( afile.string( ) ) ) {
 
                 a.time += offsetter;
                 annomap[name][val].push_back( a );

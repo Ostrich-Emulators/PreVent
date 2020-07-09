@@ -20,7 +20,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <filesystem>
 
 namespace FormatConverter {
 
@@ -366,13 +365,36 @@ namespace FormatConverter {
     return std::make_unique<CachefileData>( filename, fdopen( fd, "wb+" ) );
   }
 
+  std::filesystem::path SignalUtils::canonicalizePath( const std::string& userpath ) {
+    auto canonical = std::filesystem::path{ userpath };
+
+#ifdef __CYGWIN__
+    size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, userpath.data( ), NULL, 0 );
+    if ( size < 0 ) {
+      throw std::runtime_error( "cannot resolve path: " + userpath );
+    }
+
+    char * cygpath = (char *) malloc( size );
+    if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, userpath.data( ),
+        cygpath, size ) ) {
+      free( cygpath );
+      throw std::runtime_error( "error converting path: " + userpath );
+    }
+    //std::cout << "cygpath: " << cygpath << std::endl;
+    canonical = cygpath;
+    free( cygpath );
+#endif
+
+    return canonical;
+  }
+
   CachefileData::CachefileData( const std::string& name, FILE * f ) : filename( name ), file( f ) {
   }
 
   CachefileData::~CachefileData( ) {
     if ( nullptr != file ) {
       std::fclose( file );
-      std::remove( filename.data() );
+      std::remove( filename.data( ) );
     }
   }
 }

@@ -8,6 +8,7 @@
 #include "DataRow.h"
 #include "SignalData.h"
 #include "config.h"
+#include "SignalUtils.h"
 
 #include <iostream>
 #include <iterator>
@@ -120,26 +121,7 @@ namespace FormatConverter {
       return rslt;
     }
 
-    auto headerpath = std::filesystem::path{ headername };
-#ifdef __CYGWIN__
-    size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, headername.c_str( ), NULL, 0 );
-    if ( size < 0 ) {
-      std::cerr << "cannot resolve path: " << headername << std::endl;
-      return -1;
-    }
-
-    char * cygpath = (char *) malloc( size );
-    if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, headername.c_str( ),
-        cygpath, size ) ) {
-      std::cout << "error converting path!" << std::endl;
-      perror( "cygwin_conv_path" );
-      return -1;
-    }
-    //std::cout << "cygpath: " << cygpath << std::endl;
-    headerpath.assign( cygpath );
-    free( cygpath );
-
-#endif
+    auto headerpath = SignalUtils::canonicalizePath(headername );
     auto path = ". " + headerpath.parent_path().string( );
     output( ) << "wfdb path: " << path << std::endl;
     setwfdb( path.data() );
