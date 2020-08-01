@@ -32,6 +32,7 @@
 
 #include "config.h"
 #include "releases.h"
+#include "Log.h"
 
 using namespace FormatConverter;
 
@@ -175,6 +176,7 @@ int main( int argc, char** argv ) {
         break;
       case 'q':
         Options::set( OptionsKey::QUIET );
+        Log::setlevel( LogLevel::NONE );
         break;
       case 'T':
         Options::set( OptionsKey::INDEXED_TIME );

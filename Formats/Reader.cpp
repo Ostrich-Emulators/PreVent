@@ -12,6 +12,7 @@
 #include "StpPhilipsReader.h"
 #include "DwcReader.h"
 #include "Options.h"
+#include "Log.h"
 
 #include <iostream>       // std::cout, std::ios
 #include <sstream>        // std::istringstream
@@ -71,7 +72,6 @@ namespace FormatConverter{
   }
 
   void Reader::finish( ) {
-    ss.clear( );
   }
 
   void Reader::setQuiet( bool q ) {
@@ -99,7 +99,7 @@ namespace FormatConverter{
   }
 
   std::ostream& Reader::output( ) const {
-    return ( quiet ? ( std::ostream& ) ss : std::cout );
+    return Log::debug( );
   }
 
   bool Reader::getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) {

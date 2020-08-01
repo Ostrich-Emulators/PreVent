@@ -135,7 +135,6 @@ namespace FormatConverter {
     bool anon;
     bool onefile;
     bool local_time;
-    std::stringstream ss;
     TimeModifier timemod;
   };
 }

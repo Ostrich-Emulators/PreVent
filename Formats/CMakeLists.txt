@@ -79,6 +79,7 @@ StpPhilipsReader.cpp
 DwcReader.cpp
 NullWriter.cpp
 NullSignalData.cpp
+Log.cpp
 generated/config.h
 generated/releases.h
 )
@@ -111,6 +112,7 @@ target_link_libraries(formats
 
 install (TARGETS formats DESTINATION ${lib_dest})
 install (FILES AnonymizingSignalSet.h
+exports.h
 Base64.h
 BasicSignalData.h
 BasicSignalSet.h
@@ -156,5 +158,6 @@ strict_fstream.hpp
 CircularBuffer.h
 NullWriter.h
 NullSignalData.h
+Log.h
 generated/releases.h
 DESTINATION ${include_dest} )
