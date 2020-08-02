@@ -1,7 +1,10 @@
 add_executable(formatconverter main.cpp Db.cpp)
 
-target_compile_options(formatconverter PRIVATE -Wall)
-
+if( MSVC )
+  target_compile_options(formatconverter PRIVATE /W4)
+else()
+  target_compile_options(formatconverter PRIVATE -Wall)
+endif()
 target_link_libraries(formatconverter
 	formats
 	${SQLITE_LIBRARIES}

@@ -13,6 +13,11 @@ execute_process (
 	OUTPUT_STRIP_TRAILING_WHITESPACE
   COMMAND git describe --abbrev=8 --dirty --always --tags
 )
+MESSAGE( STATUS "the git hash: ${GIT_HASH}" )
+
+if( MSVC)
+  
+else()
 
 execute_process (
     COMMAND wfdb-config "--libs"
@@ -25,18 +30,17 @@ execute_process (
     OUTPUT_VARIABLE WFDB_INCLUDES
 		OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-
-MESSAGE( STATUS "the git hash: ${GIT_HASH}" )
+endif()
 
 configure_file (
-  "config.h.in"
-  "generated/config.h"
+  "${CMAKE_SOURCE_DIR}/Formats/config.h.in"
+  "${CMAKE_SOURCE_DIR}/Formats/generated/config.h"
 )
 
 add_custom_command(
-  OUTPUT generated/releases.h
-  COMMAND xxd -i releases.h.in generated/releases.h
-  DEPENDS releases.h.in
+  OUTPUT ${CMAKE_SOURCE_DIR}/Formats/generated/releases.h
+  COMMAND xxd -i "${CMAKE_SOURCE_DIR}/Formats/releases.h.in" ${CMAKE_SOURCE_DIR}/Formats/generated/releases.h
+  DEPENDS "${CMAKE_SOURCE_DIR}/Formats/releases.h.in"
 )
 
 add_library(formats SHARED AnonymizingSignalSet.cpp
@@ -87,15 +91,13 @@ generated/releases.h
 set(include_dest include/formatconverter-${LIBVERSION})
 set(lib_dest lib/formatconverter-${LIBVERSION})
 
-target_compile_options(formats PRIVATE -Wall)
-
 target_include_directories(formats
     PUBLIC
         $<INSTALL_INTERFACE:${include_dest}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     PRIVATE
         $<INSTALL_INTERFACE:${include_dest}>
-        $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS} ${MATIO_INCLUDES} ${WFDB_INCLUDES}>
+        $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS} ${MATIO_INCLUDES} ${WFDB_INCLUDES} ${EXPAT_INCLUDE_DIR}>
 )
 
 target_link_libraries(formats 
