@@ -482,14 +482,14 @@ namespace FormatConverter{
       H5::DataSpace space( 2, dims );
 
       auto ds = events.createDataSet( "Segment_Offsets", H5::PredType::STD_I64LE, space );
-      long long indexes[segmentsizes.size( ) * 2] = { 0 };
+      auto indexes = std::vector<long long>(segmentsizes.size() * 2);
       int row = 0;
       for ( const auto& e : segmentsizes ) {
         indexes[ 2 * row ] = e.second;
         indexes[2 * row + 1] = e.first;
         row++;
       }
-      ds.write( indexes, H5::PredType::STD_I64LE );
+      ds.write( indexes.data(), H5::PredType::STD_I64LE );
       writeAttribute( ds, "Columns", "timestamp (ms), segment offset" );
     }
 
@@ -826,7 +826,7 @@ namespace FormatConverter{
 
     // HDF5 seems to have trouble writing a vector of strings, so
     // we'll just load the data into an array of char *s.
-    const char * vdata[sz] = { };
+    auto vdata = std::vector<const char*>(sz);
 
     size_t c = 0;
     for ( const auto& t : data ) {
@@ -851,7 +851,7 @@ namespace FormatConverter{
     }
 
     H5::DataSet dsv = auxg.createDataSet( "data", st, space, props );
-    dsv.write( vdata, st );
+    dsv.write( vdata.data(), st );
   }
 
   void Hdf5Writer::writeEvents( H5::Group& group, SignalData * data ) {

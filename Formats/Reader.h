@@ -17,7 +17,7 @@ namespace FormatConverter {
   class SignalData;
   class DataRow;
 
-  enum ReadResult {
+  enum class ReadResult : int {
     FIRST_READ = 0,
     NORMAL = 1,
     END_OF_PATIENT = 2,

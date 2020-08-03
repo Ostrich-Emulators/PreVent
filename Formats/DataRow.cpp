@@ -68,7 +68,7 @@ namespace FormatConverter{
         *val = whole;
       }
       else {
-        *scale = ( strval.length( ) - dotpos - 1 );
+        *scale = static_cast<int>((strval.length() - dotpos - 1));
         *val = fraction;
 
         if ( 0 != whole ) {

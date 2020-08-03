@@ -39,7 +39,13 @@ if(MSVC)
   set(tdmspp-osem_DIR "../Tdmspp/out/install/x64-Debug/lib/tdmspp-osem-2.0.0")
   set(expat_DIR "C:/Program Files (x86)/Expat 2.2.0")
   set(SQLITE_LIBRARIES "C:/Program Files (x86)/sqlite3/sqlite3.dll")
+
+  set(MATIO_INCLUDES "C:/Users/ryan/source/matio-1.5.17/src;C:/Users/ryan/source/matio-1.5.17/visual_studio")
+  set(MATIO_LIRARIES "C:/Users/ryan/source/matio-1.5.17/visual_studio/x64/Debug")
+
   find_package(EXPAT REQUIRED expat2>=2)
+
+
 else()
 set(HDF5_USE_STATIC_LIBRARIES false)
   find_package(PkgConfig)

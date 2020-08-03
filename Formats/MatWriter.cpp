@@ -172,8 +172,8 @@ namespace FormatConverter{
 
     size_t dims[2] = { (size_t) rows, (size_t) cols };
 
-    int timestamps[rows] = { 0 };
-    short vitals[rows * cols];
+    auto timestamps = std::vector<int>(rows);
+    auto vitals=std::vector<short>(rows * cols);
     int row = 0;
     timestamps[0] = earliest;
     for ( std::vector<int>& rowcols : syncd ) {
@@ -193,7 +193,7 @@ namespace FormatConverter{
     }
 
     matvar_t * var = Mat_VarCreate( "vitals", MAT_C_INT16, MAT_T_INT16, 2, dims,
-        vitals, 0 );
+        vitals.data(), 0 );
 
     Mat_VarWrite( matfile, var, compress );
     Mat_VarFree( var );
@@ -202,18 +202,18 @@ namespace FormatConverter{
     dims[0] = rows;
     dims[1] = 1;
 
-    var = Mat_VarCreate( "vt", MAT_C_INT32, MAT_T_INT32, 2, dims, timestamps, 0 );
+    var = Mat_VarCreate( "vt", MAT_C_INT32, MAT_T_INT32, 2, dims, timestamps.data(), 0 );
     Mat_VarWrite( matfile, var, compress );
     Mat_VarFree( var );
 
     // scales
     dims[0] = 1;
     dims[1] = cols;
-    short scalesarr[cols];
+    auto scalesarr = std::vector<short>(cols);
     for ( int i = 0; i < cols; i++ ) {
       scalesarr[i] = scales[labels[i]];
     }
-    var = Mat_VarCreate( "vscales", MAT_C_INT16, MAT_T_INT16, 2, dims, scalesarr, 0 );
+    var = Mat_VarCreate( "vscales", MAT_C_INT16, MAT_T_INT16, 2, dims, scalesarr.data(), 0 );
     Mat_VarWrite( matfile, var, compress );
     Mat_VarFree( var );
 
