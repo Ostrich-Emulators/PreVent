@@ -202,9 +202,9 @@ namespace FormatConverter{
     }
 
     if ( !wavevals.empty( ) ) {
-      std::cerr << "NO sequence numbers, but wave vals? WRONG!" << std::endl;
+      Log::error( ) << "NO sequence numbers, but wave vals? WRONG!" << std::endl;
       for ( const auto& m : wavevals ) {
-        std::cerr << "\twave: " << m.first << "\t" << m.second.size( ) << std::endl;
+        Log::debug( ) << "\twave: " << m.first << "\t" << m.second.size( ) << std::endl;
       }
     }
   }
@@ -531,7 +531,7 @@ namespace FormatConverter{
         work.rewind( 4 );
         // note: GE Unity systems seem to always have a 0 for this marker
         if ( isunity( ) ) {
-          Log::info() << "note: assuming GE Unity Carescape input" << std::endl;
+          Log::info( ) << "note: assuming GE Unity Carescape input" << std::endl;
         }
       }
 
@@ -805,7 +805,7 @@ namespace FormatConverter{
         work.skip( waveoffset - work.poppedSinceMark( ) );
       }
       else if ( work.poppedSinceMark( ) > waveoffset ) {
-        std::cerr << "we passed the wave start. that ain't right!" << std::endl;
+        Log::error( ) << "we passed the wave start. that ain't right!" << std::endl;
         work.rewind( work.poppedSinceMark( ) - waveoffset );
       }
 
@@ -817,8 +817,7 @@ namespace FormatConverter{
       return ChunkReadResult::OK;
     }
     catch ( const std::runtime_error & err ) {
-      std::cerr << err.what( ) << " (chunk started at byte: "
-          << chunkstart << ")" << std::endl;
+      Log::error( ) << err.what( ) << " (chunk started at byte: " << chunkstart << ")" << std::endl;
       return ChunkReadResult::UNKNOWN_BLOCKTYPE;
     }
   }
@@ -1208,7 +1207,7 @@ namespace FormatConverter{
     reader.setNonbreaking( true );
     int failed = reader.prepare( input, info.get( ) );
     if ( failed ) {
-      std::cerr << "error while opening input file. error code: " << failed << std::endl;
+      Log::error() << "error while opening input file. error code: " << failed << std::endl;
       return metas;
     }
     reader.setMetadataOnly( );
@@ -1237,7 +1236,7 @@ namespace FormatConverter{
           okToContinue = false;
           break;
         case ReadResult::ERROR:
-          std::cerr << "error while reading input file" << std::endl;
+          Log::error() << "error while reading input file" << std::endl;
           okToContinue = false;
           break;
       }

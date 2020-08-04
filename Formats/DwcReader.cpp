@@ -8,21 +8,20 @@
 #include "DataRow.h"
 #include "SignalData.h"
 #include "SignalUtils.h"
+#include "Log.h"
 
 #include <filesystem>
 #include <iostream>
 #include <iterator>
 
-namespace FormatConverter {
+namespace FormatConverter{
   const size_t DwcReader::FIRST_VITAL_COL = 4;
   const size_t DwcReader::TIME_COL = 1;
   const size_t DwcReader::DATE_COL = 0;
 
-  DwcReader::DwcReader( ) : WfdbReader( "DWC" ) {
-  }
+  DwcReader::DwcReader( ) : WfdbReader( "DWC" ) { }
 
-  DwcReader::~DwcReader( ) {
-  }
+  DwcReader::~DwcReader( ) { }
 
   dr_time DwcReader::converttime( const std::string& timeline ) {
     struct tm timeinfo;
@@ -86,7 +85,7 @@ namespace FormatConverter {
     auto numsfile = basename + ".numerics.csv";
     numerics.open( numsfile );
     if ( !numerics.good( ) ) {
-      std::cerr << "no numerics file found" << std::endl;
+      Log::error( ) << "no numerics file found" << std::endl;
       return -1;
     }
 

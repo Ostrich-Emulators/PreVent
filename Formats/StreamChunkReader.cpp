@@ -14,6 +14,7 @@
  */
 
 #include "StreamChunkReader.h"
+#include "Log.h"
 
 #include <fstream>
 #include <cassert>
@@ -29,12 +30,12 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-namespace FormatConverter {
+namespace FormatConverter{
   const int StreamChunkReader::DEFAULT_CHUNKSIZE = 1024 * 256;
 
   StreamChunkReader::StreamChunkReader( std::istream * cin, bool compressed,
-          bool isStdin, bool isGzip, int chunksz ) : rr( ReadResult::NORMAL ),
-  iscompressed( compressed ), usestdin( isStdin ), chunksize( chunksz ), stream( cin ) {
+      bool isStdin, bool isGzip, int chunksz ) : rr( ReadResult::NORMAL ),
+      iscompressed( compressed ), usestdin( isStdin ), chunksize( chunksz ), stream( cin ) {
     if ( iscompressed ) {
       initZlib( isGzip );
     }
@@ -52,11 +53,11 @@ namespace FormatConverter {
     strm.next_in = Z_NULL;
 
     int ret = ( forGzip
-            ? inflateInit2( &strm, 16 + MAX_WBITS )
-            : inflateInit( &strm ) );
+        ? inflateInit2( &strm, 16 + MAX_WBITS )
+        : inflateInit( &strm ) );
 
     if ( ret != Z_OK ) {
-      std::cerr << "zlib error code: " << ret << std::endl;
+      Log::error( ) << "zlib error code: " << ret << std::endl;
       exit( 0 );
     }
   }

@@ -57,7 +57,7 @@ namespace FormatConverter{
     size_t pos = expand.find( "%S" );
     while ( pos != std::string::npos ) //initially sorts through file for all standard form flags and expands them
     {
-      Log::debug() << "replacing %S with %i-p%p-%s.%t" << std::endl;
+      Log::trace() << "replacing %S with %i-p%p-%s.%t" << std::endl;
       expand.replace( pos, 2, "%i-p%p-%s.%t" );
       pos = expand.find( "%S", pos + 1 );
     }
@@ -145,7 +145,7 @@ namespace FormatConverter{
     for ( auto x : replacements ) {
       size_t pos = lastname.find( x );
       while ( pos != std::string::npos ) {
-        Log::debug() << "replacing " << x << " with " << conversions[x] << std::endl;
+        Log::trace() << "replacing " << x << " with " << conversions[x] << std::endl;
         lastname.replace( pos, 2, conversions[x] );
         pos = lastname.find( x, pos + 1 );
       }

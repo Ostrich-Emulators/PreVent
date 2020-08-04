@@ -37,12 +37,12 @@ namespace FormatConverter{
         file = H5::H5File( filename, H5F_ACC_RDONLY );
       }
       catch ( H5::FileIException& error ) {
-        Log::error() << error.getDetailMsg( ) << std::endl;
+        Log::error( ) << error.getDetailMsg( ) << std::endl;
         return -1;
       }
       // catch failure caused by the DataSet operations
       catch ( H5::DataSetIException& error ) {
-        Log::error() << error.getDetailMsg( ) << std::endl;
+        Log::error( ) << error.getDetailMsg( ) << std::endl;
         return -2;
       }
     }
@@ -65,13 +65,13 @@ namespace FormatConverter{
       }
     }
     catch ( H5::FileIException& error ) {
-      Log::error() << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
       return false;
     }
     // catch failure caused by the DataSet operations
     catch ( H5::DataSetIException& error ) {
-      Log::error() << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
       return false;
     }
@@ -108,13 +108,13 @@ namespace FormatConverter{
       eattr.read( eattr.getDataType( ), &endtime );
     }
     catch ( H5::FileIException& error ) {
-      Log::error() << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
       return false;
     }
     // catch failure caused by the DataSet operations
     catch ( H5::DataSetIException& error ) {
-      Log::error() << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
       return false;
     }
@@ -151,10 +151,10 @@ namespace FormatConverter{
 
           // just read everything all at once...offsets should always be small
           // (yeah, right!)
-          auto read = std::vector<long>(ROWS * COLS);
-          offsets.read( read.data(), offsets.getDataType( ) );
+          auto read = std::vector<long>( ROWS * COLS );
+          offsets.read( read.data( ), offsets.getDataType( ) );
           for ( size_t row = 0; row < ROWS; row++ ) {
-              info->addOffset(read[2 * row + 1], read[2 * row]);
+            info->addOffset( read[2 * row + 1], read[2 * row] );
           }
         }
       }
@@ -168,11 +168,11 @@ namespace FormatConverter{
       }
     }
     catch ( H5::FileIException& error ) {
-      Log::error() << "/: " << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << "/: " << error.getDetailMsg( ) << std::endl;
     }
     // catch failure caused by the DataSet operations
     catch ( H5::DataSetIException& error ) {
-      Log::error() << "/: " << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << "/: " << error.getDetailMsg( ) << std::endl;
     }
 
 
@@ -186,11 +186,11 @@ namespace FormatConverter{
       vgroup.close( );
     }
     catch ( H5::FileIException& error ) {
-     Log::error() << "/VitalSigns: " << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << "/VitalSigns: " << error.getDetailMsg( ) << std::endl;
     }
     // catch failure caused by the DataSet operations
     catch ( H5::DataSetIException& error ) {
-      Log::error()  << "/VitalSigns: " << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << "/VitalSigns: " << error.getDetailMsg( ) << std::endl;
     }
 
     if ( !this->skipwaves( ) ) {
@@ -204,11 +204,11 @@ namespace FormatConverter{
         wgroup.close( );
       }
       catch ( H5::FileIException& error ) {
-        Log::error()  << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
+        Log::error( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
       }
       // catch failure caused by the DataSet operations
       catch ( H5::DataSetIException& error ) {
-        Log::error()  << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
+        Log::error( ) << "/Waveforms: " << error.getDetailMsg( ) << std::endl;
       }
     }
 
@@ -224,15 +224,15 @@ namespace FormatConverter{
     const hsize_t COLS = DIMS[1];
 
     const hsize_t sizer = ROWS * COLS;
-    auto read = std::vector<long>(sizer);
-    dataset.read( read.data(), dataset.getDataType( ) );
+    auto read = std::vector<long>( sizer );
+    dataset.read( read.data( ), dataset.getDataType( ) );
     std::vector<dr_time> times;
     times.reserve( sizer );
     for ( hsize_t i = 0; i < sizer; i++ ) {
       long l = read[i];
       times.push_back( modtime( l ) );
     }
-    Log::trace() << "times vector size is: " << times.size( ) << std::endl;
+    Log::trace( ) << "times vector size is: " << times.size( ) << std::endl;
     return times;
   }
 
@@ -313,11 +313,11 @@ namespace FormatConverter{
               free( readdata );
             }
             else {
-              std::cerr << "\"time\" and \"data\" datasets must have the same number of data points...ignoring" << std::endl;
+              Log::warn( ) << "\"time\" and \"data\" datasets must have the same number of data points...ignoring" << std::endl;
             }
           }
           else {
-            std::cerr << "auxillary data group must have a \"time\" and \"data\" dataset" << std::endl;
+            Log::warn( ) << "auxillary data group must have a \"time\" and \"data\" dataset" << std::endl;
           }
         }
       }
@@ -350,34 +350,34 @@ namespace FormatConverter{
     // FIXME: use hyperslabs (slabreadi/slabreads is fine when we only have 1 column)
 
     if ( dataset.getDataType( ) == H5::PredType::STD_I16LE ) {
-        auto read = std::vector<short>(ROWS * COLS);
+      auto read = std::vector<short>( ROWS * COLS );
 
-      dataset.read( read.data(), dataset.getDataType( ) );
+      dataset.read( read.data( ), dataset.getDataType( ) );
       for ( size_t row = 0; row < ROWS; row++ ) {
-        short val = read[COLS*row];
+        short val = read[COLS * row];
 
         // FIXME: we better hope valsPerTime is always 1!
         auto drow = std::make_unique<DataRow>( times[row / valsPerTime], val, scale );
         if ( COLS > 1 ) {
-          for ( int c = 1; c < (int)COLS; c++ ) {
-              drow->extras[attrmap[c]] = std::to_string(read[COLS * row + c]);
+          for ( int c = 1; c < (int) COLS; c++ ) {
+            drow->extras[attrmap[c]] = std::to_string( read[COLS * row + c] );
           }
         }
         signal->add( std::move( drow ) );
       }
     }
     else { // data is in integers
-      auto read = std::vector<int>(ROWS * COLS);
-      dataset.read( read.data(), dataset.getDataType( ) );
+      auto read = std::vector<int>( ROWS * COLS );
+      dataset.read( read.data( ), dataset.getDataType( ) );
       for ( size_t row = 0; row < ROWS; row++ ) {
 
-        int val = read[COLS*row];
+        int val = read[COLS * row];
 
         // FIXME: we better hope valsPerTime is always 1!
         auto drow = std::make_unique<DataRow>( times[row / valsPerTime], val, scale );
         if ( COLS > 1 ) {
-          for ( int c = 1; c < (int)COLS; c++ ) {
-              drow->extras[attrmap[c]] = std::to_string(read[COLS * row + c]);
+          for ( int c = 1; c < (int) COLS; c++ ) {
+            drow->extras[attrmap[c]] = std::to_string( read[COLS * row + c] );
           }
         }
         signal->add( std::move( drow ) );
@@ -422,10 +422,10 @@ namespace FormatConverter{
       H5::DataSpace memspace( 2, count );
       memspace.selectHyperslab( H5S_SELECT_SET, count, offset0 );
       if ( doints ) {
-        dataset.read( intbuff.data(), dataset.getDataType( ), memspace, dataspace );
+        dataset.read( intbuff.data( ), dataset.getDataType( ), memspace, dataspace );
       }
       else {
-        dataset.read( shortbuff.data(), dataset.getDataType( ), memspace, dataspace );
+        dataset.read( shortbuff.data( ), dataset.getDataType( ), memspace, dataspace );
       }
 
       for ( size_t row = 0; row < count[0]; row++ ) {
@@ -467,7 +467,7 @@ namespace FormatConverter{
               signal->setMeta( key, inty );
             }
             else if ( type.getSize( ) <= sizeof ( long ) ) {
-              std::cerr << "long meta copy not implemented" << std::endl;
+              Log::warn() << "long meta copy not implemented" << std::endl;
               // long inty = 0;
               // attr.read( type, &inty );
               // signal->setMeta( key, inty );
@@ -656,12 +656,12 @@ namespace FormatConverter{
       }
     }
     catch ( H5::FileIException& error ) {
-      Log::error()  << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
     }
     // catch failure caused by the DataSet operations
     catch ( H5::DataSetIException& error ) {
-      Log::error() << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
     }
   }
@@ -701,7 +701,7 @@ namespace FormatConverter{
     hsize_t endpos = ROWS;
 
     while ( startpos < endpos ) {
-      auto checkpos = static_cast<hsize_t>(std::floor((endpos + startpos) / 2.0));
+      auto checkpos = static_cast<hsize_t> ( std::floor( ( endpos + startpos ) / 2.0 ) );
       auto checktime = getTimeAtIndex( haystack, checkpos );
 
       if ( leftmost ) {
@@ -752,13 +752,13 @@ namespace FormatConverter{
 
     hsize_t offset[] = { startrow, 0 };
 
-    auto dd = std::vector<int>(rowstoget * COLS);
+    auto dd = std::vector<int>( rowstoget * COLS );
     dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
-    ds.read( dd.data(), ds.getDataType( ), searchspace, dsspace );
+    ds.read( dd.data( ), ds.getDataType( ), searchspace, dsspace );
 
     std::vector<int> values( rowstoget );
     for ( hsize_t i = 0; i < rowstoget; i++ ) {
-      values[i] = dd[COLS*i];
+      values[i] = dd[COLS * i];
     }
 
     return values;
@@ -782,13 +782,13 @@ namespace FormatConverter{
     H5::DataSpace searchspace( 2, dim );
 
     const hsize_t offset[] = { startrow, 0 };
-    auto dd = std::vector<short>(rowstoget * COLS);
+    auto dd = std::vector<short>( rowstoget * COLS );
     dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
-    ds.read( dd.data(), ds.getDataType( ), searchspace, dsspace );
+    ds.read( dd.data( ), ds.getDataType( ), searchspace, dsspace );
 
     std::vector<int> values( rowstoget );
     for ( hsize_t i = 0; i < rowstoget; i++ ) {
-      values[i] = static_cast<int> ( dd[COLS*i] );
+      values[i] = static_cast<int> ( dd[COLS * i] );
     }
 
     return values;
@@ -818,10 +818,10 @@ namespace FormatConverter{
 
     const hsize_t offset[] = { startrow, 0 };
     const hsize_t stride[] = { 1, COLS };
-    auto times = std::vector<dr_time>(rowstoget);
+    auto times = std::vector<dr_time>( rowstoget );
     dsspace.selectHyperslab( H5S_SELECT_SET, count, offset, stride );
-    ds.read( times.data(), ds.getDataType( ), searchspace, dsspace );
-    
+    ds.read( times.data( ), ds.getDataType( ), searchspace, dsspace );
+
     return times;
   }
 

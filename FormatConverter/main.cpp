@@ -36,8 +36,16 @@
 
 using namespace FormatConverter;
 
+void intro( char * progname ) {
+  Log::info( ) << progname << " version " << FC_VERS_MAJOR
+      << "." << FC_VERS_MINOR << "." << FC_VERS_MICRO
+      << "; build " << GIT_BUILD << std::endl;
+}
+
 void helpAndExit( char * progname, std::string msg = "" ) {
-  std::cerr << msg << std::endl
+  intro( progname );
+
+  Log::error() << msg << std::endl
       << "Syntax: " << progname << " --to <format> <file>..."
       << std::endl << "\t-f or --from <input format>"
       << std::endl << "\t-t or --to <output format>"
@@ -86,13 +94,13 @@ void settmpdir( std::string tmpdir ) {
 #ifdef __CYGWIN__
   size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, tmpdir.c_str( ), NULL, 0 );
   if ( size < 0 ) {
-    std::cerr << "cannot resolve path: " << tmpdir << std::endl;
+    Log::error() << "cannot resolve path: " << tmpdir << std::endl;
     exit( 2 );
   }
 
   char * cygpath = (char *) malloc( size );
   if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, tmpdir.c_str( ), cygpath, size ) ) {
-    std::cout << "error converting path!" << std::endl;
+    Log::error() << "error converting path!" << std::endl;
     perror( "cygwin_conv_path" );
     exit( 2 );
   }
@@ -250,7 +258,7 @@ int main( int argc, char** argv ) {
         stopatone = true;
         break;
       case ':':
-        std::cerr << "missing option argument" << std::endl;
+        Log::error() << "missing option argument" << std::endl;
         helpAndExit( argv[0] );
         break;
       case '?':
@@ -260,9 +268,7 @@ int main( int argc, char** argv ) {
     }
   }
 
-  Log::info( ) << argv[0] << " version " << FC_VERS_MAJOR
-      << "." << FC_VERS_MINOR << "." << FC_VERS_MICRO
-      << "; build " << GIT_BUILD << std::endl;
+  intro( argv[0] );
 
   if ( ( optind + 1 ) > argc ) {
     helpAndExit( argv[0], "no file specified" );
@@ -364,7 +370,7 @@ int main( int argc, char** argv ) {
     from->timeModifier( timemod );
   }
   catch ( std::string x ) {
-    std::cerr << x << std::endl;
+    Log::error() << x << std::endl;
   }
 
   std::shared_ptr<Db> db;

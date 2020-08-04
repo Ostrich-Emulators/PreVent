@@ -284,7 +284,7 @@ namespace FormatConverter {
       ok += std::fread( &vals[0], SIZEOFINT, counter, cachefile->file );
 
       if ( ok < counter + 4 ) {
-        std::cerr << "error reading cache file for signal: " << label << std::endl;
+        Log::error() << "error reading cache file for signal: " << label << std::endl;
       }
 
       if ( static_cast<int> ( std::ftell( cachefile->file ) - offset_start ) < offset ) {

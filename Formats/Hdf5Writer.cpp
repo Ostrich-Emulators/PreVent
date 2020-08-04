@@ -208,7 +208,7 @@ namespace FormatConverter{
 
     bool useInts = false;
     if ( rescaleForShortsIfNeeded( data, useInts ) ) {
-      std::cerr << std::endl << " coercing out-of-range numbers (possible loss of precision)";
+      Log::warn() << std::endl << " coercing out-of-range numbers (possible loss of precision)";
     }
 
     H5::DataSet ds = group.createDataSet( "data",
@@ -332,7 +332,7 @@ namespace FormatConverter{
 
     bool useInts = false;
     if ( rescaleForShortsIfNeeded( data, useInts ) ) {
-      std::cerr << std::endl << "  coercing out-of-range numbers (possible loss of precision)";
+      Log::warn() << std::endl << "  coercing out-of-range numbers (possible loss of precision)";
     }
 
     H5::DataSet ds = group.createDataSet( "data",

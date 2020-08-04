@@ -86,7 +86,7 @@ namespace FormatConverter{
   std::vector<std::string> Writer::write( Reader * from, SignalSet * data ) {
     auto patientno = 1;
 
-    Log::debug() << "init data set" << std::endl;
+    Log::trace() << "init data set" << std::endl;
     namer->patientOrdinal( patientno );
     auto initrslt = initDataSet( );
     auto list = std::vector<std::string>{ };
@@ -122,7 +122,7 @@ namespace FormatConverter{
         }
 
         if ( files.empty( ) ) {
-          std::cerr << "refusing to write empty data file!" << std::endl;
+          Log::warn() << "refusing to write empty data file!" << std::endl;
         }
         else {
           list.insert( list.end( ), files.begin( ), files.end( ) );
@@ -134,7 +134,7 @@ namespace FormatConverter{
 
         data->reset( true );
         namer->patientOrdinal( patientno );
-        Log::debug() << "init data set" << std::endl;
+        Log::trace() << "init data set" << std::endl;
         initDataSet( );
       }
       else if ( ReadResult::END_OF_FILE == retcode ) {
@@ -142,7 +142,7 @@ namespace FormatConverter{
 
         std::vector<std::string> files = closeDataSet( );
         if ( files.empty( ) ) {
-          Log::error() << "refusing to write empty data file!" << std::endl;
+          Log::warn() << "refusing to write empty data file!" << std::endl;
         }
         else {
           list.insert( list.end( ), files.begin( ), files.end( ) );

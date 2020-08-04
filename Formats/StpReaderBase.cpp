@@ -10,6 +10,7 @@
 #include "Hdf5Writer.h"
 #include "StreamChunkReader.h"
 #include "BasicSignalSet.h"
+#include "Log.h"
 
 #include <sys/stat.h>
 
@@ -137,7 +138,7 @@ namespace FormatConverter{
       filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
     }
     catch ( zstr::Exception& x ) {
-      std::cerr << x.what( ) << std::endl;
+      Log::error( ) << x.what( ) << std::endl;
       return -1;
     }
 

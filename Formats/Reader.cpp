@@ -125,7 +125,7 @@ namespace FormatConverter{
 
   void Reader::splice( const std::string& inputfile, const std::string& path,
       dr_time from, dr_time to, SignalData * signal ) {
-    std::cerr << "this reader does not support splicing" << std::endl;
+    Log::error() << "this reader does not support splicing" << std::endl;
   }
 
   bool Reader::strptime2( const std::string& input, const std::string& format,

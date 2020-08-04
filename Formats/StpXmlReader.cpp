@@ -17,6 +17,7 @@
 #include "SignalData.h"
 #include "SignalUtils.h"
 #include "Options.h"
+#include "Log.h"
 
 #include <iostream>
 #include <fstream>
@@ -159,7 +160,7 @@ namespace FormatConverter{
           v8samplerate = 256;
           if ( !warnedix ) {
             warnedix = true;
-            std::cerr << "Assuming 256 samples/sec from this Philips IX data" << std::endl;
+            Log::error() << "Assuming 256 samples/sec from this Philips IX data" << std::endl;
           }
         }
       }
@@ -240,7 +241,7 @@ namespace FormatConverter{
       if ( "WaveformData" == element ) {
         if ( label.empty( ) ) {
           if ( warnMissingName ) {
-            std::cerr << "skipping unnamed waveforms" << std::endl;
+            Log::warn() << "skipping unnamed waveforms" << std::endl;
             warnMissingName = false;
           }
         }
@@ -267,7 +268,7 @@ namespace FormatConverter{
           }
           else if ( warnJunkData ) {
             warnJunkData = false;
-            std::cerr << "skipping waveforms with no usable data" << std::endl;
+            Log::warn() << "skipping waveforms with no usable data" << std::endl;
           }
         }
       }

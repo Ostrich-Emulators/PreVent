@@ -118,7 +118,7 @@ namespace FormatConverter{
       if ( work.available( ) < 1024 * 768 ) {
         // we should never come close to filling up our work buffer
         // so if we have, make sure the user knows
-        std::cerr << "work buffer is too full...something is going wrong" << std::endl;
+        Log::error() << "work buffer is too full...something is going wrong" << std::endl;
         return ReadResult::ERROR;
       }
 
@@ -174,7 +174,7 @@ namespace FormatConverter{
         XML_Status status = XML_Parse( parser, xmldoc.c_str( ), xmldoc.length( ), true );
         if ( status != XML_STATUS_OK ) {
           XML_Error err = XML_GetErrorCode( parser );
-          std::cerr << XML_ErrorString( err )
+          Log::error() << XML_ErrorString( err )
               << " line: " << XML_GetCurrentLineNumber( parser )
               << " column: " << XML_GetCurrentColumnNumber( parser )
               << std::endl;
@@ -323,7 +323,7 @@ namespace FormatConverter{
     reader.setNonbreaking( true );
     int failed = reader.prepare( input, info.get() );
     if ( failed ) {
-      std::cerr << "error while opening input file. error code: " << failed << std::endl;
+      Log::error() << "error while opening input file. error code: " << failed << std::endl;
       return metas;
     }
     reader.setMetadataOnly( );
@@ -352,7 +352,7 @@ namespace FormatConverter{
           okToContinue = false;
           break;
         case ReadResult::ERROR:
-          std::cerr << "error while reading input file" << std::endl;
+          Log::error() << "error while reading input file" << std::endl;
           okToContinue = false;
           break;
       }

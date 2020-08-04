@@ -9,6 +9,7 @@
 #include <ctime>
 #include <iostream>
 #include "Reader.h"
+#include "Log.h"
 
 namespace FormatConverter{
 
@@ -43,7 +44,7 @@ namespace FormatConverter{
       }
     }
 
-    std::cerr << "could not parse time: " << timestr << std::endl;
+    Log::error( ) << "could not parse time: " << timestr << std::endl;
     return 0;
   }
 }
