@@ -45,7 +45,7 @@ void intro( char * progname ) {
 void helpAndExit( char * progname, std::string msg = "" ) {
   intro( progname );
 
-  Log::error() << msg << std::endl
+  Log::error( ) << msg << std::endl
       << "Syntax: " << progname << " --to <format> <file>..."
       << std::endl << "\t-f or --from <input format>"
       << std::endl << "\t-t or --to <output format>"
@@ -94,13 +94,13 @@ void settmpdir( std::string tmpdir ) {
 #ifdef __CYGWIN__
   size_t size = cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, tmpdir.c_str( ), NULL, 0 );
   if ( size < 0 ) {
-    Log::error() << "cannot resolve path: " << tmpdir << std::endl;
+    Log::error( ) << "cannot resolve path: " << tmpdir << std::endl;
     exit( 2 );
   }
 
   char * cygpath = (char *) malloc( size );
   if ( cygwin_conv_path( CCP_WIN_A_TO_POSIX | CCP_RELATIVE, tmpdir.c_str( ), cygpath, size ) ) {
-    Log::error() << "error converting path!" << std::endl;
+    Log::error( ) << "error converting path!" << std::endl;
     perror( "cygwin_conv_path" );
     exit( 2 );
   }
@@ -237,7 +237,8 @@ int main( int argc, char** argv ) {
         Options::set( OptionsKey::NOCACHE );
         break;
       case 'R':
-        std::cout << releases_h_in << std::endl;
+        intro( argv[0] );
+        Log::info() << releases_h_in << std::endl;
         exit( 0 );
         break;
       case 'a':
@@ -258,7 +259,7 @@ int main( int argc, char** argv ) {
         stopatone = true;
         break;
       case ':':
-        Log::error() << "missing option argument" << std::endl;
+        Log::error( ) << "missing option argument" << std::endl;
         helpAndExit( argv[0] );
         break;
       case '?':
@@ -370,7 +371,7 @@ int main( int argc, char** argv ) {
     from->timeModifier( timemod );
   }
   catch ( std::string x ) {
-    Log::error() << x << std::endl;
+    Log::error( ) << x << std::endl;
   }
 
   std::shared_ptr<Db> db;
