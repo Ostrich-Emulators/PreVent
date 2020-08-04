@@ -11,8 +11,8 @@
  * Created on August 1, 2020, 8:04 AM
  */
 
-#ifndef EXPORTS_H
-#define EXPORTS_H
+#ifndef FMTCNV_EXPORTS_H
+#define FMTCNV_EXPORTS_H
 
 
 #if defined(_WIN32) || defined(_Win64)
@@ -21,5 +21,5 @@
 #define FMTCNV_EXPORT
 #endif
 
-#endif /* EXPORTS_H */
+#endif /* FMTCNV_EXPORTS_H */
 

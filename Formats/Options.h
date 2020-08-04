@@ -22,7 +22,6 @@ namespace FormatConverter {
   enum OptionsKey {
     NOCACHE,
     INDEXED_TIME,
-    QUIET,
     ANONYMIZE,
     LOCALIZED_TIME,
     NO_BREAK,

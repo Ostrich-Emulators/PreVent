@@ -15,14 +15,14 @@
 #include "FileNamer.h"
 #include "OffsetTimeSignalSet.h"
 #include "Options.h"
+#include "Log.h"
 
 namespace FormatConverter{
 
   const int Writer::DEFAULT_COMPRESSION = 6;
 
   Writer::Writer( const std::string& ext ) : compress( DEFAULT_COMPRESSION ),
-      bequiet( false ), extension( ext ),
-      namer( std::make_unique<FileNamer>( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
+      extension( ext ), namer( std::make_unique<FileNamer>( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ) {
     // figure out a string for our timezone by getting a reference time
     time_t reftime = std::time( nullptr );
     tm * reftm = localtime( &reftime );
@@ -30,7 +30,7 @@ namespace FormatConverter{
     timezone = std::string( reftm->tm_zone );
   }
 
-  Writer::Writer( const Writer& w ) : compress( DEFAULT_COMPRESSION ), bequiet( false ),
+  Writer::Writer( const Writer& w ) : compress( DEFAULT_COMPRESSION ),
       extension( w.extension ), namer( std::make_unique<FileNamer>( FileNamer::parse( FileNamer::DEFAULT_PATTERN ) ) ),
       gmt_offset( w.gmt_offset ), timezone( w.timezone ) { }
 
@@ -86,16 +86,16 @@ namespace FormatConverter{
   std::vector<std::string> Writer::write( Reader * from, SignalSet * data ) {
     auto patientno = 1;
 
-    output( ) << "init data set" << std::endl;
+    Log::debug() << "init data set" << std::endl;
     namer->patientOrdinal( patientno );
     auto initrslt = initDataSet( );
     auto list = std::vector<std::string>{ };
     if ( initrslt < 0 ) {
-      std::cerr << "cannot init dataset: " + namer->last( ) << std::endl;
+      Log::error() << "cannot init dataset: " + namer->last( ) << std::endl;
       return list;
     }
 
-    output( ) << "filling data" << std::endl;
+    Log::debug() << "filling data" << std::endl;
     ReadResult retcode = from->fill( data );
 
     int files = 1;
@@ -134,7 +134,7 @@ namespace FormatConverter{
 
         data->reset( true );
         namer->patientOrdinal( patientno );
-        output( ) << "init data set" << std::endl;
+        Log::debug() << "init data set" << std::endl;
         initDataSet( );
       }
       else if ( ReadResult::END_OF_FILE == retcode ) {
@@ -142,7 +142,7 @@ namespace FormatConverter{
 
         std::vector<std::string> files = closeDataSet( );
         if ( files.empty( ) ) {
-          std::cerr << "refusing to write empty data file!" << std::endl;
+          Log::error() << "refusing to write empty data file!" << std::endl;
         }
         else {
           list.insert( list.end( ), files.begin( ), files.end( ) );
@@ -157,12 +157,12 @@ namespace FormatConverter{
       }
 
       // carry on with next data chunk
-      output( ) << "reading next file chunk" << std::endl;
+      Log::info() << "reading next file chunk" << std::endl;
       retcode = from->fill( data, retcode );
     }
 
     if ( ReadResult::ERROR == retcode ) {
-      std::cerr << "error reading file" << std::endl;
+      Log::error() << "error reading file" << std::endl;
     }
 
     return list;
@@ -172,26 +172,8 @@ namespace FormatConverter{
     listeners.push_back( l );
   }
 
-  class NullBuffer : public std::streambuf{
-  public:
-
-    int overflow( int c ) {
-
-      return c;
-    }
-  };
-
-  void Writer::quiet( bool q ) {
-
-    bequiet = q;
-  }
-
   void Writer::filenamer( const FileNamer& p ) {
     namer.reset( new FileNamer( p ) );
-  }
-
-  std::ostream& Writer::output( ) const {
-    return ( bequiet ? ( std::ostream& ) ss : std::cout );
   }
 
   int Writer::tz_offset( ) const {

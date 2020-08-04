@@ -1,3 +1,7 @@
+4.3.1
+  * Updated TDMS library
+  * Added --verbose option
+
 4.3.0
   * Reduced memory usage for extremely large files
   * Improved runtime performance

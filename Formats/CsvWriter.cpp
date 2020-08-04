@@ -17,6 +17,7 @@
 #include "SignalData.h"
 #include "SignalUtils.h"
 #include "FileNamer.h"
+#include "Log.h"
 
 namespace FormatConverter {
 
@@ -37,7 +38,7 @@ namespace FormatConverter {
 
   int CsvWriter::drain( SignalSet * info ) {
     std::string filename = filenamer( ).filename( info );
-    output( ) << "CsvWriter::drain() must be refactored dramatically" << std::endl;
+    Log::error() << "CsvWriter::drain() must be refactored dramatically" << std::endl;
     //  std::ofstream out( filename );
     //  for ( auto& v : info ) {
     //    const int scale = v.get( )->scale( );

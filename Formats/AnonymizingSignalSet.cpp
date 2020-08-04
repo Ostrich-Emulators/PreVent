@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include "config.h"
+#include "Log.h"
 
 namespace FormatConverter {
   const std::string AnonymizingSignalSet::DEFAULT_FILENAME_PATTERN = "%i-anonymized-storage.txt";
@@ -57,7 +58,7 @@ namespace FormatConverter {
 
     std::ofstream myfile( storagefile );
     if ( myfile.is_open( ) ) {
-      std::cout << "writing anonymous storage to " << storagefile << std::endl;
+      Log::info() << "writing anonymous storage to " << storagefile << std::endl;
       myfile << namer.inputfilename( ) << std::endl;
       for ( auto& x : saveddata ) {
         myfile << x.first << " = " << x.second << std::endl;
@@ -68,7 +69,7 @@ namespace FormatConverter {
       myfile.close( );
     }
     else {
-      std::cerr << "could not open anonymous storage file: " << storagefile << std::endl;
+      Log::error() << "could not open anonymous storage file: " << storagefile << std::endl;
     }
   }
 }

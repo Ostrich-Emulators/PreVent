@@ -18,6 +18,7 @@
 #include "DataRow.h"
 #include "Hdf5Writer.h"
 #include "StreamChunkReader.h"
+#include "Log.h"
 
 #include <iostream>
 #include <fstream>
@@ -177,7 +178,7 @@ namespace FormatConverter{
         SignalData * dataset = info->addVital( vital, &added );
 
         if ( val.empty( ) ) {
-          output( ) << "empty val? " << chunk << std::endl;
+          Log::debug() << "empty val? " << chunk << std::endl;
         }
 
         if ( added ) {

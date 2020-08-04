@@ -22,11 +22,11 @@
 
 namespace FormatConverter{
 
-  Reader::Reader( const std::string& name ) : rdrname( name ),
-      quiet( false ), onefile( false ), local_time( false ), timemod( TimeModifier::passthru( ) ) { }
+  Reader::Reader( const std::string& name ) : rdrname( name ), onefile( false ),
+      local_time( false ), timemod( TimeModifier::passthru( ) ) { }
 
-  Reader::Reader( const Reader& r ) : rdrname( "x" ), quiet( r.quiet ),
-      onefile( r.onefile ), local_time( r.local_time ), timemod( r.timemod ) { }
+  Reader::Reader( const Reader& r ) : rdrname( "x" ), onefile( r.onefile ),
+      local_time( r.local_time ), timemod( r.timemod ) { }
 
   Reader::~Reader( ) { }
 
@@ -73,11 +73,7 @@ namespace FormatConverter{
 
   void Reader::finish( ) {
   }
-
-  void Reader::setQuiet( bool q ) {
-    quiet = q;
-  }
-
+  
   void Reader::setNonbreaking( bool nb ) {
     onefile = nb;
   }
@@ -96,10 +92,6 @@ namespace FormatConverter{
 
   bool Reader::localizingTime( ) const {
     return local_time;
-  }
-
-  std::ostream& Reader::output( ) const {
-    return Log::debug( );
   }
 
   bool Reader::getAttributes( const std::string& inputfile, std::map<std::string, std::string>& map ) {

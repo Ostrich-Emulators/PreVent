@@ -28,6 +28,7 @@
 #include "TimezoneOffsetTimeSignalSet.h"
 #include "Options.h"
 #include "TimeRange.h"
+#include "Log.h"
 
 namespace FormatConverter{
   const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.1";
@@ -482,14 +483,14 @@ namespace FormatConverter{
       H5::DataSpace space( 2, dims );
 
       auto ds = events.createDataSet( "Segment_Offsets", H5::PredType::STD_I64LE, space );
-      long long indexes[segmentsizes.size( ) * 2] = { 0 };
+      auto indexes = std::vector<long long>( segmentsizes.size( ) * 2 );
       int row = 0;
       for ( const auto& e : segmentsizes ) {
         indexes[ 2 * row ] = e.second;
         indexes[2 * row + 1] = e.first;
         row++;
       }
-      ds.write( indexes, H5::PredType::STD_I64LE );
+      ds.write( indexes.data( ), H5::PredType::STD_I64LE );
       writeAttribute( ds, "Columns", "timestamp (ms), segment offset" );
     }
 
@@ -596,11 +597,11 @@ namespace FormatConverter{
     std::string outy = filenamer( ).filename( dataptr );
 
     if ( dataptr->vitals( ).empty( ) && dataptr->waves( ).empty( ) ) {
-      std::cerr << "Nothing to write to " << outy << std::endl;
+      Log::warn( ) << "Nothing to write to " << outy << std::endl;
       return ret;
     }
 
-    output( ) << "Writing to " << outy << std::endl;
+    Log::info( ) << "Writing to " << outy << std::endl;
 
     H5::Exception::dontPrint( );
     try {
@@ -619,10 +620,10 @@ namespace FormatConverter{
       writeFileAttributes( file, dataptr->metadata( ), firstTime, lastTime );
 
       auto grp = ensureGroupExists( file, "VitalSigns" );
-      output( ) << "Writing " << dataptr->vitals( ).size( ) << " Vitals" << std::endl;
+      Log::info( ) << "Writing " << dataptr->vitals( ).size( ) << " Vitals" << std::endl;
       for ( auto& vits : dataptr->vitals( ) ) {
         if ( vits->empty( ) ) {
-          output( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
+          Log::warn( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
         }
         else {
           auto g = ensureGroupExists( grp, getDatasetName( vits ) );
@@ -632,10 +633,10 @@ namespace FormatConverter{
 
       if ( !this->skipwaves( ) ) {
         grp = ensureGroupExists( file, "Waveforms" );
-        output( ) << "Writing " << dataptr->waves( ).size( ) << " Waveforms" << std::endl;
+        Log::info( ) << "Writing " << dataptr->waves( ).size( ) << " Waveforms" << std::endl;
         for ( auto& wavs : dataptr->waves( ) ) {
           if ( wavs->empty( ) ) {
-            output( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
+            Log::warn( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
           }
           else {
             H5::Group g = ensureGroupExists( grp, getDatasetName( wavs ) );
@@ -648,18 +649,18 @@ namespace FormatConverter{
     }
     // catch failure caused by the H5File operations
     catch ( H5::FileIException& error ) {
-      output( ) << "error writing file: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << "error writing file: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
     }
     // catch failure caused by the DataSet operations
     catch ( H5::DataSetIException& error ) {
-      output( ) << "error writing dataset: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << "error writing dataset: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
     }
     // catch failure caused by the DataSpace operations
     catch ( H5::DataSpaceIException& error ) {
-      output( ) << "error writing dataset: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << "error writing dataset: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
     }
     catch ( H5::GroupIException& error ) {
-      output( ) << "error writing group: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
+      Log::error( ) << "error writing group: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
     }
 
     return ret;
@@ -689,7 +690,7 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::writeVitalGroup( H5::Group& group, SignalData * data ) {
-    output( ) << "Writing Vital: " << data->name( ) << std::endl;
+    Log::debug( ) << "Writing Vital: " << data->name( ) << std::endl;
 
     writeGroupAttrs( group, data );
     writeTimes( group, data );
@@ -722,7 +723,7 @@ namespace FormatConverter{
 
   void Hdf5Writer::writeWaveGroup( H5::Group& group, SignalData * data ) {
 
-    output( ) << "Writing Wave: " << data->name( );
+    Log::debug( ) << "Writing Wave: " << data->name( );
     auto st = std::chrono::high_resolution_clock::now( );
 
     writeTimes( group, data );
@@ -735,7 +736,8 @@ namespace FormatConverter{
 
     auto en = std::chrono::high_resolution_clock::now( );
     std::chrono::duration<float> dur = en - st;
-    output( ) << " (complete in " << dur.count( ) << "s)" << std::endl;
+    Log::trace( ) << " (complete in " << dur.count( ) << "s)";
+    Log::debug( ) << std::endl;
   }
 
   H5::DataSet Hdf5Writer::writeTimes( H5::Group& group, TimeRange * times, const std::string& dsname ) {
@@ -826,7 +828,7 @@ namespace FormatConverter{
 
     // HDF5 seems to have trouble writing a vector of strings, so
     // we'll just load the data into an array of char *s.
-    const char * vdata[sz] = { };
+    auto vdata = std::vector<const char*>( sz );
 
     size_t c = 0;
     for ( const auto& t : data ) {
@@ -851,7 +853,7 @@ namespace FormatConverter{
     }
 
     H5::DataSet dsv = auxg.createDataSet( "data", st, space, props );
-    dsv.write( vdata, st );
+    dsv.write( vdata.data( ), st );
   }
 
   void Hdf5Writer::writeEvents( H5::Group& group, SignalData * data ) {

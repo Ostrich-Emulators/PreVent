@@ -18,9 +18,13 @@
 #include <memory>
 #include <string>
 #include <deque>
-#include <tdms.hpp>
+#include <tdmspp.h>
 
 #include "BasicSignalSet.h"
+
+namespace TDMS {
+    class channel;
+}
 
 namespace FormatConverter {
   class SignalData;
@@ -71,7 +75,7 @@ namespace FormatConverter {
     bool writeSignalRow( std::vector<double>& doubles, const bool seenFloat,
         SignalData * signal, dr_time time );
 
-    void initSignal( const std::unique_ptr<TDMS::channel>&, bool first );
+    void initSignal( TDMS::channel *, bool first );
 
     /**
      * If a signal starts after a rollover will have occurred, then it'll never

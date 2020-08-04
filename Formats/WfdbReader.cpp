@@ -9,6 +9,7 @@
 #include "SignalData.h"
 #include "config.h"
 #include "SignalUtils.h"
+#include "Log.h"
 
 #include <iostream>
 #include <iterator>
@@ -123,7 +124,7 @@ namespace FormatConverter {
 
     auto headerpath = SignalUtils::canonicalizePath(headername );
     auto path = ". " + headerpath.parent_path().string( );
-    output( ) << "wfdb path: " << path << std::endl;
+    Log::debug() << "wfdb path: " << path << std::endl;
     setwfdb( path.data() );
 
     // the record name is just the basename of the file
@@ -131,7 +132,7 @@ namespace FormatConverter {
     auto cutup = std::string{ recordname };
 
     sigcount = isigopen( (char *) cutup.c_str( ), NULL, 0 );
-    std::cout << "signal count: " << sigcount << std::endl;
+    Log::debug() << "signal count: " << sigcount << std::endl;
     if ( sigcount > 0 ) {
       WFDB_Frequency wffreqhz = getifreq( );
       bool iswave = ( wffreqhz > 1 );
@@ -147,7 +148,7 @@ namespace FormatConverter {
       else {
         interval = 1024;
         freqhz = wffreqhz * 1.024;
-        output( ) << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
+        Log::warn() << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
       }
 
       sigcount = isigopen( (char *) ( cutup.c_str( ) ), siginfo, sigcount );
@@ -245,7 +246,7 @@ namespace FormatConverter {
       }
     }
 
-    output( ) << "looping" << std::endl;
+    Log::debug() << "looping" << std::endl;
     while ( true ) {
       std::map<int, std::vector<int>> currents;
       for ( int i = 0; i < sigcount; i++ ) {
@@ -300,7 +301,7 @@ namespace FormatConverter {
           }
 
           if ( currents[signalidx].size( ) < expected ) {
-            output( ) << "filling in " << ( expected - currents[signalidx].size( ) )
+            Log::debug() << "filling in " << ( expected - currents[signalidx].size( ) )
                 << " values for wave " << siginfo[signalidx].desc << std::endl;
             currents[signalidx].resize( expected, SignalData::MISSING_VALUE );
           }

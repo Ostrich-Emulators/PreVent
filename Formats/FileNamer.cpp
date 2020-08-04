@@ -7,6 +7,8 @@
 #include "FileNamer.h"
 #include "SignalSet.h"
 #include "config.h"
+#include "Log.h"
+
 #include <sys/stat.h>
 #include <iostream>
 #include <ctime>
@@ -15,7 +17,7 @@
 #include <stdio.h>
 
 //this should fetch current working directory regardless of platform
-#ifdef WINDOWS
+#ifdef _WIN32
 #include <direct.h>
 #define GetCurrentDir _getcwd
 #else
@@ -55,7 +57,7 @@ namespace FormatConverter{
     size_t pos = expand.find( "%S" );
     while ( pos != std::string::npos ) //initially sorts through file for all standard form flags and expands them
     {
-      std::cout << "replacing %S with %i-p%p-%s.%t" << std::endl;
+      Log::debug() << "replacing %S with %i-p%p-%s.%t" << std::endl;
       expand.replace( pos, 2, "%i-p%p-%s.%t" );
       pos = expand.find( "%S", pos + 1 );
     }
@@ -143,7 +145,7 @@ namespace FormatConverter{
     for ( auto x : replacements ) {
       size_t pos = lastname.find( x );
       while ( pos != std::string::npos ) {
-        std::cout << "replacing " << x << " with " << conversions[x] << std::endl;
+        Log::debug() << "replacing " << x << " with " << conversions[x] << std::endl;
         lastname.replace( pos, 2, conversions[x] );
         pos = lastname.find( x, pos + 1 );
       }

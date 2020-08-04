@@ -17,7 +17,7 @@ namespace FormatConverter {
   class SignalData;
   class DataRow;
 
-  enum ReadResult {
+  enum class ReadResult : int {
     FIRST_READ = 0,
     NORMAL = 1,
     END_OF_PATIENT = 2,
@@ -64,7 +64,6 @@ namespace FormatConverter {
      */
     virtual std::string name( ) const;
 
-    void setQuiet( bool quiet = true );
     void setNonbreaking( bool nb = false );
     void localizeTime( bool local = true );
     bool localizingTime( ) const;
@@ -124,14 +123,11 @@ namespace FormatConverter {
     bool nonbreaking( ) const;
     bool skipwaves( ) const;
 
-    std::ostream& output( ) const;
-
     virtual
     dr_time modtime( const dr_time& time );
 
   private:
     const std::string rdrname;
-    bool quiet;
     bool anon;
     bool onefile;
     bool local_time;

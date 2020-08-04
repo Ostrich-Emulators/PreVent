@@ -8,12 +8,13 @@
 #include "SignalSet.h"
 #include "SignalData.h"
 #include "Options.h"
+#include "Log.h"
 
 #include <sys/stat.h>
 #include <iostream>
 #include <exception>
 
-namespace FormatConverter {
+namespace FormatConverter{
   const std::string Db::CREATE = "CREATE TABLE patient (  id INTEGER PRIMARY KEY,  name VARCHAR( 500 ));CREATE TABLE unit (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ));CREATE TABLE bed ( id INTEGER PRIMARY KEY,  unit_id INTEGER,  name VARCHAR( 25 )); CREATE TABLE file (  id INTEGER PRIMARY KEY,  filename VARCHAR( 500 ),  patient_id INTEGER,  bed_id INTEGER,  start INTEGER,  end INTEGER);CREATE TABLE signal (  id INTEGER PRIMARY KEY,  name VARCHAR( 25 ),  hz FLOAT,  uom VARCHAR( 25 ), iswave INTEGER );CREATE TABLE file_signal (  file_id INTEGER,  signal_id INTEGER,  start INTEGER,  end INTEGER,  PRIMARY KEY( file_id, signal_id ));CREATE TABLE offset ( file_id INTEGER, time INTEGER, offset INTEGER );";
 
   int Db::nameidcb( void * a_param, int argc, char **argv, char ** ) {
@@ -24,14 +25,14 @@ namespace FormatConverter {
 
   int Db::bedcb( void *a_param, int argc, char **argv, char ** ) {
     std::map<std::pair<std::string, std::string>, int> * map
-            = static_cast<std::map<std::pair<std::string, std::string>, int>*> ( a_param );
+        = static_cast<std::map<std::pair<std::string, std::string>, int>*> ( a_param );
     map->insert( std::make_pair( std::make_pair( argv[0], argv[1] ), std::stoi( argv[2] ) ) );
     return 0;
   }
 
   int Db::signalcb( void * a_param, int argc, char ** argv, char ** column ) {
     std::map < std::tuple < std::string, double, bool>, int> * map
-            = static_cast<std::map < std::tuple < std::string, double, bool>, int>*> ( a_param );
+        = static_cast<std::map < std::tuple < std::string, double, bool>, int>*> ( a_param );
     std::string name = argv[0];
     double hz = std::stod( argv[1] );
     bool wave = ( 0 != std::stoi( argv[2] ) );
@@ -40,8 +41,7 @@ namespace FormatConverter {
     return 0;
   }
 
-  Db::Db( ) : ptr( nullptr ) {
-  }
+  Db::Db( ) : ptr( nullptr ) { }
 
   Db::~Db( ) {
     if ( nullptr != ptr ) {
@@ -66,7 +66,7 @@ namespace FormatConverter {
     exec( "SELECT name, id FROM unit", &nameidcb, &unitids );
 
     exec( "SELECT u.name, b.name, b.id FROM bed b JOIN unit u ON b.unit_id=u.id",
-            &bedcb, &bedids );
+        &bedcb, &bedids );
 
     exec( "SELECT name, hz, iswave, id FROM signal", &signalcb, &signalids );
 
@@ -206,7 +206,7 @@ namespace FormatConverter {
       // since we're constructing the SQL from a generated id, it's safe
       // to "inject" one of the bind variables
       int id = addLookup( "INSERT INTO bed( unit_id, name ) VALUES( "
-              + std::to_string( unitid ) + ", ? )", name );
+          + std::to_string( unitid ) + ", ? )", name );
       bedids.insert( std::make_pair( pairkey, id ) );
     }
 
@@ -240,10 +240,7 @@ namespace FormatConverter {
   }
 
   void Db::onFileCompleted( const std::string& filename, SignalSet * data ) {
-    auto quiet = FormatConverter::Options::asBool( FormatConverter::OptionsKey::QUIET );
-    if ( !quiet ) {
-      std::cout << "updating database...";
-    }
+    Log::info( ) << "updating database...";
 
     exec( "BEGIN;" );
 
@@ -261,7 +258,7 @@ namespace FormatConverter {
     }
 
     std::string sql
-            = "INSERT INTO file( filename, bed_id, patient_id, start, end ) VALUES( ?, ?, ?, ?, ? )";
+        = "INSERT INTO file( filename, bed_id, patient_id, start, end ) VALUES( ?, ?, ?, ?, ? )";
     sqlite3_stmt * stmt = nullptr;
     auto rc = sqlite3_prepare_v2( ptr, sql.c_str( ), sql.length( ), &stmt, nullptr );
     if ( rc != SQLITE_OK ) {
@@ -303,35 +300,9 @@ namespace FormatConverter {
     }
 
     exec( "COMMIT;" );
-    if ( !quiet ) {
-      std::cout << "complete" << std::endl;
-    }
-
-    //  std::cout << "file completed: " << filename << std::endl;
-    //
-    //  std::cout << "\t" << data.earliest( ) << " to " << data.latest( ) << std::endl;
-    //  for ( const auto& m : data.metadata( ) ) {
-    //    std::cout << "\t" << m.first << ": " << m.second << std::endl;
-    //  }
-    //
-    //  for ( const std::unique_ptr<SignalData>& m : data.allsignals( ) ) {
-    //    std::cout << "\t  " << ( m->wave( ) ? "WAVE " : "VITAL " ) << m->name( ) << std::endl;
-    //    std::cout << "\t\t" << m->startTime( ) << " to " << m->endTime( ) << std::endl;
-    //
-    //    for ( const auto& x : m->metad( ) ) {
-    //      std::cout << "\t\t" << x.first << ": " << x.second << std::endl;
-    //    }
-    //    for ( const auto& x : m->metas( ) ) {
-    //      std::cout << "\t\t" << x.first << ": " << x.second << std::endl;
-    //    }
-    //    for ( const auto& x : m->metai( ) ) {
-    //
-    //      std::cout << "\t\t" << x.first << ": " << x.second << std::endl;
-    //    }
-    //  }
+    Log::info( ) << "complete" << std::endl;
   }
 
   void Db::onConversionCompleted( const std::string& input,
-          const std::vector<std::string>& outputs ) {
-  }
+      const std::vector<std::string>& outputs ) { }
 }

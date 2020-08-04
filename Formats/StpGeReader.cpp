@@ -8,6 +8,7 @@
 #include "SignalData.h"
 #include "DataRow.h"
 #include "BasicSignalSet.h"
+#include "Log.h"
 
 #include <algorithm>
 #include <iostream>
@@ -309,20 +310,20 @@ namespace FormatConverter{
         const int waveid = w.first;
         std::vector<int>& datapoints = w.second;
         size_t loops = 8 - count;
-        std::cout << "wave " << waveid << ": before filling: " << datapoints.size( );
+        Log::debug( ) << "wave " << waveid << ": before filling: " << datapoints.size( );
         // break is based on missing sequence numbers
         size_t valsPerSeqNum = expectedValues[waveid] / 8; // 8 FA0D loops/sec
         size_t valsToAdd = loops * valsPerSeqNum;
         datapoints.resize( datapoints.size( ) + valsToAdd, SignalData::MISSING_VALUE );
 
-        std::cout << "; after filling: " << datapoints.size( ) << std::endl;
+        Log::debug( ) << "; after filling: " << datapoints.size( ) << std::endl;
       }
     }
     else {
 
-      std::cout << "small break in sequence (" << seqdiff << " elements) current map:" << std::endl;
+      Log::debug( ) << "small break in sequence (" << seqdiff << " elements) current map:" << std::endl;
       for ( const auto& m : sequencenums ) {
-        std::cout << "\t" << m.first << "\t" << m.second << std::endl;
+        Log::debug( ) << "\t" << m.first << "\t" << m.second << std::endl;
       }
 
       // we have a small sequence difference, so fill in phantom values
@@ -330,21 +331,21 @@ namespace FormatConverter{
         const int waveid = w.first;
         std::vector<int>& datapoints = w.second;
 
-        std::cout << "wave " << waveid << ": before filling: " << datapoints.size( );
+        Log::debug( ) << "wave " << waveid << ": before filling: " << datapoints.size( );
         // break is based on missing sequence numbers
         size_t valsPerSeqNum = expectedValues[waveid] / 8; // 8 FA0D loops/sec
         size_t valsToAdd = seqdiff * valsPerSeqNum;
         datapoints.resize( datapoints.size( ) + valsToAdd, SignalData::MISSING_VALUE );
 
-        std::cout << "; after filling: " << datapoints.size( ) << std::endl;
+        Log::debug( ) << "; after filling: " << datapoints.size( ) << std::endl;
       }
       for ( unsigned short i = 1; i <= seqdiff; i++ ) {
         sequencenums.push_back( std::make_pair( ( currseq + i ) % 0xFF, time ) );
       }
 
-      std::cout << "new map: " << std::endl;
+      Log::debug( ) << "new map: " << std::endl;
       for ( const auto& m : sequencenums ) {
-        std::cout << "\t" << m.first << "\t" << m.second << std::endl;
+        Log::debug( ) << "\t" << m.first << "\t" << m.second << std::endl;
       }
     }
   }
@@ -388,7 +389,7 @@ namespace FormatConverter{
 
   void StpGeReader::WaveTracker::flushone( SignalSet * info ) {
     if ( empty( ) ) {
-      std::cout << "no wave data to flush" << std::endl;
+      Log::debug( ) << "no wave data to flush" << std::endl;
     }
 
     int erasers = std::min( (int) sequencenums.size( ), 8 );
@@ -404,11 +405,11 @@ namespace FormatConverter{
       std::vector<int>& datapoints = w.second;
 
       if ( datapoints.size( ) > expectedValues[waveid] ) {
-        std::cout << "more values than needed (" << datapoints.size( ) << "/" << expectedValues[waveid]
+        Log::debug( ) << "more values than needed (" << datapoints.size( ) << "/" << expectedValues[waveid]
             << ") for waveid: " << waveid << std::endl;
       }
       if ( datapoints.size( ) < expectedValues[waveid] ) {
-        std::cout << "filling in " << ( expectedValues[waveid] - datapoints.size( ) )
+        Log::debug( ) << "filling in " << ( expectedValues[waveid] - datapoints.size( ) )
             << " for waveid: " << waveid << std::endl;
         datapoints.resize( expectedValues[waveid], SignalData::MISSING_VALUE );
       }
@@ -442,7 +443,7 @@ namespace FormatConverter{
       prune( );
     }
     else {
-      std::cout << "still have " << sequencenums.size( ) << " seq numbers in the chute:" << std::endl;
+      Log::trace( ) << "still have " << sequencenums.size( ) << " seq numbers in the chute:" << std::endl;
       //      for ( auto& x : sequencenums ) {
       //        std::cout << "\tseqs: " << x.first << "\t" << x.second << std::endl;
       //      }
@@ -520,7 +521,7 @@ namespace FormatConverter{
       if ( work.available( ) < 1024 * 768 ) {
         // we should never come close to filling up our work buffer
         // so if we have, make sure the sure knows
-        std::cerr << "work buffer is too full...something is going wrong" << std::endl;
+        Log::error( ) << "work buffer is too full...something is going wrong" << std::endl;
         return ReadResult::ERROR;
       }
 
@@ -530,7 +531,7 @@ namespace FormatConverter{
         work.rewind( 4 );
         // note: GE Unity systems seem to always have a 0 for this marker
         if ( isunity( ) ) {
-          output( ) << "note: assuming GE Unity Carescape input" << std::endl;
+          Log::info() << "note: assuming GE Unity Carescape input" << std::endl;
         }
       }
 
@@ -810,7 +811,7 @@ namespace FormatConverter{
 
       // waves are always ok (?)
       //ChunkReadResult rslt = readWavesBlock( info );
-      if( !this->skipwaves() ){
+      if ( !this->skipwaves( ) ) {
         readWavesBlock( info, maxread );
       }
       return ChunkReadResult::OK;
@@ -843,12 +844,12 @@ namespace FormatConverter{
       WaveSequenceResult wavecheck = wavetracker.newseq( popUInt8( ), currentTime );
       if ( WaveSequenceResult::TIMEBREAK == wavecheck ) {
         while ( wavetracker.writable( ) ) {
-          output( ) << "time break at byte " << ( work.popped( ) - 1 ) << std::endl;
+          Log::debug( ) << "time break at byte " << ( work.popped( ) - 1 ) << std::endl;
           wavetracker.flushone( info );
         }
       }
       else if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::SEQBREAK == wavecheck ) {
-        output( ) << "wave sequence check: " << wavecheck << " (old/new): " << oldseq << "/"
+        Log::debug( ) << "wave sequence check: " << wavecheck << " (old/new): " << oldseq << "/"
             << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
       }
       // skip the other two bytes (don't know what they mean, if anything)
@@ -907,12 +908,12 @@ namespace FormatConverter{
           WaveSequenceResult wavecheck = wavetracker.newseq( popUInt8( ), currentTime );
           if ( WaveSequenceResult::TIMEBREAK == wavecheck ) {
             while ( wavetracker.writable( ) ) {
-              output( ) << "time break (2) at byte " << ( work.popped( ) - 1 ) << std::endl;
+              Log::trace( ) << "time break (2) at byte " << ( work.popped( ) - 1 ) << std::endl;
               wavetracker.flushone( info );
             }
           }
           else if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::SEQBREAK == wavecheck ) {
-            output( ) << "wave sequence check (2): " << wavecheck << " (old/new): " << oldseq << "/"
+            Log::trace( ) << "wave sequence check (2): " << wavecheck << " (old/new): " << oldseq << "/"
                 << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
           }
 
@@ -964,7 +965,7 @@ namespace FormatConverter{
     }
 
     if ( 8 != fa0dloop ) {
-      output( ) << "got " << fa0dloop << " loops instead of 8 at pos: " << work.popped( ) << std::endl;
+      Log::debug( ) << "got " << fa0dloop << " loops instead of 8 at pos: " << work.popped( ) << std::endl;
     }
 
     while ( wavetracker.writable( ) ) {
@@ -1216,7 +1217,7 @@ namespace FormatConverter{
 
     bool okToContinue = true;
     while ( okToContinue ) {
-      last = reader.fill( info.get(), last );
+      last = reader.fill( info.get( ), last );
       switch ( last ) {
         case ReadResult::FIRST_READ:
           // NOTE: no break here

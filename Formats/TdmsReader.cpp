@@ -7,6 +7,7 @@
 #include "TdmsReader.h"
 #include "DataRow.h"
 #include "SignalData.h"
+#include "Log.h"
 
 #include <math.h>
 #include <sstream>
@@ -17,20 +18,18 @@ namespace FormatConverter{
 
   TdmsReader::TdmsReader( ) : Reader( "TDMS" ), filler( nullptr ) { }
 
-  TdmsReader::~TdmsReader( ) {
- }
+  TdmsReader::~TdmsReader( ) { }
 
   void TdmsReader::data( const std::string& channelname, const unsigned char* datablock, TDMS::data_type_t datatype, size_t num_vals ) {
-    std::vector<double> vals;
+    auto vals = std::vector<double>( num_vals );
     if ( nullptr != datablock ) {
-      vals.reserve( num_vals );
+      memcpy( vals.data( ), datablock, datatype.length( ) * num_vals );
 
-      for ( size_t i = 0; i < num_vals; i++ ) {
-        double out;
-        memcpy( &out, datablock + ( i * datatype.length ), datatype.length );
-        vals.push_back( out );
-      }
-      //    memcpy( &vals[0], datablock, datatype.length * num_vals );
+      //      for ( size_t i = 0; i < num_vals; i++ ) {
+      //        double out;
+      //        memcpy( &out, datablock + ( i * datatype.length() ), datatype.length() );
+      //        vals.push_back( out );
+      //      }
     }
 
     //if ( std::string::npos != channelname.find( "HR" ) ) {
@@ -95,7 +94,7 @@ namespace FormatConverter{
   }
 
   int TdmsReader::prepare( const std::string& recordset, SignalSet * info ) {
-    output( ) << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
+    Log::warn( ) << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
     //TDMS::log::debug.debug_mode = true;
     int rslt = Reader::prepare( recordset, info );
     if ( 0 != rslt ) {
@@ -124,7 +123,7 @@ namespace FormatConverter{
     }
   }
 
-  void TdmsReader::initSignal( const std::unique_ptr<TDMS::channel>& channel, bool firstrun ) {
+  void TdmsReader::initSignal( TDMS::channel * channel, bool firstrun ) {
     const std::string starter( "/Intellivue'/'" );
     if ( channel->get_path( ).size( ) < starter.size( ) ) {
       return;
@@ -191,13 +190,13 @@ namespace FormatConverter{
 
       TDMS::data_type_t valtype = p.second->data_type;
 
-      if ( valtype.name == "tdsTypeString" ) {
+      if ( valtype.is_string( ) ) {
         signal->setMeta( p.first, p.second->asString( ) );
       }
-      else if ( valtype.name == "tdsTypeDoubleFloat" ) {
+      else if ( valtype.name( ) == "tdsTypeDoubleFloat" ) {
         signal->setMeta( p.first, p.second->asDouble( ) );
       }
-      else if ( valtype.name == "tdsTypeTimeStamp" ) {
+      else if ( valtype.name( ) == "tdsTypeTimeStamp" ) {
         time_t timer = modtime( p.second->asUTCTimestamp( ) );
         tm * pt = gmtime( &timer );
 
@@ -225,9 +224,7 @@ namespace FormatConverter{
     handleLateStarters( );
 
     while ( last_segment_read < tdmsfile->segments( ) ) {
-      std::unique_ptr<TDMS::listener> ear( this );
-      tdmsfile->loadSegment( last_segment_read, ear );
-      ear.release( );
+      tdmsfile->loadSegment( last_segment_read, this );
       // all the data saving gets done by the listener, not here
 
       // if we have some signals, and all are "waiting",
@@ -271,7 +268,7 @@ namespace FormatConverter{
   bool TdmsReader::writeSignalRow( std::vector<double>& doubles, const bool seenFloat,
       SignalData * signal, dr_time time ) {
 
-    if( signal->wave() && this->skipwaves() ){
+    if ( signal->wave( ) && this->skipwaves( ) ) {
       return true;
     }
 

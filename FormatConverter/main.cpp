@@ -44,6 +44,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-z or --compression <compression level (0-9, default: 6)>"
       << std::endl << "\t-s or --sqlite <db file>"
       << std::endl << "\t-q or --quiet"
+      << std::endl << "\t-v or --verbose"
       << std::endl << "\t-1 or --stop-after-one"
       << std::endl << "\t-l or --localtime"
       << std::endl << "\t-Z or --offset <time string (MM/DD/YYYY) or seconds since 01/01/1970>"
@@ -124,6 +125,7 @@ struct option longopts[] = {
   { "compression", required_argument, NULL, 'z' },
   { "sqlite", required_argument, NULL, 's' },
   { "quiet", no_argument, NULL, 'q' },
+  { "verbose", optional_argument, NULL, 'v' },
   { "anonymize", no_argument, NULL, 'a' },
   { "anon", no_argument, NULL, 'a' },
   { "anonymous", no_argument, NULL, 'a' },
@@ -153,17 +155,17 @@ int main( int argc, char** argv ) {
   std::string pattern = FileNamer::DEFAULT_PATTERN;
   std::string offsetstr;
   bool offsetIsDesiredDate = false;
-  Options::set( OptionsKey::QUIET, false );
   Options::set( OptionsKey::ANONYMIZE, false );
   Options::set( OptionsKey::INDEXED_TIME, false );
   Options::set( OptionsKey::LOCALIZED_TIME, false );
   Options::set( OptionsKey::NO_BREAK, false );
+  auto loglevel = static_cast<int> ( LogLevel::INFO );
   bool stopatone = false;
   int compression = Writer::DEFAULT_COMPRESSION;
 
   settmpdir( std::filesystem::temp_directory_path( ) );
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qanl1CTZ:S:Rwm:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qv::anl1CTZ:S:Rwm:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -175,8 +177,27 @@ int main( int argc, char** argv ) {
         compression = std::atoi( optarg );
         break;
       case 'q':
-        Options::set( OptionsKey::QUIET );
-        Log::setlevel( LogLevel::NONE );
+        loglevel--;
+        if ( nullptr != optarg ) {
+          auto vvv = std::string( optarg );
+          loglevel -= vvv.length( );
+        }
+        if ( loglevel< static_cast<int> ( LogLevel::NONE ) ) {
+          loglevel = static_cast<int> ( LogLevel::NONE );
+        }
+        Log::setlevel( static_cast<LogLevel> ( loglevel ) );
+        break;
+      case 'v':
+        loglevel++;
+        if ( nullptr != optarg ) {
+          auto vvv = std::string( optarg );
+          loglevel += vvv.length( );
+        }
+        if ( loglevel> static_cast<int> ( LogLevel::ALL ) ) {
+          loglevel = static_cast<int> ( LogLevel::ALL );
+        }
+        Log::setlevel( static_cast<LogLevel> ( loglevel ) );
+
         break;
       case 'T':
         Options::set( OptionsKey::INDEXED_TIME );
@@ -239,11 +260,9 @@ int main( int argc, char** argv ) {
     }
   }
 
-  if ( !Options::asBool( OptionsKey::QUIET ) ) {
-    std::cout << argv[0] << " version " << FC_VERS_MAJOR
-        << "." << FC_VERS_MINOR << "." << FC_VERS_MICRO
-        << "; build " << GIT_BUILD << std::endl;
-  }
+  Log::info( ) << argv[0] << " version " << FC_VERS_MAJOR
+      << "." << FC_VERS_MINOR << "." << FC_VERS_MICRO
+      << "; build " << GIT_BUILD << std::endl;
 
   if ( ( optind + 1 ) > argc ) {
     helpAndExit( argv[0], "no file specified" );
@@ -334,14 +353,12 @@ int main( int argc, char** argv ) {
   try {
     from = Reader::get( fromfmt );
     to = Writer::get( tofmt );
-    to->quiet( Options::asBool( OptionsKey::QUIET ) );
     to->compression( compression );
     to->stopAfterFirstFile( stopatone );
     FileNamer namer = FileNamer::parse( pattern );
     namer.tofmt( to->ext( ) );
     to->filenamer( namer );
 
-    from->setQuiet( Options::asBool( OptionsKey::QUIET ) );
     from->setNonbreaking( Options::asBool( OptionsKey::NO_BREAK ) );
     from->localizeTime( Options::asBool( OptionsKey::LOCALIZED_TIME ) );
     from->timeModifier( timemod );
@@ -363,7 +380,7 @@ int main( int argc, char** argv ) {
     // see if the file exists before we do anything
     struct stat buffer;
     if ( 0 != stat( argv[i], &buffer ) ) {
-      std::cerr << "could not open file: " << argv[i] << std::endl;
+      Log::error( ) << "could not open file: " << argv[i] << std::endl;
       continue;
     }
 
@@ -378,12 +395,12 @@ int main( int argc, char** argv ) {
 
     auto input( argv[i] );
     to->filenamer( ).inputfilename( input );
-    std::cout << "converting " << input
+    Log::info( ) << "converting " << input
         << " from " << fromstr
         << " to " << tostr << std::endl;
 
     if ( from->prepare( input, data.get( ) ) < 0 ) {
-      std::cerr << "could not prepare file for reading" << std::endl;
+      Log::error( ) << "could not prepare file for reading" << std::endl;
       returncode = -1;
       continue;
     }
@@ -392,7 +409,7 @@ int main( int argc, char** argv ) {
       from->finish( );
 
       for ( const auto& f : files ) {
-        std::cout << " written to " << f << std::endl;
+        Log::info( ) << " written to " << f << std::endl;
       }
 
       if ( db ) {

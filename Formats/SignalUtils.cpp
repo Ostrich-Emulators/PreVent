@@ -10,6 +10,7 @@
 #include "SignalData.h"
 #include "DataRow.h"
 #include "Reader.h"
+#include "Log.h"
 
 #include <set>
 #include <limits>
@@ -264,7 +265,7 @@ namespace FormatConverter {
 
     size_t currentIndex = 0;
     for ( dr_time all : alltimes ) {
-      std::cout << "all: " << all << "\t front: " << signaltimes.front( ) << std::endl;
+      Log::trace() << "all: " << all << "\t front: " << signaltimes.front( ) << std::endl;
       indexes.push_back( currentIndex );
       if ( !signaltimes.empty( ) && signaltimes.front( ) == all ) {
 

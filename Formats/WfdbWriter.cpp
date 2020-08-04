@@ -17,6 +17,8 @@
 #include "SignalUtils.h"
 #include "config.h"
 #include "FileNamer.h"
+#include "Log.h"
+
 namespace FormatConverter{
 
   WfdbWriter::WfdbWriter( ) : Writer( "hea" ) { }
@@ -27,7 +29,7 @@ namespace FormatConverter{
 
   int WfdbWriter::initDataSet( ) {
     currdir = getcwd( NULL, 0 );
-    output( ) << "WFDB directory code has been changed, and MUST be refactored. " << std::endl;
+    Log::warn() << "WFDB directory code has been changed, and MUST be refactored. " << std::endl;
     // FIXME: need to figure out where our output directory is
     //std::string directory = filenamer( ).outputdir( );
     std::string directory( "." );
@@ -57,7 +59,7 @@ namespace FormatConverter{
   }
 
   int WfdbWriter::drain( SignalSet * info ) {
-    output( ) << "Error: WFDB writing not yet implemented" << std::endl;
+    Log::error() << "Error: WFDB writing not yet implemented" << std::endl;
     return -1;
 
 

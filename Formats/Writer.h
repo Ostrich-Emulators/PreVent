@@ -25,7 +25,6 @@ namespace FormatConverter {
     void compression( int lev );
     int compression( ) const;
     void addListener( std::shared_ptr<ConversionListener> listener );
-    void quiet( bool = true );
     void stopAfterFirstFile( bool onlyone = true );
     void filenamer( const FormatConverter::FileNamer& namer );
     FormatConverter::FileNamer& filenamer( ) const;
@@ -35,7 +34,6 @@ namespace FormatConverter {
 
   protected:
     Writer( const std::string& extension );
-    std::ostream& output( ) const;
 
     bool skipwaves() const;
 
@@ -71,9 +69,7 @@ namespace FormatConverter {
 
     std::vector<std::shared_ptr<ConversionListener>> listeners;
     int compress;
-    bool bequiet;
     bool testrun;
-    std::stringstream ss;
     const std::string extension; // filename extension
     std::unique_ptr<FormatConverter::FileNamer> namer;
     int gmt_offset;

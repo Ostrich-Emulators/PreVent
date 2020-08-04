@@ -5,6 +5,8 @@
  */
 
 #include "Formats.h"
+#include "Log.h"
+
 #include <algorithm>
 #include <string>
 #include <iostream>
@@ -96,7 +98,7 @@ namespace FormatConverter{
         return Format::STPP;
       }
       else if ( "stp" == suffix ) {
-        std::cout << "\"stp\" interpreted as \"stpge\", use \"stpp\" for Philips version" << std::endl;
+        Log::info() << "\"stp\" interpreted as \"stpge\", use \"stpp\" for Philips version" << std::endl;
         return Format::STPGE;
       }
       else if ( "csv" == suffix ) {

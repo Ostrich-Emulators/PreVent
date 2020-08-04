@@ -20,6 +20,7 @@
 #include "SignalUtils.h"
 #include "config.h"
 #include "CircularBuffer.h"
+#include "Log.h"
 
 #include <algorithm>
 #include <iostream>
@@ -89,7 +90,7 @@ namespace FormatConverter{
 
   ReadResult StpPhilipsReader::fill( SignalSet * info, const ReadResult& lastrr ) {
     currentTime = 0;
-    output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
+    Log::debug() << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
     if ( ReadResult::END_OF_PATIENT == lastrr ) {
       info->setMeta( PATIENT_NAME, "" ); // reset the patient name
@@ -194,13 +195,13 @@ namespace FormatConverter{
       }
     }
 
-    output( ) << "file is exhausted" << std::endl;
+    Log::debug() << "file is exhausted" << std::endl;
 
     // copy any data we have left in our filler set to the real set
 
     // if we still have stuff in our work buffer, process it
     if ( !work.empty( ) ) {
-      output( ) << "still have stuff in our work buffer!" << std::endl;
+      Log::warn() << "still have stuff in our work buffer!" << std::endl;
     }
 
     return ReadResult::END_OF_FILE;
@@ -489,7 +490,7 @@ namespace FormatConverter{
     else if ( WAVE_SEG == el ) {
       if ( !xml->outer.wavewarning ) {
         xml->outer.wavewarning = true;
-        xml->outer.output( ) << "Warning: waveform data parsing is not yet implemented" << std::endl;
+        Log::warn() << "Warning: waveform data parsing is not yet implemented" << std::endl;
       }
 
       //      bool added = false;

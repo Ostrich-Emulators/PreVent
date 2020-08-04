@@ -30,6 +30,7 @@
 #include <cstring>
 #include <charconv>
 #include "config.h"
+#include "Log.h"
 
 namespace FormatConverter {
 
@@ -343,7 +344,7 @@ namespace FormatConverter {
         auto ok2 = std::fseek( cachefile->file, offset, SEEK_CUR );
 
         if ( ok < 1 || ok2 != 0 ) {
-          std::cout << "blamo!" << std::endl;
+          Log::debug() << "blamo!" << std::endl;
         }
       }
       // when we get here, our file pointer has traveled back to the end of the file
