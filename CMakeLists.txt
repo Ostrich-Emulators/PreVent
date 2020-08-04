@@ -26,7 +26,7 @@ set(HDF5_USE_STATIC_LIBRARIES false)
 find_package(PkgConfig)
 find_package(HDF5 REQUIRED COMPONENTS C CXX)
 find_package(Git REQUIRED)
-find_package(tdmspp-osem 2 REQUIRED)
+find_package(tdmspp-osem 2.1 REQUIRED)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_COLOR_MAKEFILE ON)
