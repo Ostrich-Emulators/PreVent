@@ -157,7 +157,7 @@ namespace FormatConverter{
       }
 
       // carry on with next data chunk
-      Log::info() << "reading next file chunk" << std::endl;
+      Log::debug() << "reading next file chunk" << std::endl;
       retcode = from->fill( data, retcode );
     }
 

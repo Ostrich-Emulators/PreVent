@@ -641,7 +641,7 @@ namespace FormatConverter{
       writeFileAttributes( file, dataptr->metadata( ), firstTime, lastTime );
 
       auto grp = ensureGroupExists( file, "VitalSigns" );
-      Log::info( ) << "Writing " << dataptr->vitals( ).size( ) << " Vitals" << std::endl;
+      Log::debug( ) << "Writing " << dataptr->vitals( ).size( ) << " Vitals" << std::endl;
       for ( auto& vits : dataptr->vitals( ) ) {
         if ( vits->empty( ) ) {
           Log::warn( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
@@ -654,7 +654,7 @@ namespace FormatConverter{
 
       if ( !this->skipwaves( ) ) {
         grp = ensureGroupExists( file, "Waveforms" );
-        Log::info( ) << "Writing " << dataptr->waves( ).size( ) << " Waveforms" << std::endl;
+        Log::debug( ) << "Writing " << dataptr->waves( ).size( ) << " Waveforms" << std::endl;
         for ( auto& wavs : dataptr->waves( ) ) {
           if ( wavs->empty( ) ) {
             Log::warn( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
