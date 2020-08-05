@@ -32,9 +32,9 @@
 #include "config.h"
 #include "Log.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
 
-  const int BasicSignalData::DEFAULT_CACHE_LIMIT = 30000;
+  const int BasicSignalData::DEFAULT_CACHE_LIMIT = 1024 * 32;
 
   BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
       : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
@@ -144,6 +144,7 @@ namespace FormatConverter {
       cachefile = SignalUtils::tmpf( );
     }
 
+    Log::debug( ) << "caching " << label << " signal data to " << cachefile->filename << std::endl;
     const auto SIZEOFTIME = sizeof ( dr_time );
     const auto SIZEOFINT = sizeof ( int );
 
@@ -257,6 +258,7 @@ namespace FormatConverter {
   }
 
   int BasicSignalData::uncache( int max ) {
+    Log::debug( ) << "uncaching " << label << " signal data" << std::endl;
     int loop = 0;
     const int BUFFSZ = 1024 * 16;
     char buff[BUFFSZ];
@@ -284,7 +286,7 @@ namespace FormatConverter {
       ok += std::fread( &vals[0], SIZEOFINT, counter, cachefile->file );
 
       if ( ok < counter + 4 ) {
-        Log::error() << "error reading cache file for signal: " << label << std::endl;
+        Log::error( ) << "error reading cache file for signal: " << label << std::endl;
       }
 
       if ( static_cast<int> ( std::ftell( cachefile->file ) - offset_start ) < offset ) {
@@ -344,7 +346,7 @@ namespace FormatConverter {
         auto ok2 = std::fseek( cachefile->file, offset, SEEK_CUR );
 
         if ( ok < 1 || ok2 != 0 ) {
-          Log::debug() << "blamo!" << std::endl;
+          Log::debug( ) << "blamo!" << std::endl;
         }
       }
       // when we get here, our file pointer has traveled back to the end of the file

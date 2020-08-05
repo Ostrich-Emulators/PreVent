@@ -796,7 +796,6 @@ namespace FormatConverter{
       times->fill( buffer, startidx, endidx );
 
       Log::trace( ) << "slab - " << ADDS << " rows" << std::endl;
-
       ds.write( buffer.data( ), H5::PredType::STD_I64LE, memspace, space );
       buffer.clear( );
       startidx += ADDS;

@@ -160,7 +160,7 @@ namespace FormatConverter{
           v8samplerate = 256;
           if ( !warnedix ) {
             warnedix = true;
-            Log::error() << "Assuming 256 samples/sec from this Philips IX data" << std::endl;
+            Log::error( ) << "Assuming 256 samples/sec from this Philips IX data" << std::endl;
           }
         }
       }
@@ -241,7 +241,7 @@ namespace FormatConverter{
       if ( "WaveformData" == element ) {
         if ( label.empty( ) ) {
           if ( warnMissingName ) {
-            Log::warn() << "skipping unnamed waveforms" << std::endl;
+            Log::warn( ) << "skipping unnamed waveforms" << std::endl;
             warnMissingName = false;
           }
         }
@@ -268,7 +268,7 @@ namespace FormatConverter{
           }
           else if ( warnJunkData ) {
             warnJunkData = false;
-            Log::warn() << "skipping waveforms with no usable data" << std::endl;
+            Log::warn( ) << "skipping waveforms with no usable data" << std::endl;
           }
         }
       }
@@ -385,6 +385,8 @@ namespace FormatConverter{
     if ( !( 60 == hz || 120 == hz ) ) {
       return data;
     }
+
+    Log::debug( ) << "resampling datapoints to " << hz << " hz from 240Hz" << std::endl;
 
     std::vector<std::string_view> valvec = SignalUtils::splitcsv( std::string_view( data ) );
     const int skips = ( 120 == hz ? 1 : 3 );

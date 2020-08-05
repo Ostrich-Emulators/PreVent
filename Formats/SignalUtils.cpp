@@ -22,16 +22,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-namespace FormatConverter {
+namespace FormatConverter{
 
-  SignalUtils::SignalUtils( ) {
-  }
+  SignalUtils::SignalUtils( ) { }
 
-  SignalUtils::SignalUtils( const SignalUtils& ) {
-  }
+  SignalUtils::SignalUtils( const SignalUtils& ) { }
 
-  SignalUtils::~SignalUtils( ) {
-  }
+  SignalUtils::~SignalUtils( ) { }
 
   std::string SignalUtils::trim( std::string & totrim ) {
     // ltrim
@@ -265,7 +262,7 @@ namespace FormatConverter {
 
     size_t currentIndex = 0;
     for ( dr_time all : alltimes ) {
-      Log::trace() << "all: " << all << "\t front: " << signaltimes.front( ) << std::endl;
+      Log::trace( ) << "all: " << all << "\t front: " << signaltimes.front( ) << std::endl;
       indexes.push_back( currentIndex );
       if ( !signaltimes.empty( ) && signaltimes.front( ) == all ) {
 
@@ -363,6 +360,7 @@ namespace FormatConverter {
     tmppath /= "fmtcnv-XXXXXX";
     auto filename = tmppath.string( );
     auto fd = mkstemp( filename.data( ) );
+    Log::trace( ) << "creating temp file: " << filename << std::endl;
     return std::make_unique<CachefileData>( filename, fdopen( fd, "wb+" ) );
   }
 
@@ -389,11 +387,11 @@ namespace FormatConverter {
     return canonical;
   }
 
-  CachefileData::CachefileData( const std::string& name, FILE * f ) : filename( name ), file( f ) {
-  }
+  CachefileData::CachefileData( const std::string& name, FILE * f ) : filename( name ), file( f ) { }
 
   CachefileData::~CachefileData( ) {
     if ( nullptr != file ) {
+      Log::trace( ) << "closing and removing temp file: " << filename << std::endl;
       std::fclose( file );
       std::remove( filename.data( ) );
     }
