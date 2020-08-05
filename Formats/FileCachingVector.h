@@ -25,6 +25,7 @@ namespace FormatConverter {
 
   template <class T> class FileCachingVector {
   public:
+
     class iterator {
     public:
       using difference_type = T;
@@ -87,11 +88,10 @@ namespace FormatConverter {
 
     static const inline size_t DEFAULT_CACHE_LIMIT = 1024 * 384;
 
-    FileCachingVector( ) : cachedata( FormatConverter::Options::asBool( FormatConverter::OptionsKey::NOCACHE ) ? nullptr : SignalUtils::tmpf( ) ),
+    FileCachingVector( ) : cachedata( Options::asBool( OptionsKey::NOCACHE ) ? nullptr : SignalUtils::tmpf( ) ),
         sizer( 0 ), memrange( 0, 0 ), dirty( false ) { }
 
-    virtual ~FileCachingVector( ) {
-    }
+    virtual ~FileCachingVector( ) { }
 
     iterator begin( ) {
       return iterator( this, 0 );
@@ -157,7 +157,7 @@ namespace FormatConverter {
 
     virtual bool cache_if_needed( bool force = false ) {
       if ( cachedata && ( values.size( ) >= DEFAULT_CACHE_LIMIT || force ) ) {
-        std::fwrite( values.data( ), sizeof ( dr_time ), values.size( ), cachedata->file );
+        std::fwrite( values.data( ), sizeof ( T ), values.size( ), cachedata->file );
         values.clear( );
         memrange.first = sizer;
         memrange.second = sizer;
@@ -172,7 +172,7 @@ namespace FormatConverter {
         cache_if_needed( true );
       }
 
-      const auto SIZE = sizeof (dr_time );
+      const auto SIZE = sizeof ( T );
       auto filepos = fromidx * SIZE;
       values.clear( );
       std::fseek( cachedata->file, filepos, SEEK_SET );

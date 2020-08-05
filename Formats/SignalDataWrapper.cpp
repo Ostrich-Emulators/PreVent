@@ -11,11 +11,11 @@
 
 namespace FormatConverter{
 
-  SignalDataWrapper::SignalDataWrapper( const std::unique_ptr<SignalData>& data )
-      : signal( data.get( ) ), iOwnThisPtr( false ) { }
+  SignalDataWrapper::SignalDataWrapper( std::unique_ptr<SignalData> data )
+      : signal( data.release() ), iOwnThisPtr( true ) { }
 
   SignalDataWrapper::SignalDataWrapper( SignalData * data )
-      : signal( data ), iOwnThisPtr( true ) { }
+      : signal( data ), iOwnThisPtr( false ) { }
 
   SignalDataWrapper::~SignalDataWrapper( ) {
     if ( iOwnThisPtr ) {

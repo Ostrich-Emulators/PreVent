@@ -467,7 +467,7 @@ namespace FormatConverter{
               signal->setMeta( key, inty );
             }
             else if ( type.getSize( ) <= sizeof ( long ) ) {
-              Log::warn() << "long meta copy not implemented" << std::endl;
+              Log::warn( ) << "long meta copy not implemented" << std::endl;
               // long inty = 0;
               // attr.read( type, &inty );
               // signal->setMeta( key, inty );
@@ -562,6 +562,9 @@ namespace FormatConverter{
 
   void Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
       dr_time from, dr_time to, SignalData * signal ) {
+    Log::debug( ) << "splicing data from " << inputfile << ":" << path <<
+        " from " << from << " to " << to << std::endl;
+
     size_t typeo = path.find( "VitalSigns" );
 
     signal->setWave( std::string::npos == typeo );
@@ -622,8 +625,8 @@ namespace FormatConverter{
       for ( auto time : *realtimes ) {
         // if we can't process a whole sample, get more data to process
         if ( dataidx + readingsperperiod > datavals.size( ) ) {
-          //        std::cout << "start/stop/cur idx: " << slabstartidx << "/" << slabstopidx
-          //            << "/" << currentstopidx << std::endl;
+          Log::trace( ) << "start/stop/cur idx: " << slabstartidx << "/" << slabstopidx
+              << "/" << currentstopidx << std::endl;
 
           auto newvals = ( doints
               ? slabreadi( data, slabstartidx, currentstopidx )
@@ -645,13 +648,15 @@ namespace FormatConverter{
               : slabstopidx );
         }
 
-        if ( signal->wave( ) ) {
-          std::vector<int> onerowdata( &datavals[dataidx], &datavals[dataidx + readingsperperiod] );
-          signal->add( std::make_unique<DataRow>( time, onerowdata, scale ) );
-          dataidx += readingsperperiod;
-        }
-        else {
-          signal->add( std::make_unique<DataRow>( time, datavals[dataidx++], scale ) );
+        if ( !datavals.empty( ) ) {
+          if ( signal->wave( ) ) {
+            std::vector<int> onerowdata( &datavals[dataidx], &datavals[dataidx + readingsperperiod] );
+            signal->add( std::make_unique<DataRow>( time, onerowdata, scale ) );
+            dataidx += readingsperperiod;
+          }
+          else {
+            signal->add( std::make_unique<DataRow>( time, datavals[dataidx++], scale ) );
+          }
         }
       }
     }

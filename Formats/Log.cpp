@@ -44,7 +44,12 @@ namespace FormatConverter{
   bool Log::levelok( LogLevel l ) {
     //    std::cout << "checking " << static_cast<int> ( _level ) << " >= " << static_cast<int> ( l )
     //        << "? " << ( static_cast<int> ( _level ) >= static_cast<int> ( l ) ) << std::endl;
-
+    if ( LogLevel::ALL == l ) {
+      return true;
+    }
+    else if ( LogLevel::NONE == l ) {
+      return false;
+    }
     return (static_cast<int> ( _level ) >= static_cast<int> ( l ) );
   }
 

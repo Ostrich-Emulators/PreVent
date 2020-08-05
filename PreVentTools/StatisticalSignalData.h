@@ -25,19 +25,19 @@ namespace FormatConverter {
    */
   class StatisticalSignalData : public SignalDataWrapper {
   public:
-    StatisticalSignalData(const std::unique_ptr<SignalData>& data);
-    StatisticalSignalData(SignalData * data);
+    StatisticalSignalData( std::unique_ptr<SignalData> data );
+    StatisticalSignalData( SignalData * data );
     virtual ~StatisticalSignalData( );
 
     virtual bool add( std::unique_ptr<DataRow> row ) override;
 
     double mean( ) const;
     double stddev( ) const;
-		double variance( ) const;
+    double variance( ) const;
     double min( ) const;
     double max( ) const;
     double median( ) const;
-		size_t count() const;
+    size_t count( ) const;
     /**
      * Gets the mode of this data set. If the dataset is multimodal, only
      * one of the modes is returned

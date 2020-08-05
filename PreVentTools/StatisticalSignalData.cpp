@@ -2,6 +2,7 @@
 #include "StatisticalSignalData.h"
 #include "SignalUtils.h"
 #include "DataRow.h"
+#include "Log.h"
 #include <limits>
 #include <iostream>
 #include <sstream>
@@ -10,7 +11,7 @@
 
 namespace FormatConverter{
 
-  StatisticalSignalData::StatisticalSignalData( const std::unique_ptr<SignalData>& data ) : SignalDataWrapper( data ),
+  StatisticalSignalData::StatisticalSignalData( std::unique_ptr<SignalData> data ) : SignalDataWrapper( std::move( data ) ),
       total( 0 ), _count( 0 ), _min( std::numeric_limits<double>::max( ) ),
       _max( std::numeric_limits<double>::min( ) ) { }
 
@@ -22,7 +23,7 @@ namespace FormatConverter{
 
   double StatisticalSignalData::mean( ) const {
     if ( 0 == _count ) {
-      std::cerr << "no elements to average" << std::endl;
+      Log::warn( ) << "no elements to average" << std::endl;
       return 0;
     }
     return total / _count;
@@ -55,7 +56,7 @@ namespace FormatConverter{
   double StatisticalSignalData::mode( ) const {
     auto modess = modes( );
     if ( modess.empty( ) ) {
-      std::cerr << "no elements to count" << std::endl;
+      Log::warn( ) << "no elements to count" << std::endl;
       modess.push_back( 0 );
     }
 
@@ -100,29 +101,31 @@ namespace FormatConverter{
   }
 
   bool StatisticalSignalData::add( std::unique_ptr<DataRow> row ) {
-    DataRow * ptr = row.get( );
-    SignalDataWrapper::add( std::move( row ) );
+    auto doubles = row->doubles( );
+    if ( SignalDataWrapper::add( std::move( row ) ) ) {
+      for ( auto val : doubles ) {
+        if ( val != SignalData::MISSING_VALUE ) {
+          total += val;
 
-    for ( auto val : ptr->doubles( ) ) {
-      if ( val != SignalData::MISSING_VALUE ) {
-        total += val;
+          if ( val < _min ) {
+            _min = val;
+          }
+          if ( val > _max ) {
+            _max = val;
+          }
 
-        if ( val < _min ) {
-          _min = val;
-        }
-        if ( val > _max ) {
-          _max = val;
-        }
+          // boy, we REALLY hope we have a small(ish) domain here...
+          if ( 0 == numcounts.count( val ) ) {
+            numcounts.insert( std::make_pair( val, 0 ) );
+          }
+          numcounts[val]++;
 
-        // boy, we REALLY hope we have a small(ish) domain here...
-        if ( 0 == numcounts.count( val ) ) {
-          numcounts.insert( std::make_pair( val, 0 ) );
+          _count++;
         }
-        numcounts[val]++;
       }
+      return true;
     }
 
-    _count += ptr->data.size( );
-    return true;
+    return false;
   }
 }

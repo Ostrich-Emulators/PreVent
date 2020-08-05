@@ -173,7 +173,7 @@ int main( int argc, char** argv ) {
 
   settmpdir( std::filesystem::temp_directory_path( ) );
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:qv::anl1CTZ:S:Rwm:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:q::v::anl1CTZ:S:Rwm:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;

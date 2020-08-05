@@ -213,7 +213,6 @@ namespace FormatConverter{
 
     int rowscale = row->scale;
 
-    double pow10 = std::pow( 10, rowscale );
     int hiv = std::numeric_limits<int>::min( );
     int lov = std::numeric_limits<int>::max( );
     bool check_scale = false;
@@ -226,6 +225,7 @@ namespace FormatConverter{
     }
 
     if ( check_scale ) {
+      double pow10 = std::pow( 10, rowscale );
       double rowlo = static_cast<double> ( lov ) / pow10;
       double rowhi = static_cast<double> ( hiv ) / pow10;
 

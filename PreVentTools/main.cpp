@@ -43,6 +43,7 @@
 #include "Hdf5Reader.h"
 #include "AppendingUtils.h"
 #include "StpGeReader.h"
+#include "Log.h"
 
 #include "BSIConverter.h"
 
@@ -50,7 +51,7 @@ using namespace FormatConverter;
 namespace fs = std::filesystem;
 
 void helpAndExit( char * progname, std::string msg = "" ) {
-  std::cerr << msg << std::endl
+  Log::error( ) << msg << std::endl
       << "Syntax: " << progname << " [options] <input {hdf5,stp}>"
       << std::endl << "\toptions:"
       << std::endl << "\t-o or --output <output file>"
@@ -94,6 +95,8 @@ struct option longopts[] = {
   { "statistics", no_argument, NULL, 'D' },
   { "append", required_argument, NULL, 'P' },
   { "stp-metas", no_argument, NULL, 'Q' },
+  { "quiet", no_argument, NULL, 'q' },
+  { "verbose", optional_argument, NULL, 'v' },
   { 0, 0, 0, 0 }
 };
 
@@ -101,21 +104,21 @@ void cloneFile( std::unique_ptr<H5::H5File>&infile,
     std::unique_ptr<H5::H5File>& outfile ) {
   hid_t ocpypl_id = H5Pcreate( H5P_OBJECT_COPY );
   for ( hsize_t i = 0; i < infile->getNumObjs( ); i++ ) {
-    std::string name = infile->getObjnameByIdx( i );
+    auto name = infile->getObjnameByIdx( i );
     H5Ocopy( infile->getId( ), name.c_str( ),
         outfile->getId( ), name.c_str( ),
         ocpypl_id, H5P_DEFAULT );
   }
 
   for ( int i = 0; i < infile->getNumAttrs( ); i++ ) {
-    H5::Attribute attr = infile->openAttribute( i );
-    H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
-    H5::DataType dt = attr.getDataType( );
+    auto attr = infile->openAttribute( i );
+    auto space = H5::DataSpace( H5S_SCALAR );
+    auto dt = attr.getDataType( );
 
     std::string val;
     attr.read( dt, val );
 
-    H5::Attribute newattr = outfile->createAttribute( attr.getName( ), dt, space );
+    auto newattr = outfile->createAttribute( attr.getName( ), dt, space );
     newattr.write( dt, val );
     newattr.close( );
     attr.close( );
@@ -150,8 +153,9 @@ int main( int argc, char** argv ) {
   bool stpmeta = false;
   std::vector<std::string> appendfiles;
   bool dobsi = false;
+  auto loglevel = static_cast<int> ( LogLevel::INFO );
 
-  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aS:dp:WVDP:Qb", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aq::v::S:dp:WVDP:Qb", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'o':
         outfilename = optarg;
@@ -182,10 +186,10 @@ int main( int argc, char** argv ) {
         break;
       case 'S':
       {
-        std::string kv( optarg );
-        size_t idx = kv.find( '=' );
+        auto kv = std::string( optarg );
+        auto idx = kv.find( '=' );
         if ( idx == std::string::npos ) {
-          std::cerr << "attributes must be in the form <key>=<value>";
+          Log::error( ) << "attributes must be in the form <key>=<value>";
           helpAndExit( argv[0] );
         }
         else {
@@ -220,8 +224,31 @@ int main( int argc, char** argv ) {
       case 'b':
         dobsi = true;
         break;
+      case 'q':
+        loglevel--;
+        if ( nullptr != optarg ) {
+          auto vvv = std::string( optarg );
+          loglevel -= vvv.length( );
+        }
+        if ( loglevel< static_cast<int> ( LogLevel::NONE ) ) {
+          loglevel = static_cast<int> ( LogLevel::NONE );
+        }
+        Log::setlevel( static_cast<LogLevel> ( loglevel ) );
+        break;
+      case 'v':
+        loglevel++;
+        if ( nullptr != optarg ) {
+          auto vvv = std::string( optarg );
+          loglevel += vvv.length( );
+        }
+        if ( loglevel> static_cast<int> ( LogLevel::ALL ) ) {
+          loglevel = static_cast<int> ( LogLevel::ALL );
+        }
+        Log::setlevel( static_cast<LogLevel> ( loglevel ) );
+
+        break;
       case ':':
-        std::cerr << "missing option argument" << std::endl;
+        Log::error( ) << "missing option argument" << std::endl;
         helpAndExit( argv[0] );
         break;
       case '?':
@@ -251,7 +278,7 @@ int main( int argc, char** argv ) {
   if ( dobsi ) {
     BSIConverter conv;
     for ( int i = optind; i < argc; i++ ) {
-      fs::path f = argv[i];
+      auto f = fs::path{ argv[i] };
 
       auto ext = std::string{ f.extension( ) };
       std::transform( ext.begin( ), ext.end( ), ext.begin( ), ::toupper );
@@ -265,7 +292,7 @@ int main( int argc, char** argv ) {
   if ( stpmeta ) {
     std::vector<fs::path> files;
     for ( int i = optind; i < argc; i++ ) {
-      fs::path p1 = argv[i];
+      auto p1 = fs::path{ argv[i] };
       if ( fs::is_directory( p1 ) ) {
         for ( auto& f : fs::directory_iterator( p1 ) ) {
           std::string ext = f.path( ).extension( );
@@ -344,7 +371,7 @@ int main( int argc, char** argv ) {
       filesToCat.push_back( argv[i] );
     }
 
-    std::cout << "catting " << filesToCat.size( ) << " files to " << outfilename << std::endl;
+    Log::info( ) << "catting " << filesToCat.size( ) << " files to " << outfilename << std::endl;
     //for ( auto x : filesToCat ) {
     //  std::cout << "file to cat: " << x << std::endl;
     //}
@@ -389,7 +416,7 @@ int main( int argc, char** argv ) {
       std::unique_ptr<SignalSet>data( new AnonymizingSignalSet( to->filenamer( ) ) );
 
       if ( from->prepare( input, data.get( ) ) < 0 ) {
-        std::cerr << "could not prepare file for reading: " << input << std::endl;
+        Log::error( ) << "could not prepare file for reading: " << input << std::endl;
         continue;
       }
       else {
@@ -397,7 +424,7 @@ int main( int argc, char** argv ) {
         from->finish( );
 
         for ( const auto& f : files ) {
-          std::cout << " written to " << f << std::endl;
+          Log::info( ) << " written to " << f << std::endl;
         }
       }
     }
@@ -433,16 +460,16 @@ int main( int argc, char** argv ) {
         }
       }
       catch ( H5::FileIException& error ) {
-        std::cerr << error.getDetailMsg( ) << std::endl;
+        Log::error( ) << error.getDetailMsg( ) << std::endl;
         return -1;
       }
       // catch failure caused by the DataSet operations
       catch ( H5::DataSetIException& error ) {
-        std::cerr << error.getDetailMsg( ) << std::endl;
+        Log::error( ) << error.getDetailMsg( ) << std::endl;
         return -2;
       }
       catch ( std::invalid_argument& error ) {
-        std::cerr << "could not convert \"" << val << "\" to appropriate datatype (" << attrtype << ")" << std::endl;
+        Log::error( ) << "could not convert \"" << val << "\" to appropriate datatype (" << attrtype << ")" << std::endl;
         return -3;
       }
     }
@@ -461,7 +488,7 @@ int main( int argc, char** argv ) {
 
       auto fmt = FormatConverter::Formats::guess( input );
       if ( Format::UNRECOGNIZED == fmt ) {
-        std::cerr << "Skipping unrecognized format or file: " << input << std::endl;
+        Log::error( ) << "Skipping unrecognized format or file: " << input << std::endl;
       }
       else {
         std::unique_ptr<Reader> rdr = Reader::get( fmt );
@@ -475,7 +502,7 @@ int main( int argc, char** argv ) {
   }
   else if ( listvitals || listwaves ) {
 
-    std::vector<std::string> tolist;
+    auto tolist = std::vector<std::string>( );
     if ( listvitals ) {
       tolist.push_back( "/VitalSigns" );
     }
@@ -483,19 +510,19 @@ int main( int argc, char** argv ) {
       tolist.push_back( "/Waveforms" );
     }
 
-    for ( int j = optind; j < argc; j++ ) {
+    for ( auto j = optind; j < argc; j++ ) {
       H5::H5File file = H5::H5File( argv[j], H5F_ACC_RDONLY );
       for ( auto groupname : tolist ) {
         H5::Group grp = file.openGroup( groupname );
         for ( hsize_t i = 0; i < grp.getNumObjs( ); i++ ) {
           std::string name = grp.getObjnameByIdx( i );
-          std::cout << groupname << "\t" << name << std::endl;
+          Log::out( ) << groupname << "\t" << name << std::endl;
         }
       }
     }
   }
   else if ( calc ) {
-    std::string input = argv[optind];
+    auto input = std::string{ argv[optind] };
     if ( "/" == path ) {
       helpAndExit( argv[0], "--statistics must be accompanied by --path" );
     }
@@ -503,14 +530,12 @@ int main( int argc, char** argv ) {
     bool iswave = ( std::string::npos == path.find( "VitalSigns" ) );
     auto fmt = FormatConverter::Formats::guess( input );
     if ( Format::UNRECOGNIZED == fmt ) {
-      std::cerr << "cannot guess file format; use a recognized suffix like .hdf5" << std::endl;
+      Log::error( ) << "cannot guess file format; use a recognized suffix like .hdf5" << std::endl;
       return -1;
     }
     std::unique_ptr<Reader> rdr = Reader::get( fmt );
 
-    StatisticalSignalData * descriptives = new StatisticalSignalData( std::make_unique<NullSignalData>( "-", iswave ) );
-    std::unique_ptr<SignalData> signal( descriptives );
-
+    auto descriptives = StatisticalSignalData( std::make_unique<NullSignalData>( "-", iswave ) );
     if ( for_s > 0 ) {
       if ( !havestarttime ) {
         // need to figure out start time of signal
@@ -523,23 +548,23 @@ int main( int argc, char** argv ) {
       endtime = starttime + for_s * 1000;
     }
 
-    rdr->splice( input, path, starttime, endtime, signal.get( ) );
+    rdr->splice( input, path, starttime, endtime, &descriptives );
 
-    std::cout
-        << "count: " << descriptives->count( ) << std::endl
-        << "min: " << descriptives->min( ) << std::endl
-        << "max: " << descriptives->max( ) << std::endl
-        << "median: " << descriptives->median( ) << std::endl
-        << "mode: " << descriptives->mode( ) << std::endl
-        << "mean: " << descriptives->mean( ) << std::endl
-        << "variance: " << descriptives->variance( ) << std::endl
-        << "std dev: " << descriptives->stddev( ) << std::endl
+    Log::out( )
+        << "count: " << descriptives.count( ) << std::endl
+        << "min: " << descriptives.min( ) << std::endl
+        << "max: " << descriptives.max( ) << std::endl
+        << "median: " << descriptives.median( ) << std::endl
+        << "mode: " << descriptives.mode( ) << std::endl
+        << "mean: " << descriptives.mean( ) << std::endl
+        << "variance: " << descriptives.variance( ) << std::endl
+        << "std dev: " << descriptives.stddev( ) << std::endl
         ;
   }
   else {
     // something to acknowledge the program did something
     // (even if the user didn't ask us to do anything)
-    std::cout << "yup...that's a file" << std::endl;
+    Log::debug( ) << "yup...that's a file" << std::endl;
   }
 
   return 0;
