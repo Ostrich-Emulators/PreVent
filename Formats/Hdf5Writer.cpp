@@ -233,9 +233,7 @@ namespace FormatConverter{
     const int scale = data->scale( );
 
     const size_t rows = data->size( );
-    const hsize_t maxslabcnt = ( rows > 125000
-        ? 125000
-        : rows );
+    const hsize_t maxslabcnt = std::min( rows, (size_t) ( 1024 * 256 ) );
     hsize_t offset[] = { 0, 0 };
     hsize_t count[] = { 0, exc + 1 };
 
@@ -353,7 +351,7 @@ namespace FormatConverter{
     writeAttributes( ds, data );
     writeAttribute( ds, "Columns", "scaled value" );
 
-    const hsize_t maxslabcnt = ( rows * valsperrow > 125000 ? 125000 : rows * valsperrow );
+    const hsize_t maxslabcnt = std::min( rows * valsperrow, (hsize_t) ( 1024 * 256 ) );
     hsize_t offset[] = { 0, 0 };
     hsize_t count[] = { 0, 1 };
 
