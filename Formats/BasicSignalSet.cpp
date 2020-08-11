@@ -11,6 +11,7 @@
 #include <limits>
 #include <iostream>
 #include "config.h"
+#include "Log.h"
 
 namespace FormatConverter{
 
@@ -102,6 +103,8 @@ namespace FormatConverter{
       *added = true;
     }
 
+    Log::debug( ) << "added vital: " << name << std::endl;
+
     return vits[vits.size( ) - 1].get( );
   }
 
@@ -121,10 +124,14 @@ namespace FormatConverter{
       *added = true;
     }
 
+    Log::debug( ) << "added wave: " << name << std::endl;
+
     return wavs[wavs.size( ) - 1].get( );
   }
 
   void BasicSignalSet::reset( bool signalDataOnly ) {
+    Log::debug( ) << "resetting signal set" << std::endl;
+
     vits.clear( );
     wavs.clear( );
     aux.clear( );
@@ -193,6 +200,8 @@ namespace FormatConverter{
     // nothing to do
 
     // for each vital/wave, write the min/max values as attributes
+    Log::debug( ) << "completing signal set" << std::endl;
+
     for ( auto& data : vitals( ) ) {
       data->setMeta( "Min Value", data->lowwater( ) );
       data->setMeta( "Max Value", data->highwater( ) );

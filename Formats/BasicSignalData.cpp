@@ -117,6 +117,8 @@ namespace FormatConverter{
   }
 
   bool BasicSignalData::startPopping( ) {
+    Log::trace( ) << "start popping " << ( iswave ? "wave " : "vital " ) << label << std::endl;
+
     popping = true;
     if ( cachefile ) {
       if ( !cache( ) ) { // copy any extra rows to disk
@@ -318,6 +320,7 @@ namespace FormatConverter{
   }
 
   std::unique_ptr<TimeRange> BasicSignalData::times( ) {
+    Log::debug( ) << "creating TimeRange for " << ( iswave ? "wave " : "vital " ) << label << std::endl;
     auto range = std::make_unique<TimeRange>( );
 
     const auto SLABSIZE = 1024 * 64;
