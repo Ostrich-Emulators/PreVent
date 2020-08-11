@@ -12,23 +12,19 @@
 #include "config.h"
 #include "Log.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
   const std::string AnonymizingSignalSet::DEFAULT_FILENAME_PATTERN = "%i-anonymized-storage.txt";
 
   AnonymizingSignalSet::AnonymizingSignalSet( FileNamer& filenamer )
-  : SignalSetWrapper( std::make_unique<BasicSignalSet>() ), namer( filenamer ), timemod( TimeModifier::time( 0 ) ) {
-  }
+      : SignalSetWrapper( std::make_unique<BasicSignalSet>( ) ), namer( filenamer ), timemod( TimeModifier::time( 0 ) ) { }
 
   AnonymizingSignalSet::AnonymizingSignalSet( const std::unique_ptr<SignalSet>& w,
-          FileNamer& filenamer, const TimeModifier& tm ) : SignalSetWrapper( w ), namer( filenamer ), timemod( tm ) {
-  }
+      FileNamer& filenamer, const TimeModifier& tm ) : SignalSetWrapper( w ), namer( filenamer ), timemod( tm ) { }
 
   AnonymizingSignalSet::AnonymizingSignalSet( SignalSet * w, FileNamer& filenamer, const TimeModifier& tm )
-  : SignalSetWrapper( w ), namer( filenamer ), timemod( tm ) {
-  }
+      : SignalSetWrapper( w ), namer( filenamer ), timemod( tm ) { }
 
-  AnonymizingSignalSet::~AnonymizingSignalSet( ) {
-  }
+  AnonymizingSignalSet::~AnonymizingSignalSet( ) { }
 
   void AnonymizingSignalSet::setMeta( const std::string& key, const std::string& val ) {
     if ( "Patient Name" == key || "MRN" == key || "Unit" == key || "Bed" == key ) {
@@ -51,14 +47,14 @@ namespace FormatConverter {
 
     // make a new filenaming pattern in the output directory
     FileNamer myNamer = FileNamer::parse( ( std::string::npos == pos
-            ? ""
-            : storagefile.substr( 0, pos + 1 ) ) + DEFAULT_FILENAME_PATTERN );
+        ? ""
+        : storagefile.substr( 0, pos + 1 ) ) + DEFAULT_FILENAME_PATTERN );
     myNamer.inputfilename( storagefile );
     storagefile = myNamer.filename( this );
 
     std::ofstream myfile( storagefile );
     if ( myfile.is_open( ) ) {
-      Log::info() << "writing anonymous storage to " << storagefile << std::endl;
+      Log::info( ) << "writing anonymous storage to " << storagefile << std::endl;
       myfile << namer.inputfilename( ) << std::endl;
       for ( auto& x : saveddata ) {
         myfile << x.first << " = " << x.second << std::endl;
@@ -69,7 +65,7 @@ namespace FormatConverter {
       myfile.close( );
     }
     else {
-      Log::error() << "could not open anonymous storage file: " << storagefile << std::endl;
+      Log::error( ) << "could not open anonymous storage file: " << storagefile << std::endl;
     }
   }
 }

@@ -131,7 +131,7 @@ namespace FormatConverter{
               empties.insert( i );
             }
             else {
-              currenttimes[i] = std::move( data[i]->pop( ) );
+              currenttimes[i] = data[i]->pop( );
             }
           }
           else if ( currenttimes[i]->time > earliest ) {
@@ -197,7 +197,7 @@ namespace FormatConverter{
       ret.push_back( data[i]->shallowcopy( ) );
 
       // load the first row for each signal into our current array
-      currenttimes[i] = std::move( data[i]->pop( ) );
+      currenttimes[i] = data[i]->pop( );
     }
 
     std::set<int> empties;
@@ -216,17 +216,17 @@ namespace FormatConverter{
               empties.insert( i );
             }
             else {
-              currenttimes[i] = std::move( data[i]->pop( ) );
+              currenttimes[i] = data[i]->pop( );
             }
           }
           else if ( currenttimes[i]->time > earliest ) {
             // don't have a datapoint for this time, so make a dummy one
-            ret[i]->add( std::move( dummyfill( data[i], earliest ) ) );
+            ret[i]->add( dummyfill( data[i], earliest ) );
           }
         }
         else {
           // ran out of times fo this signal, so make dummy data for this time
-          ret[i]->add( std::move( dummyfill( data[i], earliest ) ) );
+          ret[i]->add( dummyfill( data[i], earliest ) );
         }
       }
 

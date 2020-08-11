@@ -75,7 +75,7 @@ namespace FormatConverter {
     static std::string_view peekPatientId( const std::string& xmldoc, bool ispatientdoc );
     dr_time peekTime( const std::string_view& xmldoc );
 
-    ParseState state;
+    //ParseState state;
     dr_time currentTime;
     bool wavewarning;
     std::map<std::string, std::string> elementClosings;

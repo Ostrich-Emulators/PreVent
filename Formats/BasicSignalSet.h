@@ -48,9 +48,9 @@ namespace FormatConverter {
     dr_time earliest( const TimeCounter& tc = EITHER ) const override;
     dr_time latest( const TimeCounter& tc = EITHER ) const override;
 
-    virtual const std::map<long, dr_time>& offsets( ) const;
-    virtual void addOffset( long seg, dr_time time );
-    virtual void clearOffsets( );
+    virtual const std::map<long, dr_time>& offsets( ) const override;
+    virtual void addOffset( long seg, dr_time time ) override;
+    virtual void clearOffsets( ) override;
 
     virtual void setMetadataFrom( const SignalSet& target ) override;
 
@@ -63,8 +63,8 @@ namespace FormatConverter {
      * @param key
      * @param val if empty, this key is removed from the metadata
      */
-    virtual void setMeta( const std::string& key, const std::string& val );
-    virtual void clearMetas( );
+    virtual void setMeta( const std::string& key, const std::string& val ) override;
+    virtual void clearMetas( ) override;
 
     virtual void complete( ) override;
 

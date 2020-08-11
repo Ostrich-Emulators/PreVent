@@ -128,7 +128,6 @@ namespace FormatConverter {
 
   private:
     const std::string rdrname;
-    bool anon;
     bool onefile;
     bool local_time;
     TimeModifier timemod;

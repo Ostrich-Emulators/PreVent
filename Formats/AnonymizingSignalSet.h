@@ -36,7 +36,7 @@ namespace FormatConverter {
 
   private:
     FileNamer& namer;
-    const TimeModifier& timemod;
+    const TimeModifier timemod;
     std::map<std::string, std::string> saveddata;
   };
 }

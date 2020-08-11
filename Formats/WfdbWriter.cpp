@@ -76,14 +76,14 @@ namespace FormatConverter{
       }
 
       for ( auto& ds : freqgroups ) {
-        write( ds.first, ds.second, filenamer( ).filenameNoExt( info ) );
+        iwrite( ds.first, ds.second, filenamer( ).filenameNoExt( info ) );
       }
     }
 
     return 0;
   }
 
-  int WfdbWriter::write( double freq, std::vector<SignalData *> data,
+  int WfdbWriter::iwrite( double freq, std::vector<SignalData *> data,
       const std::string& namestart ) {
     setsampfreq( freq );
 

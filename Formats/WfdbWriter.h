@@ -36,7 +36,7 @@ namespace FormatConverter {
   private:
     WfdbWriter( const WfdbWriter& orig );
 
-    int write( double freq, std::vector<SignalData *> data, const std::string& filestart );
+    int iwrite( double freq, std::vector<SignalData *> data, const std::string& filestart );
     void syncAndWrite( double freq, std::vector<SignalData *> data );
 
     std::string fileloc;

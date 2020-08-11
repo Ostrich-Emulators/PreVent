@@ -30,7 +30,7 @@ namespace FormatConverter {
 
     virtual void setMetadataOnly( bool metasonly = true );
     virtual bool isMetadataOnly( ) const;
-    virtual void finish( );
+    virtual void finish( ) override;
 
     struct StpMetadata {
       std::string name;

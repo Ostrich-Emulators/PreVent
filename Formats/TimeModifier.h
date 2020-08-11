@@ -20,7 +20,6 @@ namespace FormatConverter {
 
 	class TimeModifier {
 	public:
-		TimeModifier( );
 		TimeModifier( const TimeModifier& model );
 
 		virtual ~TimeModifier( );

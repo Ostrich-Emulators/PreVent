@@ -44,7 +44,7 @@ namespace FormatConverter {
     ZlReader2( const ZlReader2& orig );
 
     bool firstread;
-    dr_time currentTime;
+    //dr_time currentTime;
     std::map<std::string, std::unique_ptr<FormatConverter::StreamChunkReader>> signalToReaderLkp;
     std::map<std::string, std::string> leftovers;
 
