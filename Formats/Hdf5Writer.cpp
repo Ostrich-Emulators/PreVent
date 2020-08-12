@@ -188,8 +188,6 @@ namespace FormatConverter{
         writeAttribute( file, it.first, std::stoi( it.second ) );
       }
       else {
-        auto x = it.first;
-        auto y = it.second;
         writeAttribute( file, it.first, it.second );
       }
     }
