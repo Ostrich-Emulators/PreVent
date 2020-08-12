@@ -349,7 +349,7 @@ namespace FormatConverter{
         auto ok2 = std::fseek( cachefile->file, offset, SEEK_CUR );
 
         if ( ok < 1 || ok2 != 0 ) {
-          Log::debug( ) << "blamo!" << std::endl;
+          Log::error( ) << "blamo!" << std::endl;
         }
       }
       // when we get here, our file pointer has traveled back to the end of the file

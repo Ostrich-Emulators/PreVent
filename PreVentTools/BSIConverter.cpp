@@ -8,6 +8,8 @@
 #include "SignalUtils.h"
 #include "Hdf5Writer.h"
 #include "BSICache.h"
+#include "Log.h"
+
 
 #include <iostream>
 #include <cmath>
@@ -119,7 +121,7 @@ namespace FormatConverter{
   }
 
   void BSIConverter::write( std::vector<BSICache *>& data, const std::filesystem::path& outfile ) const {
-    std::cout << "Writing to " << outfile << std::endl;
+    Log::info() << "Writing to " << outfile << std::endl;
 
     H5::Exception::dontPrint( );
     try {
@@ -164,7 +166,7 @@ namespace FormatConverter{
       }
     }
     catch ( std::exception& x ) {
-      std::cerr << "unable to write to: " << outfile << "; error: " << x.what( ) << std::endl;
+      Log::error() << "unable to write to: " << outfile << "; error: " << x.what( ) << std::endl;
     }
   }
 }

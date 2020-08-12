@@ -117,7 +117,7 @@ void settmpdir( std::string tmpdir ) {
       std::filesystem::create_directories( tmpdir );
     }
     catch ( std::runtime_error& x ) {
-      std::cerr << "could not set tmpdir: " << x.what( ) << std::endl;
+      Log::error( ) << "could not set tmpdir: " << x.what( ) << std::endl;
       exit( 2 );
     }
   }
@@ -238,7 +238,7 @@ int main( int argc, char** argv ) {
         break;
       case 'R':
         intro( argv[0] );
-        Log::info() << releases_h_in << std::endl;
+        Log::info( ) << releases_h_in << std::endl;
         exit( 0 );
         break;
       case 'a':
@@ -269,11 +269,11 @@ int main( int argc, char** argv ) {
     }
   }
 
-  intro( argv[0] );
-
   if ( ( optind + 1 ) > argc ) {
     helpAndExit( argv[0], "no file specified" );
   }
+
+  intro( argv[0] );
 
   const std::string argument( argv[optind] );
   if ( "-" == argument ) {

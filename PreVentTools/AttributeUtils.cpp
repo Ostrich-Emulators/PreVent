@@ -9,8 +9,9 @@
 #include <iostream>
 #include <deque>
 #include "Hdf5Writer.h"
+#include "Log.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   void AttributeUtils::printAttributes( H5::H5File& file, const std::string& path, bool recursive ) {
 
@@ -22,7 +23,7 @@ namespace FormatConverter {
       std::string itempath = todo.front( );
       todo.pop_front( );
 
-      H5G_stat_t stats = {};
+      H5G_stat_t stats = { };
       try {
         file.getObjinfo( itempath, stats );
       }
@@ -54,14 +55,14 @@ namespace FormatConverter {
 
   void AttributeUtils::iprintAttributes( H5::H5Object& location ) {
     for ( int i = 0; i < location.getNumAttrs( ); i++ ) {
-      std::cout << location.getObjName( );
+      Log::out( ) << location.getObjName( );
 
       H5::Attribute attr = location.openAttribute( i );
       H5::DataType dt = attr.getDataType( );
 
-      std::cout << "|" << attr.getName( ) << "|";
+      Log::out( ) << "|" << attr.getName( ) << "|";
 
-      auto datatype = attr.getDataType();
+      auto datatype = attr.getDataType( );
 
       switch ( datatype.getClass( ) ) {
         case H5T_INTEGER:
@@ -69,12 +70,12 @@ namespace FormatConverter {
           if ( datatype.getSize( ) <= sizeof (int ) ) {
             int val = 0;
             attr.read( dt, &val );
-            std::cout << val;
+            Log::out( ) << val;
           }
           else if ( datatype.getSize( ) <= sizeof (long ) ) {
             long val = 0;
             attr.read( dt, &val );
-            std::cout << val;
+            Log::out( ) << val;
           }
         }
           break;
@@ -82,14 +83,14 @@ namespace FormatConverter {
         {
           double val = 0.0;
           attr.read( dt, &val );
-          std::cout << val;
+          Log::out( ) << val;
         }
           break;
         case H5T_STRING:
         {
           std::string val;
           attr.read( dt, val );
-          std::cout << val;
+          Log::out( ) << val;
         }
           break;
         default:
@@ -98,19 +99,19 @@ namespace FormatConverter {
       }
 
       attr.close( );
-      std::cout << std::endl;
+      Log::out( ) << std::endl;
     }
   }
 
   void AttributeUtils::setAttribute( H5::H5File& file, const std::string& path, const std::string& attr,
-          const std::string& val ) {
-    H5G_stat_t stats = {};
+      const std::string& val ) {
+    H5G_stat_t stats = { };
 
     try {
       file.getObjinfo( path, stats );
     }
     catch ( H5::FileIException& error ) {
-      std::cerr << "could not open dataset/group: " << path << std::endl;
+      Log::error( ) << "could not open dataset/group: " << path << std::endl;
       return;
     }
 
@@ -121,11 +122,11 @@ namespace FormatConverter {
         grp.removeAttr( attr );
       }
       if ( "" == val ) {
-        std::cout << attr << " attribute removed from " << path << std::endl;
+        Log::debug( ) << attr << " attribute removed from " << path << std::endl;
       }
       else {
         Hdf5Writer::writeAttribute( grp, attr, val );
-        std::cout << attr << " attribute written to " << path << std::endl;
+        Log::debug( ) << attr << " attribute written to " << path << std::endl;
       }
     }
     else if ( stats.type == H5G_DATASET ) {
@@ -134,24 +135,24 @@ namespace FormatConverter {
         ds.removeAttr( attr );
       }
       if ( "" == val ) {
-        std::cout << attr << " attribute removed from " << path << std::endl;
+        Log::debug( ) << attr << " attribute removed from " << path << std::endl;
       }
       else {
         Hdf5Writer::writeAttribute( ds, attr, val );
-        std::cout << attr << " attribute written to " << path << std::endl;
+        Log::debug( ) << attr << " attribute written to " << path << std::endl;
       }
     }
   }
 
   void AttributeUtils::setAttribute( H5::H5File& file, const std::string& path, const std::string& attr,
-          double val ) {
-    H5G_stat_t stats = {};
+      double val ) {
+    H5G_stat_t stats = { };
 
     try {
       file.getObjinfo( path, stats );
     }
     catch ( H5::FileIException& error ) {
-      std::cerr << "could not open dataset/group: " << path << std::endl;
+      Log::error( ) << "could not open dataset/group: " << path << std::endl;
       return;
     }
 
@@ -170,18 +171,18 @@ namespace FormatConverter {
       }
       Hdf5Writer::writeAttribute( ds, attr, val );
     }
-    std::cout << attr << " attribute written to " << path << std::endl;
+    Log::debug( ) << attr << " attribute written to " << path << std::endl;
   }
 
   void AttributeUtils::setAttribute( H5::H5File& file, const std::string& path, const std::string& attr,
-          int val ) {
-    H5G_stat_t stats = {};
+      int val ) {
+    H5G_stat_t stats = { };
 
     try {
       file.getObjinfo( path, stats );
     }
     catch ( H5::FileIException& error ) {
-      std::cerr << "could not open dataset/group: " << path << std::endl;
+      Log::error( ) << "could not open dataset/group: " << path << std::endl;
       return;
     }
 
@@ -200,6 +201,6 @@ namespace FormatConverter {
       }
       Hdf5Writer::writeAttribute( ds, attr, val );
     }
-    std::cout << attr << " attribute written to " << path << std::endl;
+    Log::debug( ) << attr << " attribute written to " << path << std::endl;
   }
 }
