@@ -70,6 +70,8 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-D or --statistics or --stats\tcalculates descriptive statistics"
       << std::endl << "\t-P or --append <file>\tappends extra data to file (implies --clobber)"
       << std::endl << "\t-b or --bsi \tcreates BSI-formatted HDF5 file from CSV"
+      << std::endl << "\t-q or --quiet\tless output"
+      << std::endl << "\t-v or --verbose\tmore output"
       << std::endl << "\t--stp-metas\tprint metadata from STP file or directory of STP files"
       << std::endl;
   exit( 1 );
@@ -482,7 +484,7 @@ int main( int argc, char** argv ) {
       std::string input = argv[i];
 
       std::ostream& outstream = ( outfilename.empty( )
-          ? std::cout
+          ? Log::out( )
           : *( new std::ofstream( outfilename ) ) );
       auto signal = std::unique_ptr<SignalData>{ std::make_unique<OutputSignalData>( outstream ) };
 
@@ -492,10 +494,14 @@ int main( int argc, char** argv ) {
       }
       else {
         std::unique_ptr<Reader> rdr = Reader::get( fmt );
-        rdr->splice( input, path, starttime, endtime, signal.get( ) );
+        if ( rdr->splice( input, path, starttime, endtime, signal.get( ) ) ) {
 
-        if ( !outfilename.empty( ) ) {
-          delete &outstream;
+          if ( !outfilename.empty( ) ) {
+            delete &outstream;
+          }
+        }
+        else {
+          Log::error( ) << "error reading file: " << input << std::endl;
         }
       }
     }
@@ -548,18 +554,22 @@ int main( int argc, char** argv ) {
       endtime = starttime + for_s * 1000;
     }
 
-    rdr->splice( input, path, starttime, endtime, &descriptives );
+    if ( rdr->splice( input, path, starttime, endtime, &descriptives ) ) {
 
-    Log::out( )
-        << "count: " << descriptives.count( ) << std::endl
-        << "min: " << descriptives.min( ) << std::endl
-        << "max: " << descriptives.max( ) << std::endl
-        << "median: " << descriptives.median( ) << std::endl
-        << "mode: " << descriptives.mode( ) << std::endl
-        << "mean: " << descriptives.mean( ) << std::endl
-        << "variance: " << descriptives.variance( ) << std::endl
-        << "std dev: " << descriptives.stddev( ) << std::endl
-        ;
+      Log::out( )
+          << "count: " << descriptives.count( ) << std::endl
+          << "min: " << descriptives.min( ) << std::endl
+          << "max: " << descriptives.max( ) << std::endl
+          << "median: " << descriptives.median( ) << std::endl
+          << "mode: " << descriptives.mode( ) << std::endl
+          << "mean: " << descriptives.mean( ) << std::endl
+          << "variance: " << descriptives.variance( ) << std::endl
+          << "std dev: " << descriptives.stddev( ) << std::endl
+          ;
+    }
+    else {
+      Log::error( ) << "error reading file: " << input << std::endl;
+    }
   }
   else {
     // something to acknowledge the program did something

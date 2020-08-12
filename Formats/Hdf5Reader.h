@@ -46,7 +46,7 @@ namespace FormatConverter {
      * @param to
      * @return
      */
-    virtual void splice( const std::string& inputfile, const std::string& path,
+    virtual bool splice( const std::string& inputfile, const std::string& path,
         dr_time from, dr_time to, SignalData * signal ) override;
 
   private:

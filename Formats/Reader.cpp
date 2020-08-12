@@ -123,9 +123,10 @@ namespace FormatConverter{
     return false;
   }
 
-  void Reader::splice( const std::string& inputfile, const std::string& path,
+  bool Reader::splice( const std::string& inputfile, const std::string& path,
       dr_time from, dr_time to, SignalData * signal ) {
     Log::error( ) << "this reader does not support splicing" << std::endl;
+    return false;
   }
 
   bool Reader::strptime2( const std::string& input, const std::string& format,

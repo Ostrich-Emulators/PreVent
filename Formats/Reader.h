@@ -112,9 +112,9 @@ namespace FormatConverter {
      * @param path
      * @param from
      * @param to
-     * @return
+     * @return true, if file is read successfully
      */
-    virtual void splice( const std::string& inputfile, const std::string& path,
+    virtual bool splice( const std::string& inputfile, const std::string& path,
         dr_time from, dr_time to, SignalData * signalToFill );
 
   protected:

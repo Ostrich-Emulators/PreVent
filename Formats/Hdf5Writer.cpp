@@ -42,13 +42,18 @@ namespace FormatConverter{
   void Hdf5Writer::writeAttribute( H5::H5Object& loc,
       const std::string& attr, const std::string& val ) {
     if ( !val.empty( ) ) {
-      Log::trace( ) << "writing attribute (string):" << loc.getObjName( ) << " " << attr << ": " << val << std::endl;
+      try {
+        Log::trace( ) << "writing attribute (string):" << loc.getObjName( ) << " " << attr << ": " << val << std::endl;
 
-      H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
-      H5::StrType st( H5::PredType::C_S1, H5T_VARIABLE );
-      st.setCset( H5T_CSET_UTF8 );
-      H5::Attribute attrib = loc.createAttribute( attr, st, space );
-      attrib.write( st, val );
+        H5::DataSpace space = H5::DataSpace( H5S_SCALAR );
+        H5::StrType st( H5::PredType::C_S1, H5T_VARIABLE );
+        st.setCset( H5T_CSET_UTF8 );
+        H5::Attribute attrib = loc.createAttribute( attr, st, space );
+        attrib.write( st, val );
+      }
+      catch ( H5::AttributeIException& x ) {
+        Log::error( ) << x.getDetailMsg( ) << std::endl;
+      }
     }
   }
 
@@ -177,14 +182,15 @@ namespace FormatConverter{
 
     writeTimesAndDurationAttributes( file, firstTime, lastTime );
 
-    for ( std::map<std::string, std::string>::const_iterator it = datasetattrs.begin( );
-        it != datasetattrs.end( ); ++it ) {
-      //std::cout << "writing file attr: " << it->first << ": " << it->second << std::endl;
-      if ( it->first == OffsetTimeSignalSet::COLLECTION_OFFSET ) {
-        writeAttribute( file, it->first, std::stoi( it->second ) );
+    for ( auto& it : datasetattrs ) {
+      Log::debug( ) << "writing file attr: " << it.first << ": " << it.second << std::endl;
+      if ( OffsetTimeSignalSet::COLLECTION_OFFSET == it.first ) {
+        writeAttribute( file, it.first, std::stoi( it.second ) );
       }
       else {
-        writeAttribute( file, it->first, it->second );
+        auto x = it.first;
+        auto y = it.second;
+        writeAttribute( file, it.first, it.second );
       }
     }
 

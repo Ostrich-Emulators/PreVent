@@ -89,7 +89,7 @@ namespace FormatConverter {
     static const inline size_t DEFAULT_CACHE_LIMIT = 1024 * 384;
 
     FileCachingVector( ) : cachedata( Options::asBool( OptionsKey::NOCACHE ) ? nullptr : SignalUtils::tmpf( ) ),
-        sizer( 0 ), memrange( 0, 0 ), dirty( false ) { }
+        sizer( 0 ), memrange( 0, 0 ), dirty( false ), maxelements( DEFAULT_CACHE_LIMIT ) { }
 
     virtual ~FileCachingVector( ) { }
 
@@ -139,6 +139,28 @@ namespace FormatConverter {
         vec.push_back( value_at( startidx ) );
       }
     }
+  protected:
+
+    /**
+     * Extension point
+     * @param values
+     * @param file
+     * @return
+     */
+    virtual int _cache( std::vector<T>& values, FILE * file ) {
+      return std::fwrite( values.data( ), sizeof ( T ), values.size( ), file );
+    }
+
+    /**
+     * Extension point
+     * @param values
+     * @param file
+     * @return
+     */
+    virtual int _uncache( std::vector<T>& values, size_t maxreads, size_t elementsize, FILE * file ) {
+      return std::fread( values.data( ), elementsize, maxreads, file );
+    }
+
 
   private:
 
@@ -156,8 +178,8 @@ namespace FormatConverter {
     }
 
     virtual bool cache_if_needed( bool force = false ) {
-      if ( cachedata && ( values.size( ) >= DEFAULT_CACHE_LIMIT || force ) ) {
-        std::fwrite( values.data( ), sizeof ( T ), values.size( ), cachedata->file );
+      if ( cachedata && ( values.size( ) >= maxelements || force ) ) {
+        _cache( values, cachedata->file );
         values.clear( );
         memrange.first = sizer;
         memrange.second = sizer;
@@ -176,7 +198,7 @@ namespace FormatConverter {
       auto filepos = fromidx * SIZE;
       values.clear( );
       std::fseek( cachedata->file, filepos, SEEK_SET );
-      auto reads = std::fread( values.data( ), SIZE, DEFAULT_CACHE_LIMIT, cachedata->file );
+      auto reads = _uncache( values, maxelements, SIZE, cachedata->file );
       memrange.first = fromidx;
       memrange.second = fromidx + reads;
     }
@@ -186,6 +208,7 @@ namespace FormatConverter {
     std::vector<T> values;
     std::pair<size_t, size_t> memrange;
     bool dirty;
+    size_t maxelements;
   };
 }
 #endif /* FILECACHINGVECTOR_H */

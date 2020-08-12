@@ -17,11 +17,11 @@
 #include "Log.h"
 
 namespace FormatConverter{
-  const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS({ "Duration", "End Date/Time",
-    "Start Date/Time", SignalData::ENDTIME, SignalData::STARTTIME, SignalData::SCALE, SignalData::MSM,
-    "Layout Version", "HDF5 Version", "HDF5 Version", "Layout Version",
-    "Columns", SignalData::TIMEZONE, SignalData::LABEL, "Source Reader",
-    "Note on Scale", "Note on Min/Max", "Min Value", "Max Value" } );
+  const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS{ "Duration", "End Date/Time",
+    "Start Date/Time", "Scale",
+    "Missing Value Marker", "Layout Version", "HDF5 Version", "HDF5 Version", "Layout Version",
+    "Columns", "Timezone", "Data Label", "Source Reader",
+    "Note on Scale", "Note on Min/Max", "Min Value", "Max Value", "Start Time", "End Time" };
 
   Hdf5Reader::Hdf5Reader( ) : Reader( "HDF5" ) { }
 
@@ -129,11 +129,16 @@ namespace FormatConverter{
       H5::Attribute a = root.openAttribute( i );
       auto key = a.getName( );
 
-      if ( 0 == IGNORABLE_PROPS.count( key ) ) {
+      if ( IGNORABLE_PROPS.end( ) == IGNORABLE_PROPS.find( key ) ) {
         std::string prop = ( OffsetTimeSignalSet::COLLECTION_OFFSET == key
             ? std::to_string( metaint( a ) )
             : metastr( a ) );
+
+        Log::debug( ) << "read attr: " << key << ": " << prop << std::endl;
         info->setMeta( key, prop );
+      }
+      else {
+        Log::trace( ) << "skipping attr: " << key << std::endl;
       }
     }
 
@@ -456,8 +461,7 @@ namespace FormatConverter{
       H5::Attribute attr = dataset.openAttribute( i );
       H5::DataType type = attr.getDataType( );
       const std::string key = attr.getName( );
-      if ( 0 == IGNORABLE_PROPS.count( key ) || includeIgnorables ) {
-
+      if ( IGNORABLE_PROPS.end( ) == IGNORABLE_PROPS.find( key ) || includeIgnorables ) {
         switch ( attr.getTypeClass( ) ) {
           case H5T_INTEGER:
           {
@@ -560,7 +564,7 @@ namespace FormatConverter{
     return rev;
   }
 
-  void Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
+  bool Hdf5Reader::splice( const std::string& inputfile, const std::string& path,
       dr_time from, dr_time to, SignalData * signal ) {
     Log::debug( ) << "splicing data from " << inputfile << ":" << path <<
         " from " << from << " to " << to << std::endl;
@@ -659,15 +663,18 @@ namespace FormatConverter{
           }
         }
       }
+      return true;
     }
     catch ( H5::FileIException& error ) {
       Log::error( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
+      return false;
     }
     // catch failure caused by the DataSet operations
     catch ( H5::DataSetIException& error ) {
       Log::error( ) << error.getDetailMsg( ) << std::endl;
       file.close( );
+      return false;
     }
   }
 
