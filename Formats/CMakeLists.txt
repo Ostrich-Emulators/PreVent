@@ -84,6 +84,7 @@ DwcReader.cpp
 NullWriter.cpp
 NullSignalData.cpp
 Log.cpp
+AutonWriter.cpp
 generated/config.h
 generated/releases.h
 )
@@ -163,5 +164,6 @@ CircularBuffer.h
 NullWriter.h
 NullSignalData.h
 Log.h
+AutonWriter.h
 generated/releases.h
 DESTINATION ${include_dest} )

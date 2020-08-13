@@ -24,17 +24,14 @@
 #include <sys/cygwin.h>
 #endif
 
-namespace FormatConverter {
+namespace FormatConverter{
 
-  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) {
-  }
+  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) { }
 
   WfdbReader::WfdbReader( const std::string& name ) : Reader( name ), extra_ms( 0 ),
-      basetimeset( false ), framecount( 0 ) {
-  }
+      basetimeset( false ), framecount( 0 ) { }
 
-  WfdbReader::~WfdbReader( ) {
-  }
+  WfdbReader::~WfdbReader( ) { }
 
   void WfdbReader::setBaseTime( const dr_time& basetime ) {
     _basetime = basetime;
@@ -122,17 +119,17 @@ namespace FormatConverter {
       return rslt;
     }
 
-    auto headerpath = SignalUtils::canonicalizePath(headername );
-    auto path = ". " + headerpath.parent_path().string( );
-    Log::debug() << "wfdb path: " << path << std::endl;
-    setwfdb( path.data() );
+    auto headerpath = SignalUtils::canonicalizePath( headername );
+    auto path = ". " + headerpath.parent_path( ).string( );
+    Log::debug( ) << "wfdb path: " << path << std::endl;
+    setwfdb( path.data( ) );
 
     // the record name is just the basename of the file
     auto recordname = headerpath.filename( ).stem( );
     auto cutup = std::string{ recordname };
 
     sigcount = isigopen( (char *) cutup.c_str( ), NULL, 0 );
-    Log::debug() << "signal count: " << sigcount << std::endl;
+    Log::debug( ) << "signal count: " << sigcount << std::endl;
     if ( sigcount > 0 ) {
       WFDB_Frequency wffreqhz = getifreq( );
       bool iswave = ( wffreqhz > 1 );
@@ -148,7 +145,7 @@ namespace FormatConverter {
       else {
         interval = 1024;
         freqhz = wffreqhz * 1.024;
-        Log::warn() << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
+        Log::warn( ) << "warning: Signals are assumed to be sampled at 1024ms intervals, not 1000ms" << std::endl;
       }
 
       sigcount = isigopen( (char *) ( cutup.c_str( ) ), siginfo, sigcount );
@@ -228,6 +225,7 @@ namespace FormatConverter {
   }
 
   ReadResult WfdbReader::fill_wfdblib( SignalSet * info, const ReadResult& lastrr ) {
+    Log::debug( ) << "using WFDB lib for parsing" << std::endl;
     WFDB_Sample v[framecount];
     bool iswave = ( freqhz > 1 );
 
@@ -246,13 +244,14 @@ namespace FormatConverter {
       }
     }
 
-    Log::debug() << "looping" << std::endl;
     while ( true ) {
       std::map<int, std::vector<int>> currents;
       for ( int i = 0; i < sigcount; i++ ) {
+        currents[i].clear( );
         currents[i].reserve( freqhz * siginfo[sigcount].spf );
       }
 
+      // we fill one whole DataRow at a time
       for ( size_t i = 0; i < freqhz; i++ ) {
         retcode = getframe( v );
         if ( retcode < 0 ) {
@@ -301,7 +300,7 @@ namespace FormatConverter {
           }
 
           if ( currents[signalidx].size( ) < expected ) {
-            Log::debug() << "filling in " << ( expected - currents[signalidx].size( ) )
+            Log::debug( ) << "filling in " << ( expected - currents[signalidx].size( ) )
                 << " values for wave " << siginfo[signalidx].desc << std::endl;
             currents[signalidx].resize( expected, SignalData::MISSING_VALUE );
           }
@@ -331,6 +330,8 @@ namespace FormatConverter {
   }
 
   ReadResult WfdbReader::fill_nativeread( SignalSet * info, const ReadResult& lastrr ) {
+    Log::warn( ) << "using fast WFDB parser" << std::endl;
+
     ReadResult rslt = ReadResult::NORMAL;
     bool iswave = ( freqhz > 1 );
 

@@ -10,6 +10,7 @@
 #include "WfdbWriter.h"
 #include "MatWriter.h"
 #include "CsvWriter.h"
+#include "AutonWriter.h"
 #include "NullWriter.h"
 #include "ConversionListener.h"
 #include "FileNamer.h"
@@ -52,6 +53,8 @@ namespace FormatConverter{
         return std::make_unique<MatWriter>( MatVersion::MV4 );
       case FormatConverter::CSV:
         return std::make_unique<CsvWriter>( );
+      case FormatConverter::AUTON:
+        return std::make_unique<AutonWriter>( );
       case FormatConverter::NOOP:
         return std::make_unique<NullWriter>( );
       default:

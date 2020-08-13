@@ -23,6 +23,9 @@ namespace FormatConverter{
     if ( "wfdb" == fmt ) {
       return WFDB;
     }
+    if ( "au" == fmt || "auton" == fmt ) {
+      return AUTON;
+    }
     if ( "hdf5" == fmt ) {
       return HDF5;
     }
@@ -112,6 +115,9 @@ namespace FormatConverter{
       }
       else if ( "info" == suffix ) {
         return Format::DWC;
+      }
+      else if ( "au" == suffix ) {
+        return Format::AUTON;
       }
     }
     return Format::UNRECOGNIZED;

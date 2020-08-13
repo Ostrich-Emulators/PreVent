@@ -325,6 +325,9 @@ int main( int argc, char** argv ) {
       case FormatConverter::DWC:
         fromstr = "dwc";
         break;
+      case FormatConverter::AUTON:
+        fromstr = "au";
+        break;
       case FormatConverter::NOOP:
       case FormatConverter::UNRECOGNIZED:
         fromstr = "";
