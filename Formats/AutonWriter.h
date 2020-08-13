@@ -43,6 +43,7 @@ namespace FormatConverter {
     void writeGlobalMetas( H5::H5File& file );
     void writeVital( H5::H5Object& loc, SignalData * );
     void writeWave( H5::H5Object& loc, SignalData * );
+    void writeMetas( H5::H5Object& loc, SignalData * );
 
     SignalSet * dataptr;
   };

@@ -386,7 +386,7 @@ namespace FormatConverter{
       return data;
     }
 
-    Log::debug( ) << "resampling datapoints to " << hz << " hz from 240Hz" << std::endl;
+    Log::trace( ) << "resampling datapoints to " << hz << " hz from 240Hz" << std::endl;
 
     std::vector<std::string_view> valvec = SignalUtils::splitcsv( std::string_view( data ) );
     const int skips = ( 120 == hz ? 1 : 3 );

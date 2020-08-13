@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+#include <iostream>
 
 #include "AutonWriter.h"
-#include <iostream>
 #include "SignalSet.h"
 #include "FileNamer.h"
 #include "Hdf5Writer.h"
@@ -13,6 +13,7 @@
 #include "config.h"
 #include "SignalData.h"
 #include "Log.h"
+#include "Options.h"
 
 namespace FormatConverter{
 
@@ -48,8 +49,8 @@ namespace FormatConverter{
       H5::H5File file( outy, H5F_ACC_TRUNC );
       writeGlobalMetas( file );
 
-      auto numerics = Hdf5Writer::ensureGroupExists( file, "Numerics" );
-      auto vitals = Hdf5Writer::ensureGroupExists( numerics, "Vitals" );
+      auto topdata = Hdf5Writer::ensureGroupExists( file, "data" );
+      auto vitals = Hdf5Writer::ensureGroupExists( topdata, "vitals" );
 
       auto vitnames = std::vector<std::string>{ };
       for ( auto& v : dataptr->vitals( ) ) {
@@ -57,52 +58,14 @@ namespace FormatConverter{
         writeVital( vitals, v );
       }
 
-      auto waves = Hdf5Writer::ensureGroupExists( file, "Waveforms" );
-      auto hemos = Hdf5Writer::ensureGroupExists( waves, "Hemodynamics" );
-
+      auto waves = Hdf5Writer::ensureGroupExists( topdata, "waveforms" );
       auto wavnames = std::vector<std::string>{ };
-      for ( auto& v : dataptr->waves( ) ) {
-        wavnames.push_back( v->name( ) );
-        writeWave( hemos, v );
+      if ( !this->skipwaves( ) ) {
+        for ( auto& v : dataptr->waves( ) ) {
+          wavnames.push_back( v->name( ) );
+          writeWave( waves, v );
+        }
       }
-
-      //      createTimeCache( );
-      //      createEventsAndTimes( file, dataptr ); // also creates the timesteplkp
-      //
-      //      auto auxdata = dataptr->auxdata( );
-      //      if ( !auxdata.empty( ) ) {
-      //        for ( auto& fileaux : auxdata ) {
-      //          writeAuxData( file, fileaux.first, fileaux.second );
-      //        }
-      //      }
-      //
-      //      writeFileAttributes( file, dataptr->metadata( ), firstTime, lastTime );
-      //
-      //      auto grp = ensureGroupExists( file, "VitalSigns" );
-      //      output( ) << "Writing " << dataptr->vitals( ).size( ) << " Vitals" << std::endl;
-      //      for ( auto& vits : dataptr->vitals( ) ) {
-      //        if ( vits->empty( ) ) {
-      //          output( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
-      //        }
-      //        else {
-      //          auto g = ensureGroupExists( grp, getDatasetName( vits ) );
-      //          writeVitalGroup( g, vits );
-      //        }
-      //      }
-      //
-      //      if ( !this->skipwaves( ) ) {
-      //        grp = ensureGroupExists( file, "Waveforms" );
-      //        output( ) << "Writing " << dataptr->waves( ).size( ) << " Waveforms" << std::endl;
-      //        for ( auto& wavs : dataptr->waves( ) ) {
-      //          if ( wavs->empty( ) ) {
-      //            output( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
-      //          }
-      //          else {
-      //            H5::Group g = ensureGroupExists( grp, getDatasetName( wavs ) );
-      //            writeWaveGroup( g, wavs );
-      //          }
-      //        }
-      //      }
 
       ret.push_back( outy );
     }
@@ -144,12 +107,37 @@ namespace FormatConverter{
     Hdf5Writer::writeAttribute( globalmetas, "data", data.dump( 2, ' ', true ) );
   }
 
+  void AutonWriter::writeMetas( H5::H5Object& loc, SignalData * signal ) {
+    auto meta = nlohmann::json{ };
+    meta["columns"]["time"]["type"] = "time";
+    meta["columns"]["value"]["type"] = ( Options::asBool( OptionsKey::INDEXED_TIME )
+        ? "indexed"
+        : "real" );
+
+    for ( const auto& it : signal->metad( ) ) {
+      meta["properties"][it.first] = it.second;
+    }
+    for ( const auto& it : signal->metas( ) ) {
+      if ( !( "Note on Scale" == it.first || "Note on Min/Max" == it.first ) ) {
+        meta["properties"][it.first] = it.second;
+      }
+    }
+    for ( const auto& it : signal->metai( ) ) {
+      if ( "Scale" != it.first ) {
+        meta["properties"][it.first] = it.second;
+      }
+    }
+
+    Hdf5Writer::writeAttribute( loc, ".meta", meta.dump( 2, ' ', true ) );
+  }
+
   void AutonWriter::writeVital( H5::H5Object& loc, SignalData * signal ) {
+    Log::debug( ) << "writing vital: " << signal->name( ) << std::endl;
     auto dsname = Hdf5Writer::getDatasetName( signal->name( ) );
 
     const hsize_t rows = signal->size( );
 
-    hsize_t dims[] = { rows, 1 };
+    hsize_t dims[] = { rows, 2 };
     auto space = H5::DataSpace{ 2, dims };
 
     H5::DSetCreatPropList props;
@@ -162,12 +150,11 @@ namespace FormatConverter{
     }
 
     auto ds = loc.createDataSet( dsname, H5::PredType::IEEE_F64LE, space, props );
+    writeMetas( ds, signal );
 
-    const hsize_t maxslabcnt = ( rows > 125000
-        ? 125000
-        : rows );
+    const hsize_t maxslabcnt = std::min( rows, (hsize_t) ( 1024 * 256 ) );
     hsize_t offset[] = { 0, 0 };
-    hsize_t count[] = { 0, 1 };
+    hsize_t count[] = { 0, 2 };
 
     auto buffer = std::vector<double>{ };
     buffer.reserve( maxslabcnt );
@@ -179,6 +166,7 @@ namespace FormatConverter{
     size_t rowcount = 0;
     for ( size_t row = 0; row < rows; row++ ) {
       auto datarow = signal->pop( );
+      buffer.push_back( static_cast<double> ( datarow->time ) );
       buffer.push_back( datarow->doubles( )[0] );
 
       if ( ++rowcount >= maxslabcnt ) {
@@ -187,6 +175,7 @@ namespace FormatConverter{
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
 
         H5::DataSpace memspace( 2, count );
+        Log::debug( ) << "writing " << rowcount << " data points in a slab" << std::endl;
         ds.write( buffer.data( ), H5::PredType::IEEE_F64LE, memspace, space );
         buffer.clear( );
         buffer.reserve( maxslabcnt );
@@ -195,21 +184,24 @@ namespace FormatConverter{
     }
 
     // finally, write whatever's left in the buffer
-    if ( buffer.empty( ) ) {
+    if ( !buffer.empty( ) ) {
       offset[0] += count[0];
       count[0] = rowcount;
       space.selectHyperslab( H5S_SELECT_SET, count, offset );
       H5::DataSpace memspace( 2, count );
+      Log::debug( ) << "writing (leftovers) " << rowcount << " data points in a slab" << std::endl;
       ds.write( buffer.data( ), H5::PredType::IEEE_F64LE, memspace, space );
     }
   }
 
   void AutonWriter::writeWave( H5::H5Object& loc, SignalData * signal ) {
+    Log::debug( ) << "writing wave: " << signal->name( ) << std::endl;
     auto dsname = Hdf5Writer::getDatasetName( signal->name( ) );
     const hsize_t rows = signal->size( );
-    const int valsperrow = signal->readingsPerChunk( );
+    const auto valsperrow = signal->readingsPerChunk( );
+    const auto msstep = signal->chunkInterval( ) / valsperrow;
 
-    hsize_t dims[] = { rows * valsperrow, 1 };
+    hsize_t dims[] = { rows * valsperrow, 2 };
     auto space = H5::DataSpace{ 2, dims };
     H5::DSetCreatPropList props;
     if ( compression( ) > 0 ) {
@@ -221,10 +213,13 @@ namespace FormatConverter{
     }
 
     H5::DataSet ds = loc.createDataSet( dsname, H5::PredType::IEEE_F64LE, space, props );
+    writeMetas( ds, signal );
 
-    const hsize_t maxslabcnt = ( rows * valsperrow > 125000 ? 125000 : rows * valsperrow );
+    // this is a "soft" max value...the actual max is based on this
+    // signal's valsperrow
+    const hsize_t maxslabcnt = std::min( rows * valsperrow, (hsize_t) 1024 * 256 );
     hsize_t offset[] = { 0, 0 };
-    hsize_t count[] = { 0, 1 };
+    hsize_t count[] = { 0, 2 };
 
     auto buffer = std::vector<double>{ };
     buffer.reserve( maxslabcnt );
@@ -237,13 +232,22 @@ namespace FormatConverter{
     for ( size_t row = 0; row < rows; row++ ) {
       auto datarow = signal->pop( );
       auto dbls = datarow->doubles( );
-      buffer.insert( buffer.end( ), dbls.begin( ), dbls.end( ) );
+      auto rowtime = datarow->time;
 
+      for ( size_t vidx = 0; vidx < dbls.size( ); vidx++ ) {
+        buffer.push_back( static_cast<double> ( rowtime ) );
+        buffer.push_back( dbls[vidx] );
+        rowtime += msstep;
+      }
 
-      if ( buffer.size( ) >= maxslabcnt ) {
-        count[0] = buffer.size( );
+      // we have two values per row, so our buffer is actually 2X big
+      if ( buffer.size( ) / 2 >= maxslabcnt ) {
+        Log::debug( ) << "writing " << buffer.size( ) << " data points in a slab" << std::endl;
+
+        count[0] = buffer.size( ) / 2;
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
         offset[0] += count[0];
+        //Log::debug( ) << "writing slab " << x++ << "\tcount: " << count[0] << "\toffset: " << offset[0] << std::endl;
 
         auto memspace = H5::DataSpace{ 2, count };
         ds.write( buffer.data( ), H5::PredType::IEEE_F64LE, memspace, space );
@@ -254,7 +258,8 @@ namespace FormatConverter{
 
     // finally, write whatever's left in the buffer
     if ( !buffer.empty( ) ) {
-      count[0] = buffer.size( );
+      Log::debug( ) << "writing (leftovers) " << buffer.size( ) << " values in a slab" << std::endl;
+      count[0] = buffer.size( ) / 2;
       space.selectHyperslab( H5S_SELECT_SET, count, offset );
       auto memspace = H5::DataSpace{ 2, count };
       ds.write( buffer.data( ), H5::PredType::IEEE_F64LE, memspace, space );

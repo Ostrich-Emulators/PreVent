@@ -260,7 +260,7 @@ namespace FormatConverter{
     // once we're out of all the loops, we need to write any residual data.
     size_t rowcount = 0;
     for ( size_t row = 0; row < rows; row++ ) {
-      std::unique_ptr<FormatConverter::DataRow> datarow = data->pop( );
+      auto datarow = data->pop( );
       datarow->rescale( scale );
       if ( useInts ) {
         ibuffer.push_back( datarow->ints( )[0] );
@@ -293,13 +293,13 @@ namespace FormatConverter{
         H5::DataSpace memspace( 2, count );
         if ( useInts ) {
           Log::trace( ) << "slab" << std::endl;
-          ds.write( &ibuffer[0], H5::PredType::STD_I32LE, memspace, space );
+          ds.write( ibuffer.data(), H5::PredType::STD_I32LE, memspace, space );
           ibuffer.clear( );
           ibuffer.reserve( maxslabcnt * ( exc + 1 ) );
         }
         else {
           Log::trace( ) << "slab" << std::endl;
-          ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
+          ds.write( sbuffer.data(), H5::PredType::STD_I16LE, memspace, space );
           sbuffer.clear( );
           sbuffer.reserve( maxslabcnt * ( exc + 1 ) );
         }
@@ -315,7 +315,7 @@ namespace FormatConverter{
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
         H5::DataSpace memspace( 2, count );
         Log::trace( ) << "slab - leftovers" << std::endl;
-        ds.write( &ibuffer[0], H5::PredType::STD_I32LE, memspace, space );
+        ds.write( ibuffer.data(), H5::PredType::STD_I32LE, memspace, space );
       }
     }
     else {
@@ -325,7 +325,7 @@ namespace FormatConverter{
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
         H5::DataSpace memspace( 2, count );
         Log::trace( ) << "slab - leftovers" << std::endl;
-        ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
+        ds.write( sbuffer.data(), H5::PredType::STD_I16LE, memspace, space );
       }
     }
   }
@@ -396,7 +396,7 @@ namespace FormatConverter{
 
           H5::DataSpace memspace( 2, count );
           Log::trace( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
-          ds.write( &ibuffer[0], H5::PredType::STD_I32LE, memspace, space );
+          ds.write( ibuffer.data(), H5::PredType::STD_I32LE, memspace, space );
           ibuffer.clear( );
           ibuffer.reserve( maxslabcnt );
         }
@@ -409,7 +409,7 @@ namespace FormatConverter{
 
           H5::DataSpace memspace( 2, count );
           Log::trace( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
-          ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
+          ds.write( sbuffer.data(), H5::PredType::STD_I16LE, memspace, space );
           sbuffer.clear( );
           sbuffer.reserve( maxslabcnt );
         }
@@ -423,7 +423,7 @@ namespace FormatConverter{
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
         H5::DataSpace memspace( 2, count );
         Log::trace( ) << "slab - leftovers" << std::endl;
-        ds.write( &ibuffer[0], H5::PredType::STD_I32LE, memspace, space );
+        ds.write( ibuffer.data(), H5::PredType::STD_I32LE, memspace, space );
       }
     }
     else {
@@ -432,7 +432,7 @@ namespace FormatConverter{
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
         H5::DataSpace memspace( 2, count );
         Log::trace( ) << "slab - leftovers" << std::endl;
-        ds.write( &sbuffer[0], H5::PredType::STD_I16LE, memspace, space );
+        ds.write( sbuffer.data(), H5::PredType::STD_I16LE, memspace, space );
       }
     }
   }
@@ -911,7 +911,7 @@ namespace FormatConverter{
 
       H5::DataSet ds = eventgroup.createDataSet( getDatasetName( type ),
           H5::PredType::STD_I64LE, space, props );
-      ds.write( &times[0], H5::PredType::STD_I64LE );
+      ds.write( times.data(), H5::PredType::STD_I64LE );
       writeAttribute( ds, SignalData::LABEL, type );
       writeAttribute( ds, "Time Source", "raw" );
       writeAttribute( ds, "Columns", "timestamp (ms)" );
