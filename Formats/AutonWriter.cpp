@@ -17,7 +17,7 @@
 
 namespace FormatConverter{
 
-  AutonWriter::AutonWriter( ) : Writer( "autonlab" ) { }
+  AutonWriter::AutonWriter( ) : Writer( "au" ) { }
 
   AutonWriter::~AutonWriter( ) { }
 
@@ -105,6 +105,28 @@ namespace FormatConverter{
     data["time"]["units"] = "ms";
     data["time"]["tz"] = "GMT";
     Hdf5Writer::writeAttribute( globalmetas, "data", data.dump( 2, ' ', true ) );
+
+
+    auto mapping = nlohmann::json{ };
+    const auto& source = dataptr->metadata( ).at( "Source Reader" );
+
+    for ( auto& signal : dataptr->allsignals( ) ) {
+      const auto& name = signal->name( );
+
+      if ( !signal->uom( ).empty( ) ) {
+        mapping["common_parameters"][name]["UOM"] = signal->uom( );
+      }
+
+      if ( !source.empty( ) ) {
+        mapping["common_parameters"][name]["data_source"] = source;
+      }
+
+      auto dsname = Hdf5Writer::getDatasetName( name );
+      mapping["common_parameters"][name]["data_location"] = ( signal->wave( )
+          ? "/data/waveforms/" + dsname
+          : "/data/vitals/" + dsname );
+    }
+    Hdf5Writer::writeAttribute( globalmetas, "mapping", mapping.dump( 2, ' ', true ) );
   }
 
   void AutonWriter::writeMetas( H5::H5Object& loc, SignalData * signal ) {
