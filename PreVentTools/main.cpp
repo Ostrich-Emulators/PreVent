@@ -127,6 +127,17 @@ void cloneFile( std::unique_ptr<H5::H5File>&infile,
   }
 }
 
+dr_time getstarttime( const std::string& filename ) {
+  auto areader( Reader::get( FormatConverter::Formats::guess( filename ) ) );
+  auto amap = std::map<std::string, std::string>{ };
+  if ( areader->getAttributes( filename, amap ) ) {
+    return ( 0 == amap.count( SignalData::STARTTIME )
+        ? 0
+        : std::stol( amap.at( SignalData::STARTTIME ) ) );
+  }
+  return 0;
+}
+
 /*
  * 
  */
@@ -263,7 +274,6 @@ int main( int argc, char** argv ) {
     helpAndExit( argv[0], "no file specified" );
   }
 
-
   if ( needsoutput ) {
     if ( outfilename.empty( ) ) {
       helpAndExit( argv[0], "please specify an output filename with --output" );
@@ -384,13 +394,7 @@ int main( int argc, char** argv ) {
     H5Cat catter( outfilename );
     if ( dotime ) {
       if ( !havestarttime ) {
-        std::unique_ptr<Reader> areader( Reader::get( FormatConverter::Formats::guess( filesToCat[0] ) ) );
-        std::map<std::string, std::string> amap;
-        if ( areader->getAttributes( filesToCat[0], amap ) ) {
-          starttime = ( 0 == amap.count( SignalData::STARTTIME )
-              ? 0
-              : std::stol( amap.at( SignalData::STARTTIME ) ) );
-        }
+        starttime = getstarttime( filesToCat[0] );
       }
 
       if ( for_s > 0 ) {
@@ -493,7 +497,14 @@ int main( int argc, char** argv ) {
         Log::error( ) << "Skipping unrecognized format or file: " << input << std::endl;
       }
       else {
-        std::unique_ptr<Reader> rdr = Reader::get( fmt );
+        auto rdr = Reader::get( fmt );
+        if ( dotime && !starttime ) {
+          starttime = getstarttime( input );
+        }
+        if ( for_s > 0 ) {
+          endtime = starttime + for_s * 1000;
+        }
+
         if ( rdr->splice( input, path, starttime, endtime, signal.get( ) ) ) {
 
           if ( !outfilename.empty( ) ) {
