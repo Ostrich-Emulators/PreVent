@@ -505,15 +505,13 @@ int main( int argc, char** argv ) {
           endtime = starttime + for_s * 1000;
         }
 
-        if ( rdr->splice( input, path, starttime, endtime, signal.get( ) ) ) {
-
-          if ( !outfilename.empty( ) ) {
-            delete &outstream;
-          }
-        }
-        else {
+        if ( !rdr->splice( input, path, starttime, endtime, signal.get( ) ) ) {
           Log::error( ) << "error reading file: " << input << std::endl;
         }
+      }
+
+      if ( !outfilename.empty( ) ) {
+        delete &outstream;
       }
     }
   }
