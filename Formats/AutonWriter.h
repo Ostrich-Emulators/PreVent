@@ -46,6 +46,11 @@ namespace FormatConverter {
     void writeMetas( H5::H5Object& loc, SignalData * );
 
     SignalSet * dataptr;
+
+    struct autondata {
+      double time;
+      double value;
+    };
   };
 }
 #endif /* AUTONWRITER_H */

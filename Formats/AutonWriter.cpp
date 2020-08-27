@@ -157,28 +157,32 @@ namespace FormatConverter{
     Log::debug( ) << "writing vital: " << signal->name( ) << std::endl;
     auto dsname = Hdf5Writer::getDatasetName( signal->name( ) );
 
+    auto CMPDTYPE = H5::CompType( sizeof (autondata ) );
+    CMPDTYPE.insertMember( "Time", 0, H5::PredType::IEEE_F64LE );
+    CMPDTYPE.insertMember( signal->name( ), sizeof (double ), H5::PredType::IEEE_F64LE );
+
     const hsize_t rows = signal->size( );
 
-    hsize_t dims[] = { rows, 2 };
-    auto space = H5::DataSpace{ 2, dims };
+    hsize_t dims[] = { rows, 1 };
+    auto space = H5::DataSpace{ 1, dims };
 
     H5::DSetCreatPropList props;
     if ( compression( ) > 0 ) {
       hsize_t chunkdims[] = { 0, 0 };
-      Hdf5Writer::autochunk( dims, 2, sizeof ( double ), chunkdims );
-      props.setChunk( 2, chunkdims );
+      Hdf5Writer::autochunk( dims, 1, sizeof ( autondata ), chunkdims );
+      props.setChunk( 1, chunkdims );
       props.setShuffle( );
       props.setDeflate( compression( ) );
     }
 
-    auto ds = loc.createDataSet( dsname, H5::PredType::IEEE_F64LE, space, props );
+    auto ds = loc.createDataSet( dsname, CMPDTYPE, space, props );
     writeMetas( ds, signal );
 
     const hsize_t maxslabcnt = std::min( rows, (hsize_t) ( 1024 * 256 ) );
     hsize_t offset[] = { 0, 0 };
-    hsize_t count[] = { 0, 2 };
+    hsize_t count[] = { 0, 1 };
 
-    auto buffer = std::vector<double>{ };
+    auto buffer = std::vector<autondata>{ };
     buffer.reserve( maxslabcnt );
 
     // We're keeping a buffer to eventually write to the file. However, this
@@ -188,17 +192,19 @@ namespace FormatConverter{
     size_t rowcount = 0;
     for ( size_t row = 0; row < rows; row++ ) {
       auto datarow = signal->pop( );
-      buffer.push_back( static_cast<double> ( datarow->time ) );
-      buffer.push_back( datarow->doubles( )[0] );
+      buffer.push_back( autondata{
+        static_cast<double> ( datarow->time ),
+        datarow->doubles( )[0]
+      } );
 
       if ( ++rowcount >= maxslabcnt ) {
         offset[0] += count[0];
         count[0] = rowcount;
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
 
-        H5::DataSpace memspace( 2, count );
+        H5::DataSpace memspace( 1, count );
         Log::debug( ) << "writing " << rowcount << " data points in a slab" << std::endl;
-        ds.write( buffer.data( ), H5::PredType::IEEE_F64LE, memspace, space );
+        ds.write( buffer.data( ), CMPDTYPE, memspace, space );
         buffer.clear( );
         buffer.reserve( maxslabcnt );
         rowcount = 0;
@@ -212,7 +218,7 @@ namespace FormatConverter{
       space.selectHyperslab( H5S_SELECT_SET, count, offset );
       H5::DataSpace memspace( 2, count );
       Log::debug( ) << "writing (leftovers) " << rowcount << " data points in a slab" << std::endl;
-      ds.write( buffer.data( ), H5::PredType::IEEE_F64LE, memspace, space );
+      ds.write( buffer.data( ), CMPDTYPE, memspace, space );
     }
   }
 
@@ -223,27 +229,31 @@ namespace FormatConverter{
     const auto valsperrow = signal->readingsPerChunk( );
     const auto msstep = signal->chunkInterval( ) / valsperrow;
 
-    hsize_t dims[] = { rows * valsperrow, 2 };
-    auto space = H5::DataSpace{ 2, dims };
+    auto CMPDTYPE = H5::CompType( sizeof (autondata ) );
+    CMPDTYPE.insertMember( "Time", 0, H5::PredType::IEEE_F64LE );
+    CMPDTYPE.insertMember( signal->name( ), sizeof (double ), H5::PredType::IEEE_F64LE );
+
+    hsize_t dims[] = { rows * valsperrow, 1 };
+    auto space = H5::DataSpace{ 1, dims };
     H5::DSetCreatPropList props;
     if ( compression( ) > 0 ) {
       hsize_t chunkdims[] = { 0, 0 };
-      Hdf5Writer::autochunk( dims, 2, sizeof ( short ), chunkdims );
-      props.setChunk( 2, chunkdims );
+      Hdf5Writer::autochunk( dims, 1, sizeof ( autondata ), chunkdims );
+      props.setChunk( 1, chunkdims );
       props.setShuffle( );
       props.setDeflate( compression( ) );
     }
 
-    H5::DataSet ds = loc.createDataSet( dsname, H5::PredType::IEEE_F64LE, space, props );
+    H5::DataSet ds = loc.createDataSet( dsname, CMPDTYPE, space, props );
     writeMetas( ds, signal );
 
     // this is a "soft" max value...the actual max is based on this
     // signal's valsperrow
     const hsize_t maxslabcnt = std::min( rows * valsperrow, (hsize_t) 1024 * 256 );
     hsize_t offset[] = { 0, 0 };
-    hsize_t count[] = { 0, 2 };
+    hsize_t count[] = { 0, 1 };
 
-    auto buffer = std::vector<double>{ };
+    auto buffer = std::vector<autondata>{ };
     buffer.reserve( maxslabcnt );
 
     // We're keeping a buffer to eventually write to the file. However, this
@@ -257,22 +267,24 @@ namespace FormatConverter{
       auto rowtime = datarow->time;
 
       for ( size_t vidx = 0; vidx < dbls.size( ); vidx++ ) {
-        buffer.push_back( static_cast<double> ( rowtime ) );
-        buffer.push_back( dbls[vidx] );
+        buffer.push_back({
+          static_cast<double> ( rowtime ),
+          dbls[vidx]
+        } );
         rowtime += msstep;
       }
 
       // we have two values per row, so our buffer is actually 2X big
-      if ( buffer.size( ) / 2 >= maxslabcnt ) {
+      if ( buffer.size( ) >= maxslabcnt ) {
         Log::debug( ) << "writing " << buffer.size( ) << " data points in a slab" << std::endl;
 
-        count[0] = buffer.size( ) / 2;
+        count[0] = buffer.size( );
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
         offset[0] += count[0];
         //Log::debug( ) << "writing slab " << x++ << "\tcount: " << count[0] << "\toffset: " << offset[0] << std::endl;
 
-        auto memspace = H5::DataSpace{ 2, count };
-        ds.write( buffer.data( ), H5::PredType::IEEE_F64LE, memspace, space );
+        auto memspace = H5::DataSpace{ 1, count };
+        ds.write( buffer.data( ), CMPDTYPE, memspace, space );
         buffer.clear( );
         buffer.reserve( maxslabcnt );
       }
@@ -281,10 +293,10 @@ namespace FormatConverter{
     // finally, write whatever's left in the buffer
     if ( !buffer.empty( ) ) {
       Log::debug( ) << "writing (leftovers) " << buffer.size( ) << " values in a slab" << std::endl;
-      count[0] = buffer.size( ) / 2;
+      count[0] = buffer.size( );
       space.selectHyperslab( H5S_SELECT_SET, count, offset );
-      auto memspace = H5::DataSpace{ 2, count };
-      ds.write( buffer.data( ), H5::PredType::IEEE_F64LE, memspace, space );
+      auto memspace = H5::DataSpace{ 1, count };
+      ds.write( buffer.data( ), CMPDTYPE, memspace, space );
     }
   }
 }
