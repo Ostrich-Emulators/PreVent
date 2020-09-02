@@ -7,16 +7,17 @@ HDF5 (PreVent Native)   | X                | X
 WFDB                    | X                | X
 STP XML (versions 6-8)  | X                |
 STP (GE)                | X<sup>1</sup>    |
-STP (Philips MX800)     | X<sup>2<sup>     |
+STP (Philips MX800)     | X<sup>1,2<sup>   |
 Matlab 7.X              |                  | X
 CPC                     | X                | 
 Data Warehouse Connect  | X                |
 TDMS                    | X                |
 MEDI                    | X                | 
 Auton Lab               |                  | X
+[CSV](#csv-format)      | X<sup>2</sup>    | X<sup>2</sup>
 
 1 Experimental support\
-2 Experimental support; waveforms not implemented
+2 Waveforms not implemented
 
 PreVent Tools comprises two tools at this time: `formatconverter` is a command-line tool for converting between formats, while `preventtools` provides several useful tools for working with the data. `preventtools` primarily works with the native HDF5 format.
 
@@ -35,6 +36,7 @@ PreVent Tools comprises two tools at this time: `formatconverter` is a command-l
       - [Data](#data)
       - [Time](#time)
     + [Calculated and Auxillary Data](#calculated-and-auxillary-data)
+  * [CSV Format](#csv-format)
 
 
 # Using/Building
@@ -190,3 +192,5 @@ Both _Calculated_Data_ and _Auxillary_Data_ Groups have the same basic structure
 
 The _Auxillary_Data_ Dataset is to support input formats that provide time series that are neither vitals or waveforms. For example, DWC has a "Wall Times" Dataset. _Auxillary_Data's_ _data_ Dataset differs from other _data_ Datasets because its data type is string instead on integer. In addition to the root level, each signal can have an arbitrary number of auxillary Datasets.
 
+## CSV Format
+The CSV format is very basic: The first column is the time, and the subsequent columns are vitals data. Times can be either millisecond or second resolution.

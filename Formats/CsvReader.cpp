@@ -68,7 +68,7 @@ namespace FormatConverter{
     if ( std::string::npos == timer.find( " " )
         && std::string::npos == timer.find( "T" ) ) {
       // no space and no T---we must have a timestamp
-      // if the length ofthe string is too long, assume we have a ms timestamp
+      // if the string length is too long, assume we have a ms timestamp
 
       const auto scale = ( timer.size( ) > 10
           ? 1
