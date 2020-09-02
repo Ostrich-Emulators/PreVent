@@ -2,6 +2,7 @@
   * Updated TDMS library
   * Added --verbose option
   * Added AutonLab format ("au")
+  * Added CSV Reader 
 
 4.3.0
   * Reduced memory usage for extremely large files
