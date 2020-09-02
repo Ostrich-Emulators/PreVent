@@ -7,6 +7,7 @@
 #include "StpXmlReader.h"
 #include "StpJsonReader.h"
 #include "CpcXmlReader.h"
+#include "CsvReader.h"
 #include "TdmsReader.h"
 #include "StpGeReader.h"
 #include "StpPhilipsReader.h"
@@ -56,6 +57,8 @@ namespace FormatConverter{
         return std::make_unique<TdmsReader>( );
       case FormatConverter::DWC:
         return std::make_unique<DwcReader>( );
+      case FormatConverter::CSV:
+        return std::make_unique<CsvReader>( );
       default:
         throw std::runtime_error( "reader not yet implemented" );
     }

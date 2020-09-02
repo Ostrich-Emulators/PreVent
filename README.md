@@ -13,6 +13,7 @@ CPC                     | X                |
 Data Warehouse Connect  | X                |
 TDMS                    | X                |
 MEDI                    | X                | 
+Auton Lab               |                  | X
 
 1 Experimental support\
 2 Experimental support; waveforms not implemented
@@ -99,10 +100,11 @@ formatconverter accepts a variety of command line options to enable features or 
 Long Option | Short Option | Valid Arguments {Default} | Description
 ---|---|---|---
 --from | -f | wfdb, hdf5, stpxml, stpge, stpp, cpcxml, tdms, medi, dwc {auto} | Specify the input format
---to   | -t | wfdb, hdf5, mat4, mat7 | Specify the output format
+--to   | -t | wfdb, hdf5, mat4, mat7, au, nop | Specify the output format
 --compression | -z | 0-9 {6} | Compression level
 --sqlite| -s | db file | Create/Append SQLite metadata database
---quiet | -q | | Print less stuff to console
+--quiet | -q | | Print less stuff to console (repeat to further lessen output)
+--verbose | -v | | Print more stuff to console (repeat to further increase output)
 --stop-after-one | -1 | | Stop conversion after first file is generated. Useful for troubleshooting
 --localtime | -l | | Convert times to local time
 --offset | -Z | time string (MM/DD/YYYY) or seconds since 01/01/1970| Shift dates by the desired amount
@@ -114,6 +116,7 @@ Long Option | Short Option | Valid Arguments {Default} | Description
 --release| -R | | Show release information and exit
 --pattern | -p | format string | Set the output file naming pattern
 --skip-waves | -w | | Skip waves during reading and writing files
+--tmpdir | -m | <directory> | Place all temporary files in the specified directory
 
 ### File Naming Format String
 Because each input file can generate multiple output files, it is necessary to specify how those files should be named. This is accomplished using format specifiers within a string. The specifiers are:
@@ -159,7 +162,7 @@ If the source input format supports metadata or attributes, these are duplicated
 Lastly, every Dataset has a **Columns** attribute that describes the data each column of the Dataset. An example of this attribute might be "timestamp (ms), segment offset", telling the user that the first column is a timestamp, and the second is something called "segment offset." All Dataset columns have the same data type.
 
 ### Events
-The Events Group contains one main Dataset: _Global_Times_. This is a Dataset containing a list of all times in the other Datasets. This Dataset is generally useful in conjunction with the `--time-step` option.
+The Events Group contains one main Dataset: _Global_Times_. This is a Dataset containing a list of all times in the other Datasets. This Dataset is generally useful in conjunction with the `--time-step` option. Times are always in milliseconds since the Unix Epoch.
   
 _Segment_Offsets_ may also exist in the _Events_ group. This is auxillary data provided by the STP XML reader.
 
@@ -180,7 +183,7 @@ The _data_ Dataset contains the data points for this signal. It is usually a sin
 As with the file metadata, if an input format supports per-signal metadata, it is duplicated in the _data_ Dataset.
 
 #### Time
-The _time_ Dataset contains the timing information the data points in _data_. It is always a single-column of long numbers. _time_ contains a single attribute to help users/tools interpret the data: **Time Source** is either _raw_ or _indexed_. If it is _raw_, the times in the column are actual times. If _indexed_, the times are index numbers to _Events/Global_Times_
+The _time_ Dataset contains the timing information the data points in _data_. It is always a single-column of long numbers. _time_ contains a single attribute to help users/tools interpret the data: **Time Source** is either _raw_ or _indexed_. If it is _raw_, the times in the column are actual times. If _indexed_, the times are index numbers to _Events/Global_Times_. Actual time values are always in milliseconds since the Unix Epoch.
 
 ### Calculated and Auxillary Data
 Both _Calculated_Data_ and _Auxillary_Data_ Groups have the same basic structure as Signal Groups--_data_ and _time_ Datasets-- but with different semantics. The _Calculated_Data_ Group is used for separating data that has been added after the initial conversion. Very often, it is useful to convert a file, and then calculate some other values (e.g. RR intervals) based on it. This data goes in the _Calculated_Data_ Group. Note that _Calculated_Data's_ times are not required to be present in the _Events/Global_Times_ Dataset.

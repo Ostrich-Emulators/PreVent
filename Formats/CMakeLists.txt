@@ -85,6 +85,7 @@ NullWriter.cpp
 NullSignalData.cpp
 Log.cpp
 AutonWriter.cpp
+CsvReader.cpp
 generated/config.h
 generated/releases.h
 )
@@ -165,5 +166,6 @@ NullWriter.h
 NullSignalData.h
 Log.h
 AutonWriter.h
+CsvReader.h
 generated/releases.h
 DESTINATION ${include_dest} )

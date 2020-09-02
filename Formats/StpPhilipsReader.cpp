@@ -90,7 +90,7 @@ namespace FormatConverter{
 
   ReadResult StpPhilipsReader::fill( SignalSet * info, const ReadResult& lastrr ) {
     currentTime = 0;
-    Log::debug() << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
+    Log::debug( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
     if ( ReadResult::END_OF_PATIENT == lastrr ) {
       info->setMeta( PATIENT_NAME, "" ); // reset the patient name
@@ -118,7 +118,7 @@ namespace FormatConverter{
       if ( work.available( ) < 1024 * 768 ) {
         // we should never come close to filling up our work buffer
         // so if we have, make sure the user knows
-        Log::error() << "work buffer is too full...something is going wrong" << std::endl;
+        Log::error( ) << "work buffer is too full...something is going wrong" << std::endl;
         return ReadResult::ERROR;
       }
 
@@ -155,7 +155,7 @@ namespace FormatConverter{
         currentTime = newtime;
 
         XML_Parser parser = XML_ParserCreate( NULL );
-        xmlpassthru passthru = { info, ParseState::UNINTERESTING, .outer = *this };
+        xmlpassthru passthru = { .signals = info, .state = ParseState::UNINTERESTING, .outer = *this };
         XML_SetUserData( parser, &passthru );
         //        output( ) << "root element is: " << rootelement << std::endl;
         //        output( ) << xmldoc << std::endl << std::endl;
@@ -174,7 +174,7 @@ namespace FormatConverter{
         XML_Status status = XML_Parse( parser, xmldoc.c_str( ), xmldoc.length( ), true );
         if ( status != XML_STATUS_OK ) {
           XML_Error err = XML_GetErrorCode( parser );
-          Log::error() << XML_ErrorString( err )
+          Log::error( ) << XML_ErrorString( err )
               << " line: " << XML_GetCurrentLineNumber( parser )
               << " column: " << XML_GetCurrentColumnNumber( parser )
               << std::endl;
@@ -195,13 +195,13 @@ namespace FormatConverter{
       }
     }
 
-    Log::debug() << "file is exhausted" << std::endl;
+    Log::debug( ) << "file is exhausted" << std::endl;
 
     // copy any data we have left in our filler set to the real set
 
     // if we still have stuff in our work buffer, process it
     if ( !work.empty( ) ) {
-      Log::warn() << "still have stuff in our work buffer!" << std::endl;
+      Log::warn( ) << "still have stuff in our work buffer!" << std::endl;
     }
 
     return ReadResult::END_OF_FILE;
@@ -321,9 +321,9 @@ namespace FormatConverter{
     auto info = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
     StpPhilipsReader reader;
     reader.setNonbreaking( true );
-    int failed = reader.prepare( input, info.get() );
+    int failed = reader.prepare( input, info.get( ) );
     if ( failed ) {
-      Log::error() << "error while opening input file. error code: " << failed << std::endl;
+      Log::error( ) << "error while opening input file. error code: " << failed << std::endl;
       return metas;
     }
     reader.setMetadataOnly( );
@@ -332,7 +332,7 @@ namespace FormatConverter{
 
     bool okToContinue = true;
     while ( okToContinue ) {
-      last = reader.fill( info.get(), last );
+      last = reader.fill( info.get( ), last );
       switch ( last ) {
         case ReadResult::FIRST_READ:
           // NOTE: no break here
@@ -352,7 +352,7 @@ namespace FormatConverter{
           okToContinue = false;
           break;
         case ReadResult::ERROR:
-          Log::error() << "error while reading input file" << std::endl;
+          Log::error( ) << "error while reading input file" << std::endl;
           okToContinue = false;
           break;
       }
@@ -490,7 +490,7 @@ namespace FormatConverter{
     else if ( WAVE_SEG == el ) {
       if ( !xml->outer.wavewarning ) {
         xml->outer.wavewarning = true;
-        Log::warn() << "Warning: waveform data parsing is not yet implemented" << std::endl;
+        Log::warn( ) << "Warning: waveform data parsing is not yet implemented" << std::endl;
       }
 
       //      bool added = false;

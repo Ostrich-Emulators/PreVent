@@ -707,7 +707,6 @@ namespace FormatConverter{
       writeAttribute( group, SignalData::CHUNK_INTERVAL_MS, data->metai( ).at( SignalData::CHUNK_INTERVAL_MS ) );
     }
     if ( 0 != data->metai( ).count( SignalData::READINGS_PER_CHUNK ) ) {
-
       writeAttribute( group, SignalData::READINGS_PER_CHUNK, data->metai( ).at( SignalData::READINGS_PER_CHUNK ) );
     }
     writeAttribute( group, SignalData::UOM, data->uom( ) );
