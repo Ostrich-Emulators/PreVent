@@ -34,11 +34,12 @@ namespace FormatConverter {
     ReadResult fill( SignalSet * data, const ReadResult& lastfill ) override;
 
   private:
-    std::ifstream datafile;
-    std::vector<std::string> headings;
-
     std::vector<std::string> linevalues( const std::string& csvline, dr_time & timer );
     dr_time converttime( const std::string& timeline );
+
+    std::ifstream datafile;
+    std::vector<std::string> headings;
+    dr_time lasttime;
   };
 }
 

@@ -29,19 +29,27 @@ namespace FormatConverter{
   }
 
   ReadResult CsvReader::fill( SignalSet * data, const ReadResult& lastfill ) {
+    lasttime = 0;
 
-    for ( auto& x : headings ) {
-      auto signal = data->addVital( x );
+    for ( int i = 1; i < headings.size( ); i++ ) {
+      auto signal = data->addVital( headings[i] );
       signal->setChunkIntervalAndSampleRate( 1, 1 );
     }
 
     auto line = std::string{ };
     while ( datafile.good( ) ) {
+      auto pos = datafile.tellg( );
       std::getline( datafile, line );
       SignalUtils::trim( line );
       if ( !line.empty( ) ) {
         dr_time rowtime;
         auto vals = linevalues( line, rowtime );
+
+        if ( isRollover( lasttime, rowtime ) ) {
+          datafile.seekg( pos );
+          return ReadResult::END_OF_DAY;
+        }
+        lasttime = rowtime;
 
         for ( int i = 1; i < vals.size( ); i++ ) {
           if ( !vals[i].empty( ) ) {
@@ -59,10 +67,14 @@ namespace FormatConverter{
 
     if ( std::string::npos == timer.find( " " )
         && std::string::npos == timer.find( "T" ) ) {
-      // no space and no T---we must have a unix timestamp
-      // and we believe Stp saves unix timestamps in UTC always
-      // (regardless of valIsLocal)
-      return modtime( std::stol( timer ) * 1000 );
+      // no space and no T---we must have a timestamp
+      // if the length ofthe string is too long, assume we have a ms timestamp
+
+      const auto scale = ( timer.size( ) > 10
+          ? 1
+          : 1000 );
+
+      return modtime( std::stol( timer ) * scale );
     }
 
     // we have a local time that we need to convert
