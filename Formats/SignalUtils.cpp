@@ -325,7 +325,6 @@ namespace FormatConverter{
     std::string cellvalue;
 
     while ( std::getline( ss, cellvalue, delim ) ) {
-
       cellvalue.erase( std::remove( cellvalue.begin( ), cellvalue.end( ), '\r' ), cellvalue.end( ) );
       rslt.push_back( SignalUtils::trim( cellvalue ) );
     }

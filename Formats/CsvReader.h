@@ -16,7 +16,6 @@
 
 #include "Reader.h"
 
-#include <map>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -38,7 +37,7 @@ namespace FormatConverter {
     std::ifstream datafile;
     std::vector<std::string> headings;
 
-    std::map<std::string, std::string> linevalues( const std::string& csvline, dr_time & timer );
+    std::vector<std::string> linevalues( const std::string& csvline, dr_time & timer );
     dr_time converttime( const std::string& timeline );
   };
 }

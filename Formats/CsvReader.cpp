@@ -7,6 +7,7 @@
 #include "CsvReader.h"
 #include "SignalUtils.h"
 #include "Log.h"
+#include "SignalData.h"
 
 namespace FormatConverter{
 
@@ -29,15 +30,26 @@ namespace FormatConverter{
 
   ReadResult CsvReader::fill( SignalSet * data, const ReadResult& lastfill ) {
 
+    for ( auto& x : headings ) {
+      auto signal = data->addVital( x );
+      signal->setChunkIntervalAndSampleRate( 1, 1 );
+    }
+
     auto line = std::string{ };
     while ( datafile.good( ) ) {
       std::getline( datafile, line );
-      dr_time rowtime;
-      auto map = linevalues( line, rowtime );
-      for ( auto& x : map ) {
-        Log::error( ) << rowtime << "\t" << x.first << ": " << x.second << std::endl;
-      }
+      SignalUtils::trim( line );
+      if ( !line.empty( ) ) {
+        dr_time rowtime;
+        auto vals = linevalues( line, rowtime );
 
+        for ( int i = 1; i < vals.size( ); i++ ) {
+          if ( !vals[i].empty( ) ) {
+            auto signal = data->addVital( headings[i] );
+            signal->add( DataRow::one( rowtime, vals[i] ) );
+          }
+        }
+      }
     }
 
     return ReadResult::END_OF_FILE;
@@ -70,19 +82,13 @@ namespace FormatConverter{
     return modtime( mktime( &mytime )* 1000 ); // convert seconds to ms, adds offset
   }
 
-  std::map<std::string, std::string> CsvReader::linevalues( const std::string& csvline, dr_time& timer ) {
-    std::vector<std::string> strings = SignalUtils::splitcsv( csvline );
-    std::map<std::string, std::string> values;
+  std::vector<std::string> CsvReader::linevalues( const std::string& csvline, dr_time& timer ) {
+    auto strings = SignalUtils::splitcsv( csvline );
+    strings.resize( headings.size( ), "" );
 
-    std::string timestr = strings[0];
+    auto timestr = strings[0];
     timer = converttime( timestr );
-    for ( size_t i = 1; i < headings.size( ); i++ ) {
-      const auto& h = headings[i];
-      const auto& v = SignalUtils::trim( strings[i] );
-      if ( v.size( ) > 0 ) {
-        values[h] = v;
-      }
-    }
-    return values;
+
+    return strings;
   }
 }
