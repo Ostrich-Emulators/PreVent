@@ -207,4 +207,5 @@ A sample file:
 ```/ | Unit | 50
 / | Bed  | 5YE-4
 /VitalSigns/HR|Unit of Measure|Bpm
-/VitalSigns/SPO2|Unit of Measure|%```
+/VitalSigns/SPO2|Unit of Measure|%
+```
