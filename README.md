@@ -37,6 +37,7 @@ PreVent Tools comprises two tools at this time: `formatconverter` is a command-l
       - [Time](#time)
     + [Calculated and Auxillary Data](#calculated-and-auxillary-data)
   * [CSV Format](#csv-format)
+    + [CSV Metadata Format](#csv-metadata-format)
 
 
 # Using/Building
@@ -194,3 +195,18 @@ The _Auxillary_Data_ Dataset is to support input formats that provide time serie
 
 ## CSV Format
 The CSV format is very basic: The first column is the time, and the subsequent columns are vitals data. Times can be either millisecond or second resolution.
+
+### CSV Metadata Format
+Metadata for the CSV format is added from a separate metadata file. This file has the same filename as the CSV file, but the CSV extension (if any) is replaced with
+".meta." For example, The _test.meta_ file contains metadata for the _test.csv_ file. The metadata file must be in the same directory as the CSV file, and is optional.
+The metadata file format is basically a CSV file with three fields, using `|` as the separator. The first field is the location to set the metadata. This must be either `/`
+for the file metadata, or `/VitalSigns/HR` HR signal. The second field is the attribute to set, and the third field is the string value to set. Only string values
+are supported at this time.
+
+A sample file:
+||
+------------------------|------------------|-------
+/ | Unit | 50
+/ | Bed  | 5YE-4
+/VitalSigns/HR|Unit of Measure|Bpm
+/VitalSigns/SPO2|Unit of Measure|%
