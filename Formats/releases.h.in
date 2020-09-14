@@ -2,7 +2,8 @@
   * Updated TDMS library
   * Added --verbose option
   * Added AutonLab format ("au")
-  * Added CSV Reader 
+  * Added CSV Reader
+  * (Tools) Added --split, the opposite of --cat
 
 4.3.0
   * Reduced memory usage for extremely large files

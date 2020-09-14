@@ -58,6 +58,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-S or --set-attr <key[:<i|s|d>]=value>\tsets the given attribute to the value"
       << std::endl << "\t-C or --clobber\toverwrite input file"
       << std::endl << "\t-c or --cat\tconcatenate files from command line, used with --output"
+      << std::endl << "\t-x or --split\tsplit a file into pieces, at midnight"
       << std::endl << "\t-s or --start <time>\tstart output from this UTC time (many time formats supported)"
       << std::endl << "\t-e or --end <time>\tstop output immediately before this UTC time (many time formats supported)"
       << std::endl << "\t-f or --for <s>\toutput this many seconds of data from the start of file (or --start)"
@@ -92,6 +93,7 @@ struct option longopts[] = {
   { "waves", no_argument, NULL, 'W' },
   { "vitals", no_argument, NULL, 'V' },
   { "cat", no_argument, NULL, 'c' },
+  { "split", no_argument, NULL, 'x' },
   { "stats", no_argument, NULL, 'D' },
   { "bsi", no_argument, NULL, 'b' },
   { "statistics", no_argument, NULL, 'D' },
@@ -168,7 +170,7 @@ int main( int argc, char** argv ) {
   bool dobsi = false;
   auto loglevel = static_cast<int> ( LogLevel::INFO );
 
-  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aq::v::S:dp:WVDP:Qb", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aq::v::S:dp:WVDP:Qbx", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'o':
         outfilename = optarg;
