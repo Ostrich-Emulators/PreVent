@@ -383,11 +383,6 @@ int main( int argc, char** argv ) {
       filesToCat.push_back( argv[i] );
     }
 
-    Log::info( ) << "catting " << filesToCat.size( ) << " files to " << outfilename << std::endl;
-    //for ( auto x : filesToCat ) {
-    //  std::cout << "file to cat: " << x << std::endl;
-    //}
-
     // order the files so we can figure out our start time
     std::sort( filesToCat.begin( ), filesToCat.end( ), H5Cat::filesorter );
 

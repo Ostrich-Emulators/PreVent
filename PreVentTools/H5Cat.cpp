@@ -71,29 +71,67 @@ namespace FormatConverter{
     Hdf5Reader rdr;
     auto alldata = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
 
+    Log::debug( ) << "files to cat:";
+    for ( auto x : filesToCat ) {
+      Log::debug( ) << " " << x;
+    }
+    Log::debug( ) << std::endl;
+
     if ( doclip ) {
       alldata.reset( new ClippingSignalSet( alldata.release( ), &start, &end ) );
+
+      // if a file's start time is after our end time, or our end
+      // time is before our start time remove that file from our list
+      filesToCat.erase( std::remove_if( filesToCat.begin( ),
+          filesToCat.end( ),
+          [this]( std::string filename ) {
+            auto reader = Reader::get( FormatConverter::Formats::guess( filename ) );
+
+            std::map<std::string, std::string> map;
+            reader->getAttributes( filename, map );
+
+            const dr_time startt = ( 0 == map.count( SignalData::STARTTIME )
+                ? std::numeric_limits<dr_time>::max( )
+                : std::stol( map.at( SignalData::STARTTIME ) ) );
+            const dr_time endt = ( 0 == map.count( SignalData::ENDTIME )
+                ? std::numeric_limits<dr_time>::min( )
+                : std::stol( map.at( SignalData::ENDTIME ) ) );
+            //            std::cout << filename << std::endl
+            //                << "\tglobal start/end:\t" << this->start << "\t" << this->end << std::endl
+            //                << "\tstart/end:\t\t" << startt << "\t" << endt << std::endl
+            //                << "\tstartt>=end:" << ( startt <= this->end ) << std::endl
+            //                << "\tendt<=start:" << ( endt <= this->start ) << std::endl
+            //                << "\treturning " << ( startt >= this->end || endt <= this->start ) << std::endl;
+
+            auto removeit = ( startt >= this->end || endt <= this->start );
+            if ( removeit ) {
+              Log::debug( ) << "ignoring " << filename << " from list because it's clearly out of range" << std::endl;
+            }
+            return removeit;
+          } ),
+      filesToCat.end( ) );
     }
 
     for ( const auto& file : filesToCat ) {
-      Log::debug() << "  " << file << std::endl;
-      auto junk = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
-      rdr.prepare( file, junk.get() );
-      rdr.fill( alldata.get() );
+      Log::debug( ) << "  " << file << std::endl;
+      auto junk = BasicSignalSet{ };
+      rdr.prepare( file, &junk );
+      rdr.fill( alldata.get( ) );
       rdr.finish( );
     }
 
     alldata->setMeta( "Source Reader", rdr.name( ) );
 
     Hdf5Writer wrt;
-    std::unique_ptr<Reader> nullrdr( new NullReader( rdr.name( ) ) );
+    auto nullrdr = NullReader{ rdr.name( ) };
     FileNamer fn = FileNamer::parse( output );
 
     fn.tofmt( wrt.ext( ) );
     fn.inputfilename( "-" );
     wrt.filenamer( fn );
 
-    wrt.write( nullrdr.get(), alldata.get() );
+    wrt.write( &nullrdr, alldata.get( ) );
+    Log::info( ) << "  written to " << this->output << std::endl;
   }
 
   void H5Cat::cat( const std::string& outfile, std::vector<std::string>& filesToCat ) {
