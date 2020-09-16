@@ -409,7 +409,7 @@ int main( int argc, char** argv ) {
     for ( int i = optind; i < argc; i++ ) {
       std::string input = argv[i];
       auto from = Reader::get( FormatConverter::Formats::guess( input ) );
-      from->setNonbreaking( true );
+      from->splitter( SplitLogic::nobreaks( ) );
 
       std::unique_ptr<Writer> to = Writer::get( FormatConverter::Formats::guess( input ) );
       namer.tofmt( to->ext( ) );
