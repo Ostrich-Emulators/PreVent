@@ -56,10 +56,10 @@ namespace FormatConverter{
     const time_t modnow = now / 1000;
     const time_t modlate = latest / 1000;
 
-    const auto nowtm = *( timeIsLocal ? localtime( &modnow ) : gmtime( &modnow ) );
+    const auto nowtm = *( nowIsLocal ? localtime( &modnow ) : gmtime( &modnow ) );
 
     if ( hours < 0 ) {
-      const auto latetm = *( timeIsLocal ? localtime( &modlate ) : gmtime( &modlate ) );
+      const auto latetm = *( nowIsLocal ? localtime( &modlate ) : gmtime( &modlate ) );
       // roll at midnight (when the day of the year changes)
       return ( nowtm.tm_yday != latetm.tm_yday );
     }
@@ -67,7 +67,7 @@ namespace FormatConverter{
     const auto earliest = data->earliest( );
     const time_t modearly = earliest / 1000;
     if ( clean ) {
-      const auto earlytm = *( timeIsLocal ? localtime( &modearly ) : gmtime( &modearly ) );
+      const auto earlytm = *( nowIsLocal ? localtime( &modearly ) : gmtime( &modearly ) );
 
       if ( nowtm.tm_yday == earlytm.tm_yday ) {
         // not yet crossed midnight

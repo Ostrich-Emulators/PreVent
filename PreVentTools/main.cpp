@@ -169,6 +169,7 @@ int main( int argc, char** argv ) {
   std::vector<std::string> appendfiles;
   bool dobsi = false;
   auto loglevel = static_cast<int> ( LogLevel::INFO );
+  auto dosplit = false;
 
   while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aq::v::S:dp:WVDP:Qbx", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
@@ -218,6 +219,9 @@ int main( int argc, char** argv ) {
         break;
       case 'C':
         clobber = true;
+        break;
+      case 'x':
+        dosplit = true;
         break;
       case 'c':
         catfiles = true;
@@ -274,6 +278,10 @@ int main( int argc, char** argv ) {
   }
   if ( ( optind + 1 ) > argc ) {
     helpAndExit( argv[0], "no file specified" );
+  }
+
+  if ( catfiles && dosplit ) {
+    helpAndExit( argv[0], "cannot specify --cat and --split at the same time" );
   }
 
   if ( needsoutput ) {
@@ -403,6 +411,38 @@ int main( int argc, char** argv ) {
 
     catter.cat( filesToCat );
   }
+  else if ( dosplit ) {
+    FileNamer namer = FileNamer::parse( outfilename );
+    for ( int i = optind; i < argc; i++ ) {
+      std::string input = argv[i];
+      auto from = Reader::get( FormatConverter::Formats::guess( input ) );
+      from->splitter( SplitLogic::midnight( ) );
+
+      auto to = Writer::get( FormatConverter::Formats::guess( input ) );
+      namer.tofmt( to->ext( ) );
+      namer.inputfilename( input );
+      to->filenamer( namer );
+
+      auto data = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
+
+      if ( anon ) {
+        auto timemod = TimeModifier::offset( 0 );
+        data.reset( new AnonymizingSignalSet( data.release( ), to->filenamer( ), timemod ) );
+      }
+
+      if ( from->prepare( input, data.get( ) ) < 0 ) {
+        Log::error( ) << "could not prepare file for reading: " << input << std::endl;
+      }
+      else {
+        auto files = to->write( from.get( ), data.get( ) );
+        from->finish( );
+
+        for ( const auto& f : files ) {
+          Log::info( ) << " written to " << f << std::endl;
+        }
+      }
+    }
+  }
   else if ( anon ) {
     FileNamer namer = FileNamer::parse( outfilename );
 
@@ -411,7 +451,7 @@ int main( int argc, char** argv ) {
       auto from = Reader::get( FormatConverter::Formats::guess( input ) );
       from->splitter( SplitLogic::nobreaks( ) );
 
-      std::unique_ptr<Writer> to = Writer::get( FormatConverter::Formats::guess( input ) );
+      auto to = Writer::get( FormatConverter::Formats::guess( input ) );
       namer.tofmt( to->ext( ) );
       namer.inputfilename( input );
       to->filenamer( namer );

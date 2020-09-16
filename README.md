@@ -120,6 +120,7 @@ Long Option | Short Option | Valid Arguments {Default} | Description
 --pattern | -p | format string | Set the output file naming pattern
 --skip-waves | -w | | Skip waves during reading and writing files
 --tmpdir | -m | <directory> | Place all temporary files in the specified directory
+--splitr | -x | 'm[idnight]' or <0-9>[h] | split the output files at midnight (default) or every X hours. 'h' ensures rollover at the top of the hour.
 
 ### File Naming Format String
 Because each input file can generate multiple output files, it is necessary to specify how those files should be named. This is accomplished using format specifiers within a string. The specifiers are:
