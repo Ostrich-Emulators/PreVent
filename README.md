@@ -112,7 +112,7 @@ Long Option | Short Option | Valid Arguments {Default} | Description
 --localtime | -l | | Convert times to local time
 --offset | -Z | time string (MM/DD/YYYY) or seconds since 01/01/1970| Shift dates by the desired amount
 --opening-date | -S | time string (MM/DD/YYYY) or seconds since 01/01/1970| Shift dates so that the first time in the output is the given date
---no-break or --one-file| -n | | Do not split output files by day
+--no-break or --one-file| -n | | Do not split output files by day (convenience for --split 0)
 --no-cache| -C | | Do not cache anything to disk
 --time-step| -T | | Store timing information as offset from start of file
 --anonymize| -a  | | Attempt to anonymize the output files
@@ -120,7 +120,7 @@ Long Option | Short Option | Valid Arguments {Default} | Description
 --pattern | -p | format string | Set the output file naming pattern
 --skip-waves | -w | | Skip waves during reading and writing files
 --tmpdir | -m | <directory> | Place all temporary files in the specified directory
---splitr | -x | 'm[idnight]' or <0-9>[h] | split the output files at midnight (default) or every X hours. 'h' ensures rollover at the top of the hour.
+--splitr | -x | 'm[idnight]' or <0-9>[h] {midnight}| roll over the output files at midnight or every X hours. 'h' ensures rollover at the top of the hour. '0' disables rollover. Rollover times are affected by --localtime option.
 
 ### File Naming Format String
 Because each input file can generate multiple output files, it is necessary to specify how those files should be named. This is accomplished using format specifiers within a string. The specifiers are:
