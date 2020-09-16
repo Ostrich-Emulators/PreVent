@@ -92,11 +92,11 @@ namespace FormatConverter{
   }
 
   void XmlReaderBase::setResult( ReadResult rslt ) {
-    // if we're not breaking our output, then ignore End of Day and End of Patient
-    if ( nonbreaking( ) &&
-        ( ReadResult::END_OF_DAY == rslt || ReadResult::END_OF_PATIENT == rslt ) ) {
+    // if we're not breaking our output, then ignore End of Patient
+    if ( splitter( ).nonbreaking( ) && ReadResult::END_OF_PATIENT == rslt ) {
       return;
     }
+
     this->rslt = rslt;
   }
 
@@ -159,7 +159,7 @@ namespace FormatConverter{
   }
 
   ReadResult XmlReaderBase::fill( SignalSet * info, const ReadResult& lastfill ) {
-    if ( ReadResult::END_OF_DAY == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
+    if ( ReadResult::END_OF_DURATION == lastfill || ReadResult::END_OF_PATIENT == lastfill ) {
       copySavedInto( info );
     }
     filler = info;

@@ -570,7 +570,7 @@ namespace FormatConverter{
           }
 
           return ( ChunkReadResult::ROLLOVER == rslt
-              ? ReadResult::END_OF_DAY
+              ? ReadResult::END_OF_DURATION
               : ChunkReadResult::NEW_PATIENT == rslt
               ? ReadResult::END_OF_PATIENT
               : ReadResult::ERROR );
@@ -614,9 +614,8 @@ namespace FormatConverter{
     //output( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
     try {
       work.skip( 18 );
-      dr_time oldtime = currentTime;
       currentTime = popTime( );
-      if ( isRollover( oldtime, currentTime ) ) {
+      if ( isRollover( currentTime, info ) ) {
         return ChunkReadResult::ROLLOVER;
       }
 
@@ -1204,10 +1203,10 @@ namespace FormatConverter{
     std::vector<StpReaderBase::StpMetadata> metas;
     auto info = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
     StpGeReader reader;
-    reader.setNonbreaking( true );
+    reader.splitter( SplitLogic::nobreaks( ) );
     int failed = reader.prepare( input, info.get( ) );
     if ( failed ) {
-      Log::error() << "error while opening input file. error code: " << failed << std::endl;
+      Log::error( ) << "error while opening input file. error code: " << failed << std::endl;
       return metas;
     }
     reader.setMetadataOnly( );
@@ -1222,7 +1221,7 @@ namespace FormatConverter{
           // NOTE: no break here
         case ReadResult::NORMAL:
           break;
-        case ReadResult::END_OF_DAY:
+        case ReadResult::END_OF_DURATION:
           metas.push_back( metaFromSignalSet( info ) );
           info->reset( false );
           break;
@@ -1236,7 +1235,7 @@ namespace FormatConverter{
           okToContinue = false;
           break;
         case ReadResult::ERROR:
-          Log::error() << "error while reading input file" << std::endl;
+          Log::error( ) << "error while reading input file" << std::endl;
           okToContinue = false;
           break;
       }

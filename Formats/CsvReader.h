@@ -41,7 +41,6 @@ namespace FormatConverter {
     std::ifstream datafile;
     std::vector<std::string> metadata;
     std::vector<std::string> headings;
-    dr_time lasttime;
   };
 }
 

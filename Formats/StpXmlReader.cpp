@@ -94,8 +94,8 @@ namespace FormatConverter{
         filler->addOffset( currsegidx, currvstime );
       }
 
-      if ( isRollover( lastvstime, currvstime ) ) {
-        setResult( ReadResult::END_OF_DAY );
+      if ( isRollover( currvstime, filler ) ) {
+        setResult( ReadResult::END_OF_DURATION );
         prevtime = currvstime;
         startSaving( currvstime );
       }
@@ -122,8 +122,8 @@ namespace FormatConverter{
         filler->addOffset( currsegidx, currwavetime );
       }
 
-      if ( isRollover( lastwavetime, currwavetime ) ) {
-        setResult( ReadResult::END_OF_DAY );
+      if ( isRollover( currwavetime, filler ) ) {
+        setResult( ReadResult::END_OF_DURATION );
         prevtime = currwavetime;
         startSaving( currwavetime );
       }

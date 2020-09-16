@@ -6,12 +6,13 @@
 
 #include "SplitLogic.h"
 
-#include "Reader.h"
+#include "SignalSet.h"
 #include <ctime>
 
 namespace FormatConverter{
 
-  SplitLogic::SplitLogic( int hrs, bool cleen ) : hours( hrs ), clean( cleen ) { }
+  SplitLogic::SplitLogic( int hrs, bool cleen )
+      : hours( hrs ), clean( cleen ) { }
 
   SplitLogic::SplitLogic( const SplitLogic& orig )
       : hours( orig.hours ), clean( orig.clean ) { }
@@ -26,8 +27,12 @@ namespace FormatConverter{
 
   SplitLogic::~SplitLogic( ) { }
 
-  SplitLogic SplitLogic::nonbreaking( ) {
+  SplitLogic SplitLogic::nobreaks( ) {
     return SplitLogic( 0 );
+  }
+
+  bool SplitLogic::nonbreaking( ) const {
+    return ( 0 == hours );
   }
 
   SplitLogic SplitLogic::midnight( ) {
@@ -38,24 +43,41 @@ namespace FormatConverter{
     return SplitLogic( numhours, clean );
   }
 
-  bool SplitLogic::isRollover( dr_time then, dr_time now, const Reader * reader ) const {
-    if ( 0 == hours || 0 == then ) {
+  bool SplitLogic::isRollover( SignalSet * data, dr_time now, bool timeIsLocal ) const {
+    if ( 0 == hours ) {
       return false;
     }
 
-    time_t modnow = now / 1000;
-    time_t modthen = then / 1000;
-
-    auto nowtm = *( reader->localizingTime( ) ? localtime( &modnow ) : gmtime( &modnow ) );
-    auto thentm = *( reader->localizingTime( ) ? localtime( &modthen ) : gmtime( &modthen ) );
-
-    if ( hours < 0 ) {
-      // roll at midnight (when the day of the year changes)
-      return ( nowtm.tm_yday != thentm.tm_yday );
+    const auto latest = data->latest( );
+    if ( 0 == latest ) {
+      return false;
     }
 
-    return ( clean
-        ? thentm.tm_hour + this->hours >= nowtm.tm_hour
-        : then + ( this->hours * 60 * 60 * 1000 ) >= now );
+    const time_t modnow = now / 1000;
+    const time_t modlate = latest / 1000;
+
+    const auto nowtm = *( timeIsLocal ? localtime( &modnow ) : gmtime( &modnow ) );
+
+    if ( hours < 0 ) {
+      const auto latetm = *( timeIsLocal ? localtime( &modlate ) : gmtime( &modlate ) );
+      // roll at midnight (when the day of the year changes)
+      return ( nowtm.tm_yday != latetm.tm_yday );
+    }
+
+    const auto earliest = data->earliest( );
+    const time_t modearly = earliest / 1000;
+    if ( clean ) {
+      const auto earlytm = *( timeIsLocal ? localtime( &modearly ) : gmtime( &modearly ) );
+
+      if ( nowtm.tm_yday == earlytm.tm_yday ) {
+        // not yet crossed midnight
+        return ( nowtm.tm_hour - earlytm.tm_hour ) >= this->hours;
+      }
+      else {
+        // we're into the next day, so add 24 hours to our now hour
+        return ( nowtm.tm_hour + 24 - earlytm.tm_hour ) >= this->hours;
+      }
+    }
+    return (now - earliest ) >= ( this->hours * 60 * 60 * 1000 );
   }
 }

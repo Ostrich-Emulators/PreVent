@@ -17,7 +17,7 @@
 #include "dr_time.h"
 /** A class to encapsulate when an input file should be split into another output file*/
 namespace FormatConverter {
-  class Reader;
+  class SignalSet;
 
   class SplitLogic {
   public:
@@ -35,7 +35,7 @@ namespace FormatConverter {
      * Gets a splitter that never rolls
      * @return
      */
-    static SplitLogic nonbreaking( );
+    static SplitLogic nobreaks( );
 
     /**
      * Gets a splitter that rolls over every X hours
@@ -52,8 +52,13 @@ namespace FormatConverter {
      * @param now the time to check
      * @return true, if now and then should be split
      */
-    bool isRollover( dr_time then, dr_time now, const Reader * reader ) const;
+    bool isRollover( SignalSet * data, dr_time now, bool timeIsLocal ) const;
 
+    /**
+     * Does this Splitter ever rollover?
+     * @return
+     */
+    bool nonbreaking( ) const;
   private:
     SplitLogic( int hours = 0, bool clean = true );
 

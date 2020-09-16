@@ -16,13 +16,14 @@
 
 namespace FormatConverter {
   class SignalData;
+  class SignalSet;
   class DataRow;
 
   enum class ReadResult : int {
     FIRST_READ = 0,
     NORMAL = 1,
     END_OF_PATIENT = 2,
-    END_OF_DAY = 3,
+    END_OF_DURATION = 3,
     END_OF_FILE = 4,
     ERROR = 5,
   };
@@ -65,13 +66,12 @@ namespace FormatConverter {
      */
     virtual std::string name( ) const;
 
-    void setNonbreaking( bool nb = false );
     void localizeTime( bool local = true );
     bool localizingTime( ) const;
     void timeModifier( const TimeModifier& mod );
     const TimeModifier& timeModifier( ) const;
     void splitter( const SplitLogic& l );
-    const SplitLogic& splitter( );
+    const SplitLogic& splitter( ) const;
 
     static bool strptime2( const std::string& input, const std::string& format,
         std::tm * tm );
@@ -83,7 +83,7 @@ namespace FormatConverter {
      * @param now the time to check
      * @return true, if now and then are in different days
      */
-    bool isRollover( const dr_time& then, const dr_time& now ) const;
+    bool isRollover( const dr_time& now, SignalSet * data ) const;
 
     /**
      * Gets root attributes from the given input if this can be accomplished
@@ -119,15 +119,12 @@ namespace FormatConverter {
      */
     virtual bool splice( const std::string& inputfile, const std::string& path,
         dr_time from, dr_time to, SignalData * signalToFill );
-
-    bool nonbreaking( ) const;
   protected:
     Reader( const Reader& );
 
     bool skipwaves( ) const;
 
-    virtual
-    dr_time modtime( const dr_time& time );
+    virtual dr_time modtime( const dr_time& time );
 
   private:
     const std::string rdrname;

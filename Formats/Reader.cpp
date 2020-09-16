@@ -77,14 +77,6 @@ namespace FormatConverter{
 
   void Reader::finish( ) { }
 
-  void Reader::setNonbreaking( bool nb ) {
-    onefile = nb;
-  }
-
-  bool Reader::nonbreaking( ) const {
-    return onefile;
-  }
-
   bool Reader::skipwaves( ) const {
     return Options::asBool( OptionsKey::SKIP_WAVES );
   }
@@ -107,8 +99,8 @@ namespace FormatConverter{
     return false;
   }
 
-  bool Reader::isRollover( const dr_time& then, const dr_time& now ) const {
-    return splitmod.isRollover( then, now, this );
+  bool Reader::isRollover( const dr_time& now, SignalSet * data ) const {
+    return splitmod.isRollover( data, now, this->localizingTime( ) );
   }
 
   bool Reader::splice( const std::string& inputfile, const std::string& path,
@@ -143,7 +135,7 @@ namespace FormatConverter{
     splitmod = l;
   }
 
-  const SplitLogic& Reader::splitter( ) {
+  const SplitLogic& Reader::splitter( ) const {
     return splitmod;
   }
 }

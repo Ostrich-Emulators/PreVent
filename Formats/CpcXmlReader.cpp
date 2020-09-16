@@ -53,8 +53,8 @@ namespace FormatConverter{
       currtime = time( attrs["datetime"].substr( 0, decimalplace ) );
       //output( ) << currtime << std::endl;
 
-      if ( isRollover( lasttime, currtime ) ) {
-        setResult( ReadResult::END_OF_DAY );
+      if ( isRollover( currtime, filler ) ) {
+        setResult( ReadResult::END_OF_DURATION );
         startSaving( currtime );
       }
       inmg = false;

@@ -47,8 +47,6 @@ namespace FormatConverter{
   }
 
   ReadResult CsvReader::fill( SignalSet * data, const ReadResult& lastfill ) {
-    lasttime = 0;
-
     loadMetas( data );
 
     auto line = std::string{ };
@@ -60,11 +58,10 @@ namespace FormatConverter{
         dr_time rowtime;
         auto vals = linevalues( line, rowtime );
 
-        if ( isRollover( lasttime, rowtime ) ) {
+        if ( isRollover( rowtime, data ) ) {
           datafile.seekg( pos );
-          return ReadResult::END_OF_DAY;
+          return ReadResult::END_OF_DURATION;
         }
-        lasttime = rowtime;
 
         for ( int i = 1; i < vals.size( ); i++ ) {
           if ( !vals[i].empty( ) ) {

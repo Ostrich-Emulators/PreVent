@@ -148,9 +148,9 @@ namespace FormatConverter{
         }
 
         dr_time newtime = peekTime( xmldoc );
-        if ( 0 != newtime && isRollover( currentTime, newtime ) ) {
+        if ( 0 != newtime && isRollover( newtime, info ) ) {
           work.rewind( work.popped( ) - beforecheck );
-          return ReadResult::END_OF_DAY;
+          return ReadResult::END_OF_DURATION;
         }
         currentTime = newtime;
 
@@ -320,7 +320,7 @@ namespace FormatConverter{
     std::vector<StpReaderBase::StpMetadata> metas;
     auto info = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
     StpPhilipsReader reader;
-    reader.setNonbreaking( true );
+    reader.splitter( SplitLogic::nobreaks( ) );
     int failed = reader.prepare( input, info.get( ) );
     if ( failed ) {
       Log::error( ) << "error while opening input file. error code: " << failed << std::endl;
@@ -338,7 +338,7 @@ namespace FormatConverter{
           // NOTE: no break here
         case ReadResult::NORMAL:
           break;
-        case ReadResult::END_OF_DAY:
+        case ReadResult::END_OF_DURATION:
           metas.push_back( metaFromSignalSet( info ) );
           info->reset( false );
           break;

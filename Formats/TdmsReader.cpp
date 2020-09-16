@@ -83,7 +83,7 @@ namespace FormatConverter{
       writeSignalRow( doubles, rec.seenfloat, signal, rec.lasttime );
 
       // check for roll-over
-      rec.waiting = ( isRollover( rec.lasttime, rec.lasttime + timeinc ) );
+      rec.waiting = ( isRollover( rec.lasttime + timeinc, filler ) );
       rec.lasttime += timeinc;
 
       if ( rec.waiting ) {
@@ -119,7 +119,7 @@ namespace FormatConverter{
     // if we have a signal that starts after a rollover will have occurred,
     // set that signal to waiting
     for ( auto& ss : signalsavers ) {
-      ss.second.waiting = ( isRollover( ss.second.lasttime, earliest ) );
+      ss.second.waiting = ( isRollover( earliest, filler ) );
     }
   }
 
@@ -241,7 +241,7 @@ namespace FormatConverter{
 
       last_segment_read++;
       if ( allwaiting ) {
-        return ReadResult::END_OF_DAY;
+        return ReadResult::END_OF_DURATION;
       }
     }
 

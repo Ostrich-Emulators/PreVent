@@ -145,10 +145,10 @@ namespace FormatConverter{
         dr_time csvtime;
         auto vitvals = linevalues( csvline, csvtime );
 
-        if ( lastcsvtime > 0 && isRollover( lastcsvtime, csvtime ) ) {
+        if ( lastcsvtime > 0 && isRollover( csvtime, info ) ) {
           // "unread" the last line for the next call to fill()
           numerics.seekg( offset );
-          rslt = ReadResult::END_OF_DAY;
+          rslt = ReadResult::END_OF_DURATION;
           break;
         }
         lastcsvtime = csvtime;

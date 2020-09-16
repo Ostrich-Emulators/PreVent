@@ -89,16 +89,16 @@ namespace FormatConverter{
   std::vector<std::string> Writer::write( Reader * from, SignalSet * data ) {
     auto patientno = 1;
 
-    Log::trace() << "init data set" << std::endl;
+    Log::trace( ) << "init data set" << std::endl;
     namer->patientOrdinal( patientno );
     auto initrslt = initDataSet( );
     auto list = std::vector<std::string>{ };
     if ( initrslt < 0 ) {
-      Log::error() << "cannot init dataset: " + namer->last( ) << std::endl;
+      Log::error( ) << "cannot init dataset: " + namer->last( ) << std::endl;
       return list;
     }
 
-    Log::debug() << "filling data" << std::endl;
+    Log::debug( ) << "filling data" << std::endl;
     ReadResult retcode = from->fill( data );
 
     int files = 1;
@@ -115,8 +115,7 @@ namespace FormatConverter{
         retcode = ReadResult::END_OF_FILE;
       }
 
-
-      if ( ReadResult::END_OF_DAY == retcode || ReadResult::END_OF_PATIENT == retcode ) {
+      if ( ReadResult::END_OF_DURATION == retcode || ReadResult::END_OF_PATIENT == retcode ) {
         std::vector<std::string> files = closeDataSet( );
         for ( auto& outfile : files ) {
           for ( auto& l : listeners ) {
@@ -125,7 +124,7 @@ namespace FormatConverter{
         }
 
         if ( files.empty( ) ) {
-          Log::warn() << "refusing to write empty data file!" << std::endl;
+          Log::warn( ) << "refusing to write empty data file!" << std::endl;
         }
         else {
           list.insert( list.end( ), files.begin( ), files.end( ) );
@@ -137,7 +136,7 @@ namespace FormatConverter{
 
         data->reset( true );
         namer->patientOrdinal( patientno );
-        Log::trace() << "init data set" << std::endl;
+        Log::trace( ) << "init data set" << std::endl;
         initDataSet( );
       }
       else if ( ReadResult::END_OF_FILE == retcode ) {
@@ -145,7 +144,7 @@ namespace FormatConverter{
 
         std::vector<std::string> files = closeDataSet( );
         if ( files.empty( ) ) {
-          Log::warn() << "refusing to write empty data file!" << std::endl;
+          Log::warn( ) << "refusing to write empty data file!" << std::endl;
         }
         else {
           list.insert( list.end( ), files.begin( ), files.end( ) );
@@ -160,12 +159,12 @@ namespace FormatConverter{
       }
 
       // carry on with next data chunk
-      Log::debug() << "reading next file chunk" << std::endl;
+      Log::debug( ) << "reading next file chunk" << std::endl;
       retcode = from->fill( data, retcode );
     }
 
     if ( ReadResult::ERROR == retcode ) {
-      Log::error() << "error reading file" << std::endl;
+      Log::error( ) << "error reading file" << std::endl;
     }
 
     return list;

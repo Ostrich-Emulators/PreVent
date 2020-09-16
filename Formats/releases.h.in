@@ -3,7 +3,7 @@
   * Added --verbose option
   * Added AutonLab format ("au")
   * Added CSV Reader
-  * (Tools) Added --split, the opposite of --cat
+  * Added --split to split files into smaller segments
 
 4.3.0
   * Reduced memory usage for extremely large files
