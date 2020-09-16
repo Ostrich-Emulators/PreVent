@@ -15,7 +15,7 @@ namespace FormatConverter {
   : OffsetTimeSignalSet( ), tz_calculated( false ) {
   }
 
-  TimezoneOffsetTimeSignalSet::TimezoneOffsetTimeSignalSet( const std::unique_ptr<SignalSet>& w )
+  TimezoneOffsetTimeSignalSet::TimezoneOffsetTimeSignalSet( std::unique_ptr<SignalSet>& w )
   : OffsetTimeSignalSet( w ), tz_calculated( false ) {
   }
 

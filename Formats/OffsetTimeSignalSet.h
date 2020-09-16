@@ -21,18 +21,18 @@ namespace FormatConverter {
   public:
     static const std::string COLLECTION_OFFSET;
 
-    OffsetTimeSignalSet(long offset_ms = 0);
-    OffsetTimeSignalSet(const std::unique_ptr<SignalSet>& w, long offset_ms = 0);
-    OffsetTimeSignalSet(SignalSet * w, long offset_ms = 0);
-    ~OffsetTimeSignalSet();
+    OffsetTimeSignalSet( long offset_ms = 0 );
+    OffsetTimeSignalSet( std::unique_ptr<SignalSet>& w, long offset_ms = 0 );
+    OffsetTimeSignalSet( SignalSet * w, long offset_ms = 0 );
+    ~OffsetTimeSignalSet( );
 
-    virtual SignalData * addVital(const std::string& name, bool * added = nullptr) override;
-    virtual SignalData * addWave(const std::string& name, bool * added = nullptr) override;
-    virtual void reset(bool signalDataOnly = false) override;
-    virtual void complete() override;
+    virtual SignalData * addVital( const std::string& name, bool * added = nullptr ) override;
+    virtual SignalData * addWave( const std::string& name, bool * added = nullptr ) override;
+    virtual void reset( bool signalDataOnly = false ) override;
+    virtual void complete( ) override;
 
   protected:
-    void offset(long offset_ms);
+    void offset( long offset_ms );
 
   private:
     long offset_ms;

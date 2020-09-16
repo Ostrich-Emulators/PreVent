@@ -24,10 +24,10 @@
 namespace FormatConverter{
 
   Reader::Reader( const std::string& name ) : rdrname( name ), onefile( false ),
-      local_time( false ), timemod( TimeModifier::passthru( ) ) { }
+      local_time( false ), timemod( TimeModifier::passthru( ) ), splitmod( SplitLogic::midnight( ) ) { }
 
   Reader::Reader( const Reader& r ) : rdrname( "x" ), onefile( r.onefile ),
-      local_time( r.local_time ), timemod( r.timemod ) { }
+      local_time( r.local_time ), timemod( r.timemod ), splitmod( r.splitmod ) { }
 
   Reader::~Reader( ) { }
 
@@ -108,22 +108,7 @@ namespace FormatConverter{
   }
 
   bool Reader::isRollover( const dr_time& then, const dr_time& now ) const {
-    if ( nonbreaking( ) ) {
-      return false;
-    }
-
-    if ( 0 != then ) {
-      time_t modnow = now / 1000;
-      time_t modthen = then / 1000;
-
-      const int cdoy = ( localizingTime( ) ? localtime( &modnow ) : gmtime( &modnow ) )->tm_yday;
-      const int pdoy = ( localizingTime( ) ? localtime( &modthen ) : gmtime( &modthen ) )->tm_yday;
-      if ( cdoy != pdoy ) {
-        return true;
-      }
-    }
-
-    return false;
+    return splitmod.isRollover( then, now, this );
   }
 
   bool Reader::splice( const std::string& inputfile, const std::string& path,
@@ -152,5 +137,13 @@ namespace FormatConverter{
 
   dr_time Reader::modtime( const dr_time& time ) {
     return timemod.convert( time );
+  }
+
+  void Reader::splitter( const SplitLogic& l ) {
+    splitmod = l;
+  }
+
+  const SplitLogic& Reader::splitter( ) {
+    return splitmod;
   }
 }

@@ -12,6 +12,7 @@
 #include "dr_time.h"
 #include "SignalSet.h"
 #include "TimeModifier.h"
+#include "SplitLogic.h"
 
 namespace FormatConverter {
   class SignalData;
@@ -69,6 +70,8 @@ namespace FormatConverter {
     bool localizingTime( ) const;
     void timeModifier( const TimeModifier& mod );
     const TimeModifier& timeModifier( ) const;
+    void splitter( const SplitLogic& l );
+    const SplitLogic& splitter( );
 
     static bool strptime2( const std::string& input, const std::string& format,
         std::tm * tm );
@@ -117,10 +120,10 @@ namespace FormatConverter {
     virtual bool splice( const std::string& inputfile, const std::string& path,
         dr_time from, dr_time to, SignalData * signalToFill );
 
+    bool nonbreaking( ) const;
   protected:
     Reader( const Reader& );
 
-    bool nonbreaking( ) const;
     bool skipwaves( ) const;
 
     virtual
@@ -131,6 +134,7 @@ namespace FormatConverter {
     bool onefile;
     bool local_time;
     TimeModifier timemod;
+    SplitLogic splitmod;
   };
 }
 #endif /* READER_H */
