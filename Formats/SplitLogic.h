@@ -52,7 +52,7 @@ namespace FormatConverter {
      * @param now the time to check
      * @return true, if now and then should be split
      */
-    bool isRollover( SignalSet * data, dr_time now, bool timeIsLocal ) const;
+    bool isRollover( SignalSet * data, dr_time now, bool nowIsLocal ) const;
 
     /**
      * Does this Splitter ever rollover?

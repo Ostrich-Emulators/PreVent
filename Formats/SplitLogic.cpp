@@ -43,7 +43,7 @@ namespace FormatConverter{
     return SplitLogic( numhours, clean );
   }
 
-  bool SplitLogic::isRollover( SignalSet * data, dr_time now, bool timeIsLocal ) const {
+  bool SplitLogic::isRollover( SignalSet * data, dr_time now, bool nowIsLocal ) const {
     if ( 0 == hours ) {
       return false;
     }
