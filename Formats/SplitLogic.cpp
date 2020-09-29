@@ -7,6 +7,8 @@
 #include "SplitLogic.h"
 
 #include "SignalSet.h"
+#include "Log.h"
+#include <iomanip>
 #include <ctime>
 
 namespace FormatConverter{
@@ -43,6 +45,40 @@ namespace FormatConverter{
     return SplitLogic( numhours, clean );
   }
 
+  bool SplitLogic::isRollover( dr_time latest, dr_time now, bool timesAreLocal ) const {
+    if ( 0 == hours ) {
+      return false;
+    }
+
+    if ( 0 == latest ) {
+      return false;
+    }
+
+    const time_t modnow = now / 1000;
+    const time_t modlatest = latest / 1000;
+
+    const auto nowtm = *( timesAreLocal ? localtime( &modnow ) : gmtime( &modnow ) );
+    const auto thentm = *( timesAreLocal ? localtime( &modlatest ) : gmtime( &modlatest ) );
+
+    if ( hours < 0 ) {
+      // roll at midnight (when the day of the year changes)
+      return ( nowtm.tm_yday != thentm.tm_yday );
+    }
+
+    // rolling every X number of hours
+    if ( clean ) {
+      if ( nowtm.tm_yday == thentm.tm_yday ) {
+        // not yet crossed midnight
+        return ( nowtm.tm_hour - thentm.tm_hour ) >= this->hours;
+      }
+      else {
+        // we're into the next day, so add 24 hours to our now hour
+        return ( nowtm.tm_hour + 24 - thentm.tm_hour ) >= this->hours;
+      }
+    }
+    return (now - latest ) >= ( this->hours * 60 * 60 * 1000 );
+  }
+
   bool SplitLogic::isRollover( SignalSet * data, dr_time now, bool nowIsLocal ) const {
     if ( 0 == hours ) {
       return false;
@@ -54,14 +90,14 @@ namespace FormatConverter{
     }
 
     const time_t modnow = now / 1000;
-    const time_t modlate = latest / 1000;
+    const time_t modlatest = latest / 1000;
 
     const auto nowtm = *( nowIsLocal ? localtime( &modnow ) : gmtime( &modnow ) );
 
     if ( hours < 0 ) {
-      const auto latetm = *( nowIsLocal ? localtime( &modlate ) : gmtime( &modlate ) );
+      const auto thentm = *( nowIsLocal ? localtime( &modlatest ) : gmtime( &modlatest ) );
       // roll at midnight (when the day of the year changes)
-      return ( nowtm.tm_yday != latetm.tm_yday );
+      return ( nowtm.tm_yday != thentm.tm_yday );
     }
 
     const auto earliest = data->earliest( );

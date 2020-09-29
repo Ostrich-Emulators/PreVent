@@ -16,6 +16,8 @@
 #include <sys/stat.h>
 namespace FormatConverter{
 
+  const unsigned long TdmsReader::MAX_WAITING_GAP_MS = 60 * 60 * 1000; // 1 hour in ms
+
   TdmsReader::TdmsReader( ) : Reader( "TDMS" ), filler( nullptr ) { }
 
   TdmsReader::~TdmsReader( ) { }
@@ -32,9 +34,7 @@ namespace FormatConverter{
       //      }
     }
 
-    //if ( std::string::npos != channelname.find( "HR" ) ) {
-    //  output( ) << channelname << " new values: " << num_vals << "/" << vals.size( ) << std::endl;
-    //}
+    Log::debug( ) << channelname << " new values: " << num_vals << "/" << vals.size( ) << std::endl;
     SignalSaver& rec = signalsavers.at( channelname );
 
     // get our SignalData for this channel
@@ -65,22 +65,14 @@ namespace FormatConverter{
       return;
     }
 
-    // for waves, we need to construct a string of values that is
-    // {Frequency} items big. For vitals, we do the exact same thing,
-    // except that {Frequency} is 1.
-
     // we pretty much always get a datatype of float, even though
     // not all the data IS float, by the way
     while ( rec.leftovers.size( ) >= freq ) {
-      std::vector<double> doubles;
-      doubles.reserve( freq );
-      for ( size_t i = 0; i < freq; i++ ) {
-        double d = rec.leftovers.front( );
-        rec.leftovers.pop_front( );
-        doubles.push_back( d );
-      }
-
-      writeSignalRow( doubles, rec.seenfloat, signal, rec.lasttime );
+      const auto startpos = rec.leftovers.begin( );
+      const auto endpos = startpos + freq;
+      auto doubles = std::vector<double>{ startpos, endpos };
+      rec.leftovers.erase( startpos, endpos );
+      writeSignalRow( doubles, signal, rec.lasttime );
 
       // check for roll-over
       rec.waiting = ( isRollover( rec.lasttime + timeinc, filler ) );
@@ -111,15 +103,13 @@ namespace FormatConverter{
 
     dr_time earliest = std::numeric_limits<dr_time>::max( );
     for ( auto& ss : signalsavers ) {
-      if ( ss.second.lasttime < earliest ) {
-        earliest = ss.second.lasttime;
-      }
+      earliest = std::min( ss.second.lasttime, earliest );
     }
 
     // if we have a signal that starts after a rollover will have occurred,
     // set that signal to waiting
     for ( auto& ss : signalsavers ) {
-      ss.second.waiting = ( isRollover( earliest, filler ) );
+      ss.second.waiting = ( splitter().isRollover( earliest, ss.second.lasttime ) );
     }
   }
 
@@ -233,6 +223,7 @@ namespace FormatConverter{
 
       // FIXME: what if the file starts at like 11:58pm, and we only get one
       // signal in the first segment with 3 minutes of data? That is a problem.
+
       bool allwaiting = ( signalsavers.size( ) > 0 );
       for ( auto&x : signalsavers ) {
         if ( !x.second.waiting ) {
@@ -266,8 +257,7 @@ namespace FormatConverter{
     return ( 0 <= retcode ? ReadResult::END_OF_FILE : ReadResult::ERROR );
   }
 
-  bool TdmsReader::writeSignalRow( std::vector<double>& doubles, const bool seenFloat,
-      SignalData * signal, dr_time time ) {
+  bool TdmsReader::writeSignalRow( std::vector<double>& doubles, SignalData * signal, dr_time time ) {
 
     if ( signal->wave( ) && this->skipwaves( ) ) {
       return true;
@@ -281,17 +271,14 @@ namespace FormatConverter{
   SignalSaver::~SignalSaver( ) { }
 
   SignalSaver::SignalSaver( const std::string& label, bool wave )
-      : seenfloat( false ), waiting( false ), iswave( wave ),
-      name( label ), lasttime( 0 ) { }
+      : waiting( false ), iswave( wave ), name( label ), lasttime( 0 ) { }
 
   SignalSaver::SignalSaver( const SignalSaver& orig )
-      : seenfloat( orig.seenfloat ), waiting( orig.waiting ),
-      iswave( orig.iswave ), name( orig.name ), lasttime( orig.lasttime ),
-      leftovers( orig.leftovers ) { }
+      : waiting( orig.waiting ), iswave( orig.iswave ), name( orig.name ),
+      lasttime( orig.lasttime ), leftovers( orig.leftovers ) { }
 
   SignalSaver& SignalSaver::operator=(const SignalSaver& orig ) {
     if ( &orig != this ) {
-      seenfloat = orig.seenfloat;
       waiting = orig.waiting;
       iswave = orig.iswave;
       name = orig.name;

@@ -46,13 +46,21 @@ namespace FormatConverter {
     static SplitLogic hourly( int numHours, bool clean = true );
 
     /**
-     * Decides if now is in a new duration from then.  If then is 0, this function
+     * Decides if now is in a new duration from the values in data
+     * @param then the old time
+     * @param now the time to check
+     * @return true, if now and then should be split
+     */
+    bool isRollover( SignalSet * data, dr_time now, bool nowIsLocal = false ) const;
+
+    /**
+     * Decides if now is in a new duration from then. If then is 0, this function
      * always returns false
      * @param then the old time
      * @param now the time to check
      * @return true, if now and then should be split
      */
-    bool isRollover( SignalSet * data, dr_time now, bool nowIsLocal ) const;
+    bool isRollover( dr_time then, dr_time now, bool timesAreLocal = false ) const;
 
     /**
      * Does this Splitter ever rollover?
