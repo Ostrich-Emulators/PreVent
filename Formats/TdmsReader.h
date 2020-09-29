@@ -23,7 +23,7 @@
 #include "BasicSignalSet.h"
 
 namespace TDMS {
-    class channel;
+  class channel;
 }
 
 namespace FormatConverter {
