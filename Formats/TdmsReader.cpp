@@ -124,15 +124,16 @@ namespace FormatConverter{
   }
 
   void TdmsReader::initSignal( TDMS::channel * channel, bool firstrun ) {
-    const std::string starter( "/Intellivue'/'" );
-    if ( channel->get_path( ).size( ) < starter.size( ) ) {
+    //Log::trace( ) << "init new channel: " << channel->get_path( ) << std::endl;
+    const auto STARTER = std::string{ "/'Intellivue'/'" };
+
+    // we only accept Intellivue channels
+    if ( channel->get_path( ).size( ) < STARTER.size( ) || std::string::npos == channel->get_path( ).find( STARTER ) ) {
       return;
     }
 
-    //output( ) << "new channel: " << channel->get_path( ) << std::endl;
-    //output( ) << "new channel: " << channel->getName( ) << std::endl;
-    std::string name = channel->get_path( );
-    name = name.substr( starter.size( ) + 1, name.size( ) - starter.size( ) - 2 );
+    auto name = channel->get_path( );
+    name = name.substr( STARTER.size( ), name.size( ) - STARTER.size( ) - 1 );
 
     dr_time time = 0;
     const int timeinc = 1024; // philips runs at 1.024s, or 1024 ms
