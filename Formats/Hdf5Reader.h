@@ -52,6 +52,16 @@ namespace FormatConverter {
   private:
     Hdf5Reader( const Hdf5Reader& );
 
+    class SignalSaver {
+    public:
+      std::vector<dr_time> times;
+      hsize_t lastrowread;
+      bool nomorerows;
+
+      SignalSaver( std::vector<dr_time> timesleft = std::vector<dr_time>{ }, hsize_t lastrowread = 0 );
+    };
+
+
     /**
      * Reads an attribute as a string (converts appropriately)
      * @param attr
@@ -64,10 +74,10 @@ namespace FormatConverter {
 
     static void copymetas( SignalData * signal, H5::H5Object& dataset,
         bool includeIgnorables = false );
-    void fillVital( SignalData * signal, H5::DataSet& dataset,
-        const std::vector<dr_time>& times, int valsPerTime, int timeinterval, int scale ) const;
-    void fillWave( SignalData * signal, H5::DataSet& dataset,
-        const std::vector<dr_time>& tmes, int valsPerTime, int scale ) const;
+    void fillVital( SignalData * signal, SignalSet * info, H5::DataSet& dataset,
+        SignalSaver& saver, int valsPerTime, int timeinterval, int scale ) const;
+    void fillWave( SignalData * signal, SignalSet * info, H5::DataSet& dataset,
+        SignalSaver& saver, int valsPerTime, int scale ) const;
     std::map<std::string, std::vector<TimedData>> readAuxData( H5::Group& auxparent );
     void readDataSet( H5::Group& dataAndTimeGroup, const bool& iswave,
         SignalSet * info );
@@ -128,6 +138,7 @@ namespace FormatConverter {
     static std::vector<dr_time> slabreadt_small( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
 
     H5::H5File file;
+    std::map<std::string, SignalSaver> savers;
   };
 }
 #endif /* HDF5READER_H */

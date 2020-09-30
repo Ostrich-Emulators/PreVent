@@ -122,7 +122,7 @@ namespace FormatConverter{
     return true;
   }
 
-  ReadResult Hdf5Reader::fill( SignalSet * info, const ReadResult& ) {
+  ReadResult Hdf5Reader::fill( SignalSet * info, const ReadResult& lastread ) {
     H5::Group root = file.openGroup( "/" );
 
     for ( int i = 0; i < root.getNumAttrs( ); i++ ) {
@@ -180,7 +180,6 @@ namespace FormatConverter{
       Log::error( ) << "/: " << error.getDetailMsg( ) << std::endl;
     }
 
-
     try {
       H5::Group vgroup = file.openGroup( "/VitalSigns" );
       for ( size_t i = 0; i < vgroup.getNumObjs( ); i++ ) {
@@ -217,7 +216,15 @@ namespace FormatConverter{
       }
     }
 
-    return ReadResult::END_OF_FILE;
+    auto hasmore = false;
+    for ( auto& x : savers ) {
+      if ( !x.second.nomorerows ) {
+        hasmore = true;
+      }
+    }
+
+    return (hasmore ? ReadResult::END_OF_DURATION
+        : ReadResult::END_OF_FILE );
   }
 
   std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) {
@@ -268,11 +275,15 @@ namespace FormatConverter{
     std::vector<dr_time> times = readTimes( ds );
     ds.close( );
 
+    if ( 0 == savers.count( dataAndTimeGroup.getObjName( ) ) ) {
+      savers.insert( std::make_pair( dataAndTimeGroup.getObjName( ), SignalSaver( times ) ) );
+    }
+
     if ( iswave ) {
-      fillWave( signal, dataset, times, valsPerChunk, scale );
+      fillWave( signal, info, dataset, savers[dataAndTimeGroup.getObjName( )], valsPerChunk, scale );
     }
     else {
-      fillVital( signal, dataset, times, timeinterval, valsPerChunk, scale );
+      fillVital( signal, info, dataset, savers[dataAndTimeGroup.getObjName( )], timeinterval, valsPerChunk, scale );
     }
 
     auto auxdata = readAuxData( dataAndTimeGroup );
@@ -331,8 +342,8 @@ namespace FormatConverter{
     return datamap;
   }
 
-  void Hdf5Reader::fillVital( SignalData * signal, H5::DataSet& dataset,
-      const std::vector<dr_time>& times, int timeinterval, int valsPerTime, int scale ) const {
+  void Hdf5Reader::fillVital( SignalData * signal, SignalSet * info, H5::DataSet& dataset,
+      SignalSaver& saver, int timeinterval, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
     hsize_t DIMS[2] = { };
     dataspace.getSimpleExtentDims( DIMS );
@@ -353,47 +364,42 @@ namespace FormatConverter{
     }
 
     // FIXME: use hyperslabs (slabreadi/slabreads is fine when we only have 1 column)
-
+    auto intread = std::vector<int>( ROWS * COLS );
     if ( dataset.getDataType( ) == H5::PredType::STD_I16LE ) {
-      auto read = std::vector<short>( ROWS * COLS );
-
-      dataset.read( read.data( ), dataset.getDataType( ) );
-      for ( size_t row = 0; row < ROWS; row++ ) {
-        short val = read[COLS * row];
-
-        // FIXME: we better hope valsPerTime is always 1!
-        auto drow = std::make_unique<DataRow>( times[row / valsPerTime], val, scale );
-        if ( COLS > 1 ) {
-          for ( int c = 1; c < (int) COLS; c++ ) {
-            drow->extras[attrmap[c]] = std::to_string( read[COLS * row + c] );
-          }
-        }
-        signal->add( std::move( drow ) );
+      auto shortread = std::vector<short>( ROWS * COLS );
+      dataset.read( shortread.data( ), dataset.getDataType( ) );
+      for ( size_t i = 0; i < shortread.size( ); i++ ) {
+        intread[i] = shortread[i];
       }
     }
-    else { // data is in integers
-      auto read = std::vector<int>( ROWS * COLS );
-      dataset.read( read.data( ), dataset.getDataType( ) );
-      for ( size_t row = 0; row < ROWS; row++ ) {
-
-        int val = read[COLS * row];
-
-        // FIXME: we better hope valsPerTime is always 1!
-        auto drow = std::make_unique<DataRow>( times[row / valsPerTime], val, scale );
-        if ( COLS > 1 ) {
-          for ( int c = 1; c < (int) COLS; c++ ) {
-            drow->extras[attrmap[c]] = std::to_string( read[COLS * row + c] );
-          }
-        }
-        signal->add( std::move( drow ) );
-      }
+    else {
+      dataset.read( intread.data( ), dataset.getDataType( ) );
     }
 
+    while ( saver.lastrowread < ROWS && !isRollover( saver.times[saver.lastrowread], info ) ) {
+      // we can only have 1 valPerTime because this is a vital (otherwise, we'd call it a wave)
+      auto rowtime = saver.times[saver.lastrowread];
+      if ( isRollover( rowtime, info ) ) {
+        return;
+      }
+
+      int val = intread[COLS * saver.lastrowread];
+      auto drow = std::make_unique<DataRow>( rowtime, val, scale );
+      if ( COLS > 1 ) {
+        for ( int c = 1; c < (int) COLS; c++ ) {
+          drow->extras[attrmap[c]] = std::to_string( intread[COLS * saver.lastrowread + c] );
+        }
+      }
+      signal->add( std::move( drow ) );
+      saver.lastrowread++;
+    }
     signal->scale( scale );
+
+    saver.nomorerows = ( saver.lastrowread >= ROWS );
   }
 
-  void Hdf5Reader::fillWave( SignalData * signal, H5::DataSet& dataset,
-      const std::vector<dr_time>& times, int valsPerTime, int scale ) const {
+  void Hdf5Reader::fillWave( SignalData * signal, SignalSet * info, H5::DataSet& dataset,
+      SignalSaver& saver, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
     hsize_t DIMS[2] = { };
     dataspace.getSimpleExtentDims( DIMS );
@@ -438,7 +444,7 @@ namespace FormatConverter{
         values.push_back( val );
 
         if ( static_cast<size_t> ( valsPerTime ) == values.size( ) ) {
-          signal->add( std::make_unique<DataRow>( times[timecounter++], values, scale ) );
+          signal->add( std::make_unique<DataRow>( saver.times[timecounter++], values, scale ) );
           values.clear( );
         }
       }
@@ -855,4 +861,7 @@ namespace FormatConverter{
 
     return range;
   }
+
+  Hdf5Reader::SignalSaver::SignalSaver( std::vector<dr_time> _times, hsize_t lastrow )
+      : times( _times ), lastrowread( lastrow ), nomorerows( false ) { }
 }
