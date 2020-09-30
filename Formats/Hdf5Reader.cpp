@@ -218,11 +218,6 @@ namespace FormatConverter{
 
     auto hasmore = false;
     for ( auto& x : savers ) {
-      Log::warn( ) << std::setw( 30 ) << x.first << ":" << std::setw( 10 )
-          << x.second.timeidx << " " << ( x.second.done( ) ? "DONE" : "more" )
-          << std::endl;
-
-
       if ( !x.second.done( ) ) {
         hasmore = true;
       }
