@@ -55,10 +55,10 @@ namespace FormatConverter {
     class SignalSaver {
     public:
       std::vector<dr_time> times;
-      hsize_t lastrowread;
-      bool nomorerows;
+      hsize_t timeidx;
 
       SignalSaver( std::vector<dr_time> timesleft = std::vector<dr_time>{ }, hsize_t lastrowread = 0 );
+      bool done() const;
     };
 
 
