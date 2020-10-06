@@ -31,14 +31,17 @@
 #include "TimeRange.h"
 #include "Log.h"
 
-namespace FormatConverter{
+namespace FormatConverter {
   const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.1";
 
-  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) { }
+  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
+  }
 
-  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) { }
+  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) {
+  }
 
-  Hdf5Writer::~Hdf5Writer( ) { }
+  Hdf5Writer::~Hdf5Writer( ) {
+  }
 
   void Hdf5Writer::writeAttribute( H5::H5Object& loc,
       const std::string& attr, const std::string& val ) {
@@ -293,13 +296,13 @@ namespace FormatConverter{
         H5::DataSpace memspace( 2, count );
         if ( useInts ) {
           Log::trace( ) << "slab" << std::endl;
-          ds.write( ibuffer.data(), H5::PredType::STD_I32LE, memspace, space );
+          ds.write( ibuffer.data( ), H5::PredType::STD_I32LE, memspace, space );
           ibuffer.clear( );
           ibuffer.reserve( maxslabcnt * ( exc + 1 ) );
         }
         else {
           Log::trace( ) << "slab" << std::endl;
-          ds.write( sbuffer.data(), H5::PredType::STD_I16LE, memspace, space );
+          ds.write( sbuffer.data( ), H5::PredType::STD_I16LE, memspace, space );
           sbuffer.clear( );
           sbuffer.reserve( maxslabcnt * ( exc + 1 ) );
         }
@@ -315,7 +318,7 @@ namespace FormatConverter{
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
         H5::DataSpace memspace( 2, count );
         Log::trace( ) << "slab - leftovers" << std::endl;
-        ds.write( ibuffer.data(), H5::PredType::STD_I32LE, memspace, space );
+        ds.write( ibuffer.data( ), H5::PredType::STD_I32LE, memspace, space );
       }
     }
     else {
@@ -325,7 +328,7 @@ namespace FormatConverter{
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
         H5::DataSpace memspace( 2, count );
         Log::trace( ) << "slab - leftovers" << std::endl;
-        ds.write( sbuffer.data(), H5::PredType::STD_I16LE, memspace, space );
+        ds.write( sbuffer.data( ), H5::PredType::STD_I16LE, memspace, space );
       }
     }
   }
@@ -396,7 +399,7 @@ namespace FormatConverter{
 
           H5::DataSpace memspace( 2, count );
           Log::trace( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
-          ds.write( ibuffer.data(), H5::PredType::STD_I32LE, memspace, space );
+          ds.write( ibuffer.data( ), H5::PredType::STD_I32LE, memspace, space );
           ibuffer.clear( );
           ibuffer.reserve( maxslabcnt );
         }
@@ -409,7 +412,7 @@ namespace FormatConverter{
 
           H5::DataSpace memspace( 2, count );
           Log::trace( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
-          ds.write( sbuffer.data(), H5::PredType::STD_I16LE, memspace, space );
+          ds.write( sbuffer.data( ), H5::PredType::STD_I16LE, memspace, space );
           sbuffer.clear( );
           sbuffer.reserve( maxslabcnt );
         }
@@ -423,7 +426,7 @@ namespace FormatConverter{
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
         H5::DataSpace memspace( 2, count );
         Log::trace( ) << "slab - leftovers" << std::endl;
-        ds.write( ibuffer.data(), H5::PredType::STD_I32LE, memspace, space );
+        ds.write( ibuffer.data( ), H5::PredType::STD_I32LE, memspace, space );
       }
     }
     else {
@@ -432,7 +435,7 @@ namespace FormatConverter{
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
         H5::DataSpace memspace( 2, count );
         Log::trace( ) << "slab - leftovers" << std::endl;
-        ds.write( sbuffer.data(), H5::PredType::STD_I16LE, memspace, space );
+        ds.write( sbuffer.data( ), H5::PredType::STD_I16LE, memspace, space );
       }
     }
   }
@@ -713,14 +716,27 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::writeVitalGroup( H5::Group& group, SignalData * data ) {
-    Log::debug( ) << "Writing Vital: " << data->name( ) << std::endl;
+    try {
+      Log::debug( ) << "Writing Vital: " << data->name( ) << std::endl;
 
-    writeGroupAttrs( group, data );
-    writeTimes( group, data );
-    writeVital( group, data );
-    writeEvents( group, data );
-    for ( const auto& aux : data->auxdata( ) ) {
-      writeAuxData( group, aux.first, aux.second );
+      writeGroupAttrs( group, data );
+      writeTimes( group, data );
+      writeVital( group, data );
+      writeEvents( group, data );
+      for ( const auto& aux : data->auxdata( ) ) {
+        writeAuxData( group, aux.first, aux.second );
+      }
+    }
+    // catch failure caused by the DataSet operations
+    catch ( H5::DataSetIException& error ) {
+      Log::error( ) << "error writing dataset: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
+    }
+    // catch failure caused by the DataSpace operations
+    catch ( H5::DataSpaceIException& error ) {
+      Log::error( ) << "error writing dataset: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
+    }
+    catch ( H5::GroupIException& error ) {
+      Log::error( ) << "error writing group: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
     }
   }
 
@@ -745,22 +761,34 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::writeWaveGroup( H5::Group& group, SignalData * data ) {
+    try {
+      Log::debug( ) << "Writing Wave: " << data->name( );
+      auto st = std::chrono::high_resolution_clock::now( );
 
-    Log::debug( ) << "Writing Wave: " << data->name( );
-    auto st = std::chrono::high_resolution_clock::now( );
+      writeTimes( group, data );
+      writeWave( group, data );
+      writeEvents( group, data );
+      writeGroupAttrs( group, data );
+      for ( const auto& aux : data->auxdata( ) ) {
+        writeAuxData( group, aux.first, aux.second );
+      }
 
-    writeTimes( group, data );
-    writeWave( group, data );
-    writeEvents( group, data );
-    writeGroupAttrs( group, data );
-    for ( const auto& aux : data->auxdata( ) ) {
-      writeAuxData( group, aux.first, aux.second );
+      auto en = std::chrono::high_resolution_clock::now( );
+      std::chrono::duration<float> dur = en - st;
+      Log::trace( ) << " (complete in " << dur.count( ) << "s)";
+      Log::debug( ) << std::endl;
     }
-
-    auto en = std::chrono::high_resolution_clock::now( );
-    std::chrono::duration<float> dur = en - st;
-    Log::trace( ) << " (complete in " << dur.count( ) << "s)";
-    Log::debug( ) << std::endl;
+    // catch failure caused by the DataSet operations
+    catch ( H5::DataSetIException& error ) {
+      Log::error( ) << "error writing dataset: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
+    }
+    // catch failure caused by the DataSpace operations
+    catch ( H5::DataSpaceIException& error ) {
+      Log::error( ) << "error writing dataset: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
+    }
+    catch ( H5::GroupIException& error ) {
+      Log::error( ) << "error writing group: " << error.getFuncName( ) << " said " << error.getDetailMsg( ) << std::endl;
+    }
   }
 
   H5::DataSet Hdf5Writer::writeTimes( H5::Group& group, TimeRange * times, const std::string& dsname ) {
@@ -910,7 +938,7 @@ namespace FormatConverter{
 
       H5::DataSet ds = eventgroup.createDataSet( getDatasetName( type ),
           H5::PredType::STD_I64LE, space, props );
-      ds.write( times.data(), H5::PredType::STD_I64LE );
+      ds.write( times.data( ), H5::PredType::STD_I64LE );
       writeAttribute( ds, SignalData::LABEL, type );
       writeAttribute( ds, "Time Source", "raw" );
       writeAttribute( ds, "Columns", "timestamp (ms)" );
