@@ -98,7 +98,7 @@ namespace FormatConverter {
     }
 
     iterator end( ) {
-      return iterator( this, sizer + 1 );
+      return iterator( this, sizer );
     }
 
     void push_back( const std::vector<T>& vec ) {

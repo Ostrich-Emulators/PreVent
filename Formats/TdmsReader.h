@@ -23,7 +23,7 @@
 #include "BasicSignalSet.h"
 
 namespace TDMS {
-    class channel;
+  class channel;
 }
 
 namespace FormatConverter {
@@ -31,7 +31,6 @@ namespace FormatConverter {
 
   class SignalSaver {
   public:
-    bool seenfloat;
     bool waiting;
     bool iswave;
     std::string name;
@@ -67,13 +66,13 @@ namespace FormatConverter {
     ReadResult fill( SignalSet * data, const ReadResult& lastfill ) override;
 
   private:
+    static const unsigned long MAX_WAITING_GAP_MS;
     std::unique_ptr<TDMS::tdmsfile> tdmsfile;
     SignalSet * filler;
     std::map<std::string, SignalSaver> signalsavers;
     size_t last_segment_read;
 
-    bool writeSignalRow( std::vector<double>& doubles, const bool seenFloat,
-        SignalData * signal, dr_time time );
+    bool writeSignalRow( std::vector<double>& doubles, SignalData * signal, dr_time time );
 
     void initSignal( TDMS::channel *, bool first );
 

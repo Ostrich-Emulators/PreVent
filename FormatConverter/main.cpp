@@ -58,7 +58,8 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-Z or --offset <time string (MM/DD/YYYY) or seconds since 01/01/1970>"
       << std::endl << "\t-S or --opening-date <time string (MM/DD/YYYY) or seconds since 01/01/1970>"
       << std::endl << "\t-p or --pattern <naming pattern>"
-      << std::endl << "\t-n or --no-break or --one-file"
+      << std::endl << "\t-x or --split <m[idnight]|0-24[h]>"
+      << std::endl << "\t-n or --no-break or --one-file (convenience for --split 0)"
       << std::endl << "\t-C or --no-cache"
       << std::endl << "\t-T or --time-step (store timing information as offset from start of file"
       << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
@@ -88,6 +89,41 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\tif file is -, stdin is read for input"
       << std::endl << std::endl;
   exit( 1 );
+}
+
+SplitLogic resolveSplitDurationAndNamingPattern( char * progname,
+    const std::string& duration, std::string& pattern ) {
+  if ( "0" == duration ) {
+    Options::set( OptionsKey::NO_BREAK );
+    if ( FileNamer::DEFAULT_PATTERN == pattern ) {
+      pattern = FileNamer::FILENAME_PATTERN;
+    }
+    Log::debug( ) << "not splitting files" << std::endl;
+    return SplitLogic::nobreaks( );
+  }
+
+  if ( 0 == duration.find( 'm' ) ) {
+    Log::debug( ) << "splitting files at midnight" << std::endl;
+    return SplitLogic::midnight( );
+  }
+
+  try {
+    bool clean = ( duration.find( 'h' ) != std::string::npos );
+    int hours = std::stoi( duration );
+    Log::debug( ) << "splitting files every " << hours << " hours";
+    if ( clean ) {
+      Log::debug( ) << " at the top of the hour";
+    }
+    Log::debug( ) << std::endl;
+
+    return SplitLogic::hourly( hours, clean );
+  }
+  catch ( std::exception& x ) {
+    helpAndExit( progname, "unable to parse split duration: " + duration );
+  }
+
+  // we should never get here, but avoid a compiler warning
+  return SplitLogic::midnight( );
 }
 
 void settmpdir( std::string tmpdir ) {
@@ -150,6 +186,7 @@ struct option longopts[] = {
   { "time-step", no_argument, NULL, 'T' },
   { "skip-waves", no_argument, NULL, 'w' },
   { "tmpdir", required_argument, NULL, 'm' },
+  { "split", required_argument, NULL, 'x' },
   { 0, 0, 0, 0 }
 };
 
@@ -169,11 +206,12 @@ int main( int argc, char** argv ) {
   Options::set( OptionsKey::NO_BREAK, false );
   auto loglevel = static_cast<int> ( LogLevel::INFO );
   bool stopatone = false;
-  int compression = Writer::DEFAULT_COMPRESSION;
+  auto compression = Writer::DEFAULT_COMPRESSION;
+  auto split = std::string{ "midnight" };
 
   settmpdir( std::filesystem::temp_directory_path( ) );
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:q::v::anl1CTZ:S:Rwm:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:q::v::anl1CTZ:S:Rwm:x:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -249,11 +287,11 @@ int main( int argc, char** argv ) {
           offsetIsDesiredDate = true;
         }
         break;
+      case 'x':
+        split = std::string( optarg );
+        break;
       case 'n':
-        Options::set( OptionsKey::NO_BREAK );
-        if ( FileNamer::DEFAULT_PATTERN == pattern ) {
-          pattern = FileNamer::FILENAME_PATTERN;
-        }
+        split = "0";
         break;
       case '1':
         stopatone = true;
@@ -279,6 +317,8 @@ int main( int argc, char** argv ) {
   if ( "-" == argument ) {
     fromstr = "zl";
   }
+
+  auto splitlogic = resolveSplitDurationAndNamingPattern( argv[0], split, pattern );
 
   if ( "" == fromstr ) {
     auto f = Formats::guess( argv[optind] );
@@ -369,9 +409,9 @@ int main( int argc, char** argv ) {
     namer.tofmt( to->ext( ) );
     to->filenamer( namer );
 
-    from->setNonbreaking( Options::asBool( OptionsKey::NO_BREAK ) );
     from->localizeTime( Options::asBool( OptionsKey::LOCALIZED_TIME ) );
     from->timeModifier( timemod );
+    from->splitter( splitlogic );
   }
   catch ( std::string x ) {
     Log::error( ) << x << std::endl;

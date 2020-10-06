@@ -20,7 +20,7 @@ namespace FormatConverter {
   public:
     static const std::string COLLECTION_TIMEZONE;
     TimezoneOffsetTimeSignalSet();
-    TimezoneOffsetTimeSignalSet(const std::unique_ptr<SignalSet>& w);
+    TimezoneOffsetTimeSignalSet(std::unique_ptr<SignalSet>& w);
     TimezoneOffsetTimeSignalSet(SignalSet * w);
     ~TimezoneOffsetTimeSignalSet();
 

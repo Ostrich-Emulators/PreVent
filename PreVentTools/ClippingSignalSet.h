@@ -20,7 +20,7 @@ namespace FormatConverter {
   class ClippingSignalSet : public SignalSetWrapper {
   public:
     ClippingSignalSet( dr_time * starttime = nullptr, dr_time * endtime = nullptr );
-    ClippingSignalSet( const std::unique_ptr<SignalSet>& w, dr_time * starttime = nullptr, dr_time * endtime = nullptr );
+    ClippingSignalSet( std::unique_ptr<SignalSet> w, dr_time * starttime = nullptr, dr_time * endtime = nullptr );
     ClippingSignalSet( SignalSet * w, dr_time * starttime = nullptr, dr_time * endtime = nullptr );
     ~ClippingSignalSet( );
 

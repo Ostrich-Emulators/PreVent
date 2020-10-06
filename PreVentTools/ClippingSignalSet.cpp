@@ -30,7 +30,7 @@ namespace FormatConverter{
     init( starttime, endtime );
   }
 
-  ClippingSignalSet::ClippingSignalSet( const std::unique_ptr<SignalSet>& w, dr_time * starttime, dr_time * endtime )
+  ClippingSignalSet::ClippingSignalSet( std::unique_ptr<SignalSet> w, dr_time * starttime, dr_time * endtime )
       : SignalSetWrapper( w ) {
     init( starttime, endtime );
   }

@@ -16,6 +16,8 @@
 #include <sys/stat.h>
 namespace FormatConverter{
 
+  const unsigned long TdmsReader::MAX_WAITING_GAP_MS = 60 * 60 * 1000; // 1 hour in ms
+
   TdmsReader::TdmsReader( ) : Reader( "TDMS" ), filler( nullptr ) { }
 
   TdmsReader::~TdmsReader( ) { }
@@ -32,10 +34,8 @@ namespace FormatConverter{
       //      }
     }
 
-    //if ( std::string::npos != channelname.find( "HR" ) ) {
-    //  output( ) << channelname << " new values: " << num_vals << "/" << vals.size( ) << std::endl;
-    //}
-    SignalSaver& rec = signalsavers.at( channelname );
+    //Log::debug( ) << channelname << " new values: " << num_vals << "/" << vals.size( ) << std::endl;
+    auto& rec = signalsavers.at( channelname );
 
     // get our SignalData for this channel
     auto signal = ( rec.iswave
@@ -65,25 +65,17 @@ namespace FormatConverter{
       return;
     }
 
-    // for waves, we need to construct a string of values that is
-    // {Frequency} items big. For vitals, we do the exact same thing,
-    // except that {Frequency} is 1.
-
     // we pretty much always get a datatype of float, even though
     // not all the data IS float, by the way
     while ( rec.leftovers.size( ) >= freq ) {
-      std::vector<double> doubles;
-      doubles.reserve( freq );
-      for ( size_t i = 0; i < freq; i++ ) {
-        double d = rec.leftovers.front( );
-        rec.leftovers.pop_front( );
-        doubles.push_back( d );
-      }
-
-      writeSignalRow( doubles, rec.seenfloat, signal, rec.lasttime );
+      const auto startpos = rec.leftovers.begin( );
+      const auto endpos = startpos + freq;
+      auto doubles = std::vector<double>{ startpos, endpos };
+      rec.leftovers.erase( startpos, endpos );
+      writeSignalRow( doubles, signal, rec.lasttime );
 
       // check for roll-over
-      rec.waiting = ( isRollover( rec.lasttime, rec.lasttime + timeinc ) );
+      rec.waiting = ( isRollover( rec.lasttime + timeinc, filler ) );
       rec.lasttime += timeinc;
 
       if ( rec.waiting ) {
@@ -111,28 +103,27 @@ namespace FormatConverter{
 
     dr_time earliest = std::numeric_limits<dr_time>::max( );
     for ( auto& ss : signalsavers ) {
-      if ( ss.second.lasttime < earliest ) {
-        earliest = ss.second.lasttime;
-      }
+      earliest = std::min( ss.second.lasttime, earliest );
     }
 
     // if we have a signal that starts after a rollover will have occurred,
     // set that signal to waiting
     for ( auto& ss : signalsavers ) {
-      ss.second.waiting = ( isRollover( ss.second.lasttime, earliest ) );
+      ss.second.waiting = ( splitter( ).isRollover( earliest, ss.second.lasttime ) );
     }
   }
 
   void TdmsReader::initSignal( TDMS::channel * channel, bool firstrun ) {
-    const std::string starter( "/Intellivue'/'" );
-    if ( channel->get_path( ).size( ) < starter.size( ) ) {
+    //Log::trace( ) << "init new channel: " << channel->get_path( ) << std::endl;
+    const auto STARTER = std::string{ "/'Intellivue'/'" };
+
+    // we only accept Intellivue channels
+    if ( channel->get_path( ).size( ) < STARTER.size( ) || std::string::npos == channel->get_path( ).find( STARTER ) ) {
       return;
     }
 
-    //output( ) << "new channel: " << channel->get_path( ) << std::endl;
-    //output( ) << "new channel: " << channel->getName( ) << std::endl;
-    std::string name = channel->get_path( );
-    name = name.substr( starter.size( ) + 1, name.size( ) - starter.size( ) - 2 );
+    auto name = channel->get_path( );
+    name = name.substr( STARTER.size( ), name.size( ) - STARTER.size( ) - 1 );
 
     dr_time time = 0;
     const int timeinc = 1024; // philips runs at 1.024s, or 1024 ms
@@ -213,7 +204,6 @@ namespace FormatConverter{
   }
 
   ReadResult TdmsReader::fill( SignalSet * info, const ReadResult& lastfill ) {
-    int retcode = 0;
     filler = info;
     bool firstrun = ( ReadResult::FIRST_READ == lastfill );
 
@@ -222,6 +212,24 @@ namespace FormatConverter{
     }
 
     handleLateStarters( );
+
+    Log::trace( ) << "at fill, segment: " << last_segment_read << std::endl;
+    for ( auto&x : signalsavers ) {
+      auto& ss = x.second;
+      time_t lastt = ss.lasttime / 1000;
+      tm time = *std::gmtime( &lastt );
+      Log::trace( ) << std::setfill( ' ' ) << std::setw( 30 ) << ss.name
+          << ( ss.waiting ? " WAITING " : " no wait " ) << " "
+          << ss.lasttime << " "
+          << std::setfill( '0' ) << std::setw( 2 ) << 1900 + time.tm_year << "-"
+          << std::setfill( '0' ) << std::setw( 2 ) << time.tm_mon + 1 << "-"
+          << std::setfill( '0' ) << std::setw( 2 ) << time.tm_mday << "T"
+          << std::setfill( '0' ) << std::setw( 2 ) << time.tm_hour << ":"
+          << std::setfill( '0' ) << std::setw( 2 ) << time.tm_min << ":"
+          << std::setfill( '0' ) << std::setw( 2 ) << time.tm_sec
+          << "\tleftovers:" << std::setfill( ' ' ) << std::setw( 5 ) << ss.leftovers.size( )
+          << std::endl;
+    }
 
     while ( last_segment_read < tdmsfile->segments( ) ) {
       tdmsfile->loadSegment( last_segment_read, this );
@@ -232,6 +240,7 @@ namespace FormatConverter{
 
       // FIXME: what if the file starts at like 11:58pm, and we only get one
       // signal in the first segment with 3 minutes of data? That is a problem.
+
       bool allwaiting = ( signalsavers.size( ) > 0 );
       for ( auto&x : signalsavers ) {
         if ( !x.second.waiting ) {
@@ -241,32 +250,51 @@ namespace FormatConverter{
 
       last_segment_read++;
       if ( allwaiting ) {
-        return ReadResult::END_OF_DAY;
+        return ReadResult::END_OF_DURATION;
       }
     }
 
     // we're out of segments, so we're done reading the file, but now we need to
     // fill out the last DataRow from the leftovers
+
+    // because we may have a lot (LOT!) of data stacked up waiting for some
+    // lagging signal, we need to process these leftover rows as if we were
+    // reading them from the file...check for rollover, send back intermediate
+    // data, and all that...ugh.
+    auto removers = std::vector<std::string>{ };
     for ( auto&x : signalsavers ) {
-      SignalSaver& rec = x.second;
-      // get our SignalData for this channel
+      auto& rec = x.second;
       auto signal = ( rec.iswave
           ? filler->addWave( rec.name )
           : filler->addVital( rec.name ) );
       size_t freq = signal->metai( ).at( SignalData::READINGS_PER_CHUNK );
-      size_t cnt = rec.leftovers.size( );
-      for ( size_t i = cnt; i < freq; i++ ) {
-        rec.leftovers.push_back( SignalData::MISSING_VALUE );
+
+      if ( !x.second.leftovers.empty( ) ) {
+        if ( x.second.leftovers.size( ) < freq ) {
+          // not enough values to fill up a datarow, so add some
+          x.second.leftovers.resize( freq, SignalData::MISSING_VALUE );
+        }
+
+        this->data( x.first, nullptr, TDMS::data_type_t( "ignored", 0, nullptr ), 0 );
       }
 
-      this->data( x.first, nullptr, TDMS::data_type_t( "ignored", 0, nullptr ), 0 );
+      if ( x.second.leftovers.empty( ) ) {
+        removers.push_back( x.first );
+      }
     }
 
-    return ( 0 <= retcode ? ReadResult::END_OF_FILE : ReadResult::ERROR );
+    for ( auto& x : removers ) {
+      signalsavers.erase( x );
+    }
+
+    // now, if all our signalsavers are empty, we're done with this file
+    // else we have to loop again
+    return ( signalsavers.empty( )
+        ? ReadResult::END_OF_FILE
+        : ReadResult::END_OF_DURATION );
   }
 
-  bool TdmsReader::writeSignalRow( std::vector<double>& doubles, const bool seenFloat,
-      SignalData * signal, dr_time time ) {
+  bool TdmsReader::writeSignalRow( std::vector<double>& doubles, SignalData * signal, dr_time time ) {
 
     if ( signal->wave( ) && this->skipwaves( ) ) {
       return true;
@@ -280,17 +308,14 @@ namespace FormatConverter{
   SignalSaver::~SignalSaver( ) { }
 
   SignalSaver::SignalSaver( const std::string& label, bool wave )
-      : seenfloat( false ), waiting( false ), iswave( wave ),
-      name( label ), lasttime( 0 ) { }
+      : waiting( false ), iswave( wave ), name( label ), lasttime( 0 ) { }
 
-  SignalSaver::SignalSaver( const SignalSaver& orig )
-      : seenfloat( orig.seenfloat ), waiting( orig.waiting ),
-      iswave( orig.iswave ), name( orig.name ), lasttime( orig.lasttime ),
-      leftovers( orig.leftovers ) { }
+  SignalSaver::SignalSaver( const SignalSaver & orig )
+      : waiting( orig.waiting ), iswave( orig.iswave ), name( orig.name ),
+      lasttime( orig.lasttime ), leftovers( orig.leftovers ) { }
 
-  SignalSaver& SignalSaver::operator=(const SignalSaver& orig ) {
+  SignalSaver & SignalSaver::operator=(const SignalSaver & orig ) {
     if ( &orig != this ) {
-      seenfloat = orig.seenfloat;
       waiting = orig.waiting;
       iswave = orig.iswave;
       name = orig.name;

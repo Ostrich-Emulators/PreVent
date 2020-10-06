@@ -314,11 +314,9 @@ namespace FormatConverter{
         }
       }
 
-      auto oldtime = curtime;
-
       curtime += interval;
-      if ( isRollover( oldtime, curtime ) ) {
-        rslt = ReadResult::END_OF_DAY;
+      if ( isRollover( curtime, info ) ) {
+        rslt = ReadResult::END_OF_DURATION;
         break;
       }
       else if ( ReadResult::END_OF_FILE == rslt ) {
@@ -368,11 +366,9 @@ namespace FormatConverter{
         }
       }
 
-      auto oldtime = curtime;
-
       curtime += interval;
-      if ( isRollover( oldtime, curtime ) ) {
-        rslt = ReadResult::END_OF_DAY;
+      if ( isRollover( curtime, info ) ) {
+        rslt = ReadResult::END_OF_DURATION;
         break;
       }
       else if ( ReadResult::END_OF_FILE == rslt ) {

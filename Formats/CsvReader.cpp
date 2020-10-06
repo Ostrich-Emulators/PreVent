@@ -9,6 +9,8 @@
 #include "Log.h"
 #include "SignalData.h"
 
+#include <filesystem>
+
 namespace FormatConverter{
 
   CsvReader::CsvReader( ) : Reader( "CSV" ) { }
@@ -22,6 +24,22 @@ namespace FormatConverter{
       return -1;
     }
 
+    auto metainput = std::filesystem::path{ input };
+    metainput.replace_extension( ".meta" );
+    auto metadatafile = std::fstream{ metainput };
+    if ( metadatafile.good( ) ) {
+      Log::debug( ) << "loading metadata from file: " << metainput << std::endl;
+      auto line = std::string{ };
+      while ( std::getline( metadatafile, line ) ) {
+        if ( !SignalUtils::trim( line ).empty( ) ) {
+          metadata.push_back( line );
+        }
+      }
+    }
+    else {
+      Log::trace( ) << "no meta file: " << metainput << std::endl;
+    }
+
     std::string firstline;
     std::getline( datafile, firstline );
     headings = SignalUtils::splitcsv( firstline );
@@ -29,12 +47,7 @@ namespace FormatConverter{
   }
 
   ReadResult CsvReader::fill( SignalSet * data, const ReadResult& lastfill ) {
-    lasttime = 0;
-
-    for ( int i = 1; i < headings.size( ); i++ ) {
-      auto signal = data->addVital( headings[i] );
-      signal->setChunkIntervalAndSampleRate( 1, 1 );
-    }
+    loadMetas( data );
 
     auto line = std::string{ };
     while ( datafile.good( ) ) {
@@ -45,11 +58,10 @@ namespace FormatConverter{
         dr_time rowtime;
         auto vals = linevalues( line, rowtime );
 
-        if ( isRollover( lasttime, rowtime ) ) {
+        if ( isRollover( rowtime, data ) ) {
           datafile.seekg( pos );
-          return ReadResult::END_OF_DAY;
+          return ReadResult::END_OF_DURATION;
         }
-        lasttime = rowtime;
 
         for ( int i = 1; i < vals.size( ); i++ ) {
           if ( !vals[i].empty( ) ) {
@@ -68,7 +80,7 @@ namespace FormatConverter{
     if ( std::string::npos == timer.find( " " )
         && std::string::npos == timer.find( "T" ) ) {
       // no space and no T---we must have a timestamp
-      // if the length ofthe string is too long, assume we have a ms timestamp
+      // if the string length is too long, assume we have a ms timestamp
 
       const auto scale = ( timer.size( ) > 10
           ? 1
@@ -102,5 +114,30 @@ namespace FormatConverter{
     timer = converttime( timestr );
 
     return strings;
+  }
+
+  void CsvReader::loadMetas( SignalSet * info ) {
+
+    // root metadata starts with /|
+    for ( auto&line : metadata ) {
+      auto check = "/|";
+      if ( 0 == line.find( check ) ) {
+        auto pieces = SignalUtils::splitcsv( line, '|' );
+        info->setMeta( pieces[1], pieces[2] );
+      }
+    }
+
+    // now set data for individual vitals
+    for ( int i = 1; i < headings.size( ); i++ ) {
+      auto signal = info->addVital( headings[i] );
+      signal->setChunkIntervalAndSampleRate( 1, 1 );
+      for ( auto&line : metadata ) {
+        auto check = "/VitalSigns/" + headings[i] + "|";
+        if ( 0 == line.find( check ) ) {
+          auto pieces = SignalUtils::splitcsv( line, '|' );
+          signal->setMeta( pieces[1], pieces[2] );
+        }
+      }
+    }
   }
 }

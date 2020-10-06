@@ -36,10 +36,11 @@ namespace FormatConverter {
   private:
     std::vector<std::string> linevalues( const std::string& csvline, dr_time & timer );
     dr_time converttime( const std::string& timeline );
+    void loadMetas( SignalSet * info );
 
     std::ifstream datafile;
+    std::vector<std::string> metadata;
     std::vector<std::string> headings;
-    dr_time lasttime;
   };
 }
 

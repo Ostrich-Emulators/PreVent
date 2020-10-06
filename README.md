@@ -7,16 +7,17 @@ HDF5 (PreVent Native)   | X                | X
 WFDB                    | X                | X
 STP XML (versions 6-8)  | X                |
 STP (GE)                | X<sup>1</sup>    |
-STP (Philips MX800)     | X<sup>2<sup>     |
+STP (Philips MX800)     | X<sup>1,2<sup>   |
 Matlab 7.X              |                  | X
 CPC                     | X                | 
 Data Warehouse Connect  | X                |
 TDMS                    | X                |
 MEDI                    | X                | 
 Auton Lab               |                  | X
+[CSV](#csv-format)      | X<sup>2</sup>    | X<sup>2</sup>
 
 1 Experimental support\
-2 Experimental support; waveforms not implemented
+2 Waveforms not implemented
 
 PreVent Tools comprises two tools at this time: `formatconverter` is a command-line tool for converting between formats, while `preventtools` provides several useful tools for working with the data. `preventtools` primarily works with the native HDF5 format.
 
@@ -35,6 +36,8 @@ PreVent Tools comprises two tools at this time: `formatconverter` is a command-l
       - [Data](#data)
       - [Time](#time)
     + [Calculated and Auxillary Data](#calculated-and-auxillary-data)
+  * [CSV Format](#csv-format)
+    + [CSV Metadata Format](#csv-metadata-format)
 
 
 # Using/Building
@@ -109,7 +112,7 @@ Long Option | Short Option | Valid Arguments {Default} | Description
 --localtime | -l | | Convert times to local time
 --offset | -Z | time string (MM/DD/YYYY) or seconds since 01/01/1970| Shift dates by the desired amount
 --opening-date | -S | time string (MM/DD/YYYY) or seconds since 01/01/1970| Shift dates so that the first time in the output is the given date
---no-break or --one-file| -n | | Do not split output files by day
+--no-break or --one-file| -n | | Do not split output files by day (convenience for --split 0)
 --no-cache| -C | | Do not cache anything to disk
 --time-step| -T | | Store timing information as offset from start of file
 --anonymize| -a  | | Attempt to anonymize the output files
@@ -117,6 +120,7 @@ Long Option | Short Option | Valid Arguments {Default} | Description
 --pattern | -p | format string | Set the output file naming pattern
 --skip-waves | -w | | Skip waves during reading and writing files
 --tmpdir | -m | <directory> | Place all temporary files in the specified directory
+--splitr | -x | 'm[idnight]' or <0-9>[h] {midnight}| roll over the output files at midnight or every X hours. 'h' ensures rollover at the top of the hour. '0' disables rollover. Rollover times are affected by --localtime option.
 
 ### File Naming Format String
 Because each input file can generate multiple output files, it is necessary to specify how those files should be named. This is accomplished using format specifiers within a string. The specifiers are:
@@ -190,3 +194,19 @@ Both _Calculated_Data_ and _Auxillary_Data_ Groups have the same basic structure
 
 The _Auxillary_Data_ Dataset is to support input formats that provide time series that are neither vitals or waveforms. For example, DWC has a "Wall Times" Dataset. _Auxillary_Data's_ _data_ Dataset differs from other _data_ Datasets because its data type is string instead on integer. In addition to the root level, each signal can have an arbitrary number of auxillary Datasets.
 
+## CSV Format
+The CSV format is very basic: The first column is the time, and the subsequent columns are vitals data. Times can be either millisecond or second resolution.
+
+### CSV Metadata Format
+Metadata for the CSV format is added from a separate metadata file. This file has the same filename as the CSV file, but the CSV extension (if any) is replaced with
+".meta." For example, The _test.meta_ file contains metadata for the _test.csv_ file. The metadata file must be in the same directory as the CSV file, and is optional.
+The metadata file format is basically a CSV file with three fields, using `|` as the separator. The first field is the location to set the metadata. This must be either `/`
+for the file metadata, or `/VitalSigns/HR` HR signal. The second field is the attribute to set, and the third field is the string value to set. Only string values
+are supported at this time.
+
+A sample file:
+```/ | Unit | 50
+/ | Bed  | 5YE-4
+/VitalSigns/HR|Unit of Measure|Bpm
+/VitalSigns/SPO2|Unit of Measure|%
+```

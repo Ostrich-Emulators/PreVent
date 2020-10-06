@@ -16,7 +16,7 @@ namespace FormatConverter {
     SignalSetWrapper::setMeta( COLLECTION_OFFSET, std::to_string( offset_ms ) );
   }
 
-  OffsetTimeSignalSet::OffsetTimeSignalSet( const std::unique_ptr<SignalSet>& w,
+  OffsetTimeSignalSet::OffsetTimeSignalSet( std::unique_ptr<SignalSet>& w,
           long offset_ms ) : SignalSetWrapper( w ), offset_ms( offset_ms ) {
     SignalSetWrapper::setMeta( COLLECTION_OFFSET, std::to_string( offset_ms ) );
   }

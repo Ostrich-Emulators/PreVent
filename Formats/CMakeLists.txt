@@ -86,6 +86,7 @@ NullSignalData.cpp
 Log.cpp
 AutonWriter.cpp
 CsvReader.cpp
+SplitLogic.cpp
 generated/config.h
 generated/releases.h
 )
@@ -167,5 +168,6 @@ NullSignalData.h
 Log.h
 AutonWriter.h
 CsvReader.h
+SplitLogic.h
 generated/releases.h
 DESTINATION ${include_dest} )

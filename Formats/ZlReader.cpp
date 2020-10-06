@@ -138,7 +138,7 @@ namespace FormatConverter{
     // we either ran out of file, or we hit a HEADER line...figure out which
     if ( ReadResult::NORMAL == retcode ) {
       // we hit a new HEADER
-      retcode = ( this->nonbreaking( ) ? ReadResult::NORMAL : ReadResult::END_OF_PATIENT );
+      retcode = ( splitter().nonbreaking( ) ? ReadResult::NORMAL : ReadResult::END_OF_PATIENT );
     }
 
     if ( retcode != ReadResult::ERROR ) {
