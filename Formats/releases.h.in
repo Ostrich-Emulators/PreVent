@@ -1,3 +1,4 @@
+
 4.3.1
   * Fixed TDMS reader for older TDMS files
   * Updated TDMS library
@@ -5,6 +6,7 @@
   * Added AutonLab format ("au")
   * Added CSV Reader
   * Added --split to split files into smaller segments
+  * Added start, end time markers for file naming (%T, %E, respectively)
 
 4.3.0
   * Reduced memory usage for extremely large files
