@@ -63,7 +63,7 @@ namespace FormatConverter{
           return ReadResult::END_OF_DURATION;
         }
 
-        for ( int i = 1; i < vals.size( ); i++ ) {
+        for ( size_t i = 1; i < vals.size( ); i++ ) {
           if ( !vals[i].empty( ) ) {
             auto signal = data->addVital( headings[i] );
             signal->add( DataRow::one( rowtime, vals[i] ) );
@@ -128,7 +128,7 @@ namespace FormatConverter{
     }
 
     // now set data for individual vitals
-    for ( int i = 1; i < headings.size( ); i++ ) {
+    for ( size_t i = 1; i < headings.size( ); i++ ) {
       auto signal = info->addVital( headings[i] );
       signal->setChunkIntervalAndSampleRate( 1, 1 );
       for ( auto&line : metadata ) {

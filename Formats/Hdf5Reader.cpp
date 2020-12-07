@@ -421,7 +421,7 @@ namespace FormatConverter{
       if ( doshorts ) {
         std::vector<short> shortbuff( valsPerTime );
         dataset.read( shortbuff.data( ), dataset.getDataType( ), memspace, dataspace );
-        for ( size_t i = 0; i < valsPerTime; i++ ) {
+        for ( int i = 0; i < valsPerTime; i++ ) {
           buffer[i] = shortbuff[i];
         }
       }
