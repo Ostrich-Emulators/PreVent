@@ -80,6 +80,8 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t  %D - date of conversion"
       << std::endl << "\t  %s - date of first data point"
       << std::endl << "\t  %e - date of last data point"
+      << std::endl << "\t  %T - time of first data point (24hr clock)"
+      << std::endl << "\t  %E - time of last data point (24hr clock)"
       << std::endl << "\t  %o - output file ordinal"
       << std::endl << "\t  %t - the --to option's extension (e.g., hdf5, csv)"
       << std::endl << "\t  all dates are output in YYYYMMDD format"

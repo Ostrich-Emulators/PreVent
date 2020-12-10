@@ -72,7 +72,8 @@ namespace FormatConverter {
 
     static std::string getDateSuffix(const dr_time& date, const std::string& sep = "-" );
 
-    std::string YYYYMMDD(struct tm *time);
+    static std::string YYYYMMDD(struct tm *time);
+    static std::string HHmmdd(struct tm *time);
 
   private:
     FileNamer(const std::string& pat);

@@ -105,6 +105,11 @@ namespace FormatConverter{
     conversions["%s"] = getDateSuffix( data->earliest( ), "" );
     conversions["%e"] = getDateSuffix( data->latest( ), "" );
 
+    time_t etime = ( data->earliest( ) / 1000 );
+    time_t ltime = ( data->latest( ) / 1000 );
+    conversions["%T"] = HHmmdd( std::gmtime( &etime ) );
+    conversions["%E"] = HHmmdd( std::gmtime( &ltime ) );
+
     //Current Date
     time_t tim;
     time( &tim );
@@ -131,7 +136,9 @@ namespace FormatConverter{
       "%e",
       "%x",
       "%m",
-      "%S"
+      "%S",
+      "%T",
+      "%E"
     };
 
     for ( auto x : replacements ) {
@@ -182,31 +189,30 @@ namespace FormatConverter{
   std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& sep ) {
     time_t mytime = date / 1000;
     tm * dater = std::gmtime( &mytime );
-    // we want YYYYMMDD format, but cygwin seems to misinterpret %m for strftime
-    // so we're doing it manually (for now)
-    std::string ret = sep;
-    ret += std::to_string( dater->tm_year + 1900 );
-
-    if ( dater->tm_mon + 1 < 10 ) {
-      ret += '0';
-    }
-    ret += std::to_string( dater->tm_mon + 1 );
-
-    if ( dater->tm_mday < 10 ) {
-      ret += '0';
-    }
-    ret += std::to_string( dater->tm_mday );
-
+    std::string ret = sep + YYYYMMDD( dater );
     return ret;
   }
 
-  std::string FileNamer::YYYYMMDD( struct tm * time ) {//It was easier to just make my own method
-    std::stringstream ss; //continuing with manual date entry because of cygwin
+  std::string FileNamer::YYYYMMDD( struct tm * time ) {
+    // we want YYYYMMDD format, but cygwin seems to misinterpret %m for strftime
+    // so we're doing it manually (for now)
+    std::stringstream ss;
     ss << ( 1900 + time->tm_year );
     if ( time->tm_mon + 1 < 10 ) ss << 0;
     ss << time->tm_mon + 1;
     if ( time->tm_mday < 10 ) ss << 0;
     ss << time->tm_mday;
+    return ss.str( );
+  }
+
+  std::string FileNamer::HHmmdd( struct tm * time ) {
+    std::stringstream ss;
+    if ( time->tm_hour < 10 ) ss << 0;
+    ss << time->tm_hour << "_";
+    if ( time->tm_min < 10 ) ss << 0;
+    ss << time->tm_min << "_";
+    if ( time->tm_sec < 10 ) ss << 0;
+    ss << time->tm_sec;
     return ss.str( );
   }
 }
