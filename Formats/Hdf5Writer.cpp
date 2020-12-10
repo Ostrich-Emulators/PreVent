@@ -620,7 +620,7 @@ namespace FormatConverter{
     auto firstTime = dataptr->earliest( );
     auto lastTime = dataptr->latest( );
     std::vector<std::string> ret;
-    if ( 0 == lastTime ) {
+    if ( std::numeric_limits<dr_time>::min( ) == lastTime ) {
       // we don't have any data at all!
       return ret;
     }

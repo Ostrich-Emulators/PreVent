@@ -50,7 +50,7 @@ namespace FormatConverter{
       return false;
     }
 
-    if ( 0 == latest ) {
+    if ( std::numeric_limits<dr_time>::min() == latest ) {
       return false;
     }
 
@@ -85,7 +85,8 @@ namespace FormatConverter{
     }
 
     const auto latest = data->latest( );
-    if ( 0 == latest ) {
+    // FIXME: check for min, not 0
+    if ( std::numeric_limits<dr_time>::min() == latest ) {
       return false;
     }
 

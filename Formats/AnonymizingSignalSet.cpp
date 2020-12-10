@@ -27,7 +27,8 @@ namespace FormatConverter{
   AnonymizingSignalSet::~AnonymizingSignalSet( ) { }
 
   void AnonymizingSignalSet::setMeta( const std::string& key, const std::string& val ) {
-    if ( "Patient Name" == key || "MRN" == key || "Unit" == key || "Bed" == key ) {
+    if ( "Patient Name" == key || "MRN" == key || "Unit" == key || "Bed" == key
+        || "Filename" == key ) {
       saveddata[key] = val;
     }
     else {

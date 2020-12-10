@@ -51,7 +51,7 @@ namespace FormatConverter{
       *first = std::numeric_limits<dr_time>::max( );
     }
     if ( nullptr != last ) {
-      *last = 0;
+      *last = std::numeric_limits<dr_time>::min( );
     }
     for ( const auto& m : map ) {
       if ( m.second->startTime( ) < earliest ) {
@@ -80,7 +80,7 @@ namespace FormatConverter{
       *first = std::numeric_limits<dr_time>::max( );
     }
     if ( nullptr != last ) {
-      *last = 0;
+      *last = std::numeric_limits<dr_time>::min( );
     }
     for ( const auto& signal : signals ) {
       if ( signal->startTime( ) < earliest ) {

@@ -129,7 +129,7 @@ namespace FormatConverter{
   }
 
   ReadResult DwcReader::fill( SignalSet * info, const ReadResult & lastrr ) {
-    dr_time lastcsvtime = 0;
+    dr_time lastcsvtime = std::numeric_limits<dr_time>::min();
     ReadResult rslt = ReadResult::NORMAL;
     std::string csvline;
 

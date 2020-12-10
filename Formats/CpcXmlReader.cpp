@@ -32,10 +32,13 @@ namespace FormatConverter{
     "startDateTime", "StartTime", "SessStatus", "MODE",
     "mean" };
 
-  CpcXmlReader::CpcXmlReader( ) : XmlReaderBase( "CPC XML" ), currtime( 0 ), lasttime( 0 ) { }
+  CpcXmlReader::CpcXmlReader( ) : XmlReaderBase( "CPC XML" ), 
+      currtime( std::numeric_limits<dr_time>::min() ),
+      lasttime( std::numeric_limits<dr_time>::min() ) { }
 
   CpcXmlReader::CpcXmlReader( const CpcXmlReader& orig ) : XmlReaderBase( orig ),
-      currtime( 0 ), lasttime( 0 ) { }
+      currtime( std::numeric_limits<dr_time>::min() ),
+      lasttime( std::numeric_limits<dr_time>::min() ) { }
 
   CpcXmlReader::~CpcXmlReader( ) { }
 

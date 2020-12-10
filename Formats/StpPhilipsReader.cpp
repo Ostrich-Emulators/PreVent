@@ -89,7 +89,7 @@ namespace FormatConverter{
   }
 
   ReadResult StpPhilipsReader::fill( SignalSet * info, const ReadResult& lastrr ) {
-    currentTime = 0;
+    currentTime = std::numeric_limits<dr_time>::min();
     Log::debug( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
     if ( ReadResult::END_OF_PATIENT == lastrr ) {

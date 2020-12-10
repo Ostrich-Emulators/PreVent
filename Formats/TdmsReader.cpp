@@ -311,7 +311,8 @@ namespace FormatConverter{
   SignalSaver::~SignalSaver( ) { }
 
   SignalSaver::SignalSaver( const std::string& label, bool wave )
-      : waiting( false ), iswave( wave ), name( label ), lasttime( 0 ) { }
+      : waiting( false ), iswave( wave ), name( label ),
+      lasttime( std::numeric_limits<dr_time>::min( ) ) { }
 
   SignalSaver::SignalSaver( const SignalSaver & orig )
       : waiting( orig.waiting ), iswave( orig.iswave ), name( orig.name ),

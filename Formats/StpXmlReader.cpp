@@ -38,22 +38,23 @@ namespace FormatConverter{
   const int StpXmlReader::INNAME = 8;
 
 
-  time_t prevtime;
-  time_t currvstime;
-  time_t lastvstime;
-  time_t currwavetime;
-  time_t lastwavetime;
-  long currsegidx;
-  bool warnMissingName;
-  bool warnJunkData;
-  bool v8;
-  bool isphilips;
-  bool isix;
-  bool warnedix;
+//  time_t prevtime;
+//  time_t currvstime;
+//  time_t lastvstime;
+//  time_t currwavetime;
+//  time_t lastwavetime;
+//  long currsegidx;
+//  bool warnMissingName;
+//  bool warnJunkData;
+//  bool v8;
+//  bool isphilips;
+//  bool isix;
+//  bool warnedix;
 
-  StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ), prevtime( 0 ),
-      currvstime( 0 ), lastvstime( 0 ), currwavetime( 0 ), lastwavetime( 0 ),
-      recordtime( 0 ), currsegidx( 0 ), warnMissingName( true ), warnJunkData( true ),
+  StpXmlReader::StpXmlReader( ) : XmlReaderBase( "STP XML" ), prevtime( std::numeric_limits<dr_time>::min() ),
+      currvstime( std::numeric_limits<dr_time>::min() ), lastvstime( std::numeric_limits<dr_time>::min() ),
+      currwavetime( std::numeric_limits<dr_time>::min() ), lastwavetime( std::numeric_limits<dr_time>::min() ),
+      recordtime( std::numeric_limits<dr_time>::min() ), currsegidx( 0 ), warnMissingName( true ), warnJunkData( true ),
       v8( false ), isphilips( false ), isix( false ), warnedix( false ), skipthiswave( false ),
       skipvital( false ), state( INDETERMINATE ) { }
 

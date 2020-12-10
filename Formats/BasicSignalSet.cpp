@@ -65,7 +65,7 @@ namespace FormatConverter{
   }
 
   dr_time BasicSignalSet::latest( const TimeCounter& type ) const {
-    dr_time last = 0;
+    dr_time last = std::numeric_limits<dr_time>::min();
 
     if ( TimeCounter::VITAL == type || TimeCounter::EITHER == type ) {
       SignalUtils::firstlast( vitals( ), nullptr, &last );

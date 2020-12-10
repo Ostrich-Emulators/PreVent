@@ -501,7 +501,7 @@ namespace FormatConverter{
     }
 
     magiclong = std::numeric_limits<unsigned long>::max( );
-    currentTime = 0;
+    currentTime = std::numeric_limits<dr_time>::min();
     return 0;
   }
 

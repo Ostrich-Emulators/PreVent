@@ -37,7 +37,7 @@ namespace FormatConverter{
   const int BasicSignalData::DEFAULT_CACHE_LIMIT = 1024 * 32;
 
   BasicSignalData::BasicSignalData( const std::string& name, bool wavedata )
-      : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( 0 ),
+      : label( name ), firstdata( std::numeric_limits<dr_time>::max( ) ), lastdata( std::numeric_limits<dr_time>::min() ),
       datacount( 0 ), livecount( 0 ), popping( false ),
       iswave( wavedata ), highval( -std::numeric_limits<double>::max( ) ),
       lowval( std::numeric_limits<double>::max( ) ),
