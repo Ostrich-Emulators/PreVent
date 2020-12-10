@@ -393,7 +393,10 @@ int main( int argc, char** argv ) {
   }
 
   // FIXME: if we're localizing time, then offsetstr should be assumed to be localtime
-  auto offset = TimeParser::parse( offsetstr );
+  // our offsetstr is supposed to be in seconds, but we want to calculate
+  // our times in ms, so * 1000
+  auto offset = static_cast<dr_time> ( TimeParser::parse( offsetstr,
+      Options::asBool( OptionsKey::LOCALIZED_TIME ) ) * 1000 );
   auto timemod = ( offsetIsDesiredDate
       ? TimeModifier::time( offset )
       : TimeModifier::offset( offset ) );
@@ -435,12 +438,11 @@ int main( int argc, char** argv ) {
     }
 
     auto data = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
-    if ( Options::asBool( OptionsKey::LOCALIZED_TIME ) ) {
-      data.reset( new TimezoneOffsetTimeSignalSet( data.release( ) ) );
-    }
     if ( Options::asBool( OptionsKey::ANONYMIZE ) ) {
-      // FIXME: this TimeModifier doesn't work as expected here (it's probably a copy)
       data.reset( new AnonymizingSignalSet( data.release( ), to->filenamer( ), timemod ) );
+    }
+    else if ( Options::asBool( OptionsKey::LOCALIZED_TIME ) ) {
+      data.reset( new TimezoneOffsetTimeSignalSet( data.release( ) ) );
     }
 
     auto input( argv[i] );

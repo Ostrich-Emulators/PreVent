@@ -228,12 +228,12 @@ int main( int argc, char** argv ) {
         needsoutput = true;
         break;
       case 's':
-        starttime = TimeParser::parse( optarg );
+        starttime = static_cast<dr_time> ( TimeParser::parse( optarg ) * 1000 );
         havestarttime = true;
         dotime = true;
         break;
       case 'e':
-        endtime = TimeParser::parse( optarg );
+        endtime = static_cast<dr_time> ( TimeParser::parse( optarg ) * 1000 );
         dotime = true;
         break;
       case 'f':

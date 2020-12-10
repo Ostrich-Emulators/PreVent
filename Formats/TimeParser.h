@@ -19,22 +19,27 @@
 
 namespace FormatConverter {
 
-	class TimeParser {
-	public:
+  class TimeParser {
+  public:
 
-		virtual ~TimeParser( ) {
-		}
+    virtual ~TimeParser( ) { }
 
-		static dr_time parse( const std::string& timestr );
+    /**
+     * Parses time and returns the seconds since the epoch.
+     * @param timestr the string to parse. could be a time string, or seconds
+     * since the epoch.
+     * @param islocal if true, assume the timestr is localtime. (This does nothing
+     * if timestr is actually a number of seconds since the epoch.)
+     * @return
+     */
+    static time_t parse( const std::string& timestr, bool islocal = false );
 
+  private:
 
-	private:
+    TimeParser( );
 
-		TimeParser( );
-
-		TimeParser( const TimeParser& ) {
-		}
-	};
+    TimeParser( const TimeParser& ) { }
+  };
 }
 #endif /* TIMEPARSER_H */
 

@@ -18,64 +18,68 @@
 
 namespace FormatConverter {
 
-	class TimeModifier {
-	public:
-		TimeModifier( const TimeModifier& model );
+  /**
+   * Class to handle time manipulation. All offset calculations are made in ms
+   * @param model
+   */
+  class TimeModifier {
+  public:
+    TimeModifier( const TimeModifier& model );
 
-		virtual ~TimeModifier( );
+    virtual ~TimeModifier( );
 
-		TimeModifier& operator=( const TimeModifier& orig );
+    TimeModifier& operator=(const TimeModifier& orig );
 
-		/**
-		 * Modifies the given time with the appropriate offset.
-		 * @param orig
-		 * @return the converted time
-		 */
-		virtual dr_time convert( const dr_time& orig );
+    /**
+     * Modifies the given time with the appropriate offset.
+     * @param orig
+     * @return the converted time
+     */
+    virtual dr_time convert( const dr_time& orig );
 
-		virtual dr_time offset() const;
-		/**
-		 * Gets the first time converted
-		 * @return
-		 */
-		virtual dr_time firsttime() const;
+    virtual dr_time offset( ) const;
+    /**
+     * Gets the first time converted
+     * @return
+     */
+    virtual dr_time firsttime( ) const;
 
-		/**
-		 * Creates a TimeModifier that does not modify the time
-		 * @return
-		 */
-		static TimeModifier passthru();
+    /**
+     * Creates a TimeModifier that does not modify the time
+     * @return
+     */
+    static TimeModifier passthru( );
 
-		/**
-		 * Creates a TimeModifier that converts time such that its first converted
-		 * time will be desiredFirsttime
-		 * @param desiredFirstTime
-		 * @return
-		 */
-		static TimeModifier time( const dr_time& desiredFirstTime );
+    /**
+     * Creates a TimeModifier that converts time such that its first converted
+     * time will be desiredFirsttime
+     * @param desiredFirstTime
+     * @return
+     */
+    static TimeModifier time( const dr_time& desiredFirstTime );
 
-		/**
-		 * Creataes a TimeModifier with a pre-calculated offset.
-		 * @param offset
-		 * @return
-		 */
-		static TimeModifier offset( const dr_time& offset );
+    /**
+     * Creataes a TimeModifier with a pre-calculated offset.
+     * @param offset
+     * @return
+     */
+    static TimeModifier offset( const dr_time& offset );
 
-	private:
-		/**
-		 * Creates a TimeModifier with a pre-calculated offset
-		 * @param inited if true, then offset is a pre-calculated offset. else this
-		 * the same as TimeModifier( desiredFirstTime )
-		 * @param offset the offset, or the desired first time, depending on
-		 * the value of inited.
-		 */
-		TimeModifier( bool inited, dr_time offset = 0 );
+  private:
+    /**
+     * Creates a TimeModifier with a pre-calculated offset
+     * @param inited if true, then offset is a pre-calculated offset. else this
+     * the same as TimeModifier( desiredFirstTime )
+     * @param offset the offset, or the desired first time, depending on
+     * the value of inited.
+     */
+    TimeModifier( bool inited, dr_time offset = 0 );
 
-		bool initialized;
-		bool used;
-		dr_time _offset;
-		dr_time _first;
-	};
+    bool initialized;
+    bool used;
+    dr_time _offset;
+    dr_time _first;
+  };
 }
 
 #endif /* TIMEMODIFIER_H */

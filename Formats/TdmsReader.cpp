@@ -163,7 +163,8 @@ namespace FormatConverter{
         signal->setUom( p.second->asString( ) );
       }
       else if ( "wf_starttime" == p.first ) {
-        time = modtime( p.second->asUTCTimestamp( )* 1000 );
+        // tdsTypeTimeStamps are in seconds, but we need ms for our modifier
+        time = modtime( p.second->asUTCTimestamp( ) * 1000 );
         // do not to overwrite our lasttime if we're re-initing after a roll over
         if ( firstrun ) {
           signalsavers.at( channel->get_path( ) ).lasttime = time;
@@ -188,7 +189,9 @@ namespace FormatConverter{
         signal->setMeta( p.first, p.second->asDouble( ) );
       }
       else if ( valtype.name( ) == "tdsTypeTimeStamp" ) {
-        time_t timer = modtime( p.second->asUTCTimestamp( ) );
+        // tdsTypeTimeStamps are in seconds, but we need ms for our modifier, so
+        // multiply by 1000. However, time_t expects seconds, so divide by 1000
+        time_t timer = modtime( p.second->asUTCTimestamp( ) * 1000 ) / 1000;
         tm * pt = gmtime( &timer );
 
         char buffer[80];

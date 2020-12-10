@@ -107,9 +107,9 @@ namespace FormatConverter{
       drain( data );
       namer->fileOrdinal( files++ );
 
-      if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
-        namer->timeoffset_ms( std::stol( data->metadata( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) );
-      }
+//      if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
+//        namer->timeoffset_ms( std::stol( data->metadata( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) );
+//      }
 
       if ( testrun ) {
         retcode = ReadResult::END_OF_FILE;

@@ -38,7 +38,6 @@ namespace FormatConverter {
     void fileOrdinal(int filenum);
     void inputfilename(const std::string& input);
     std::string inputfilename() const;
-    void timeoffset_ms(long offset);
 
     /**
      * Provides a filename (including directory) for the given SignalData and
@@ -71,8 +70,7 @@ namespace FormatConverter {
      */
     std::string last() const;
 
-    static std::string getDateSuffix(const dr_time& date, const std::string& sep = "-",
-            long offset_ms = 0);
+    static std::string getDateSuffix(const dr_time& date, const std::string& sep = "-" );
 
     std::string YYYYMMDD(struct tm *time);
 
@@ -82,7 +80,6 @@ namespace FormatConverter {
     std::map<std::string, std::string> conversions;
     std::string lastname;
     std::string inputfile;
-    long offset;
   };
 }
 #endif /* FILENAMER_H */

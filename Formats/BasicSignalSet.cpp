@@ -16,12 +16,12 @@
 namespace FormatConverter{
 
   BasicSignalSet::BasicSignalSet( ) {
-    setMeta( SignalData::TIMEZONE, "UTC" );
+    setMeta( SignalData::TIMEZONE, "GMT" );
     setMeta( SignalData::BUILD_NUM, GIT_BUILD );
   }
 
   BasicSignalSet::BasicSignalSet( const BasicSignalSet& ) {
-    setMeta( SignalData::TIMEZONE, "UTC" );
+    setMeta( SignalData::TIMEZONE, "GMT" );
     setMeta( SignalData::BUILD_NUM, GIT_BUILD );
   }
 
@@ -137,7 +137,7 @@ namespace FormatConverter{
     aux.clear( );
     if ( !signalDataOnly ) {
       metamap.clear( );
-      metamap[SignalData::TIMEZONE] = "UTC";
+      metamap[SignalData::TIMEZONE] = "GMT";
       metamap[SignalData::BUILD_NUM] = GIT_BUILD;
 
       segs.clear( );

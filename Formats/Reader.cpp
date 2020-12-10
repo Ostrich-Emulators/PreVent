@@ -67,7 +67,7 @@ namespace FormatConverter{
   int Reader::prepare( const std::string& input, SignalSet * info ) {
     Log::debug( ) << "preparing to read " << input << std::endl;
     std::string timezone = ( 0 == info->metadata( ).count( SignalData::TIMEZONE )
-        ? "UTC"
+        ? "GMT"
         : info->metadata( ).at( SignalData::TIMEZONE ) );
     info->reset( false );
     info->setMeta( SignalData::TIMEZONE, timezone );

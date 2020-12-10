@@ -13,13 +13,13 @@
 
 namespace FormatConverter{
 
-  dr_time TimeParser::parse( const std::string& timestr ) {
+  time_t TimeParser::parse( const std::string& timestr, bool timeIsLocal ) {
     if ( timestr.empty( ) ) {
       return 0;
     }
 
     // timestamp
-    if ( timestr.find_first_not_of( "0123456789" ) == std::string::npos ) {
+    if ( timestr.find_first_not_of( "-0123456789" ) == std::string::npos ) {
       return std::stol( timestr );
     }
 
@@ -35,12 +35,23 @@ namespace FormatConverter{
     };
 
     tm tm = { };
+
+    bool isneg = ( '-' == timestr[0] );
+    const auto checktime = ( isneg
+        ? timestr.substr( 1 )
+        : timestr );
+    const auto cstr = checktime.c_str( );
+
     for ( auto& fmt : formats ) {
       // not sure what this will do on failure
-      if ( Reader::strptime2( timestr.c_str( ), fmt.c_str( ), &tm ) ) {
+      if ( Reader::strptime2( cstr, fmt.c_str( ), &tm ) ) {
         // now convert our local time to UTC
-        time_t gmt = timegm( &tm );
-        return gmt * 1000; // convert seconds to ms
+        time_t mytime = ( timeIsLocal
+            ? timelocal( &tm )
+            : timegm( &tm ) );
+        return ( isneg
+            ? -mytime
+            : mytime );
       }
     }
 

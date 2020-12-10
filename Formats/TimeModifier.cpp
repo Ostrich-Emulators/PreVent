@@ -9,17 +9,15 @@
 
 namespace FormatConverter{
 
-  TimeModifier::TimeModifier( bool inited, dr_time desiredFirstTime ) : initialized( inited ),
-  used( false ), _offset( desiredFirstTime ), _first( 0 ) {
-  }
+  TimeModifier::TimeModifier( bool inited, dr_time desiredFirstTime ) :
+      initialized( inited ), used( false ), _offset( desiredFirstTime ),
+      _first( 0 ) { }
 
-  TimeModifier::TimeModifier( const TimeModifier& model ) : initialized( model.initialized ),
-  used( model.used ), _offset( model._offset ), _first( model._first ) {
+  TimeModifier::TimeModifier( const TimeModifier& model ) :
+      initialized( model.initialized ), used( model.used ),
+      _offset( model._offset ), _first( model._first ) { }
 
-  }
-
-  TimeModifier::~TimeModifier( ) {
-  }
+  TimeModifier::~TimeModifier( ) { }
 
   TimeModifier& TimeModifier::operator=(const TimeModifier& orig ) {
     if ( &orig != this ) {
@@ -31,6 +29,10 @@ namespace FormatConverter{
     return *this;
   }
 
+  /**
+   * Gets the time offset in ms
+   * @return
+   */
   dr_time TimeModifier::offset( ) const {
     return _offset;
   }
@@ -43,9 +45,8 @@ namespace FormatConverter{
     if ( !initialized ) {
       initialized = true;
 
-      // if we haven't been initialized yet, then our offset is 
-      // really our desired first time, so calculate what the real
-      // offset should be
+      // if we haven't been initialized yet, then our offset is really our
+      // desired first time, so calculate what the real offset should be
       _offset -= orig;
     }
 

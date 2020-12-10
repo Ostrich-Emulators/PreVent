@@ -29,16 +29,13 @@ namespace FormatConverter{
   const std::string FileNamer::DEFAULT_PATTERN = "%d%i-p%p-%s.%t";
   const std::string FileNamer::FILENAME_PATTERN = "%i.%t";
 
-  FileNamer::FileNamer( const std::string& pat ) : pattern( pat ), offset( 0 ) {
-  }
+  FileNamer::FileNamer( const std::string& pat ) : pattern( pat ) { }
 
   FileNamer::FileNamer( const FileNamer& orig ) : pattern( orig.pattern ),
-  conversions( orig.conversions.begin( ), orig.conversions.end( ) ),
-  lastname( orig.lastname ), inputfile( orig.inputfile ), offset( 0 ) {
-  }
+      conversions( orig.conversions.begin( ), orig.conversions.end( ) ),
+      lastname( orig.lastname ), inputfile( orig.inputfile ) { }
 
-  FileNamer::~FileNamer( ) {
-  }
+  FileNamer::~FileNamer( ) { }
 
   FileNamer& FileNamer::operator=(const FileNamer& orig ) {
     if ( this != &orig ) {
@@ -47,7 +44,6 @@ namespace FormatConverter{
       conversions.insert( orig.conversions.begin( ), orig.conversions.end( ) );
       lastname = orig.lastname;
       inputfile = orig.inputfile;
-      offset = orig.offset;
     }
     return *this;
   }
@@ -57,7 +53,7 @@ namespace FormatConverter{
     size_t pos = expand.find( "%S" );
     while ( pos != std::string::npos ) //initially sorts through file for all standard form flags and expands them
     {
-      Log::trace() << "replacing %S with %i-p%p-%s.%t" << std::endl;
+      Log::trace( ) << "replacing %S with %i-p%p-%s.%t" << std::endl;
       expand.replace( pos, 2, "%i-p%p-%s.%t" );
       pos = expand.find( "%S", pos + 1 );
     }
@@ -103,15 +99,11 @@ namespace FormatConverter{
     return lastname.substr( 0, pos );
   }
 
-  void FileNamer::timeoffset_ms( long off ) {
-    offset = off;
-  }
-
   std::string FileNamer::filename( SignalSet * data ) {
     // we need to have data for all the conversion keys in here
 
-    conversions["%s"] = getDateSuffix( data->earliest( ), "", offset );
-    conversions["%e"] = getDateSuffix( data->latest( ), "", offset );
+    conversions["%s"] = getDateSuffix( data->earliest( ), "" );
+    conversions["%e"] = getDateSuffix( data->latest( ), "" );
 
     //Current Date
     time_t tim;
@@ -145,7 +137,7 @@ namespace FormatConverter{
     for ( auto x : replacements ) {
       size_t pos = lastname.find( x );
       while ( pos != std::string::npos ) {
-        Log::trace() << "replacing " << x << " with " << conversions[x] << std::endl;
+        Log::trace( ) << "replacing " << x << " with " << conversions[x] << std::endl;
         lastname.replace( pos, 2, conversions[x] );
         pos = lastname.find( x, pos + 1 );
       }
@@ -187,9 +179,8 @@ namespace FormatConverter{
     return lastname;
   }
 
-  std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& sep,
-      long offset_ms ) {
-    time_t mytime = ( date + offset_ms ) / 1000;
+  std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& sep ) {
+    time_t mytime = date / 1000;
     tm * dater = std::gmtime( &mytime );
     // we want YYYYMMDD format, but cygwin seems to misinterpret %m for strftime
     // so we're doing it manually (for now)

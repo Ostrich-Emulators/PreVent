@@ -31,17 +31,14 @@
 #include "TimeRange.h"
 #include "Log.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
   const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.1";
 
-  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) {
-  }
+  Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) { }
 
-  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) {
-  }
+  Hdf5Writer::Hdf5Writer( const Hdf5Writer& orig ) : Writer( "hdf5" ) { }
 
-  Hdf5Writer::~Hdf5Writer( ) {
-  }
+  Hdf5Writer::~Hdf5Writer( ) { }
 
   void Hdf5Writer::writeAttribute( H5::H5Object& loc,
       const std::string& attr, const std::string& val ) {
@@ -89,6 +86,7 @@ namespace FormatConverter {
     Log::trace( ) << "writing times and durations for " << loc.getObjName( ) << std::endl;
 
     const bool indexedtime = FormatConverter::Options::asBool( FormatConverter::OptionsKey::INDEXED_TIME );
+    const bool localt = FormatConverter::Options::asBool( FormatConverter::OptionsKey::LOCALIZED_TIME );
 
     time_t stime;
     time_t etime;
@@ -107,11 +105,17 @@ namespace FormatConverter {
       writeAttribute( loc, SignalData::ENDTIME, end );
     }
 
-    char buf[sizeof "2011-10-08T07:07:09Z"];
-    strftime( buf, sizeof buf, "%FT%TZ", gmtime( &stime ) );
+    char buf[sizeof "2011-10-08T07:07:09Z   "];
+    strftime( buf, sizeof buf, "%FT%T%Z",
+        localt
+        ? localtime( &stime )
+        : gmtime( &stime ) );
     writeAttribute( loc, "Start Date/Time", buf );
 
-    strftime( buf, sizeof buf, "%FT%TZ", gmtime( &etime ) );
+    strftime( buf, sizeof buf, "%FT%T%Z",
+        localt
+        ? localtime( &etime )
+        : gmtime( &etime ) );
     writeAttribute( loc, "End Date/Time", buf );
 
     time_t xx( etime - stime );
