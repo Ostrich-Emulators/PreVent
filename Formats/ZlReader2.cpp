@@ -69,19 +69,7 @@ namespace FormatConverter{
       size_t ext = filename.find_last_of( '.' );
       std::string signal( filename.substr( lastdash, ext - lastdash ) );
 
-      // we need to read the first byte of the input stream to decide if it's compressed
-      unsigned char firstbyte;
-      unsigned char secondbyte;
-      std::ifstream * myfile = new std::ifstream( filename, std::ios::binary );
-      ( *myfile ) >> firstbyte;
-      ( *myfile ) >> secondbyte;
-
-      bool islibz = ( 0x78 == firstbyte );
-      bool isgz = ( 0x1F == firstbyte && 0x8B == secondbyte );
-
-      myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
-      signalToReaderLkp[signal] = std::make_unique<StreamChunkReader>( myfile,
-          ( islibz || isgz ), false, isgz );
+      signalToReaderLkp[signal] = StreamChunkReader::fromFile( filename );
     }
 
     return 0;
@@ -111,26 +99,26 @@ namespace FormatConverter{
       // for now, just read in the whole file
 
       bool added;
-      SignalData * signal = info->addWave( x.first, &added );
+          SignalData * signal = info->addWave( x.first, &added );
 
-      std::string data = normalizeText( x.first, x.second->readNextChunk( ) );
+          std::string data = normalizeText( x.first, x.second->readNextChunk( ) );
       while ( ReadResult::NORMAL == x.second->rr ) {
         // process what we just read
         if ( "" != data ) {
           auto jj = nlohmann::json::parse( data );
 
-          // we have one array of many arrays
-          // iterate through the array, and add DataRows
+              // we have one array of many arrays
+              // iterate through the array, and add DataRows
           for ( auto j2 : jj ) {
             std::string timestr = j2[0];
-            std::string data = j2[2];
+                std::string data = j2[2];
 
             if ( waveIsOk( data ) ) {
               auto row = DataRow::many( modtime( std::stol( timestr ) ), data );
 
               if ( added ) {
                 int readings = static_cast<int> ( row->data.size( ) );
-                signal->setChunkIntervalAndSampleRate( 250, readings );
+                    signal->setChunkIntervalAndSampleRate( 250, readings );
               }
 
               signal->add( std::move( row ) );
@@ -146,16 +134,16 @@ namespace FormatConverter{
         if ( "" != data ) {
           auto jj = nlohmann::json::parse( data );
 
-          // we have one array of many arrays
-          // iterate through the array, and add DataRows
+              // we have one array of many arrays
+              // iterate through the array, and add DataRows
           for ( auto j2 : jj ) {
             std::string timestr = j2[0];
-            std::string data = j2[2];
+                std::string data = j2[2];
             if ( waveIsOk( data ) ) {
               auto row = DataRow::many( modtime( std::stol( timestr ) ), data );
               if ( added ) {
                 int readings = static_cast<int> ( row->data.size( ) );
-                signal->setChunkIntervalAndSampleRate( 250, readings );
+                    signal->setChunkIntervalAndSampleRate( 250, readings );
               }
 
               signal->add( std::move( row ) );
@@ -164,6 +152,7 @@ namespace FormatConverter{
         }
       }
       else {
+
         ss = x.second->rr;
       }
     }
@@ -173,8 +162,8 @@ namespace FormatConverter{
   std::string ZlReader2::normalizeText( const std::string& signalname, std::string text ) {
     std::string data = leftovers[signalname] + text;
 
-    // we happened to split *just* before our final
-    // array closing, so there's nothing left now
+        // we happened to split *just* before our final
+        // array closing, so there's nothing left now
     if ( ']' == data[0] ) {
       leftovers[signalname].clear( );
       return "";

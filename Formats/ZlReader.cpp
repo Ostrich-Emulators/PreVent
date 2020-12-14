@@ -67,28 +67,19 @@ namespace FormatConverter{
     // stdin, we can't reset the stream back to the start, so we need to trust
     // that the user used the right switch
     if ( usestdin ) {
-      bool isgz = ( "-gz" == input );
-      bool islibz = ( "-lz" == input );
+      StreamType t = StreamType::RAW;
+      if ( "-gz" == input ) {
+        t = StreamType::GZIP;
+      }
+      else if ( "-lz" == input ) {
+        t = StreamType::COMPRESS;
+      }
 
-      stream.reset( new StreamChunkReader( &( std::cin ), ( islibz || isgz ),
-          true, isgz ) );
+      stream = StreamChunkReader::fromStdin( t );
     }
     else {
-      // we need to read the first byte of the input stream to decide if it's compressed
-
       // we're looking at an "old-skool" uva format, so we only have one file
-      unsigned char firstbyte;
-      unsigned char secondbyte;
-      std::ifstream * myfile = new std::ifstream( input, std::ios::binary );
-      ( *myfile ) >> firstbyte;
-      ( *myfile ) >> secondbyte;
-
-      bool islibz = ( 0x78 == firstbyte );
-      bool isgz = ( 0x1F == firstbyte && 0x8B == secondbyte );
-
-
-      myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
-      stream.reset( new StreamChunkReader( myfile, ( islibz || isgz ), false, isgz ) );
+      stream = StreamChunkReader::fromFile( input );
     }
 
     return 0;
@@ -138,7 +129,7 @@ namespace FormatConverter{
     // we either ran out of file, or we hit a HEADER line...figure out which
     if ( ReadResult::NORMAL == retcode ) {
       // we hit a new HEADER
-      retcode = ( splitter().nonbreaking( ) ? ReadResult::NORMAL : ReadResult::END_OF_PATIENT );
+      retcode = ( splitter( ).nonbreaking( ) ? ReadResult::NORMAL : ReadResult::END_OF_PATIENT );
     }
 
     if ( retcode != ReadResult::ERROR ) {
@@ -178,7 +169,7 @@ namespace FormatConverter{
         SignalData * dataset = info->addVital( vital, &added );
 
         if ( val.empty( ) ) {
-          Log::debug() << "empty val? " << chunk << std::endl;
+          Log::debug( ) << "empty val? " << chunk << std::endl;
         }
 
         if ( added ) {
@@ -187,7 +178,7 @@ namespace FormatConverter{
         }
         dataset->add( DataRow::from( currentTime, val ) );
       }
-      else if ( WAVE == firstword && !this->skipwaves() ) {
+      else if ( WAVE == firstword && !this->skipwaves( ) ) {
         state = zlReaderState::ZIN_WAVE;
         std::stringstream points( chunk.substr( pos + 1 ) );
         std::string wavename;

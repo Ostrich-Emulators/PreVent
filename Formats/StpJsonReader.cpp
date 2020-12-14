@@ -63,16 +63,12 @@ namespace FormatConverter{
     // stdin, we can't reset the stream back to the start, so we need to trust
     // that the user used the right switch
     if ( usestdin ) {
-      stream.reset( new StreamChunkReader( &( std::cin ), ( "-zl" == input ), true ) );
+      stream = StreamChunkReader::fromStdin( "-zl" == input
+          ? StreamType::COMPRESS
+          : StreamType::RAW );
     }
     else {
-      // we need to read the first byte of the input stream to decide if it's 
-      unsigned char firstbyte;
-      std::ifstream * myfile = new std::ifstream( input, std::ios::binary );
-      ( *myfile ) >> firstbyte;
-
-      myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
-      stream.reset( new StreamChunkReader( myfile, ( 'x' == firstbyte ), false ) );
+      stream = StreamChunkReader::fromFile( input );
     }
     return 0;
   }
@@ -162,7 +158,7 @@ namespace FormatConverter{
         auto dataset = info->addVital( vital, &added );
 
         if ( val.empty( ) ) {
-          Log::debug() << "empty val? " << chunk << std::endl;
+          Log::debug( ) << "empty val? " << chunk << std::endl;
         }
 
         if ( added ) {
@@ -191,7 +187,7 @@ namespace FormatConverter{
           dataset->setUom( uom );
         }
 
-        dataset->add( DataRow::many(currentTime, val) );
+        dataset->add( DataRow::many( currentTime, val ) );
       }
       else if ( TIME == firstword ) {
         state = jsonReaderState::JIN_TIME;

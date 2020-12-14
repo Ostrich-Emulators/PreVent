@@ -1,5 +1,6 @@
 4.3.2
-  * Allow negative values for --offset
+  * Added ability to process zipped XML files with --from stpz
+  * Improved --offset to allow negative values
 
 4.3.1
   * Fixed TDMS reader for older TDMS files

@@ -110,12 +110,14 @@ namespace FormatConverter{
       XML_SetCommentHandler( parser, XmlReaderBase::comment );
 
       if ( "-" == fname ) {
-        input.reset( new StreamChunkReader( &( std::cin ), false, true, READCHUNK ) );
+        // std::istream * input, bool compressed, bool isStdin, bool isGzip = false, int chunksize = DEFAULT_CHUNKSIZE);
+        input = StreamChunkReader::fromStdin( );
       }
       else {
-        std::ifstream * myfile = new std::ifstream( fname, std::ios::in );
-        input.reset( new StreamChunkReader( myfile, false, false, READCHUNK ) );
+        input = StreamChunkReader::fromFile( fname );
       }
+
+      input->setChunkSize( READCHUNK );
     }
     return rr;
   }

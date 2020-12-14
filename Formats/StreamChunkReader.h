@@ -19,6 +19,7 @@
 #include <vector>
 
 #include <zlib.h>
+#include <zip.h>
 
 #include "Reader.h"
 
@@ -27,46 +28,62 @@
  */
 namespace FormatConverter {
 
+  enum StreamType {
+    RAW, COMPRESS, GZIP, ZIP
+  };
+
   class StreamChunkReader {
   public:
-    StreamChunkReader(std::istream * input, bool compressed, bool isStdin,
-            bool isGzip = false, int chunksize = DEFAULT_CHUNKSIZE);
 
-    virtual ~StreamChunkReader();
-    void close();
+    static std::unique_ptr<StreamChunkReader> fromStdin( StreamType t = StreamType::RAW,
+        int chunksize = DEFAULT_CHUNKSIZE );
+    static std::unique_ptr<StreamChunkReader> fromFile( const std::string& filename,
+        int chunksize = DEFAULT_CHUNKSIZE );
+
+    virtual ~StreamChunkReader( );
+    void close( );
 
     /**
      * Reads this many bytes 
      * @param numbytes
      * @return
      */
-    std::string read(int numbytes);
-    std::string readNextChunk();
+    std::string read( int numbytes );
+    std::string readNextChunk( );
     /**
      * Reads this many bytes into the given vector. This function only works on
      * uncompressed streams (for now)
      * @param vec
      * @return the number of bytes read
      */
-    int read(std::vector<char>& vec, int numbytes);
-    void setChunkSize(int size);
+    int read( std::vector<char>& vec, int numbytes );
+    void setChunkSize( int size );
 
     ReadResult rr;
   private:
+
+    StreamChunkReader( std::istream * input, bool isStdin,
+        StreamType ziptype = StreamType::COMPRESS,
+        int chunksize = DEFAULT_CHUNKSIZE );
+
     static const int DEFAULT_CHUNKSIZE;
 
-    std::string readNextCompressedChunk(int numbytes);
-    void initZlib(bool forGzip = false);
+    std::string readNextCompressedChunk( int numbytes );
+    void initZlib( bool forGzip = false );
 
     bool iscompressed;
     bool usestdin;
     int chunksize;
 
     std::istream * stream;
+    StreamType type;
 
 
     // zlib-only var
     z_stream strm;
+
+    // libzip var
+    zip_t * archive;
   };
 }
 #endif /* FILEORCINSTREAM_H */

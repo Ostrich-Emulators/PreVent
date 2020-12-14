@@ -5,6 +5,8 @@
 set(LIBVERSION 4.3.2)
 project(formatconverter VERSION ${LIBVERSION} LANGUAGES CXX)
 
+find_package(ZLIB REQUIRED)
+
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/../lib/formatconverter-${LIBVERSION}:$ORIGIN/")
 
 # add the command to generate the source code
@@ -102,7 +104,7 @@ target_include_directories(formats
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     PRIVATE
         $<INSTALL_INTERFACE:${include_dest}>
-        $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS} ${MATIO_INCLUDES} ${WFDB_INCLUDES} ${EXPAT_INCLUDE_DIR}>
+        $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS} ${MATIO_INCLUDES} ${WFDB_INCLUDES} ${EXPAT_INCLUDE_DIR} ${ZLIB_INCLUDE_DIRS}>
 )
 
 target_link_libraries(formats 
@@ -112,6 +114,7 @@ target_link_libraries(formats
 	${MATIO_LIBRARIES}
 	${HDF5_LIBRARIES}
 	${WFDB_LIBRARIES}
+  ${ZLIB_LIBRARIES}
 	# need this because MATIO says it links to -lhdf5, but
 	# the HDF5 package uses a full path to find the library
 	"-L/usr/lib/x86_64-linux-gnu/hdf5/serial"

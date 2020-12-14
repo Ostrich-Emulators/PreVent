@@ -33,11 +33,46 @@
 namespace FormatConverter{
   const int StreamChunkReader::DEFAULT_CHUNKSIZE = 1024 * 256;
 
-  StreamChunkReader::StreamChunkReader( std::istream * cin, bool compressed,
-      bool isStdin, bool isGzip, int chunksz ) : rr( ReadResult::NORMAL ),
-      iscompressed( compressed ), usestdin( isStdin ), chunksize( chunksz ), stream( cin ) {
-    if ( iscompressed ) {
-      initZlib( isGzip );
+  std::unique_ptr<StreamChunkReader> StreamChunkReader::fromStdin( StreamType t, int chunksize ) {
+    return std::unique_ptr<StreamChunkReader>( new StreamChunkReader( &( std::cin ), true, t, chunksize ) );
+  }
+
+  std::unique_ptr<StreamChunkReader> StreamChunkReader::fromFile( const std::string& filename,
+      int chunksize ) {
+    std::ifstream * myfile = new std::ifstream( filename, std::ios::in );
+
+    // we need to read the first byte of the input stream to decide if it's compressed
+    unsigned char firstbyte;
+    unsigned char secondbyte;
+
+    ( *myfile ) >> firstbyte;
+    ( *myfile ) >> secondbyte;
+
+    StreamType t = StreamType::RAW;
+    if ( 0x78 == firstbyte ) {
+      t = StreamType::COMPRESS;
+    }
+    else if ( 0x1F == firstbyte && 0x8B == secondbyte ) {
+      t = StreamType::GZIP;
+    }
+    else if ( 0x50 == firstbyte && 0x4B == secondbyte ) {
+      t = StreamType::ZIP;
+    }
+
+    myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
+
+    return std::unique_ptr<StreamChunkReader>( new StreamChunkReader( myfile, false, t, chunksize ) );
+  }
+
+  StreamChunkReader::StreamChunkReader( std::istream * cin, bool isStdin,
+      StreamType stype, int chunksz ) : rr( ReadResult::NORMAL ),
+      usestdin( isStdin ), chunksize( chunksz ), stream( cin ), type( stype ) {
+    iscompressed = ( StreamType::RAW != type );
+    if ( StreamType::COMPRESS == type || StreamType::GZIP == type ) {
+      initZlib( StreamType::GZIP == type );
+    }
+    else if ( StreamType::ZIP == type ) {
+      archive = nullptr;
     }
   }
 

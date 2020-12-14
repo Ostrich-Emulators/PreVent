@@ -50,7 +50,7 @@ namespace FormatConverter {
     std::string leftoverText;
     time_t currentTime;
     jsonReaderState state;
-    std::unique_ptr<FormatConverter::StreamChunkReader> stream;
+    std::unique_ptr<StreamChunkReader> stream;
 
     void handleInputChunk(std::string& chunk, SignalSet * info);
     void handleOneLine(const std::string& chunk, SignalSet * info);
