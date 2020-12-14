@@ -85,7 +85,7 @@ namespace FormatConverter{
       else if ( "hdf5" == suffix || "h5" == suffix ) {
         return Format::HDF5;
       }
-      else if ( "xml" == suffix ) {
+      else if ( "xml" == suffix || "zip" == suffix ) {
         return Format::STPXML;
       }
       else if ( "zl" == suffix || "gzip" == suffix || "gz" == suffix ) {
@@ -101,7 +101,7 @@ namespace FormatConverter{
         return Format::STPP;
       }
       else if ( "stp" == suffix ) {
-        Log::info() << "\"stp\" interpreted as \"stpge\", use \"stpp\" for Philips version" << std::endl;
+        Log::info( ) << "\"stp\" interpreted as \"stpge\", use \"stpp\" for Philips version" << std::endl;
         return Format::STPGE;
       }
       else if ( "csv" == suffix ) {

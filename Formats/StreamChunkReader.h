@@ -51,8 +51,9 @@ namespace FormatConverter {
     std::string read( int numbytes );
     std::string readNextChunk( );
     /**
-     * Reads this many bytes into the given vector. This function only works on
-     * uncompressed streams (for now)
+     * Reads this many bytes into the given vector. Note that if this is a
+     * compressed stream, this function reads in this many compressed bytes,
+     * so the output size may be much larger
      * @param vec
      * @return the number of bytes read
      */
@@ -62,7 +63,10 @@ namespace FormatConverter {
     ReadResult rr;
   private:
 
-    StreamChunkReader( std::istream * input, bool isStdin,
+    StreamChunkReader( std::istream * input, bool closestream,
+        StreamType ziptype = StreamType::COMPRESS,
+        int chunksize = DEFAULT_CHUNKSIZE );
+    StreamChunkReader( const std::string& filename,
         StreamType ziptype = StreamType::COMPRESS,
         int chunksize = DEFAULT_CHUNKSIZE );
 
@@ -71,19 +75,18 @@ namespace FormatConverter {
     std::string readNextCompressedChunk( int numbytes );
     void initZlib( bool forGzip = false );
 
-    bool iscompressed;
-    bool usestdin;
+    bool closeStreamAtEnd;
     int chunksize;
 
-    std::istream * stream;
     StreamType type;
 
-
-    // zlib-only var
+    // zlib-only vars
     z_stream strm;
+    std::istream * stream;
 
-    // libzip var
-    zip_t * archive;
+    // libzip-only vars
+    zip_t * ziparchive;
+    zip_file_t * zipdata;
   };
 }
 #endif /* FILEORCINSTREAM_H */

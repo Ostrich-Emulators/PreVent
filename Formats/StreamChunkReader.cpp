@@ -34,7 +34,7 @@ namespace FormatConverter{
   const int StreamChunkReader::DEFAULT_CHUNKSIZE = 1024 * 256;
 
   std::unique_ptr<StreamChunkReader> StreamChunkReader::fromStdin( StreamType t, int chunksize ) {
-    return std::unique_ptr<StreamChunkReader>( new StreamChunkReader( &( std::cin ), true, t, chunksize ) );
+    return std::unique_ptr<StreamChunkReader>( new StreamChunkReader( &( std::cin ), false, t, chunksize ) );
   }
 
   std::unique_ptr<StreamChunkReader> StreamChunkReader::fromFile( const std::string& filename,
@@ -47,6 +47,7 @@ namespace FormatConverter{
 
     ( *myfile ) >> firstbyte;
     ( *myfile ) >> secondbyte;
+    myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
 
     StreamType t = StreamType::RAW;
     if ( 0x78 == firstbyte ) {
@@ -57,22 +58,43 @@ namespace FormatConverter{
     }
     else if ( 0x50 == firstbyte && 0x4B == secondbyte ) {
       t = StreamType::ZIP;
+      return std::unique_ptr<StreamChunkReader>( new StreamChunkReader( filename, t, chunksize ) );
     }
 
-    myfile->seekg( std::ios::beg ); // seek back to the beginning of the file
-
-    return std::unique_ptr<StreamChunkReader>( new StreamChunkReader( myfile, false, t, chunksize ) );
+    return std::unique_ptr<StreamChunkReader>( new StreamChunkReader( myfile, true, t, chunksize ) );
   }
 
-  StreamChunkReader::StreamChunkReader( std::istream * cin, bool isStdin,
+  StreamChunkReader::StreamChunkReader( std::istream * cin, bool freeit,
       StreamType stype, int chunksz ) : rr( ReadResult::NORMAL ),
-      usestdin( isStdin ), chunksize( chunksz ), stream( cin ), type( stype ) {
-    iscompressed = ( StreamType::RAW != type );
+      closeStreamAtEnd( freeit ), chunksize( chunksz ), type( stype ), stream( cin ) {
+
     if ( StreamType::COMPRESS == type || StreamType::GZIP == type ) {
       initZlib( StreamType::GZIP == type );
     }
     else if ( StreamType::ZIP == type ) {
-      archive = nullptr;
+      Log::error( ) << "cannot open zip archives from stdin" << std::endl;
+      throw std::runtime_error( "cannot open zip archives from stdin" );
+    }
+  }
+
+  StreamChunkReader::StreamChunkReader( const std::string& filename,
+      StreamType stype, int chunksz ) : rr( ReadResult::NORMAL ),
+      closeStreamAtEnd( true ), chunksize( chunksz ), type( stype ) {
+
+    if ( StreamType::COMPRESS == type || StreamType::GZIP == type ) {
+      stream = new std::ifstream( filename, std::ios::in );
+      initZlib( StreamType::GZIP == type );
+    }
+    else if ( StreamType::ZIP == type ) {
+      Log::info( ) << "input is zip stream" << std::endl;
+      int errorp = 0;
+      ziparchive = zip_open( filename.c_str( ), ZIP_RDONLY, &errorp );
+      if ( 0 != errorp ) {
+        Log::error( ) << "error opening file: " << filename << std::endl;
+      }
+
+      // NOTE: we only expect a single file in the zip archive
+      zipdata = zip_fopen_index( ziparchive, 0, 0 );
     }
   }
 
@@ -102,14 +124,27 @@ namespace FormatConverter{
   }
 
   void StreamChunkReader::close( ) {
-    if ( iscompressed ) {
+    if ( StreamType::COMPRESS == type || StreamType::GZIP == type ) {
       inflateEnd( &strm );
     }
 
-    if ( !usestdin ) {
-      std::ifstream * str = static_cast<std::ifstream *> ( stream );
-      if ( str->is_open( ) ) {
-        str->close( );
+    if ( closeStreamAtEnd ) {
+      if ( StreamType::COMPRESS == type || StreamType::GZIP == type ) {
+        std::ifstream * str = static_cast<std::ifstream *> ( stream );
+        if ( str->is_open( ) ) {
+          str->close( );
+        }
+      }
+      else if ( StreamType::ZIP == type ) {
+        if ( nullptr != zipdata ) {
+          zip_fclose( zipdata );
+          zipdata = nullptr;
+        }
+
+        if ( nullptr != ziparchive ) {
+          zip_discard( ziparchive );
+          ziparchive = nullptr;
+        }
       }
     }
   }
@@ -119,16 +154,37 @@ namespace FormatConverter{
   }
 
   int StreamChunkReader::read( std::vector<char>& vec, int numbytes ) {
-    if ( stream->good( ) ) {
-      stream->read( vec.data( ), numbytes );
-      int bytesread = stream->gcount( );
-      return bytesread;
+    if ( StreamType::ZIP == type ) {
+      auto read = zip_fread( zipdata, vec.data( ), numbytes );
+      rr = ( read < 0
+          ? ReadResult::END_OF_FILE
+          : ReadResult::NORMAL );
+
+      // if we didn't get a full read, we need to shrink the string
+      vec.resize( read );
+      return read;
+    }
+    else if ( StreamType::GZIP == type || StreamType::COMPRESS == type ) {
+      auto data = readNextCompressedChunk( numbytes );
+      vec.resize( data.length( ) );
+      for ( size_t i = 0; i < data.length( ); i++ ) {
+        vec[i] = data[i];
+      }
+      return data.size( );
+    }
+    else {
+      // uncompressed stream
+      if ( stream->good( ) ) {
+        stream->read( vec.data( ), numbytes );
+        int bytesread = stream->gcount( );
+        return bytesread;
+      }
     }
     return 0;
   }
 
   std::string StreamChunkReader::read( int bufsz ) {
-    if ( iscompressed ) {
+    if ( StreamType::COMPRESS == type || StreamType::GZIP == type || StreamType::ZIP == type ) {
       return readNextCompressedChunk( bufsz );
     }
     else {
@@ -151,45 +207,60 @@ namespace FormatConverter{
   std::string StreamChunkReader::readNextCompressedChunk( int bufsz ) {
     unsigned char in[bufsz];
     unsigned char out[bufsz];
-
     std::string data;
-    int retcode = 0;
-    stream->read( (char *) in, bufsz );
-    strm.avail_in = stream->gcount( );
 
-    retcode = 1;
-    if ( strm.avail_in == 0 ) {
-      rr = ReadResult::END_OF_FILE;
-      return "";
-    }
+    if ( StreamType::COMPRESS == type || StreamType::GZIP == type ) {
+      int retcode = 0;
+      stream->read( (char *) in, bufsz );
+      strm.avail_in = stream->gcount( );
 
-    strm.next_in = in;
-    do {
-      strm.avail_out = bufsz;
-      strm.next_out = out;
-      retcode = inflate( &strm, Z_NO_FLUSH );
-      assert( retcode != Z_STREAM_ERROR ); /* state not clobbered */
-      switch ( retcode ) {
-        case Z_NEED_DICT:
-          retcode = Z_DATA_ERROR; /* and fall through */
-        case Z_DATA_ERROR:
-        case Z_MEM_ERROR:
-          retcode = -1;
-          rr = ReadResult::ERROR;
-          inflateEnd( &strm );
+      retcode = 1;
+      if ( strm.avail_in == 0 ) {
+        rr = ReadResult::END_OF_FILE;
+        return "";
       }
-      int have = bufsz - strm.avail_out;
-      // okay, we have some data to look at
-      std::string str( (char *) out, have );
-      data += str;
-    }
-    while ( strm.avail_out == 0 );
 
-    if ( retcode == Z_STREAM_END ) {
-      rr = ReadResult::END_OF_FILE;
+      strm.next_in = in;
+      do {
+        strm.avail_out = bufsz;
+        strm.next_out = out;
+        retcode = inflate( &strm, Z_NO_FLUSH );
+        assert( retcode != Z_STREAM_ERROR ); /* state not clobbered */
+        switch ( retcode ) {
+          case Z_NEED_DICT:
+            retcode = Z_DATA_ERROR; /* and fall through */
+          case Z_DATA_ERROR:
+          case Z_MEM_ERROR:
+            retcode = -1;
+            rr = ReadResult::ERROR;
+            inflateEnd( &strm );
+        }
+        int have = bufsz - strm.avail_out;
+        // okay, we have some data to look at
+        std::string str( (char *) out, have );
+        data += str;
+      }
+      while ( strm.avail_out == 0 );
+
+      if ( retcode == Z_STREAM_END ) {
+        rr = ReadResult::END_OF_FILE;
+      }
+      else if ( retcode == Z_OK ) {
+        rr = ReadResult::NORMAL;
+      }
+
     }
-    else if ( retcode == Z_OK ) {
-      rr = ReadResult::NORMAL;
+    else if ( StreamType::ZIP == type ) {
+      // we're going to read directly into our output structure.
+      // so make sure it's big enough to handle the data
+      data.resize( bufsz );
+      auto read = zip_fread( zipdata, data.data( ), bufsz );
+      rr = ( read < 0
+          ? ReadResult::END_OF_FILE
+          : ReadResult::NORMAL );
+
+      // if we didn't get a full read, we need to shrink the string
+      data.resize( read );
     }
 
     return data;

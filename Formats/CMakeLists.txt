@@ -5,8 +5,25 @@
 set(LIBVERSION 4.3.2)
 project(formatconverter VERSION ${LIBVERSION} LANGUAGES CXX)
 
-find_package(ZLIB REQUIRED)
+pkg_check_modules( ZIP REQUIRED libzip )
 
+#get_cmake_property(_variableNames VARIABLES)
+#list (SORT _variableNames)
+#foreach (_variableName ${_variableNames})
+#    message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()
+#
+#
+#MESSAGE ( ${ZIP_VERSION} )
+#MESSAGE ( ${ZIP_INCLUDEDIR} )
+#MESSAGE ( ${ZIP_LIBDIR} )
+#
+#MESSAGE ( ${ZLIB_LIBRARIES} )
+#MESSAGE ( ${ZLIB_LIBRARY_DIRS} )
+#MESSAGE ( ${ZLIB_LDFLAGS} )
+#MESSAGE ( ${ZLIB_INCLUDE_DIRS} )
+#MESSAGE ( ${ZLIB_CFLAGS} )
+#
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/../lib/formatconverter-${LIBVERSION}:$ORIGIN/")
 
 # add the command to generate the source code
@@ -104,7 +121,7 @@ target_include_directories(formats
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     PRIVATE
         $<INSTALL_INTERFACE:${include_dest}>
-        $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS} ${MATIO_INCLUDES} ${WFDB_INCLUDES} ${EXPAT_INCLUDE_DIR} ${ZLIB_INCLUDE_DIRS}>
+        $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS} ${MATIO_INCLUDES} ${WFDB_INCLUDES} ${EXPAT_INCLUDE_DIR} ${ZIP_INCLUDEDIR}>
 )
 
 target_link_libraries(formats 
@@ -114,7 +131,7 @@ target_link_libraries(formats
 	${MATIO_LIBRARIES}
 	${HDF5_LIBRARIES}
 	${WFDB_LIBRARIES}
-  ${ZLIB_LIBRARIES}
+	${ZIP_LINK_LIBRARIES}
 	# need this because MATIO says it links to -lhdf5, but
 	# the HDF5 package uses a full path to find the library
 	"-L/usr/lib/x86_64-linux-gnu/hdf5/serial"
