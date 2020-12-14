@@ -85,7 +85,7 @@ namespace FormatConverter{
       else if ( "hdf5" == suffix || "h5" == suffix ) {
         return Format::HDF5;
       }
-      else if ( "xml" == suffix || "zip" == suffix ) {
+      else if ( "xml" == suffix ) {
         return Format::STPXML;
       }
       else if ( "zl" == suffix || "gzip" == suffix || "gz" == suffix ) {

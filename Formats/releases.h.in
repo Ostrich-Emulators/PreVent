@@ -1,5 +1,5 @@
 4.3.2
-  * Added ability to process zipped XML files with --from stpz
+  * Added ability to process zipped/gzipped/compressed STP XML files (need --from stpxml)
   * Improved --offset to allow negative values
 
 4.3.1

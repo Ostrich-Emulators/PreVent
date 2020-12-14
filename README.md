@@ -5,7 +5,7 @@ Monitor/Format          | Input            | Output
 ------------------------|------------------|-------
 HDF5 (PreVent Native)   | X                | X
 WFDB                    | X                | X
-STP XML (versions 6-8)  | X                |
+STP XML (versions 6-8)  | X<sup>3</sup>    |
 STP (GE)                | X<sup>1</sup>    |
 STP (Philips MX800)     | X<sup>1,2<sup>   |
 Matlab 7.X              |                  | X
@@ -18,6 +18,7 @@ Auton Lab               |                  | X
 
 1 Experimental support\
 2 Waveforms not implemented
+3 Supports gzipped/compressed/zipped files as well
 
 PreVent Tools comprises two tools at this time: `formatconverter` is a command-line tool for converting between formats, while `preventtools` provides several useful tools for working with the data. `preventtools` primarily works with the native HDF5 format.
 
@@ -137,6 +138,8 @@ Because each input file can generate multiple output files, it is necessary to s
 **%e** - date of last data point\
 **%o** - output file ordinal\
 **%t** - the --to option's extension (e.g., hdf5, wfdb)\
+**%T** - the time of the first data point\
+**%E** - the time of the last data point\
 **%S** - same as `%d%i-p%p-%s.%t`
 
 The default output filename pattern is `%d%i.%t`, that is, the output filename is the input file name with a different extension. Note that some specifiers are similar to command-line options; these are separate concepts.
