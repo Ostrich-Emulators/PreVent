@@ -17,7 +17,7 @@ Auton Lab               |                  | X
 [CSV](#csv-format)      | X<sup>2</sup>    | X<sup>2</sup>
 
 1 Experimental support\
-2 Waveforms not implemented
+2 Waveforms not implemented\
 3 Supports gzipped/compressed/zipped files as well
 
 PreVent Tools comprises two tools at this time: `formatconverter` is a command-line tool for converting between formats, while `preventtools` provides several useful tools for working with the data. `preventtools` primarily works with the native HDF5 format.
@@ -121,7 +121,7 @@ Long Option | Short Option | Valid Arguments {Default} | Description
 --pattern | -p | format string | Set the output file naming pattern
 --skip-waves | -w | | Skip waves during reading and writing files
 --tmpdir | -m | <directory> | Place all temporary files in the specified directory
---splitr | -x | 'm[idnight]' or <0-9>[h] {midnight}| roll over the output files at midnight or every X hours. 'h' ensures rollover at the top of the hour. '0' disables rollover. Rollover times are affected by --localtime option.
+--split | -x | 'm[idnight]' or <0-9>[h] {midnight}| roll over the output files at midnight or every X hours. 'h' ensures rollover at the top of the hour. '0' disables rollover. Rollover times are affected by --localtime option.
 
 ### File Naming Format String
 Because each input file can generate multiple output files, it is necessary to specify how those files should be named. This is accomplished using format specifiers within a string. The specifiers are:
