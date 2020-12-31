@@ -27,6 +27,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.SpinnerValueFactory.ListSpinnerValueFactory;
@@ -98,6 +99,12 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   @FXML
   private SplitPane splitter;
 
+  @FXML
+  private RadioButton dockerconverter;
+
+  @FXML
+  private RadioButton nativeconverter;
+
   private Path savelocation;
   private WorkItemEntryController detailscontroller;
 
@@ -121,6 +128,11 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   private void loadPrefs() {
     nativestp.setSelected( App.prefs.useNativeStp() );
     usephilips.setSelected( App.prefs.isStpPhilips() );
+
+    if( App.prefs.useNativeConverter() ){
+      nativeconverter.setSelected( true );
+    }
+
     removecontainers.setSelected( App.prefs.removeDockerOnSuccess() );
     App.docker.setMaxContainers( App.prefs.getMaxDockerCount() );
     dockercnt.setValueFactory( new SpinnerValueFactory.IntegerSpinnerValueFactory( 1,
@@ -172,6 +184,8 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     catch ( IOException x ) {
       LOG.error( "{}", x );
     }
+    dockercnt.disableProperty().bind( nativeconverter.selectedProperty());
+    removecontainers.disableProperty().bind( nativeconverter.selectedProperty() );
 
     fixTableLayout();
 
@@ -181,14 +195,16 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       LOG.debug( "Docker is ready!" );
     }
     else {
+      dockerconverter.setDisable( true );
+      nativeconverter.arm();
       Alert alert = new Alert( Alert.AlertType.ERROR );
       alert.setTitle( "Docker Images Missing" );
       alert.setHeaderText( "Docker is not Initialized Properly" );
-      ButtonType exitbtn = new ButtonType( "Exit Application", ButtonBar.ButtonData.CANCEL_CLOSE );
+      ButtonType exitbtn = new ButtonType( "Cancel", ButtonBar.ButtonData.CANCEL_CLOSE );
       alert.getButtonTypes().setAll( exitbtn );
       alert.setContentText( "Docker may not be started, or the ry99/prevent image could not be pulled.\nOn Windows, Docker must be listening to port 2375." );
       alert.showAndWait();
-      Platform.exit();
+      //Platform.exit();
     }
 
     try {

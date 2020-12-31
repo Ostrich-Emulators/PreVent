@@ -24,6 +24,7 @@ public class Preference {
   private static final String STPDIR = "tools.parser.stptoxml";
   private static final String LASTDIR = "directory.last";
   private static final String OUTPUTDIR = "directory.output";
+  private static final String NATIVECONVERTER = "converter.native";
 
   private final Preferences prefs = Preferences.userRoot().node( "com/ostrichemulators/prevent" );
 
@@ -42,6 +43,15 @@ public class Preference {
 
   public Preference setNativeStp( boolean yes ) {
     prefs.putBoolean( NATIVESTP, yes );
+    return this;
+  }
+
+  public boolean useNativeConverter(){
+    return prefs.getBoolean( NATIVECONVERTER, true );
+  }
+
+  public Preference setNativeConverter( boolean yes ){
+    prefs.putBoolean( NATIVECONVERTER, yes);
     return this;
   }
 
