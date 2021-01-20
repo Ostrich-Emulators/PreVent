@@ -24,6 +24,7 @@ public class Preference {
   private static final String STPDIR = "tools.parser.stptoxml";
   private static final String LASTDIR = "directory.last";
   private static final String OUTPUTDIR = "directory.output";
+  private static final String LOGDIR = "directory.logs";
   private static final String NATIVECONVERTER = "converter.native";
 
   private final Preferences prefs = Preferences.userRoot().node( "com/ostrichemulators/prevent" );
@@ -46,12 +47,12 @@ public class Preference {
     return this;
   }
 
-  public boolean useNativeConverter(){
+  public boolean useNativeConverter() {
     return prefs.getBoolean( NATIVECONVERTER, true );
   }
 
-  public Preference setNativeConverter( boolean yes ){
-    prefs.putBoolean( NATIVECONVERTER, yes);
+  public Preference setNativeConverter( boolean yes ) {
+    prefs.putBoolean( NATIVECONVERTER, yes );
     return this;
   }
 
@@ -65,7 +66,7 @@ public class Preference {
   }
 
   public int getMaxDockerCount() {
-    return prefs.getInt( DOCKERCOUNT, DockerManager.DEFAULT_MAX_RUNNING_CONTAINERS );
+    return prefs.getInt( DOCKERCOUNT, ConversionConductor.DEFAULT_MAX_RUNNING_CONTAINERS );
   }
 
   public Preference setMaxDockerCount( int max ) {
@@ -121,6 +122,15 @@ public class Preference {
 
   public Preference setOutputPath( Path f ) {
     prefs.put( OUTPUTDIR, f.toString() );
+    return this;
+  }
+
+  public Path getLogPath() {
+    return Paths.get( prefs.get( LOGDIR, System.getProperty( "java.io.tmpdir" ) ) );
+  }
+
+  public Preference setLogPath( Path f ) {
+    prefs.put( LOGDIR, f.toString() );
     return this;
   }
 }

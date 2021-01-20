@@ -45,6 +45,7 @@ public final class WorkItem {
   private final SimpleStringProperty message = new SimpleStringProperty();
   private final SimpleObjectProperty<Path> outputdir = new SimpleObjectProperty<>();
 
+  // for jackson
   private WorkItem() {
   }
 

@@ -1,6 +1,5 @@
 package com.ostrichemulators.prevent;
 
-import static com.ostrichemulators.prevent.App.docker;
 import com.ostrichemulators.prevent.WorkItem.Status;
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -43,6 +41,9 @@ import javafx.stage.Window;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static com.ostrichemulators.prevent.App.converter;
+import java.nio.file.Files;
+import javafx.application.Platform;
 
 public class PrimaryController implements Initializable, WorkItemStateChangeListener {
 
@@ -97,6 +98,9 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   private Label outputlbl;
 
   @FXML
+  private Label loglbl;
+
+  @FXML
   private SplitPane splitter;
 
   @FXML
@@ -110,7 +114,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 
   @FXML
   void saveconfig() {
-    App.docker.setMaxContainers( dockercnt.getValue() );
+    App.converter.setMaxRunners( dockercnt.getValue() );
     dockercnt.setValueFactory( new SpinnerValueFactory.IntegerSpinnerValueFactory( 1,
           10, dockercnt.getValue() ) );
 
@@ -129,18 +133,22 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     nativestp.setSelected( App.prefs.useNativeStp() );
     usephilips.setSelected( App.prefs.isStpPhilips() );
 
-    if( App.prefs.useNativeConverter() ){
+    if ( App.prefs.useNativeConverter() ) {
       nativeconverter.setSelected( true );
     }
 
     removecontainers.setSelected( App.prefs.removeDockerOnSuccess() );
-    App.docker.setMaxContainers( App.prefs.getMaxDockerCount() );
+    App.converter.setMaxRunners( App.prefs.getMaxDockerCount() );
     dockercnt.setValueFactory( new SpinnerValueFactory.IntegerSpinnerValueFactory( 1,
-          10, App.docker.getMaxContainers() ) );
+          10, App.converter.getMaxRunners() ) );
 
     outputlbl.setTextOverrun( OverrunStyle.CENTER_ELLIPSIS );
     Path outpath = App.prefs.getOutputPath();
     outputlbl.setText( null == outpath ? "From Input" : outpath.toString() );
+
+    loglbl.setTextOverrun( OverrunStyle.CENTER_ELLIPSIS );
+    Path logdirpath = App.prefs.getLogPath();
+    loglbl.setText( logdirpath.toString() );
 
     ListSpinnerValueFactory<Integer> vfac = new SpinnerValueFactory.ListSpinnerValueFactory<>(
           FXCollections.observableArrayList( 10, 30, 60, 180, 480, Integer.MAX_VALUE ) );
@@ -184,27 +192,39 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     catch ( IOException x ) {
       LOG.error( "{}", x );
     }
-    dockercnt.disableProperty().bind( nativeconverter.selectedProperty());
+
     removecontainers.disableProperty().bind( nativeconverter.selectedProperty() );
 
     fixTableLayout();
 
     loadPrefs();
 
-    if ( docker.verifyAndPrepare() ) {
-      LOG.debug( "Docker is ready!" );
+    boolean natives = nativeconverter.isSelected();
+
+    if ( App.converter.useNativeConverters( natives ) ) {
+      LOG.debug( "Converter is ready!" );
     }
-    else {
+    else if ( !natives ) {
       dockerconverter.setDisable( true );
-      nativeconverter.arm();
+      nativeconverter.setSelected( true );
+
       Alert alert = new Alert( Alert.AlertType.ERROR );
       alert.setTitle( "Docker Images Missing" );
       alert.setHeaderText( "Docker is not Initialized Properly" );
       ButtonType exitbtn = new ButtonType( "Cancel", ButtonBar.ButtonData.CANCEL_CLOSE );
       alert.getButtonTypes().setAll( exitbtn );
-      alert.setContentText( "Docker may not be started, or the ry99/prevent image could not be pulled.\nOn Windows, Docker must be listening to port 2375." );
+      alert.setContentText( "Docker may not be started, or the ry99/prevent image could not be pulled.\nOn Windows, Docker must be listening to port 2375.\nContinuing with Native Converter" );
       alert.showAndWait();
-      //Platform.exit();
+
+      if ( !App.converter.useNativeConverters( natives ) ) {
+        alert = new Alert( Alert.AlertType.ERROR );
+        alert.setTitle( "No Converters initialized" );
+        alert.setHeaderText( "The fallback (Native) Converter did not initialize properly." );
+        alert.getButtonTypes().setAll( exitbtn );
+        alert.setContentText( "Are you on a supported platform? Windows and Linux are supported at this time." );
+        alert.showAndWait();
+        Platform.exit();
+      }
     }
 
     try {
@@ -224,7 +244,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
         return row;
       } );
 
-      App.docker.reinitializeItems( allitems, this );
+      App.converter.reinitializeItems( allitems, this );
 
       table.getItems().addAll( allitems );
     }
@@ -294,7 +314,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       List<WorkItem> todo = table.getItems().stream()
             .filter( wi -> workable.contains( wi.getStatus() ) )
             .collect( Collectors.toList() );
-      App.docker.convert( todo, this );
+      App.converter.convert( todo, this );
     }
     catch ( IOException x ) {
       LOG.error( "{}", x );
@@ -309,7 +329,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       List<WorkItem> todo = table.getSelectionModel().getSelectedItems().stream()
             .filter( wi -> !workable.contains( wi.getStatus() ) )
             .collect( Collectors.toList() );
-      App.docker.convert( todo, this );
+      App.converter.convert( todo, this );
     }
     catch ( IOException x ) {
       LOG.error( "{}", x );
@@ -369,7 +389,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     chsr.setTitle( "Select Output Directory" );
 
     Path outdir = App.prefs.getOutputPath();
-    if ( null != outdir ) {
+    if ( Files.exists( outdir ) ) {
       chsr.setInitialDirectory( outdir.toFile() );
     }
     Window window = table.getScene().getWindow();
@@ -381,6 +401,19 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   @FXML
   void setOutputFromInput() {
     outputlbl.setText( "From Input" );
+  }
+
+  @FXML
+  void selectLogDir() {
+    DirectoryChooser chsr = new DirectoryChooser();
+    chsr.setTitle( "Select Log Directory" );
+
+    Path outdir = App.prefs.getLogPath();
+    chsr.setInitialDirectory( outdir.toFile() );
+    Window window = table.getScene().getWindow();
+
+    File dir = chsr.showDialog( window );
+    loglbl.setText( dir.getAbsolutePath() );
   }
 
   private static class LocalDateTableCell extends TableCell<WorkItem, LocalDateTime> {

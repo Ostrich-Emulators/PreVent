@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.ostrichemulators.prevent;
+package com.ostrichemulators.prevent.conversion;
 
+import com.ostrichemulators.prevent.App;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -31,22 +32,7 @@ public class StpToXml {
   private static final Logger LOG = LoggerFactory.getLogger( StpToXml.class );
   private static Path stpdir;
 
-  public static class StpConversionInfo {
-
-    public final Process process;
-    public final File dir;
-    public final File stdoutfile;
-    public final File stderrfile;
-
-    public StpConversionInfo( Process process, File dir, File stdoutfile, File stderrfile ) {
-      this.process = process;
-      this.dir = dir;
-      this.stdoutfile = stdoutfile;
-      this.stderrfile = stderrfile;
-    }
-  }
-
-  public static StpConversionInfo convert( Path stpfile, Path xmlfile ) throws IOException {
+  public static ProcessInfo convert( Path stpfile, Path xmlfile ) throws IOException {
     initIfNeeded();
 
     // STPtoXML seems to struggle when multiple conversions are running from the
@@ -77,7 +63,7 @@ public class StpToXml {
           .directory( dir )
           .start();
 
-    return new StpConversionInfo( proc, dir, stdout, stderr );
+    return new ProcessInfo( proc, dir, stdout, stderr );
   }
 
   /**

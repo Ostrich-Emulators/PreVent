@@ -21,8 +21,8 @@ public class App extends Application {
   private static final Logger LOG = LoggerFactory.getLogger( App.class );
 
   private static Scene scene;
-  static final DockerManager docker = DockerManager.connect();
-  static final Preference prefs = Preference.open();
+  static final ConversionConductor converter = new ConversionConductor();
+  public static final Preference prefs = Preference.open();
 
   @Override
   public void start( Stage stage ) throws IOException {
@@ -63,6 +63,6 @@ public class App extends Application {
   @Override
   public void stop() throws Exception {
     super.stop();
-    docker.shutdown();
+    converter.shutdown();
   }
 }
