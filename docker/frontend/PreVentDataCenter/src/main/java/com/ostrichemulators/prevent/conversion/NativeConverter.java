@@ -74,13 +74,12 @@ public class NativeConverter extends AbstractConverter {
           }
 
           int ret = cnv.process.exitValue();
+          this.saveLogs( item, cnv, LogType.STP );
+
           if ( 0 != ret ) {
             // FIXME: save the output log somewhere
             item.getItem().error( "stp conversion failed" );
             item.tellListeners();
-
-
-            // FIXME: copy/zip logs from process to the logdir
             return;
           }
 
@@ -135,6 +134,8 @@ public class NativeConverter extends AbstractConverter {
           }
         }
 
+        this.saveLogs( item, fmtcnv, LogType.CONVERSION );
+        FileUtils.deleteDirectory( fmtcnv.dir );
         LOG.debug( "done waiting! " );
       }
       catch ( IOException x ) {
