@@ -51,7 +51,9 @@ public class NativeConverter extends AbstractConverter {
           f.mkdirs();
         }
 
+        boolean doxml = false;
         if ( item.needsStpToXml() ) {
+          doxml = true;
           item.getItem().preprocess();
           item.tellListeners();
 
@@ -87,7 +89,9 @@ public class NativeConverter extends AbstractConverter {
         }
 
         // done with preprocessing, so start the actual conversion
-        ProcessInfo fmtcnv = FormatConverter.convert( item );
+        ProcessInfo fmtcnv = FormatConverter.convert( item, doxml
+                                                            ? item.getXmlPath()
+                                                            : null );
         item.getItem().started( "" ); // FIXME: need some sort of container id here
         item.tellListeners();
 

@@ -31,11 +31,15 @@ public class FormatConverter {
 
   private static final Logger LOG = LoggerFactory.getLogger( FormatConverter.class );
 
-  public static ProcessInfo convert( Conversion src ) throws IOException {
+  public static ProcessInfo convert( Conversion src, Path inputfile ) throws IOException {
     File fmtcnv = initPath();
 
+    if( null == inputfile ){
+      inputfile = src.getItem().getPath();
+    }
+
     List<String> cmds = List.of( fmtcnv.toString(),
-          src.getItem().getPath().toString(),
+          inputfile.toString(),
           "--to", "hdf5",
           "--localtime",
           "--pattern", src.getItem().getOutputPath().resolve( "%S" ).toString()
