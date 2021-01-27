@@ -41,7 +41,6 @@ import javafx.stage.Window;
 import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static com.ostrichemulators.prevent.App.converter;
 import java.nio.file.Files;
 import javafx.application.Platform;
 
@@ -146,6 +145,21 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     Path outpath = App.prefs.getOutputPath();
     outputlbl.setText( null == outpath ? "From Input" : outpath.toString() );
 
+    if ( null != outpath && !Files.exists( outpath ) ) {
+      LOG.info( "creating output directory: {}", outpath );
+
+      boolean created = outpath.toFile().mkdirs();
+      if ( !created ) {
+        Alert alert = new Alert( Alert.AlertType.ERROR );
+        alert.setTitle( "Docker Images Missing" );
+        alert.setHeaderText( "Docker is not Initialized Properly" );
+        ButtonType exitbtn = new ButtonType( "Cancel", ButtonBar.ButtonData.CANCEL_CLOSE );
+        alert.getButtonTypes().setAll( exitbtn );
+        alert.setContentText( "Docker may not be started, or the ry99/prevent image could not be pulled.\nOn Windows, Docker must be listening to port 2375.\nContinuing with Native Converter" );
+
+      }
+    }
+
     loglbl.setTextOverrun( OverrunStyle.CENTER_ELLIPSIS );
     Path logdirpath = App.prefs.getLogPath();
     loglbl.setText( logdirpath.toString() );
@@ -198,6 +212,22 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     fixTableLayout();
 
     loadPrefs();
+
+    Path outpath = App.prefs.getOutputPath();
+    if ( null != outpath && !Files.exists( outpath ) ) {
+      LOG.info( "creating output directory: {}", outpath );
+
+      boolean created = outpath.toFile().mkdirs();
+      if ( !created ) {
+        Alert alert = new Alert( Alert.AlertType.ERROR );
+        alert.setTitle( "Cannot create output directory" );
+        alert.setHeaderText( "Output path: " + outpath.toString() + " does not exist and could not be created" );
+        ButtonType exitbtn = new ButtonType( "Okay", ButtonBar.ButtonData.CANCEL_CLOSE );
+        alert.getButtonTypes().setAll( exitbtn );
+        alert.setContentText( outpath + " does not exist and could not be created\nOutput files will not be generated\nPlease set the \"Output Path\" preference before converting files" );
+        alert.showAndWait();
+      }
+    }
 
     boolean natives = nativeconverter.isSelected();
 

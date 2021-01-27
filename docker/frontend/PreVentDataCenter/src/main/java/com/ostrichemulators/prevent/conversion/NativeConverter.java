@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.concurrent.FutureTask;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,7 @@ public class NativeConverter extends AbstractConverter {
   public void reinitialize( Conversion item ) {
     // native processor only works while this app is running, so
     // any item not completed or errored must be reinitialized
-    if ( REINIT_STATUSES.contains( item.getItem().getStatus() ) ){
+    if ( REINIT_STATUSES.contains( item.getItem().getStatus() ) ) {
       item.getItem().reinit();
     }
   }
@@ -54,6 +55,7 @@ public class NativeConverter extends AbstractConverter {
           item.getItem().preprocess();
           item.tellListeners();
 
+          LOG.debug( "Calling StpToolkit on {} (xml:{})", item.getItem().getPath(), item.getXmlPath() );
           cnv = StpToXml.convert( item.getItem().getPath(), item.getXmlPath() );
           synchronized ( monitor ) {
             while ( cnv.process.isAlive() && StopReason.DONT_STOP == conversionCanWaitLonger( item ) ) {
@@ -76,8 +78,13 @@ public class NativeConverter extends AbstractConverter {
             // FIXME: save the output log somewhere
             item.getItem().error( "stp conversion failed" );
             item.tellListeners();
+
+
+            // FIXME: copy/zip logs from process to the logdir
             return;
           }
+
+          FileUtils.deleteDirectory( cnv.dir );
         }
 
         // done with preprocessing, so start the actual conversion
