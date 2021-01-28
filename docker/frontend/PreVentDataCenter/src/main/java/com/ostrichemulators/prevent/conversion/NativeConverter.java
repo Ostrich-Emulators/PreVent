@@ -141,7 +141,7 @@ public class NativeConverter extends AbstractConverter {
         FileUtils.deleteDirectory( fmtcnv.dir );
         FileUtils.deleteQuietly( fmtcnv.stderrfile );
         FileUtils.deleteQuietly( fmtcnv.stdoutfile );
-        LOG.debug( "done waiting! " );
+        LOG.debug( "conversion complete: {}", item.getItem().getPath() );
       }
       catch ( IOException x ) {
         LOG.error( "{}", x );

@@ -436,6 +436,7 @@ int main( int argc, char** argv ) {
     struct stat buffer;
     if ( 0 != stat( argv[i], &buffer ) ) {
       Log::error( ) << "could not open file: " << argv[i] << std::endl;
+      returncode = -1;
       continue;
     }
 
@@ -455,7 +456,7 @@ int main( int argc, char** argv ) {
 
     if ( from->prepare( input, data.get( ) ) < 0 ) {
       Log::error( ) << "could not prepare file for reading" << std::endl;
-      returncode = -1;
+      returncode = -2;
       continue;
     }
     else {
