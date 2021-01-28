@@ -14,7 +14,6 @@ import com.amihaiemil.docker.UnexpectedResponseException;
 import com.amihaiemil.docker.UnixDocker;
 import com.ostrichemulators.prevent.App;
 import com.ostrichemulators.prevent.Conversion;
-import com.ostrichemulators.prevent.ConversionConductor;
 import com.ostrichemulators.prevent.WorkItem;
 import com.ostrichemulators.prevent.WorkItem.Status;
 import com.ostrichemulators.prevent.WorkItemStateChangeListener;
@@ -113,12 +112,12 @@ public class DockerConverter extends AbstractConverter {
     return containers;
   }
 
-  private Container createContainer( WorkItem item ) throws IOException {
+  private Container createContainer( Conversion item ) throws IOException {
     LOG.debug( "creating container from image: ", image.toString() );
     JsonArrayBuilder mounts = Json.createArrayBuilder();
     JsonObjectBuilder volumes = Json.createObjectBuilder();
-    mounts.add( String.format( "%s:/opt/todo", item.getPath().getParent().toString() ) );
-    mounts.add( String.format( "%s:/opt/output", item.getOutputPath().toString() ) );
+    mounts.add( String.format( "%s:/opt/todo", item.getItem().getPath().getParent().toString() ) );
+    mounts.add( String.format( "%s:/opt/output", item.getItem().getOutputPath().toString() ) );
 
     volumes.add( "/opt/todo", Json.createObjectBuilder() );
     volumes.add( "/opt/output", Json.createObjectBuilder() );
@@ -126,14 +125,15 @@ public class DockerConverter extends AbstractConverter {
     JsonObjectBuilder hostconfig = Json.createObjectBuilder();
     hostconfig.add( "Binds", mounts );
 
+    boolean doxml = item.needsStpToXml();
     JsonArrayBuilder cmds = Json.createArrayBuilder( List.of( "--to", "hdf5",
           "--pattern", "/opt/output/%S",
           "--localtime",
-          String.format( "/opt/todo/%s", ( ConversionConductor.needsStpToXmlConversion( item )
-                                           ? ConversionConductor.xmlPathForStp( item )
-                                           : item.getPath() ).getFileName() ) ) );
-    if ( null != item.getType() ) {
-      cmds.add( "--from" ).add( item.getType() );
+          String.format( "/opt/todo/%s", ( doxml
+                                           ? item.getXmlPath()
+                                           : item.getItem().getPath() ).getFileName() ) ) );
+    if ( null != item.getItem().getType() ) {
+      cmds.add( "--from" ).add( item.getItem().getType() );
     }
 
     JsonObjectBuilder config = Json.createObjectBuilder();
@@ -231,7 +231,7 @@ public class DockerConverter extends AbstractConverter {
           item.getItem().preprocess();
           item.tellListeners();
 
-          cnv = StpToXml.convert( item.getItem().getPath(), item.getXmlPath() );
+          cnv = StpToXml.convert( item );
           synchronized ( monitor ) {
             while ( cnv.process.isAlive() && StopReason.DONT_STOP == conversionCanWaitLonger( item ) ) {
               try {
@@ -257,7 +257,7 @@ public class DockerConverter extends AbstractConverter {
           }
         }
 
-        Container c = createContainer( item.getItem() );
+        Container c = createContainer( item );
         item.getItem().started( c.containerId() );
         item.tellListeners();
         c.start();

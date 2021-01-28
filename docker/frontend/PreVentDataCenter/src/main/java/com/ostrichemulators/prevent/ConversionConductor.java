@@ -9,10 +9,8 @@ import com.ostrichemulators.prevent.Conversion.ConversionBuilder;
 import com.ostrichemulators.prevent.conversion.Converter;
 import com.ostrichemulators.prevent.conversion.DockerConverter;
 import com.ostrichemulators.prevent.conversion.NativeConverter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.concurrent.ExecutorService;
@@ -122,10 +120,13 @@ public class ConversionConductor {
     }, 0, CHECK_INTERVAL_S, TimeUnit.SECONDS );
   }
 
-  public static Path xmlPathForStp( WorkItem item ) {
-    File f = item.getPath().toFile();
-    String filename = FilenameUtils.getBaseName( f.toString() );
-    return Paths.get( f.getParent(), filename + ".xml" );
+  private static Path xmlPathForStp( WorkItem item, Path logdir ) {
+    Path inputfile = item.getPath();
+    String filename = inputfile.getFileName().toString();
+    String basename = FilenameUtils.removeExtension( filename );
+
+    Path xmlfile = logdir.resolve( filename ).resolveSibling( basename + ".xml" );
+    return xmlfile;
   }
 
   public static boolean needsStpToXmlConversion( WorkItem item ) {
@@ -151,13 +152,14 @@ public class ConversionConductor {
   }
 
   private Conversion createConversion( WorkItem item, WorkItemStateChangeListener l ) {
+    Path logdir = App.prefs.getLogPath().resolve( item.getId() );
 
     ConversionBuilder builder = Conversion.builder( item )
           .listener( l )
-          .withLogsIn( App.prefs.getLogPath().resolve( item.getId() ) )
+          .withLogsIn( logdir )
           .maxRuntime( Duration.ofMinutes( App.prefs.getMaxConversionMinutes() ) );
     if ( needsStpToXmlConversion( item ) ) {
-      builder.withXml( xmlPathForStp( item ) );
+      builder.withXml( xmlPathForStp( item, logdir ) );
     }
 
     return builder.build();

@@ -6,6 +6,7 @@
 package com.ostrichemulators.prevent.conversion;
 
 import com.ostrichemulators.prevent.App;
+import com.ostrichemulators.prevent.Conversion;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,8 +33,11 @@ public class StpToXml {
   private static final Logger LOG = LoggerFactory.getLogger( StpToXml.class );
   private static Path stpdir;
 
-  public static ProcessInfo convert( Path stpfile, Path xmlfile ) throws IOException {
+  public static ProcessInfo convert( Conversion conv ) throws IOException {
     initIfNeeded();
+
+    Path stpfile = conv.getItem().getPath();
+    Path xmlfile = conv.getXmlPath();
 
     // STPtoXML seems to struggle when multiple conversions are running from the
     // same directory, so we copy stpdir to a new dir for every conversion

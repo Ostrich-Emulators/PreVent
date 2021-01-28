@@ -10,6 +10,7 @@ import com.ostrichemulators.prevent.WorkItem;
 import com.ostrichemulators.prevent.WorkItem.Status;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.concurrent.FutureTask;
@@ -57,7 +58,7 @@ public class NativeConverter extends AbstractConverter {
           item.tellListeners();
 
           LOG.debug( "Calling StpToolkit on {} (xml:{})", item.getItem().getPath(), item.getXmlPath() );
-          cnv = StpToXml.convert( item.getItem().getPath(), item.getXmlPath() );
+          cnv = StpToXml.convert( item );
           synchronized ( monitor ) {
             while ( cnv.process.isAlive() && StopReason.DONT_STOP == conversionCanWaitLonger( item ) ) {
               try {
@@ -123,7 +124,9 @@ public class NativeConverter extends AbstractConverter {
               item.getItem().killed();
               break;
             case ERROR:
-              item.getItem().error( "process died in error" );
+              item.getItem().error( Files.isReadable( item.getItem().getPath() )
+                                    ? "Process died during conversion"
+                                    : "Input file could not be opened" );
               break;
             case COMPLETED:
               item.getItem().finished( LocalDateTime.now() );
