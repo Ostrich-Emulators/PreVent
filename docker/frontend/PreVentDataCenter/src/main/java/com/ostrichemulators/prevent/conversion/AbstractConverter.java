@@ -5,7 +5,6 @@
  */
 package com.ostrichemulators.prevent.conversion;
 
-import com.ostrichemulators.prevent.App;
 import com.ostrichemulators.prevent.Conversion;
 import com.ostrichemulators.prevent.WorkItem.Status;
 import com.ostrichemulators.prevent.conversion.Converter.StopReason;
@@ -79,7 +78,7 @@ public abstract class AbstractConverter implements Converter {
   }
 
   public Reader getLog( Conversion conv, LogType type, boolean err ) throws IOException {
-    File datadir = App.prefs.getLogPath().resolve( conv.getItem().getId() ).toFile();
+    File datadir = conv.getLogDir().toFile();
     if ( datadir.exists() && datadir.isDirectory() ) {
       throw new IOException( "Cannot locate log directory (or not a directory): " + datadir );
     }
@@ -92,7 +91,7 @@ public abstract class AbstractConverter implements Converter {
   }
 
   protected void saveLogs( Conversion conv, ProcessInfo proc, LogType type ) throws IOException {
-    File datadir = App.prefs.getLogPath().resolve( conv.getItem().getId() ).toFile();
+    File datadir = conv.getLogDir().toFile();
     boolean ok = ( datadir.exists() && datadir.isDirectory()
                    ? true
                    : datadir.mkdirs() );
@@ -100,6 +99,7 @@ public abstract class AbstractConverter implements Converter {
       throw new RuntimeException( "unable to save logs: " + datadir );
     }
 
+    // FIXME: check conv.compresslogs before compressing
     try ( Reader input = new FileReader( proc.stderrfile );
           OutputStream outstream = new GZIPOutputStream( new FileOutputStream( new File( datadir, type + "-stderr.gz" ) ) ) ) {
       IOUtils.copy( input, outstream, StandardCharsets.UTF_8.toString() );

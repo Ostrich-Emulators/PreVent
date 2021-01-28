@@ -122,7 +122,8 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
           .setNativeStp( nativestp.isSelected() )
           .setMaxDockerCount( dockercnt.getValue() )
           .setStpPhilips( usephilips.isSelected() )
-          .setRemoveDockerOnSuccess( removecontainers.isSelected() );
+          .setRemoveDockerOnSuccess( removecontainers.isSelected() )
+          .setLogPath( Paths.get( loglbl.getText() ) );
     if ( !"From Input".equals( outputlbl.getText() ) ) {
       App.prefs.setOutputPath( Paths.get( outputlbl.getText() ) );
     }

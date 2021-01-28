@@ -51,8 +51,8 @@ public class FormatConverter {
 
     LOG.debug( "FormatConverter command: {}", String.join( " ", cmds ) );
 
-    File stdout = src.getLogDir().resolve( "stp-output.log" ).toFile();
-    File stderr = src.getLogDir().resolve( "stp-errors.log" ).toFile();
+    File stdout = src.getLogDir().resolve( "conv-output.log" ).toFile();
+    File stderr = src.getLogDir().resolve( "conv-errors.log" ).toFile();
     Process proc = new ProcessBuilder()
           .command( cmds )
           .redirectError( stderr )

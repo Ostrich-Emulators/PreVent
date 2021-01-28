@@ -45,15 +45,14 @@ public class NativeConverter extends AbstractConverter {
     return new FutureTask<>( () -> {
       ProcessInfo cnv = null;
       cnv = null;
+      boolean doxml = item.needsStpToXml();
       try {
         File f = item.getLogDir().toFile();
         if ( !f.exists() ) {
           f.mkdirs();
         }
 
-        boolean doxml = false;
-        if ( item.needsStpToXml() ) {
-          doxml = true;
+        if ( doxml ) {
           item.getItem().preprocess();
           item.tellListeners();
 
@@ -140,6 +139,8 @@ public class NativeConverter extends AbstractConverter {
 
         this.saveLogs( item, fmtcnv, LogType.CONVERSION );
         FileUtils.deleteDirectory( fmtcnv.dir );
+        FileUtils.deleteQuietly( fmtcnv.stderrfile );
+        FileUtils.deleteQuietly( fmtcnv.stdoutfile );
         LOG.debug( "done waiting! " );
       }
       catch ( IOException x ) {
@@ -150,7 +151,7 @@ public class NativeConverter extends AbstractConverter {
       finally {
         item.tellListeners();
 
-        if ( item.needsStpToXml() ) {
+        if ( doxml ) {
           LOG.debug( "removing XML from STPtoXML conversion: {}", item.getXmlPath() );
           item.getXmlPath().toFile().delete();
         }

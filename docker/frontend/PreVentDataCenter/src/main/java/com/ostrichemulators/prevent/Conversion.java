@@ -25,7 +25,7 @@ public class Conversion {
   private WorkItem item;
   private Path xmlpath;
   private Path logdir;
-  private boolean compresslogs;
+  private boolean compresslogs = true;
   private final List<WorkItemStateChangeListener> listeners = new ArrayList<>();
 
   private Conversion() {

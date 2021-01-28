@@ -154,7 +154,7 @@ public class ConversionConductor {
 
     ConversionBuilder builder = Conversion.builder( item )
           .listener( l )
-          .withLogsIn( App.prefs.getLogPath() )
+          .withLogsIn( App.prefs.getLogPath().resolve( item.getId() ) )
           .maxRuntime( Duration.ofMinutes( App.prefs.getMaxConversionMinutes() ) );
     if ( needsStpToXmlConversion( item ) ) {
       builder.withXml( xmlPathForStp( item ) );
