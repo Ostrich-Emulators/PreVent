@@ -460,8 +460,13 @@ int main( int argc, char** argv ) {
       continue;
     }
     else {
-      auto files = to->write( from.get( ), data.get( ) );
+      bool iserr;
+      auto files = to->write( from.get( ), data.get( ), &iserr );
       from->finish( );
+
+      if ( iserr ) {
+        returncode = -3;
+      }
 
       for ( const auto& f : files ) {
         Log::info( ) << " written to " << f << std::endl;

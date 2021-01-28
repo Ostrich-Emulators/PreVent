@@ -30,12 +30,12 @@ namespace FormatConverter {
     FormatConverter::FileNamer& filenamer( ) const;
     const std::string& ext( ) const;
 
-    virtual std::vector<std::string> write( Reader * from, SignalSet * data );
+    virtual std::vector<std::string> write( Reader * from, SignalSet * data, bool * iserror = nullptr );
 
   protected:
     Writer( const std::string& extension );
 
-    bool skipwaves() const;
+    bool skipwaves( ) const;
 
     /**
      * Lets subclasses initialize a new (possibly temporary) data file.

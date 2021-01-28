@@ -86,8 +86,11 @@ namespace FormatConverter{
     return *namer.get( );
   }
 
-  std::vector<std::string> Writer::write( Reader * from, SignalSet * data ) {
+  std::vector<std::string> Writer::write( Reader * from, SignalSet * data, bool * iserror ) {
     auto patientno = 1;
+    if ( nullptr != iserror ) {
+      *iserror = false;
+    }
 
     Log::trace( ) << "init data set" << std::endl;
     namer->patientOrdinal( patientno );
@@ -95,6 +98,9 @@ namespace FormatConverter{
     auto list = std::vector<std::string>{ };
     if ( initrslt < 0 ) {
       Log::error( ) << "cannot init dataset: " + namer->last( ) << std::endl;
+      if ( nullptr != iserror ) {
+        *iserror = true;
+      }
       return list;
     }
 
@@ -107,9 +113,9 @@ namespace FormatConverter{
       drain( data );
       namer->fileOrdinal( files++ );
 
-//      if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
-//        namer->timeoffset_ms( std::stol( data->metadata( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) );
-//      }
+      //      if ( 0 != data->metadata( ).count( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) {
+      //        namer->timeoffset_ms( std::stol( data->metadata( ).at( OffsetTimeSignalSet::COLLECTION_OFFSET ) ) );
+      //      }
 
       if ( testrun ) {
         retcode = ReadResult::END_OF_FILE;
@@ -163,8 +169,12 @@ namespace FormatConverter{
       retcode = from->fill( data, retcode );
     }
 
+
     if ( ReadResult::ERROR == retcode ) {
       Log::error( ) << "error reading file" << std::endl;
+      if ( nullptr != iserror ) {
+        *iserror = true;
+      }
     }
 
     return list;
