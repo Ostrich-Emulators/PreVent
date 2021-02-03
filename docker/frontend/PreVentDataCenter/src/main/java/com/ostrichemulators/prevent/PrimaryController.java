@@ -420,7 +420,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     chsr.setTitle( "Select Output Directory" );
 
     Path outdir = App.prefs.getOutputPath();
-    if ( Files.exists( outdir ) ) {
+    if ( null != outdir && Files.exists( outdir ) ) {
       chsr.setInitialDirectory( outdir.toFile() );
     }
     Window window = table.getScene().getWindow();
