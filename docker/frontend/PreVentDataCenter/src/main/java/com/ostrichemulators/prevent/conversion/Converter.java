@@ -15,13 +15,17 @@ import java.util.concurrent.FutureTask;
  */
 public interface Converter {
 
+  public static enum LogType {
+    STP, CONVERSION
+  };
+
   static enum StopReason {
     TOO_LONG, ERROR, SHUTDOWN, COMPLETED, DONT_STOP
   };
 
   public void verifyAndPrepare();
 
-  public void reinitialize( Conversion item );
+  public Conversion reinitialize( Conversion item );
 
   public FutureTask<WorkItem> createTask( Conversion c, Object monitor );
 

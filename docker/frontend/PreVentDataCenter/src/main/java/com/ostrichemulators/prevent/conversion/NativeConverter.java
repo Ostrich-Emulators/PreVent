@@ -33,12 +33,13 @@ public class NativeConverter extends AbstractConverter {
   }
 
   @Override
-  public void reinitialize( Conversion item ) {
+  public Conversion reinitialize( Conversion item ) {
     // native processor only works while this app is running, so
     // any item not completed or errored must be reinitialized
     if ( REINIT_STATUSES.contains( item.getItem().getStatus() ) ) {
       item.getItem().reinit();
     }
+    return item;
   }
 
   @Override
@@ -59,6 +60,7 @@ public class NativeConverter extends AbstractConverter {
 
           LOG.debug( "Calling StpToolkit on {} (xml:{})", item.getItem().getPath(), item.getXmlPath() );
           cnv = StpToXml.convert( item );
+          item.setLogable( cnv );
           synchronized ( monitor ) {
             while ( cnv.process.isAlive() && StopReason.DONT_STOP == conversionCanWaitLonger( item ) ) {
               try {
@@ -92,6 +94,7 @@ public class NativeConverter extends AbstractConverter {
         ProcessInfo fmtcnv = FormatConverter.convert( item, doxml
                                                             ? item.getXmlPath()
                                                             : null );
+        item.setLogable( fmtcnv );
         item.getItem().started( "" ); // FIXME: need some sort of container id here
         item.tellListeners();
 
@@ -119,6 +122,12 @@ public class NativeConverter extends AbstractConverter {
           // 3) the conversion was killed (timed out)
           // 4) the system is shutting down
           // FIXME: no matter how we got to this point, save the container logs somewhere
+          this.saveLogs( item, fmtcnv, LogType.CONVERSION );
+          FileUtils.deleteDirectory( fmtcnv.dir );
+          FileUtils.deleteQuietly( fmtcnv.stderrfile );
+          FileUtils.deleteQuietly( fmtcnv.stdoutfile );
+          item.setLogable( null );
+
           switch ( reason ) {
             case TOO_LONG:
               item.getItem().killed();
@@ -140,10 +149,6 @@ public class NativeConverter extends AbstractConverter {
           }
         }
 
-        this.saveLogs( item, fmtcnv, LogType.CONVERSION );
-        FileUtils.deleteDirectory( fmtcnv.dir );
-        FileUtils.deleteQuietly( fmtcnv.stderrfile );
-        FileUtils.deleteQuietly( fmtcnv.stdoutfile );
         LOG.debug( "conversion complete: {}", item.getItem().getPath() );
       }
       catch ( IOException x ) {
@@ -166,10 +171,10 @@ public class NativeConverter extends AbstractConverter {
     if ( !process.process.isAlive() ) {
       int ret = process.process.exitValue();
       if ( 0 == ret ) {
-        conv.getItem().finished( LocalDateTime.now() );
+        return StopReason.COMPLETED;
       }
       else {
-        conv.getItem().error( "processed died in error" );
+        return StopReason.ERROR;
       }
     }
 

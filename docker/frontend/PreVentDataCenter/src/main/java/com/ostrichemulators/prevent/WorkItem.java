@@ -33,7 +33,6 @@ public final class WorkItem {
     PREPROCESSING
   }
 
-  private Path file;
   private String id;
 
   private final SimpleLongProperty bytes = new SimpleLongProperty();
@@ -44,6 +43,7 @@ public final class WorkItem {
   private final SimpleObjectProperty<Status> status = new SimpleObjectProperty<>( Status.ADDED );
   private final SimpleStringProperty message = new SimpleStringProperty();
   private final SimpleObjectProperty<Path> outputdir = new SimpleObjectProperty<>();
+  private final SimpleObjectProperty<Path> file = new SimpleObjectProperty<>();
 
   // for jackson
   WorkItem() {
@@ -80,11 +80,15 @@ public final class WorkItem {
   }
 
   public Path getPath() {
-    return file;
+    return file.get();
   }
 
   public void setPath( Path file ) {
-    this.file = file;
+    this.file.set( file );
+  }
+
+  public ReadOnlyObjectProperty<Path> pathProperty() {
+    return file;
   }
 
   public Path getOutputPath() {

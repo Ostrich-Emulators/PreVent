@@ -9,15 +9,12 @@ import com.ostrichemulators.prevent.Conversion;
 import com.ostrichemulators.prevent.WorkItem.Status;
 import com.ostrichemulators.prevent.conversion.Converter.StopReason;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -31,10 +28,6 @@ public abstract class AbstractConverter implements Converter {
 
   private static final Logger LOG = LoggerFactory.getLogger( AbstractConverter.class );
   private boolean shuttingDown = false;
-
-  protected static enum LogType {
-    STP, CONVERSION
-  };
 
   protected StopReason conversionCanWaitLonger( Conversion conv ) {
 
@@ -77,20 +70,9 @@ public abstract class AbstractConverter implements Converter {
     return shuttingDown;
   }
 
-  public Reader getLog( Conversion conv, LogType type, boolean err ) throws IOException {
-    File datadir = conv.getLogDir().toFile();
-    if ( datadir.exists() && datadir.isDirectory() ) {
-      throw new IOException( "Cannot locate log directory (or not a directory): " + datadir );
-    }
-
-    String gz = ( err
-                  ? "stderr.gz"
-                  : "stdout.gz" );
-
-    return new InputStreamReader( new GZIPInputStream( new FileInputStream( new File( datadir, type + gz ) ) ) );
-  }
-
   protected void saveLogs( Conversion conv, ProcessInfo proc, LogType type ) throws IOException {
+    LOG.debug( "saving {} files!", type );
+
     File datadir = conv.getLogDir().toFile();
     boolean ok = ( datadir.exists() && datadir.isDirectory()
                    ? true
@@ -100,14 +82,18 @@ public abstract class AbstractConverter implements Converter {
     }
 
     // FIXME: check conv.compresslogs before compressing
-    try ( Reader input = new FileReader( proc.stderrfile );
-          OutputStream outstream = new GZIPOutputStream( new FileOutputStream( new File( datadir, type + "-stderr.gz" ) ) ) ) {
-      IOUtils.copy( input, outstream, StandardCharsets.UTF_8.toString() );
+    if ( proc.stderrfile.length() > 0 ) {
+      try ( Reader input = new FileReader( proc.stderrfile );
+            OutputStream outstream = new GZIPOutputStream( new FileOutputStream( conv.getLog( type, true ).toFile() ) ) ) {
+        IOUtils.copy( input, outstream, StandardCharsets.UTF_8.toString() );
+      }
     }
 
-    try ( Reader input = new FileReader( proc.stdoutfile );
-          OutputStream outstream = new GZIPOutputStream( new FileOutputStream( new File( datadir, type + "-stdout.gz" ) ) ) ) {
-      IOUtils.copy( input, outstream, StandardCharsets.UTF_8.toString() );
+    if ( proc.stdoutfile.length() > 0 ) {
+      try ( Reader input = new FileReader( proc.stdoutfile );
+            OutputStream outstream = new GZIPOutputStream( new FileOutputStream( conv.getLog( type, false ).toFile() ) ) ) {
+        IOUtils.copy( input, outstream, StandardCharsets.UTF_8.toString() );
+      }
     }
   }
 }

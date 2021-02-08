@@ -6,12 +6,13 @@
 package com.ostrichemulators.prevent.conversion;
 
 import java.io.File;
+import java.nio.file.Path;
 
 /**
  *
  * @author ryan
  */
-public class ProcessInfo {
+public class ProcessInfo implements Logable {
 
   public final Process process;
   public final File dir;
@@ -23,5 +24,16 @@ public class ProcessInfo {
     this.dir = dir;
     this.stdoutfile = stdoutfile;
     this.stderrfile = stderrfile;
+  }
+
+  @Override
+  public Path getOut() {
+    return this.stdoutfile.toPath();
+
+  }
+
+  @Override
+  public Path getErr() {
+    return this.stderrfile.toPath();
   }
 }

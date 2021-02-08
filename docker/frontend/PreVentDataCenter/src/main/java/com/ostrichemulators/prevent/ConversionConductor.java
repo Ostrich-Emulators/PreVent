@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,21 +135,22 @@ public class ConversionConductor {
           && "stpxml".equalsIgnoreCase( item.getType() ) );
   }
 
-  public void convert( Collection<WorkItem> work, WorkItemStateChangeListener l ) throws IOException {
+  public void convert( Collection<Conversion> work ) throws IOException {
     if ( null == threadreaper ) {
       startReaping();
     }
 
-    for ( WorkItem item : work ) {
-      item.queued();
-      l.itemChanged( item );
-      executor.submit( converter.createTask( createConversion( item, l ), monitor ) );
+    for ( Conversion item : work ) {
+      item.getItem().queued();
+      item.tellListeners();
+      executor.submit( converter.createTask( item, monitor ) );
     }
   }
 
-  public void reinitializeItems( Collection<WorkItem> items, WorkItemStateChangeListener l ) {
-    items.stream().map( wi -> createConversion( wi, l ) )
-          .forEach( conv -> converter.reinitialize( conv ) );
+  public Collection<Conversion> reinitializeItems( Collection<WorkItem> items, WorkItemStateChangeListener l ) {
+    return items.stream()
+          .map( wi -> converter.reinitialize( createConversion( wi, l ) ) )
+          .collect( Collectors.toList() );
   }
 
   private Conversion createConversion( WorkItem item, WorkItemStateChangeListener l ) {

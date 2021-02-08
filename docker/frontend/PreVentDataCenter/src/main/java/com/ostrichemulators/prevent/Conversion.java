@@ -6,6 +6,13 @@
 package com.ostrichemulators.prevent;
 
 import com.ostrichemulators.prevent.WorkItem.Status;
+import com.ostrichemulators.prevent.conversion.Converter.LogType;
+import com.ostrichemulators.prevent.conversion.Logable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -14,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.zip.GZIPInputStream;
 
 /**
  *
@@ -27,6 +35,7 @@ public class Conversion {
   private Path logdir;
   private boolean compresslogs = true;
   private final List<WorkItemStateChangeListener> listeners = new ArrayList<>();
+  private Logable worker;
 
   private Conversion() {
   }
@@ -55,6 +64,14 @@ public class Conversion {
     return LocalDateTime.now().isAfter( item.getStarted().plus( maxlifespan ) );
   }
 
+  public void setLogable( Logable l ) {
+    this.worker = l;
+  }
+
+  public Logable getLogable() {
+    return this.worker;
+  }
+
   public boolean needsStpToXml() {
     return ( Objects.isNull( xmlpath )
              ? false
@@ -71,6 +88,24 @@ public class Conversion {
 
   public void tellListeners() {
     listeners.stream().forEach( l -> l.itemChanged( item ) );
+  }
+
+  public Path getLog( LogType type, boolean err ) {
+    Path datadir = getLogDir();
+    String gz = ( err
+                  ? "stderr.gz"
+                  : "stdout.gz" );
+    return datadir.resolve( type + "-" + gz );
+  }
+
+  public Reader getLogReader( LogType type, boolean err ) throws IOException {
+    Path path = getLog( type, err );
+    File datadir = path.getParent().toFile();
+    if ( !( datadir.exists() && datadir.isDirectory() ) ) {
+      throw new IOException( "Cannot locate log directory (or not a directory): " + datadir );
+    }
+
+    return new InputStreamReader( new GZIPInputStream( new FileInputStream( path.toFile() ) ) );
   }
 
   public class ConversionBuilder {

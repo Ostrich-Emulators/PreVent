@@ -34,7 +34,6 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
@@ -42,41 +41,46 @@ import javafx.util.StringConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.nio.file.Files;
+import java.util.Collection;
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.control.TableColumn.CellDataFeatures;
+import javafx.util.Callback;
 
 public class PrimaryController implements Initializable, WorkItemStateChangeListener {
 
   private static final Logger LOG = LoggerFactory.getLogger( PrimaryController.class );
   private static final int COLWIDTHS[] = {15, 50, 10, 10, 15, 15, 10, 10, 10};
   @FXML
-  private TableView<WorkItem> table;
+  private TableView<Conversion> table;
 
   @FXML
-  private TableColumn<WorkItem, Status> statuscol;
+  private TableColumn<Conversion, Status> statuscol;
 
   @FXML
-  private TableColumn<WorkItem, Path> filecol;
+  private TableColumn<Conversion, Path> filecol;
 
   @FXML
-  private TableColumn<WorkItem, Path> outputcol;
+  private TableColumn<Conversion, Path> outputcol;
 
   @FXML
-  private TableColumn<WorkItem, LocalDateTime> startedcol;
+  private TableColumn<Conversion, LocalDateTime> startedcol;
 
   @FXML
-  private TableColumn<WorkItem, LocalDateTime> endedcol;
+  private TableColumn<Conversion, LocalDateTime> endedcol;
 
   @FXML
-  private TableColumn<WorkItem, String> messagecol;
+  private TableColumn<Conversion, String> messagecol;
 
   @FXML
-  private TableColumn<WorkItem, Long> sizecol;
+  private TableColumn<Conversion, Long> sizecol;
 
   @FXML
-  private TableColumn<WorkItem, String> typecol;
+  private TableColumn<Conversion, String> typecol;
 
   @FXML
-  private TableColumn<WorkItem, String> containercol;
+  private TableColumn<Conversion, String> containercol;
 
   @FXML
   private CheckBox nativestp;
@@ -259,12 +263,12 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     }
 
     try {
-      List<WorkItem> allitems = Worklist.open( savelocation );
+      List<WorkItem> loadeditems = Worklist.open( savelocation );
 
       table.setRowFactory( tv -> {
-        TableRow<WorkItem> row = new TableRow();
+        TableRow<Conversion> row = new TableRow();
         row.setOnMouseClicked( event -> {
-          WorkItem item = row.getItem();
+          Conversion item = row.getItem();
           if ( !row.isEmpty() ) {
             detailscontroller.setItem( item );
             if ( event.getClickCount() > 1 ) {
@@ -275,7 +279,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
         return row;
       } );
 
-      App.converter.reinitializeItems( allitems, this );
+      Collection<Conversion> allitems = App.converter.reinitializeItems( loadeditems, this );
 
       table.getItems().addAll( allitems );
     }
@@ -284,10 +288,10 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     }
   }
 
-  private void toggleDetails( WorkItem item ) {
+  private void toggleDetails( Conversion item ) {
     double pos = splitter.getDividerPositions()[0];
     if ( pos > 0.7 ) {
-      splitter.setDividerPosition( 0, 0.7 );
+      splitter.setDividerPosition( 0, 0.4 );
     }
     else {
       splitter.setDividerPosition( 0, 1.0 );
@@ -311,24 +315,24 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       }
     }
 
-    statuscol.setCellValueFactory( new PropertyValueFactory<>( "status" ) );
-    messagecol.setCellValueFactory( new PropertyValueFactory<>( "message" ) );
-    typecol.setCellValueFactory( new PropertyValueFactory<>( "type" ) );
-    containercol.setCellValueFactory( new PropertyValueFactory<>( "containerId" ) );
+    statuscol.setCellValueFactory( new ConversionPropertyCellFactory<>( "status" ) );
+    messagecol.setCellValueFactory( new ConversionPropertyCellFactory<>( "message" ) );
+    typecol.setCellValueFactory( new ConversionPropertyCellFactory<>( "type" ) );
+    containercol.setCellValueFactory( new ConversionPropertyCellFactory<>( "containerId" ) );
 
-    sizecol.setCellValueFactory( new PropertyValueFactory<>( "bytes" ) );
+    sizecol.setCellValueFactory( new ConversionPropertyCellFactory<>( "bytes" ) );
     sizecol.setCellFactory( column -> new KbTableCell() );
 
-    filecol.setCellValueFactory( new PropertyValueFactory<>( "path" ) );
+    filecol.setCellValueFactory( new ConversionPropertyCellFactory<>( "path" ) );
     filecol.setCellFactory( column -> new LeadingEllipsisTableCell() );
 
-    outputcol.setCellValueFactory( new PropertyValueFactory<>( "outputPath" ) );
+    outputcol.setCellValueFactory( new ConversionPropertyCellFactory<>( "outputPath" ) );
     outputcol.setCellFactory( column -> new LeadingEllipsisTableCell() );
 
-    startedcol.setCellValueFactory( new PropertyValueFactory<>( "started" ) );
+    startedcol.setCellValueFactory( new ConversionPropertyCellFactory<>( "started" ) );
     startedcol.setCellFactory( column -> new LocalDateTableCell() );
 
-    endedcol.setCellValueFactory( new PropertyValueFactory<>( "finished" ) );
+    endedcol.setCellValueFactory( new ConversionPropertyCellFactory<>( "finished" ) );
     endedcol.setCellFactory( column -> new LocalDateTableCell() );
   }
 
@@ -342,10 +346,10 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     try {
       // ignore items that are already running, already finished, or already queued
       Set<Status> workable = new HashSet<>( List.of( Status.ERROR, Status.ADDED, Status.KILLED ) );
-      List<WorkItem> todo = table.getItems().stream()
-            .filter( wi -> workable.contains( wi.getStatus() ) )
+      List<Conversion> todo = table.getItems().stream()
+            .filter( wi -> workable.contains( wi.getItem().getStatus() ) )
             .collect( Collectors.toList() );
-      App.converter.convert( todo, this );
+      App.converter.convert( todo );
     }
     catch ( IOException x ) {
       LOG.error( "{}", x );
@@ -357,14 +361,18 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     try {
       // run whatever's selected (except already-queued or already running items)
       Set<Status> workable = new HashSet<>( List.of( Status.RUNNING, Status.PREPROCESSING, Status.QUEUED ) );
-      List<WorkItem> todo = table.getSelectionModel().getSelectedItems().stream()
-            .filter( wi -> !workable.contains( wi.getStatus() ) )
+      List<Conversion> todo = table.getSelectionModel().getSelectedItems().stream()
+            .filter( wi -> !workable.contains( wi.getItem().getStatus() ) )
             .collect( Collectors.toList() );
-      App.converter.convert( todo, this );
+      App.converter.convert( todo );
     }
     catch ( IOException x ) {
       LOG.error( "{}", x );
     }
+  }
+
+  private void saveWorklist() throws IOException {
+    Worklist.save( table.getItems().stream().map( conv -> conv.getItem() ).collect( Collectors.toList() ), savelocation );
   }
 
   @FXML
@@ -381,8 +389,8 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
           .map( wi -> wi.get() )
           .collect( Collectors.toList() );
     if ( !newitems.isEmpty() ) {
-      table.getItems().addAll( newitems );
-      Worklist.save( table.getItems(), savelocation );
+      table.getItems().addAll( App.converter.reinitializeItems( newitems, this ) );
+      saveWorklist();
       App.prefs.setLastOpenedDir( newitems.get( 0 ).getPath().getParent().toFile() );
     }
   }
@@ -397,8 +405,9 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
 
     File dir = chsr.showDialog( window );
     if ( null != dir ) {
-      Worklist.recursively( dir.toPath(), nativestpx ).forEach( wi -> table.getItems().add( wi ) );
-      Worklist.save( table.getItems(), savelocation );
+      List<WorkItem> items = Worklist.recursively( dir.toPath(), nativestpx );
+      table.getItems().addAll( App.converter.reinitializeItems( items, this ) );
+      saveWorklist();
       App.prefs.setLastOpenedDir( dir.getParentFile() );
     }
   }
@@ -407,7 +416,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
   public void itemChanged( WorkItem item ) {
     table.refresh();
     try {
-      Worklist.save( table.getItems(), savelocation );
+      saveWorklist();
     }
     catch ( IOException xx ) {
       LOG.warn( "Could not save WorkItem update", xx );
@@ -447,7 +456,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     loglbl.setText( dir.getAbsolutePath() );
   }
 
-  private static class LocalDateTableCell extends TableCell<WorkItem, LocalDateTime> {
+  private static class LocalDateTableCell extends TableCell<Conversion, LocalDateTime> {
 
     @Override
     protected void updateItem( LocalDateTime item, boolean empty ) {
@@ -461,7 +470,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     }
   }
 
-  private static class LeadingEllipsisTableCell extends TableCell<WorkItem, Path> {
+  private static class LeadingEllipsisTableCell extends TableCell<Conversion, Path> {
 
     @Override
     protected void updateItem( Path item, boolean empty ) {
@@ -477,7 +486,7 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
     }
   }
 
-  private static class KbTableCell extends TableCell<WorkItem, Long> {
+  private static class KbTableCell extends TableCell<Conversion, Long> {
 
     @Override
     protected void updateItem( Long bytes, boolean empty ) {
@@ -489,6 +498,43 @@ public class PrimaryController implements Initializable, WorkItemStateChangeList
       }
       else {
         setText( String.valueOf( bytes / 1000 ) );
+      }
+    }
+  }
+
+  private static class ConversionPropertyCellFactory<T> implements Callback<CellDataFeatures<Conversion, T>, ObservableValue<T>> {
+
+    private final String prop;
+
+    ConversionPropertyCellFactory( String propname ) {
+      prop = propname;
+    }
+
+    @Override
+    public ObservableValue<T> call( CellDataFeatures<Conversion, T> p ) {
+      WorkItem item = p.getValue().getItem();
+      switch ( prop ) {
+        case "status":
+          return (ObservableValue<T>) ( item.statusProperty() );
+        case "message":
+          return (ObservableValue<T>) ( item.messageProperty() );
+        case "containerId":
+          return (ObservableValue<T>) ( item.containerIdProperty() );
+        case "bytes":
+          return (ObservableValue<T>) ( item.bytesProperty() );
+        case "path":
+          T val = (T) item.getPath();
+          return new ReadOnlyObjectWrapper<T>( val );
+        case "outputPath":
+          return (ObservableValue<T>) ( item.messageProperty() );
+        case "started":
+          return (ObservableValue<T>) ( item.startedProperty() );
+        case "finished":
+          return (ObservableValue<T>) ( item.finishedProperty() );
+        case "type":
+          return (ObservableValue<T>) ( item.typeProperty() );
+        default:
+          throw new RuntimeException( "Cell factory not yet implemented for property: " + prop );
       }
     }
   }

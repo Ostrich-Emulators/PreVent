@@ -350,7 +350,8 @@ public class DockerConverter extends AbstractConverter {
   }
 
   @Override
-  public void reinitialize( Conversion item ) {
+  public Conversion reinitialize( Conversion item ) {
     item.getItem().reinit();
+    return item;
   }
 }
