@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,18 +29,16 @@ import org.slf4j.LoggerFactory;
 public class Worklist {
 
   private static final Logger LOG = LoggerFactory.getLogger( Worklist.class );
-  private static final Map<String, String> EXT_TYPE_LKP = new HashMap<>();
-  private static ObjectMapper objmap;
+  private static final Map<String, String> EXT_TYPE_LKP = Map.of(
+        "medi", "tdms",
+        "xml", "stpxml",
+        "tdms", "tdms",
+        "mat", "mat5",
+        "mat4", "mat4",
+        "mat73", "mat73",
+        "stp", "stp" );
 
-  static {
-    EXT_TYPE_LKP.put( "medi", "tdms" );
-    EXT_TYPE_LKP.put( "xml", "stpxml" );
-    EXT_TYPE_LKP.put( "tdms", "tdms" );
-    EXT_TYPE_LKP.put( "mat", "mat5" );
-    EXT_TYPE_LKP.put( "mat4", "mat4" );
-    EXT_TYPE_LKP.put( "mat73", "mat73" );
-    EXT_TYPE_LKP.put( "stp", "stp" );
-  }
+  private static ObjectMapper objmap;
 
   public static List<WorkItem> open( Path saveloc ) throws IOException {
     List<WorkItem> list = new ArrayList<>();

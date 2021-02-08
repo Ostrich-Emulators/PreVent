@@ -46,7 +46,7 @@ public final class WorkItem {
   private final SimpleObjectProperty<Path> outputdir = new SimpleObjectProperty<>();
 
   // for jackson
-  private WorkItem() {
+  WorkItem() {
   }
 
   public static WorkItemBuilder builder( Path p ) {

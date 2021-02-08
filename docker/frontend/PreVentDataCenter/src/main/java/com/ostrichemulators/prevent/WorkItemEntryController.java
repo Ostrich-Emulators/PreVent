@@ -8,6 +8,7 @@ package com.ostrichemulators.prevent;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +25,9 @@ public class WorkItemEntryController {
   @FXML
   private Label txtlbl;
 
+  @FXML
+  private ListView<String> listview;
+
   public void setItem( WorkItem wi ) {
     this.item = wi;
     txtlbl.setText( item.toString() );
@@ -37,13 +41,10 @@ public class WorkItemEntryController {
   @FXML
   void showOutput( ActionEvent event ) {
     LOG.debug( "show output: {}", item );
-
   }
 
   @FXML
   void showStp( ActionEvent event ) {
     LOG.debug( "show stp: {}", item );
-
   }
-
 }
