@@ -39,14 +39,14 @@ if(MSVC)
   set(expat_DIR "C:/Program Files (x86)/Expat 2.2.0")
   set(SQLITE_LIBRARIES "C:/Program Files (x86)/sqlite3/sqlite3.dll")
 
-  set(MATIO_INCLUDES "C:/Users/ryan/source/matio-1.5.17/src;C:/Users/ryan/source/matio-1.5.17/visual_studio")
-  set(MATIO_LIRARIES "C:/Users/ryan/source/matio-1.5.17/visual_studio/x64/Debug")
+  set(MATIO_INCLUDES "C:/Users/ryan/source/matio-1.5.21/src;C:/Users/ryan/source/matio-1.5.21/visual_studio")
+  set(MATIO_LIRARIES "C:/Users/ryan/source/matio-1.5.21/visual_studio/x64/Debug")
 
 else()
 set(HDF5_USE_STATIC_LIBRARIES false)
   find_package(PkgConfig)
   pkg_check_modules (SQLITE REQUIRED sqlite3)
-  pkg_check_modules (MATIO REQUIRED matio)
+  pkg_check_modules (MATIO REQUIRED matio>=1.5.21)
 endif()
 
 add_subdirectory(Formats)

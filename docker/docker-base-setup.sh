@@ -2,16 +2,16 @@
 	
 # Matio has an ubuntu package, but we build it ourselves because of 
 # inconsistencies in the packaging and CMAKE, and to avoid the dependency on HDF5 1.8 (we use 1.10)
-curl --silent --create-dirs --output /tmp/matio.tgz https://ayera.dl.sourceforge.net/project/matio/matio/1.5.17/matio-1.5.17.tar.gz
+curl --silent --create-dirs --output /tmp/matio.tgz https://phoenixnap.dl.sourceforge.net/project/matio/matio/1.5.21/matio-1.5.21.tar.gz
 cd /tmp
 tar xfz matio.tgz
-pushd matio-1.5.17
+pushd matio-1.5.21
 ./configure --prefix=/usr --with-hdf5=/usr/lib/x86_64-linux-gnu/hdf5/serial
 make
 make install
 popd
 
-# WFDB doens't have an ubuntu package
+# WFDB doesn't have an ubuntu package
 curl --silent --create-dirs --output /tmp/wfdb.tgz https://archive.physionet.org/physiotools/wfdb.tar.gz
 cd /tmp
 tar xfz wfdb.tgz
