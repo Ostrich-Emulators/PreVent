@@ -6,6 +6,15 @@ if [ $# -ne 1 ]; then
 fi
 
 VERSION=$1
+
+git tag | grep -q "^${VERSION}$"
+TAG_OK=$?
+ 
+if [ ${TAG_OK} -ne 0 ]; then
+  echo "Tag not found: $VERSION"
+  exit 1
+fi
+
 sed -e 's/XXVERSIONXX/'${VERSION}'/g' Dockerfile > .dockerfile-${VERSION}
 sed -e 's/XXVERSIONXX/'${VERSION}'/g' docker-base-setup.sh > .docker-base-setup-${VERSION}.sh
 sed -e 's/XXVERSIONXX/'${VERSION}'/g' Dockerfile-multiconvert > .dockerfile-multiconvert-${VERSION}
@@ -19,17 +28,17 @@ docker build -t ry99/prevent --file .dockerfile-${VERSION} .
 docker build -t ry99/prevent-cnv --file .dockerfile-multiconvert-${VERSION} .
 docker build -t ry99/prevent-tools --file .dockerfile-tools-${VERSION} .
 
-IMAGEID=$(docker image ls|grep 'prevent ' | cut -c42-54)
+IMAGEID=$(docker image ls|grep 'prevent ' | cut -c57-69)
 echo "prevent image: ${IMAGEID}"
 docker tag $IMAGEID "ry99/prevent:latest" 
 docker tag $IMAGEID "ry99/prevent:${VERSION}"
 
-IMAGEID=$(docker image ls|grep 'prevent-cnv' | cut -c42-54)
+IMAGEID=$(docker image ls|grep 'prevent-cnv' | cut -c57-69)
 echo "prevent-cnv image: ${IMAGEID}"
 docker tag $IMAGEID "ry99/prevent-cnv:latest"
 docker tag $IMAGEID "ry99/prevent-cnv:${VERSION}"
 
-IMAGEID=$(docker image ls|grep 'prevent-tool' | cut -c42-54)
+IMAGEID=$(docker image ls|grep 'prevent-tool' | cut -c57-69)
 echo "prevent-tools image: ${IMAGEID}"
 docker tag $IMAGEID "ry99/prevent-tools:latest"
 docker tag $IMAGEID "ry99/prevent-tools:${VERSION}"

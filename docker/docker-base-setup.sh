@@ -32,6 +32,7 @@ popd
 # and finally, we can build the format converter
 git clone https://github.com/Ostrich-Emulators/PreVent.git
 pushd PreVent
+git co XXVERSIONXX
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr CMakeLists.txt
 make
 make install
