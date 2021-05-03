@@ -30,7 +30,7 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN/../lib/formatconverter-$
 execute_process (
 	OUTPUT_VARIABLE GIT_HASH
 	OUTPUT_STRIP_TRAILING_WHITESPACE
-  COMMAND git describe --abbrev=8 --dirty --always --tags
+  COMMAND git describe --abbrev=8 --dirty --always
 )
 MESSAGE( STATUS "the git hash: ${GIT_HASH}" )
 

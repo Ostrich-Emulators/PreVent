@@ -1,7 +1,5 @@
-4.3.3
-  * Improved error codes
-
 4.3.2
+  * Improved error codes
   * Added ability to process zipped/gzipped/compressed STP XML files (need --from stpxml)
   * Improved --offset to allow negative values
 
