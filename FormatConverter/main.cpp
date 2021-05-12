@@ -84,6 +84,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t  %E - time of last data point (24hr clock)"
       << std::endl << "\t  %o - output file ordinal"
       << std::endl << "\t  %t - the --to option's extension (e.g., hdf5, csv)"
+      << std::endl << "\t  %S - same as %d%i-p%p-%s.%t"
       << std::endl << "\t  all dates are output in YYYYMMDD format"
       << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file (or pattern)"
       << std::endl << "\tthe --offset option will shift dates by the desired amount"

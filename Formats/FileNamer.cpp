@@ -8,6 +8,7 @@
 #include "SignalSet.h"
 #include "config.h"
 #include "Log.h"
+#include "Options.h"
 
 #include <sys/stat.h>
 #include <iostream>
@@ -119,7 +120,7 @@ namespace FormatConverter{
     //Current working directory
     char cCurrentPath[FILENAME_MAX];
     if ( !GetCurrentDir( cCurrentPath, sizeof (cCurrentPath ) ) ) {
-      perror( "Error accesing current directory" );
+      perror( "Error accessing current directory" );
     }
     conversions["%C"] = std::string( cCurrentPath ) + dirsep;
 
@@ -188,7 +189,9 @@ namespace FormatConverter{
 
   std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& sep ) {
     time_t mytime = date / 1000;
-    tm * dater = std::gmtime( &mytime );
+    tm * dater = ( Options::asBool( OptionsKey::LOCALIZED_TIME )
+        ? std::localtime( &mytime )
+        : std::gmtime( &mytime ) );
     std::string ret = sep + YYYYMMDD( dater );
     return ret;
   }
