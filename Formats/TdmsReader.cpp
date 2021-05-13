@@ -231,7 +231,7 @@ namespace FormatConverter{
           << std::setfill( '0' ) << std::setw( 2 ) << time.tm_min << ":"
           << std::setfill( '0' ) << std::setw( 2 ) << time.tm_sec
 
-          << "Z\tleftovers:" << std::setfill( ' ' ) << std::setw( 5 ) << ss.leftovers.size( )
+          << "Z\tleftovers:" << std::setfill( ' ' ) << std::setw( 7 ) << ss.leftovers.size( )
           << std::endl;
     }
 

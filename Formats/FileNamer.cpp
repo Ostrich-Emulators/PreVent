@@ -103,13 +103,14 @@ namespace FormatConverter{
   std::string FileNamer::filename( SignalSet * data ) {
     // we need to have data for all the conversion keys in here
 
-    conversions["%s"] = getDateSuffix( data->earliest( ), "" );
-    conversions["%e"] = getDateSuffix( data->latest( ), "" );
+    const tm EARLY = modtime( data->earliest( ) );
+    const tm LATE = modtime( data->latest( ) );
 
-    time_t etime = ( data->earliest( ) / 1000 );
-    time_t ltime = ( data->latest( ) / 1000 );
-    conversions["%T"] = HHmmdd( std::gmtime( &etime ) );
-    conversions["%E"] = HHmmdd( std::gmtime( &ltime ) );
+    conversions["%s"] = getDateSuffix( &EARLY, "" );
+    conversions["%e"] = getDateSuffix( &LATE, "" );
+
+    conversions["%T"] = HHmmdd( &EARLY );
+    conversions["%E"] = HHmmdd( &LATE );
 
     //Current Date
     time_t tim;
@@ -187,16 +188,11 @@ namespace FormatConverter{
     return lastname;
   }
 
-  std::string FileNamer::getDateSuffix( const dr_time& date, const std::string& sep ) {
-    time_t mytime = date / 1000;
-    tm * dater = ( Options::asBool( OptionsKey::LOCALIZED_TIME )
-        ? std::localtime( &mytime )
-        : std::gmtime( &mytime ) );
-    std::string ret = sep + YYYYMMDD( dater );
-    return ret;
+  std::string FileNamer::getDateSuffix( const tm * dater, const std::string& sep ) {
+    return sep + YYYYMMDD( dater );
   }
 
-  std::string FileNamer::YYYYMMDD( struct tm * time ) {
+  std::string FileNamer::YYYYMMDD( const tm * time ) {
     // we want YYYYMMDD format, but cygwin seems to misinterpret %m for strftime
     // so we're doing it manually (for now)
     std::stringstream ss;
@@ -208,7 +204,7 @@ namespace FormatConverter{
     return ss.str( );
   }
 
-  std::string FileNamer::HHmmdd( struct tm * time ) {
+  std::string FileNamer::HHmmdd( const tm * time ) {
     std::stringstream ss;
     if ( time->tm_hour < 10 ) ss << 0;
     ss << time->tm_hour << "_";
@@ -217,5 +213,12 @@ namespace FormatConverter{
     if ( time->tm_sec < 10 ) ss << 0;
     ss << time->tm_sec;
     return ss.str( );
+  }
+
+  tm FileNamer::modtime( const dr_time& time ) {
+     time_t mytime = time / 1000;
+     return *( Options::asBool( OptionsKey::LOCALIZED_TIME )
+        ? std::localtime( &mytime )
+        : std::gmtime( &mytime ) );
   }
 }

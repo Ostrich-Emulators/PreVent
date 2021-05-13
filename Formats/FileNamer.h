@@ -27,17 +27,17 @@ namespace FormatConverter {
     static const std::string DEFAULT_PATTERN;
     static const std::string FILENAME_PATTERN;
 
-    virtual ~FileNamer();
-    FileNamer& operator=(const FileNamer& orig);
-    FileNamer(const FileNamer& orig);
+    virtual ~FileNamer( );
+    FileNamer& operator=(const FileNamer& orig );
+    FileNamer( const FileNamer& orig );
 
-    static FileNamer parse(const std::string& pattern);
+    static FileNamer parse( const std::string& pattern );
 
-    void tofmt(const std::string& ext);
-    void patientOrdinal(int patientnum);
-    void fileOrdinal(int filenum);
-    void inputfilename(const std::string& input);
-    std::string inputfilename() const;
+    void tofmt( const std::string& ext );
+    void patientOrdinal( int patientnum );
+    void fileOrdinal( int filenum );
+    void inputfilename( const std::string& input );
+    std::string inputfilename( ) const;
 
     /**
      * Provides a filename (including directory) for the given SignalData and
@@ -46,7 +46,7 @@ namespace FormatConverter {
      * @param outputnum
      * @return
      */
-    std::string filename( SignalSet * data);
+    std::string filename( SignalSet * data );
 
     /**
      * Gets a filename (including directory) without an extension (or the preceding .)
@@ -54,33 +54,35 @@ namespace FormatConverter {
      * @param outputnum
      * @return
      */
-    std::string filenameNoExt( SignalSet * data);
+    std::string filenameNoExt( SignalSet * data );
     /**
      * Gets a filename (including directory) based on whatever information we
      * already have. Some conversions cannot be performed with this function,
      * so use the other one whenever possible
      * @return
      */
-    std::string filename();
+    std::string filename( );
 
-    std::string filenameNoExt();
+    std::string filenameNoExt( );
     /**
      * What was the last-generated filename?
      * @return
      */
-    std::string last() const;
+    std::string last( ) const;
 
-    static std::string getDateSuffix(const dr_time& date, const std::string& sep = "-" );
+    static std::string getDateSuffix( const tm * date, const std::string& sep = "-" );
 
-    static std::string YYYYMMDD(struct tm *time);
-    static std::string HHmmdd(struct tm *time);
+    static std::string YYYYMMDD( const tm * time );
+    static std::string HHmmdd( const tm * time );
 
   private:
-    FileNamer(const std::string& pat);
+    FileNamer( const std::string& pat );
     std::string pattern;
     std::map<std::string, std::string> conversions;
     std::string lastname;
     std::string inputfile;
+
+    static tm modtime( const dr_time& time );
   };
 }
 #endif /* FILENAMER_H */
