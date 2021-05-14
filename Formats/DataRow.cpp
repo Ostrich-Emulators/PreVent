@@ -26,7 +26,7 @@
 
 namespace FormatConverter{
 
-  TimedData::TimedData( dr_time t, const std::string& v ) : time( t ), data( v ) { }
+  TimedData::TimedData( const dr_time& t, const std::string& v ) : time( t ), data( v ) { }
 
   TimedData::TimedData( const TimedData& orig ) : time( orig.time ), data( orig.data ) { }
 
@@ -215,7 +215,7 @@ namespace FormatConverter{
   DataRow::~DataRow( ) { }
 
   void DataRow::clear( ) {
-    time = 0;
+    time = dr_time();
     scale = 0;
     data.clear( );
     extras.clear( );

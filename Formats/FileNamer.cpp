@@ -67,8 +67,12 @@ namespace FormatConverter{
     //Last modification date
     struct stat t_stat;
     stat( inputfile.c_str( ), &t_stat ); //reads metadata of input file
-    struct tm * timeinfo = localtime( &t_stat.st_mtime ); //stores last modification time in pointer
-    conversions["%m"] = YYYYMMDD( timeinfo );
+    auto timeinfo = dr_time::fromLocal( t_stat.st_mtime ); //stores last modification time in pointer
+
+    auto days = date::floor<date::days>( timeinfo.get_local_time());
+
+
+    conversions["%m"] = YYYYMMDD( date::year{timeinfo.year()}/timeinfo.month()/timeinfo.day() );
 
     const size_t sfxpos = inny.rfind( "." );
     std::string input = inny;
@@ -103,20 +107,17 @@ namespace FormatConverter{
   std::string FileNamer::filename( SignalSet * data ) {
     // we need to have data for all the conversion keys in here
 
-    const tm EARLY = modtime( data->earliest( ) );
-    const tm LATE = modtime( data->latest( ) );
+    const auto EARLY = modtime( data->earliest( ) );
+    const auto LATE = modtime( data->latest( ) );
 
-    conversions["%s"] = getDateSuffix( &EARLY, "" );
-    conversions["%e"] = getDateSuffix( &LATE, "" );
+    conversions["%s"] = getDateSuffix( EARLY, "" );
+    conversions["%e"] = getDateSuffix( LATE, "" );
 
-    conversions["%T"] = HHmmdd( &EARLY );
-    conversions["%E"] = HHmmdd( &LATE );
+    conversions["%T"] = HHmmdd( EARLY );
+    conversions["%E"] = HHmmdd( LATE );
 
     //Current Date
-    time_t tim;
-    time( &tim );
-    struct tm *curr_time = localtime( &tim );
-    conversions["%D"] = YYYYMMDD( curr_time );
+    conversions["%D"] = YYYYMMDD( modtime( dr_time::now( ) ) );
 
     //Current working directory
     char cCurrentPath[FILENAME_MAX];
@@ -188,23 +189,29 @@ namespace FormatConverter{
     return lastname;
   }
 
-  std::string FileNamer::getDateSuffix( const tm * dater, const std::string& sep ) {
+  std::string FileNamer::getDateSuffix( const std::chrono::time_point<std::chrono::milliseconds>& dater, const std::string& sep ) {
     return sep + YYYYMMDD( dater );
   }
 
-  std::string FileNamer::YYYYMMDD( const tm * time ) {
+  std::string FileNamer::YYYYMMDD( const date::year_month_day& ymd ) {
     // we want YYYYMMDD format, but cygwin seems to misinterpret %m for strftime
     // so we're doing it manually (for now)
+
     std::stringstream ss;
-    ss << ( 1900 + time->tm_year );
-    if ( time->tm_mon + 1 < 10 ) ss << 0;
-    ss << time->tm_mon + 1;
-    if ( time->tm_mday < 10 ) ss << 0;
-    ss << time->tm_mday;
+    ss << ymd.year( );
+    int month = ymd.month( ) + 1;
+    if ( month < 10 ) ss << 0;
+    ss << month;
+    int day = ymd.day( );
+    if ( day < 10 ) ss << 0;
+    ss << day;
     return ss.str( );
   }
 
-  std::string FileNamer::HHmmdd( const tm * time ) {
+  std::string FileNamer::HHmmdd( const std::chrono::time_point<std::chrono::milliseconds>& time ) {
+    auto day = date::floor<date::days>( time );
+    time_of_day<milliseconds> time{lt - ld };
+
     std::stringstream ss;
     if ( time->tm_hour < 10 ) ss << 0;
     ss << time->tm_hour << "_";
@@ -215,10 +222,9 @@ namespace FormatConverter{
     return ss.str( );
   }
 
-  tm FileNamer::modtime( const dr_time& time ) {
-     time_t mytime = time / 1000;
-     return *( Options::asBool( OptionsKey::LOCALIZED_TIME )
-        ? std::localtime( &mytime )
-        : std::gmtime( &mytime ) );
+  std::chrono::time_point<std::chrono::milliseconds> FileNamer::modtime( const dr_time& time ) {
+    return ( Options::asBool( OptionsKey::LOCALIZED_TIME )
+        ? time.get_local_time( )
+        : time.get_sys_time( ) );
   }
 }

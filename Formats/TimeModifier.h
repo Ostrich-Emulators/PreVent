@@ -73,7 +73,7 @@ namespace FormatConverter {
      * @param offset the offset, or the desired first time, depending on
      * the value of inited.
      */
-    TimeModifier( bool inited, dr_time offset = 0 );
+    TimeModifier( bool inited, dr_time = dr_time::localzero );
 
     bool initialized;
     bool used;

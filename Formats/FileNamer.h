@@ -70,10 +70,10 @@ namespace FormatConverter {
      */
     std::string last( ) const;
 
-    static std::string getDateSuffix( const tm * date, const std::string& sep = "-" );
+    static std::string getDateSuffix( const std::chrono::time_point<std::chrono::milliseconds>& date, const std::string& sep = "-" );
 
-    static std::string YYYYMMDD( const tm * time );
-    static std::string HHmmdd( const tm * time );
+    static std::string YYYYMMDD( const date::year_month_day& time );
+    static std::string HHmmdd( const std::chrono::time_point<std::chrono::milliseconds>& time );
 
   private:
     FileNamer( const std::string& pat );
@@ -82,7 +82,7 @@ namespace FormatConverter {
     std::string lastname;
     std::string inputfile;
 
-    static tm modtime( const dr_time& time );
+    static std::chrono::time_point<std::chrono::milliseconds> modtime( const dr_time& time );
   };
 }
 #endif /* FILENAMER_H */

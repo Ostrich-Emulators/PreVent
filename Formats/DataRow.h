@@ -29,7 +29,7 @@ namespace FormatConverter {
     dr_time time;
     std::string data;
 
-    TimedData( dr_time m, const std::string& v );
+    TimedData( const dr_time& m, const std::string& v );
     TimedData( const TimedData& orig );
     TimedData& operator=(const TimedData& orig );
     virtual ~TimedData( );

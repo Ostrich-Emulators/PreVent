@@ -106,6 +106,8 @@ Log.cpp
 AutonWriter.cpp
 CsvReader.cpp
 SplitLogic.cpp
+dr_time.cpp
+tz.cpp
 generated/config.h
 generated/releases.h
 )
@@ -121,7 +123,7 @@ target_include_directories(formats
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     PRIVATE
         $<INSTALL_INTERFACE:${include_dest}>
-        $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS} ${MATIO_INCLUDES} ${WFDB_INCLUDES} ${EXPAT_INCLUDE_DIR} ${ZIP_INCLUDEDIR}>
+        $<BUILD_INTERFACE:generated ${HDF5_INCLUDE_DIRS} ${MATIO_INCLUDES} ${WFDB_INCLUDES} ${EXPAT_INCLUDE_DIR} ${ZIP_INCLUDEDIR} ${CURL_INCLUDE_DIR}>
 )
 
 target_link_libraries(formats 
@@ -132,6 +134,7 @@ target_link_libraries(formats
 	${HDF5_LIBRARIES}
 	${WFDB_LIBRARIES}
 	${ZIP_LINK_LIBRARIES}
+	${CURL_LIBRARIES}
 	# need this because MATIO says it links to -lhdf5, but
 	# the HDF5 package uses a full path to find the library
 	"-L/usr/lib/x86_64-linux-gnu/hdf5/serial"
@@ -189,5 +192,8 @@ Log.h
 AutonWriter.h
 CsvReader.h
 SplitLogic.h
+date.h
+tz.h
+tz_private.h
 generated/releases.h
 DESTINATION ${include_dest} )
