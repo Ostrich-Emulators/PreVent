@@ -119,6 +119,11 @@ namespace FormatConverter{
       return rslt;
     }
 
+    if ( std::string::npos != headername.find( ' ' ) ) {
+      Log::error( ) << "WFDB-based paths cannot contain spaces" << std::endl;
+      return -1;
+    }
+
     auto headerpath = SignalUtils::canonicalizePath( headername );
     auto path = ". " + headerpath.parent_path( ).string( );
     Log::debug( ) << "wfdb path: " << path << std::endl;
