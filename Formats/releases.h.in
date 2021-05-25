@@ -1,3 +1,6 @@
+4.3.4
+  * Better user feedback for malformed WFDB header files
+
 4.3.3
   * Fixed roll-over file naming issue
   * Provide meaningful error message when WFDB files contain spaces
