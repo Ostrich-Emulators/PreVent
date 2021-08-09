@@ -106,6 +106,7 @@ Log.cpp
 AutonWriter.cpp
 CsvReader.cpp
 SplitLogic.cpp
+DWCxReader.cpp
 generated/config.h
 generated/releases.h
 )
@@ -189,5 +190,6 @@ Log.h
 AutonWriter.h
 CsvReader.h
 SplitLogic.h
+DWCxReader.h
 generated/releases.h
 DESTINATION ${include_dest} )

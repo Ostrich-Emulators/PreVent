@@ -1,3 +1,6 @@
+4.3.5-pre
+  * Added alternative DWC CSV parser
+
 4.3.4
   * Better user feedback for malformed WFDB header files
 
