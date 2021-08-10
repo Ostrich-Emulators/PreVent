@@ -21,10 +21,6 @@
 #include <filesystem>
 #include "dr_time.h"
 
-#ifdef __CYGWIN__
-#include <sys/cygwin.h>
-#endif
-
 namespace FormatConverter {
   class SignalSet;
   class SignalData;
