@@ -19,14 +19,16 @@ namespace FormatConverter{
   const size_t DwcReader::TIME_COL = 1;
   const size_t DwcReader::DATE_COL = 0;
 
-  DwcReader::DwcReader( ) : WfdbReader( "DWC" ) { }
+  DwcReader::DwcReader( ) : WfdbReader( "DWC" ) {
+  }
 
-  DwcReader::~DwcReader( ) { }
+  DwcReader::~DwcReader( ) {
+  }
 
   dr_time DwcReader::converttime( const std::string& timeline ) {
-    struct tm timeinfo;
+    struct tm timeinfo = { 0 };
     auto moded = timeline;
-    std::replace( moded.begin(), moded.end(), '_', ' ');
+    std::replace( moded.begin( ), moded.end( ), '_', ' ' );
     std::vector<std::string> parts = SignalUtils::splitcsv( moded, ' ' );
 
     std::string datepart( parts[0] );
@@ -52,9 +54,13 @@ namespace FormatConverter{
     int tzoff = std::stoi( tzpart.substr( 0, 3 ) );
     timeinfo.tm_gmtoff = tzoff * 3600;
     // FIXME: we still need to handle DST properly
-    if ( std::string::npos != timeline.find("aylight") || ( timeinfo.tm_mon > 2 && timeinfo.tm_mon < 10 ) ) {
+    if ( std::string::npos != timeline.find( "aylight" ) || ( timeinfo.tm_mon > 2 && timeinfo.tm_mon < 10 ) ) {
       timeinfo.tm_isdst = true;
     }
+    if( std::string::npos != timeline.find( "tandard" ) ){
+      timeinfo.tm_isdst = false;
+    }
+
     time_t tt = std::mktime( &timeinfo );
     return (tt * 1000 + ms );
   }
@@ -131,7 +137,7 @@ namespace FormatConverter{
   }
 
   ReadResult DwcReader::fill( SignalSet * info, const ReadResult & lastrr ) {
-    dr_time lastcsvtime = std::numeric_limits<dr_time>::min();
+    dr_time lastcsvtime = std::numeric_limits<dr_time>::min( );
     ReadResult rslt = ReadResult::NORMAL;
     std::string csvline;
 
