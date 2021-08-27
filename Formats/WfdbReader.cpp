@@ -198,7 +198,7 @@ namespace FormatConverter{
       }
     }
 
-    if ( 0 == sigcount ) {
+    if ( sigcount <= 0 ) {
       std::cerr << "could not open/read .hea file: " << headername << std::endl;
       return -1;
     }

@@ -66,8 +66,8 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-w or --skip-waves"
       << std::endl << "\t-m or --tmpdir <directory>"
       << std::endl << "\t-R or --release (show release information and exit)"
-      << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, stpp, cpcxml, stpjson, tdms, medi, dwc, zl, csv"
-      << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv"
+      << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, stpp, cpcxml, stpjson, tdms, medi, dwc, zl, csv, dwcx"
+      << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv, au"
       << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
       << std::endl << "\tthe --pattern option recognizes these format specifiers:"
       << std::endl << "\t  %p - patient ordinal"
@@ -371,6 +371,7 @@ int main( int argc, char** argv ) {
       case FormatConverter::AUTON:
         fromstr = "au";
         break;
+      case FormatConverter::DWCX:
       case FormatConverter::NOOP:
       case FormatConverter::UNRECOGNIZED:
         fromstr = "";

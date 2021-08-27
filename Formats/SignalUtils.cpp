@@ -22,6 +22,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __CYGWIN__
+#include <sys/cygwin.h>
+#endif
+
 namespace FormatConverter{
 
   SignalUtils::SignalUtils( ) { }

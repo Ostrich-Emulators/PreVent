@@ -29,6 +29,7 @@ namespace FormatConverter{
     struct tm timeinfo = { 0 };
     auto moded = timeline;
     std::replace( moded.begin( ), moded.end( ), '_', ' ' );
+
     std::vector<std::string> parts = SignalUtils::splitcsv( moded, ' ' );
 
     std::string datepart( parts[0] );
@@ -54,7 +55,8 @@ namespace FormatConverter{
     int tzoff = std::stoi( tzpart.substr( 0, 3 ) );
     timeinfo.tm_gmtoff = tzoff * 3600;
     // FIXME: we still need to handle DST properly
-    if ( std::string::npos != timeline.find( "aylight" ) || ( timeinfo.tm_mon > 2 && timeinfo.tm_mon < 10 ) ) {
+
+    if ( std::string::npos != timeline.find("aylight") || ( timeinfo.tm_mon > 2 && timeinfo.tm_mon < 10 ) ) {
       timeinfo.tm_isdst = true;
     }
     if( std::string::npos != timeline.find( "tandard" ) ){

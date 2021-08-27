@@ -62,6 +62,9 @@ namespace FormatConverter{
     if ( "dwc" == fmt ) {
       return DWC;
     }
+    if( "dwcx" == fmt ){
+      return DWCX;
+    }
     if ( "noop" == fmt ) {
       return NOOP;
     }
