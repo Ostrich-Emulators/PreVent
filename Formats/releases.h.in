@@ -1,4 +1,4 @@
-4.3.5-pre
+4.3.5
   * Fixed timing issue in DWC Reader
   * Added alternative DWC CSV parser
 
