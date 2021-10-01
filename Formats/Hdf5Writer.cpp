@@ -225,11 +225,7 @@ namespace FormatConverter{
       props.setDeflate( compression( ) );
     }
 
-    bool useInts = false;
-    if ( rescaleForShortsIfNeeded( data, useInts ) ) {
-      Log::warn( ) << std::endl << " coercing out-of-range numbers (possible loss of precision)";
-    }
-
+    bool useInts = !shortsOk( data );
     H5::DataSet ds = group.createDataSet( "data",
         ( useInts ? H5::PredType::STD_I32LE : H5::PredType::STD_I16LE ), space, props );
     writeAttributes( ds, data );
@@ -353,10 +349,7 @@ namespace FormatConverter{
       props.setDeflate( compression( ) );
     }
 
-    bool useInts = false;
-    if ( rescaleForShortsIfNeeded( data, useInts ) ) {
-      Log::warn( ) << std::endl << "  coercing out-of-range numbers (possible loss of precision)";
-    }
+    bool useInts = !shortsOk( data );
 
     H5::DataSet ds = group.createDataSet( "data",
         ( useInts ? H5::PredType::STD_I32LE : H5::PredType::STD_I16LE ), space, props );
@@ -480,7 +473,6 @@ namespace FormatConverter{
       LIMITS[8 * MB] = 512 * KB;
       LIMITS[12 * MB] = 768 * KB;
       LIMITS[NORMAL_MAX_SIZE_LIMIT] = MB;
-
 
       hsize_t chunksize = 0;
       for ( auto x : LIMITS ) {
@@ -744,9 +736,7 @@ namespace FormatConverter{
     }
   }
 
-  bool Hdf5Writer::rescaleForShortsIfNeeded( SignalData * data, bool& useIntsNotShorts ) const {
-    useIntsNotShorts = false;
-
+  bool Hdf5Writer::shortsOk( SignalData * data ) const {
     const auto SHORTMAX = std::numeric_limits<short>::max( );
     const auto SHORTMIN = std::numeric_limits<short>::min( );
 
@@ -754,14 +744,7 @@ namespace FormatConverter{
     auto hi = powscale * data->highwater( );
     auto low = powscale * data->lowwater( );
 
-    if ( hi < SHORTMAX && low > SHORTMIN ) {
-      useIntsNotShorts = false;
-      return false;
-    }
-    else {
-      useIntsNotShorts = true;
-      return false;
-    }
+    return ( hi < SHORTMAX && low > SHORTMIN );
   }
 
   void Hdf5Writer::writeWaveGroup( H5::Group& group, SignalData * data ) {

@@ -15,6 +15,7 @@
 #include "Reader.h"
 #include "SignalData.h"
 #include "SignalUtils.h"
+#include "Log.h"
 #include <cmath>
 #include <math.h>
 #include <sstream>
@@ -43,6 +44,7 @@ namespace FormatConverter{
   const std::set<std::string> DataRow::hiloskips = { SignalData::MISSING_VALUESTR, "32768" };
 
   void DataRow::intify( const std::string_view& _strval, size_t dotpos, int * val, int * scale ) {
+    //Log::info( ) << _strval << "\t" << dotpos << "\t" << *val << "\t" << *scale << std::endl;
     if ( std::string::npos == dotpos ) {
       *scale = 0;
       std::from_chars( _strval.data( ), _strval.data( ) + _strval.size( ), *val );
@@ -57,6 +59,10 @@ namespace FormatConverter{
       auto strval = ( isneg
           ? _strval.substr( 1 )
           : _strval );
+      if ( isneg ) {
+        // if we removed the -, the decimal point moved, too!
+        dotpos--;
+      }
 
       int whole = 0;
       int fraction = 0;
@@ -68,7 +74,7 @@ namespace FormatConverter{
         *val = whole;
       }
       else {
-        *scale = static_cast<int>((strval.length() - dotpos - 1));
+        *scale = static_cast<int> ( strval.length( ) - dotpos - 1 );
         *val = fraction;
 
         if ( 0 != whole ) {
@@ -78,6 +84,8 @@ namespace FormatConverter{
 
       if ( isneg ) {
         *val *= -1;
+//        Log::info( ) << _strval << " converted to " << *val << std::endl;
+//        Log::info( ) << "scale:" << *scale << " (strval.len: " << _strval.length( ) << "; dotpos: " << dotpos << ")" << std::endl;
       }
     }
   }
@@ -194,7 +202,7 @@ namespace FormatConverter{
         }
       }
 
-      intify( vals.str(), data, &scale );
+      intify( vals.str( ), data, &scale );
     }
     else {
       data.insert( data.end( ), doubles.begin( ), doubles.end( ) );

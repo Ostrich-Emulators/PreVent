@@ -26,12 +26,6 @@ namespace FormatConverter{
     auto vals = std::vector<double>( num_vals );
     if ( nullptr != datablock ) {
       memcpy( vals.data( ), datablock, datatype.length( ) * num_vals );
-
-      //      for ( size_t i = 0; i < num_vals; i++ ) {
-      //        double out;
-      //        memcpy( &out, datablock + ( i * datatype.length() ), datatype.length() );
-      //        vals.push_back( out );
-      //      }
     }
 
     //Log::debug( ) << channelname << " new values: " << num_vals << "/" << vals.size( ) << std::endl;
@@ -43,13 +37,6 @@ namespace FormatConverter{
         : filler->addVital( rec.name ) );
     int timeinc = signal->chunkInterval( );
     size_t freq = signal->readingsPerChunk( );
-
-    //  if ( !signal->wave( ) ) {
-    //    output( ) << signal->name( ) << " " << vals.size( )
-    //        << " new values to add to " << rec.leftovers.size( )
-    //        << " leftovers; lasttime: " << rec.lasttime
-    //        << " " << timeinc << std::endl;
-    //  }
 
     // for now, just add whatever we get to our leftovers, and work from there
     rec.leftovers.insert( rec.leftovers.end( ), vals.begin( ), vals.end( ) );
@@ -195,7 +182,7 @@ namespace FormatConverter{
         tm * pt = gmtime( &timer );
 
         char buffer[80];
-        sprintf( buffer, "%d.%02d.%d %02d:%02d:%02d,%f",
+        snprintf( buffer, 80, "%d.%02d.%d %02d:%02d:%02d,%f",
             pt->tm_mday, pt->tm_mon + 1, 1900 + pt->tm_year, pt->tm_hour, pt->tm_min, pt->tm_sec, 0.0 );
         //std::cout << "  " << p.first << " (timestamp): " << buffer << std::endl;
         signal->setMeta( p.first, std::string( buffer ) );

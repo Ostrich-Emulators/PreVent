@@ -79,13 +79,12 @@ namespace FormatConverter {
     void createEventsAndTimes( H5::H5File, const SignalSet * data );
 
     /**
-     * Rescale the data to fit in shorts
+     * Can the data be fit into a short int for storage?
      * @param data
-     * @param useIntsNotShorts (output arg) if true, use integers instead of shorts
+     * @return true if the caller should use shorts instead of integers
      * for saving data to dataset
-     * @return true, if the data was rescaled
      */
-    bool rescaleForShortsIfNeeded( SignalData * data, bool& useIntsNotShorts ) const;
+    bool shortsOk( SignalData * data ) const;
     void createTimeCache( );
     SignalSet * dataptr;
     std::map<dr_time, long> timesteplkp;

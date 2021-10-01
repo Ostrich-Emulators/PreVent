@@ -195,6 +195,11 @@ namespace FormatConverter{
           auto datafile = headerpath.parent_path( ) / siginfo[signalidx].fname;
           sigfiles.push_back( std::fopen( datafile.string( ).c_str( ), "rb" ) );
         }
+
+        Log::warn( ) << "using fast WFDB parser" << std::endl;
+      }
+      else {
+        Log::debug( ) << "using WFDB lib for parsing" << std::endl;
       }
     }
 
@@ -230,7 +235,6 @@ namespace FormatConverter{
   }
 
   ReadResult WfdbReader::fill_wfdblib( SignalSet * info, const ReadResult& lastrr ) {
-    Log::debug( ) << "using WFDB lib for parsing" << std::endl;
     WFDB_Sample v[framecount];
     bool iswave = ( freqhz > 1 );
 
@@ -333,8 +337,6 @@ namespace FormatConverter{
   }
 
   ReadResult WfdbReader::fill_nativeread( SignalSet * info, const ReadResult& lastrr ) {
-    Log::warn( ) << "using fast WFDB parser" << std::endl;
-
     ReadResult rslt = ReadResult::NORMAL;
     bool iswave = ( freqhz > 1 );
 

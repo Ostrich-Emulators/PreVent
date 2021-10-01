@@ -1,3 +1,7 @@
+4.3.6
+  * Fixed negative numbers corruption bug
+  * Fixed missing Min/Max Values for Waveforms
+
 4.3.5
   * Fixed timing issue in DWC Reader
   * Added alternative DWC CSV parser
