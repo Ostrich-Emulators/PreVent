@@ -1,3 +1,6 @@
+4.3.7-pre
+  * (Tools) Improved reading speed from HDF5 files
+
 4.3.6
   * Fixed negative numbers corruption bug
   * Fixed missing Min/Max Values for Waveforms
