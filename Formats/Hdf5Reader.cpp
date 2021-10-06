@@ -363,20 +363,8 @@ namespace FormatConverter{
       }
     }
 
-    // FIXME: use hyperslabs (slabreadi/slabreads is fine when we only have 1 column)
-    // FIXME: even without hyperslabs, we read the whole dataset every time
-    // we get here, even if we've already read some data
-    auto intread = std::vector<int>( ROWS * COLS );
-    if ( dataset.getDataType( ) == H5::PredType::STD_I16LE ) {
-      auto shortread = std::vector<short>( ROWS * COLS );
-      dataset.read( shortread.data( ), dataset.getDataType( ) );
-      for ( size_t i = 0; i < shortread.size( ); i++ ) {
-        intread[i] = shortread[i];
-      }
-    }
-    else {
-      dataset.read( intread.data( ), dataset.getDataType( ) );
-    }
+    auto intread = std::vector<int>{ };
+    slabfill( dataset, 0, ROWS, intread );
 
     while ( saver.timeidx < ROWS && !isRollover( saver.times[saver.timeidx], info ) ) {
       // we can only have 1 valPerTime because this is a vital (otherwise, we'd call it a wave)
@@ -405,34 +393,20 @@ namespace FormatConverter{
     dataspace.getSimpleExtentDims( DIMS );
 
     const hsize_t ROWS = DIMS[0];
-    const hsize_t COLS = DIMS[1];
 
-    hsize_t offset[] = { saver.timeidx * valsPerTime, 0 };
-    hsize_t count[] = { static_cast<hsize_t> ( valsPerTime ), COLS };
-    const hsize_t offset0[] = { 0, 0 };
+    hsize_t offset = saver.timeidx * valsPerTime;
 
     std::vector<int> buffer( valsPerTime );
-    const auto doshorts = ( H5::PredType::STD_I16LE == dataset.getDataType( ) );
 
-    while ( offset[0] < ROWS && !isRollover( saver.times[saver.timeidx], info ) ) {
-      dataspace.selectHyperslab( H5S_SELECT_SET, count, offset );
-      H5::DataSpace memspace( 2, count );
-      memspace.selectHyperslab( H5S_SELECT_SET, count, offset0 );
-      if ( doshorts ) {
-        std::vector<short> shortbuff( valsPerTime );
-        dataset.read( shortbuff.data( ), dataset.getDataType( ), memspace, dataspace );
-        for ( int i = 0; i < valsPerTime; i++ ) {
-          buffer[i] = shortbuff[i];
-        }
-      }
-      else {
-        dataset.read( buffer.data( ), dataset.getDataType( ), memspace, dataspace );
-      }
+    while ( offset < ROWS && !isRollover( saver.times[saver.timeidx], info ) ) {
+      auto startrow = offset;
+      auto endrow = startrow + valsPerTime;
+      slabfill( dataset, startrow, endrow, buffer );
 
       signal->add( std::make_unique<DataRow>( saver.times[saver.timeidx++], buffer, scale ) );
 
       // get ready for the next read
-      offset[0] += count[0];
+      offset += valsPerTime;
     }
   }
 
@@ -569,7 +543,6 @@ namespace FormatConverter{
       const int periodtime = metaint( data, SignalData::CHUNK_INTERVAL_MS );
       signal->setChunkIntervalAndSampleRate( periodtime, readingsperperiod );
       signal->scale( scale );
-      const bool doints = ( H5::PredType::STD_I32LE == data.getDataType( ) );
 
       const bool timeisindex = ( layoutVersion( file ) >= 40100
           ? "index to Global_Times" == metastr( times, "Columns" )
@@ -615,15 +588,10 @@ namespace FormatConverter{
           Log::trace( ) << "start/stop/cur idx: " << slabstartidx << "/" << slabstopidx
               << "/" << currentstopidx << std::endl;
 
-          auto newvals = ( doints
-              ? slabreadi( data, slabstartidx, currentstopidx )
-              : slabreads( data, slabstartidx, currentstopidx ) );
-
           // get rid of the stuff we've already processed
           datavals.erase( datavals.begin( ), datavals.begin( ) + dataidx );
 
-          // add the new stuff
-          datavals.insert( datavals.end( ), newvals.begin( ), newvals.end( ) );
+          Hdf5Reader::slabfill( data, slabstartidx, currentstopidx, datavals );
 
           // start counting from the beginning again
           dataidx = 0;
@@ -722,71 +690,42 @@ namespace FormatConverter{
         : endpos );
   }
 
-  /**
-   * Reads the given dataset from start(inclusive) to end (exclusive) as ints
-   * @param data
-   * @param startidx
-   * @param endidx
-   * @return
-   */
-  std::vector<int> Hdf5Reader::slabreadi( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
+  std::vector<int>& Hdf5Reader::slabfill( H5::DataSet& ds, hsize_t startrow, hsize_t endrow, std::vector<int>& target ) {
     hsize_t rowstoget = endrow - startrow;
 
     hsize_t DIMS[2] = { };
     H5::DataSpace dsspace = ds.getSpace( );
     dsspace.getSimpleExtentDims( DIMS );
 
-    //const hsize_t ROWS = DIMS[0];
     const hsize_t COLS = DIMS[1];
 
-    // we'll get everything in one read
-    hsize_t dim[] = { rowstoget, COLS };
-    hsize_t count[] = { rowstoget, COLS };
-
-    H5::DataSpace searchspace( 2, dim );
-
-    hsize_t offset[] = { startrow, 0 };
-
-    auto dd = std::vector<int>( rowstoget * COLS );
-    dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
-    ds.read( dd.data( ), ds.getDataType( ), searchspace, dsspace );
-
-    std::vector<int> values( rowstoget );
-    for ( hsize_t i = 0; i < rowstoget; i++ ) {
-      values[i] = dd[COLS * i];
+    if ( H5::PredType::STD_I16LE == ds.getDataType( ) ) {
+      auto shortbuff = std::vector<short>( rowstoget * COLS );
+      _slabfill( ds, startrow, endrow, COLS, shortbuff.data( ) );
+      target.insert( target.end( ), shortbuff.begin( ), shortbuff.end( ) );
+    }
+    else {
+      auto tsz = target.size( );
+      target.resize( tsz + rowstoget * COLS );
+      _slabfill( ds, startrow, endrow, COLS, target.data( ) + tsz );
     }
 
-    return values;
+    return target;
   }
 
-  std::vector<int> Hdf5Reader::slabreads( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {
+  void Hdf5Reader::_slabfill( H5::DataSet& ds, hsize_t startrow, hsize_t endrow, hsize_t COLS, void * buffer ) {
     const hsize_t rowstoget = endrow - startrow;
 
-    hsize_t DIMS[2] = { };
-    H5::DataSpace dsspace = ds.getSpace( );
-    dsspace.getSimpleExtentDims( DIMS );
-
-    //const hsize_t ROWS = DIMS[0];
-    const hsize_t COLS = DIMS[1];
-    //std::cout << "reading shorts " << ROWS << "," << COLS << std::endl;
-
-    // we'll get everything in one read
     const hsize_t dim[] = { rowstoget, COLS };
     const hsize_t count[] = { rowstoget, COLS };
 
+    H5::DataSpace dsspace = ds.getSpace( );
     H5::DataSpace searchspace( 2, dim );
 
     const hsize_t offset[] = { startrow, 0 };
-    auto dd = std::vector<short>( rowstoget * COLS );
+
     dsspace.selectHyperslab( H5S_SELECT_SET, count, offset );
-    ds.read( dd.data( ), ds.getDataType( ), searchspace, dsspace );
-
-    std::vector<int> values( rowstoget );
-    for ( hsize_t i = 0; i < rowstoget; i++ ) {
-      values[i] = static_cast<int> ( dd[COLS * i] );
-    }
-
-    return values;
+    ds.read( buffer, ds.getDataType( ), searchspace, dsspace );
   }
 
   std::vector<dr_time> Hdf5Reader::slabreadt_small( H5::DataSet& ds, hsize_t startrow, hsize_t endrow ) {

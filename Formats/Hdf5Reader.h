@@ -103,22 +103,35 @@ namespace FormatConverter {
     static hsize_t getIndexForTime( H5::DataSet& haystack, dr_time needle, bool leftmost );
     static dr_time getTimeAtIndex( H5::DataSet& haystack, hsize_t index );
 
+//    /**
+//     * Reads (as ints) the given dataset from start (inclusive) to end (exclusive)
+//     * @param data
+//     * @param startidx the first row of data to retrieve
+//     * @param endidx the index after the last row to retrieve
+//     * @return
+//     */
+//    static std::vector<int> slabreadi( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
+//    /**
+//     * Reads (as shorts) the given dataset from start (inclusive) to end (exclusive)
+//     * @param data
+//     * @param startidx the first row of data to retrieve
+//     * @param endidx the index after the last row to retrieve
+//     * @return
+//     */
+//    static std::vector<int> slabreads( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
+
     /**
-     * Reads (as ints) the given dataset from start (inclusive) to end (exclusive)
-     * @param data
+     * Fills the given vector with the given data range.
+     * @param data the data to read (data represented as short or int)
      * @param startidx the first row of data to retrieve
      * @param endidx the index after the last row to retrieve
-     * @return
+     * @param target the vector to fill (using push_back)
+     * @return the same vector passed as target
      */
-    static std::vector<int> slabreadi( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
-    /**
-     * Reads (as shorts) the given dataset from start (inclusive) to end (exclusive)
-     * @param data
-     * @param startidx the first row of data to retrieve
-     * @param endidx the index after the last row to retrieve
-     * @return
-     */
-    static std::vector<int> slabreads( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
+    static std::vector<int>& slabfill( H5::DataSet& data, hsize_t startidx, hsize_t endidx, std::vector<int>& target );
+
+    static void _slabfill( H5::DataSet& data, hsize_t startrow, hsize_t endidx, hsize_t cols, void * buffer );
+
     /**
      * Reads (as longs) the given dataset from start (inclusive) to end (exclusive)
      * @param data
