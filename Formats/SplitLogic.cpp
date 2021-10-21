@@ -10,6 +10,7 @@
 #include "Log.h"
 #include <iomanip>
 #include <ctime>
+#include <limits>
 
 namespace FormatConverter{
 

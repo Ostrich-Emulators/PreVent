@@ -23,6 +23,7 @@
 #include <functional>
 #include <sstream>
 #include <map>
+#include <limits>
 
 namespace FormatConverter{
 

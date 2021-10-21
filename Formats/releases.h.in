@@ -1,5 +1,6 @@
 4.3.7-pre
   * (Tools) Improved reading speed from HDF5 files
+  * Improved native GE STP reader
 
 4.3.6
   * Fixed negative numbers corruption bug
