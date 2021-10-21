@@ -501,7 +501,8 @@ namespace FormatConverter{
     }
 
     magiclong = std::numeric_limits<unsigned long>::max( );
-    currentTime = std::numeric_limits<dr_time>::min();
+    currentTime = std::numeric_limits<dr_time>::min( );
+    catchup = 0;
     return 0;
   }
 
@@ -611,12 +612,45 @@ namespace FormatConverter{
     // and the work buffer head is pointing to the start of the segment
     work.mark( );
     size_t chunkstart = work.popped( );
-    //output( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
     try {
       work.skip( 18 );
+      Log::trace( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
+      auto lasttime = currentTime;
       currentTime = popTime( );
+      Log::trace( ) << "current time for chunk: " << currentTime << std::endl;
       if ( isRollover( currentTime, info ) ) {
         return ChunkReadResult::ROLLOVER;
+      }
+
+      if ( lasttime > -1 ) {
+        if ( currentTime >= ( lasttime + 30000 ) ) {
+          // if we have >30s break, just restart our counting
+          catchup = 0;//( currentTime - lasttime ) / 2000;
+          catchupEven = true;
+        }
+        else if ( currentTime >= ( lasttime + 4000 ) ) {
+          // if our currentTime is more than 4s from our last time,
+          // then we're missing values that we can fill in with
+          // redundant times later
+          catchup += ( currentTime - lasttime ) / 2000;
+          catchupEven = true;
+        }
+        else if ( currentTime > lasttime ) {
+          // reset catchup if we have a "normal" time increment (1-2s)
+          //catchup--;
+          if ( catchup < 0 ) {
+            catchup = 0;
+          }
+          catchupEven = true;
+        }
+        else if ( currentTime == lasttime ) {
+          if ( catchup >= 0 && catchupEven ) {
+            // if we have the same time as our last time
+            // then we've used up one catchup
+            catchup--;
+          }
+          catchupEven = !catchupEven;
+        }
       }
 
       work.skip( 2 );
@@ -654,7 +688,7 @@ namespace FormatConverter{
       // loop, we'll pass our wave offset limit
 
       while ( work.poppedSinceMark( ) + 66 <= waveoffset ) {
-        //output( ) << "psm: " << work.poppedSinceMark( ) << "\t" << work.popped( ) << std::endl;
+        //Log::info( ) << "psm: " << work.poppedSinceMark( ) << "\t" << work.popped( ) << "\twaveoffset: " << waveoffset << std::endl;
         if ( 0x013A == readUInt16( ) ) {
           work.skip( 2 ); // the int16 we just read
           readDataBlock( info,{ SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF }, 62 );
@@ -673,7 +707,7 @@ namespace FormatConverter{
           switch ( blocktypefmt ) {
             case 0x0100:
               // sometimes our 68-byte block is only 66 bytes big! Luckily,
-              // this only seems to happen when the blocktype is actuall 0x0D,
+              // this only seems to happen when the blocktype is actually 0x0D,
               // which we ignore anyway. It seems to be followed by 0x0100,
               // so just ignore this, too
               readDataBlock( info,{ } );
@@ -749,11 +783,7 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
               break;
             case 0x0D56:
-              readDataBlock( info,{ } );
-              break;
             case 0x0D57:
-              readDataBlock( info,{ SKIP6, SKIP, STV1 } );
-              break;
             case 0x0D58:
             case 0x0D59:
               readDataBlock( info,{ } );
@@ -763,16 +793,16 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, CO2_EX, CO2_IN, CO2_RR, SKIP2, O2_EXP, O2_INSP } );
               break;
             case 0x104D:
-              readDataBlock( info,{ SKIP6, UAC1_M, UAC1_S, UAC1_M, SKIP2, UAC1_R } );
+              readDataBlock( info,{ SKIP6, UAC1_M, UAC1_S, UAC1_D, SKIP2, UAC1_R } );
               break;
             case 0x104E:
-              readDataBlock( info,{ SKIP6, UAC2_M, UAC2_S, UAC2_M, SKIP2, UAC2_R } );
+              readDataBlock( info,{ SKIP6, UAC2_M, UAC2_S, UAC2_D, SKIP2, UAC2_R } );
               break;
             case 0x104F:
-              readDataBlock( info,{ SKIP6, UAC3_M, UAC3_S, UAC3_M, SKIP2, UAC3_R } );
+              readDataBlock( info,{ SKIP6, UAC3_M, UAC3_S, UAC3_D, SKIP2, UAC3_R } );
               break;
             case 0x1050:
-              readDataBlock( info,{ SKIP6, UAC4_M, UAC4_S, UAC4_M, SKIP2, UAC4_R } );
+              readDataBlock( info,{ SKIP6, UAC4_M, UAC4_S, UAC4_D, SKIP2, UAC4_R } );
               break;
             case 0x14C2:
               readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
@@ -975,17 +1005,21 @@ namespace FormatConverter{
 
   void StpGeReader::readDataBlock( SignalSet * info, const std::vector<BlockConfig>& vitals, size_t blocksize ) {
     size_t read = 0;
+    if ( Log::levelok( LogLevel::TRACE ) && vitals.size( ) > 0 ) {
+      Log::trace( ) << "read data block for vitals: [";
+      for ( const auto& cfg : vitals ) {
+        Log::trace( ) << " " << cfg.label;
+      }
+      Log::trace( ) << " ]" << std::endl;
+    }
+
     for ( const auto& cfg : vitals ) {
       read += cfg.readcount;
       if ( cfg.isskip ) {
-        //output( ) << "skipping";
-        //        for ( size_t i = 0; i < cfg.readcount; i++ ) {
-        //          output( ) << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << (int) work.pop( );
-        //        }
-        //        output( ) << std::endl;
         work.skip( cfg.readcount );
       }
       else {
+
         bool okval = false;
         bool added = false;
         if ( cfg.unsign ) {
@@ -999,7 +1033,11 @@ namespace FormatConverter{
             okval = ( val != 0x8000 );
           }
 
-          if ( okval ) {
+          if ( "HR" == cfg.label ) {
+            Log::trace( ) << "HR value: " << val << " at " << currentTime << "; catchup: " << catchup << ( okval && catchupEven && catchup >= 0 ? " keeping" : " skipping" ) << std::endl;
+          }
+
+          if ( okval && catchupEven && catchup >= 0 ) {
             auto sig = info->addVital( cfg.label, &added );
             if ( added ) {
               sig->setChunkIntervalAndSampleRate( 2000, 1 );
@@ -1025,7 +1063,7 @@ namespace FormatConverter{
             okval = ( val > -32767 );
           }
 
-          if ( okval ) {
+          if ( okval && catchupEven && catchup >= 0 ) {
             auto sig = info->addVital( cfg.label, &added );
             if ( added ) {
               sig->setChunkIntervalAndSampleRate( 2000, 1 );
@@ -1122,27 +1160,34 @@ namespace FormatConverter{
             while ( true ) {
               const unsigned int check = popUInt8( );
               if ( 0xC9 == check ) {
-                //unsigned long pos = work.popped( ) - 1;
-                //output( ) << "found 0xC9 at byte: " << std::dec << pos << std::endl;
+                unsigned long pos = work.popped( ) - 1;
+                //Log::trace( ) << "found possible segment marker (0xC9) at byte: " << std::dec << pos << std::endl;
                 // got a C9, so check the previous 13 bytes for 0s
                 bool found = true;
                 for ( int i = 1; i < 14 && found; i++ ) {
-                  //                  output( ) << "\tbyte " << ( pos - i ) << " is: "
-                  //                          << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-                  //                          << (unsigned short) work.read( -i - 1 ) << std::endl;
                   if ( 0 != work.read( -i - 1 ) ) {
                     found = false;
                   }
                 }
                 if ( found ) {
+                  auto length = ( work.poppedSinceMark( ) - 14 );
+                  if ( Log::levelok( LogLevel::TRACE ) ) {
+                    auto start = pos + 1 - length;
+                    auto end = pos - 2;
+                    Log::trace( ) << "found segment in bytes: [" << std::dec << start << " - " << end << "]; size: " << end - start
+                        << "; markers (0x00C9) at " << pos - 1 - length << "," << pos - 1 << std::endl;
+                  }
                   ok = true;
                   if ( nullptr != size ) {
-                    *size = ( work.poppedSinceMark( ) - 14 );
+                    *size = length;
                   }
                   break;
                 }
               }
             }
+          }
+          else {
+            Log::error( ) << "missing segment boundary!" << std::endl;
           }
         }
         else { // carescape

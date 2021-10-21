@@ -52,7 +52,7 @@ namespace FormatConverter {
 
     class WaveTracker {
     public:
-      WaveTracker();
+      WaveTracker( );
       virtual ~WaveTracker( );
 
       WaveSequenceResult newseq( const unsigned short& seqnum, dr_time time );
@@ -117,13 +117,13 @@ namespace FormatConverter {
 
     private:
 
-      BlockConfig( int read = 1 )
-          : isskip( true ), label( "SKIP" ), divBy10( false ), readcount( read ), unsign( false ),
-          uom( "Uncalib" ) { }
+      BlockConfig( int read = 1 ) : isskip( true ), label( "SKIP" + std::to_string( read ) ),
+          divBy10( false ), readcount( read ), unsign( false ), uom( "Uncalib" ) { }
 
-      BlockConfig( const std::string& lbl, size_t read = 2, unsigned int div = 0, bool unsign = true, const std::string& uom = "" )
-          : isskip( false ), label( lbl ), divBy10( div ), readcount( read ), unsign( unsign ),
-          uom( uom ) { }
+      BlockConfig( const std::string& lbl, size_t read = 2, unsigned int div = 0,
+          bool unsign = true, const std::string& uom = "" )
+          : isskip( false ), label( lbl ), divBy10( div ), readcount( read ),
+          unsign( unsign ), uom( uom ) { }
     };
 
     // <editor-fold defaultstate="collapsed" desc="block configs">
@@ -290,6 +290,8 @@ namespace FormatConverter {
     dr_time currentTime;
     unsigned long magiclong;
     WaveTracker wavetracker;
+    int catchup;
+    bool catchupEven; // we only use every other catchup value
   };
 }
 #endif /* STPGEREADER_H */
