@@ -1,4 +1,4 @@
-4.3.7-pre
+4.3.7
   * (Tools) Improved reading speed from HDF5 files
   * Improved native GE STP reader
 
