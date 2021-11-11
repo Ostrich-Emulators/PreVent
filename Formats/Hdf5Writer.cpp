@@ -336,7 +336,7 @@ namespace FormatConverter{
   void Hdf5Writer::writeWave( H5::Group& group, SignalData * data ) {
     const hsize_t rows = data->size( );
     const int scale = data->scale( );
-    const uint valsperrow = data->readingsPerChunk( );
+    const unsigned int valsperrow = data->readingsPerChunk( );
 
     hsize_t dims[] = { rows * valsperrow, 1 };
     H5::DataSpace space( 2, dims );
