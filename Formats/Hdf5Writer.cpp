@@ -336,7 +336,7 @@ namespace FormatConverter{
   void Hdf5Writer::writeWave( H5::Group& group, SignalData * data ) {
     const hsize_t rows = data->size( );
     const int scale = data->scale( );
-    const int valsperrow = data->readingsPerChunk( );
+    const uint valsperrow = data->readingsPerChunk( );
 
     hsize_t dims[] = { rows * valsperrow, 1 };
     H5::DataSpace space( 2, dims );
@@ -380,11 +380,26 @@ namespace FormatConverter{
       std::unique_ptr<FormatConverter::DataRow> datarow = data->pop( );
       datarow->rescale( scale );
       if ( useInts ) {
-        const auto& ints = datarow->ints( );
+        auto ints = datarow->ints( );
+        if ( ints.size( ) != valsperrow ) {
+          Log::warn( ) << "at time " << datarow->time << ", expected " << valsperrow
+              << " values, got " << ints.size( ) << "..."
+              << ( ints.size( ) < valsperrow ? "adding" : "truncating" )
+              << " extras" << std::endl;
+          ints.resize( valsperrow, SignalData::MISSING_VALUE );
+        }
+
         ibuffer.insert( ibuffer.end( ), ints.begin( ), ints.end( ) );
       }
       else {
         std::vector<short> ints = datarow->shorts( );
+        if ( ints.size( ) != valsperrow ) {
+          Log::warn( ) << "at time " << datarow->time << ", expected " << valsperrow
+              << " values, got " << ints.size( ) << "..."
+              << ( ints.size( ) < valsperrow ? "adding" : "truncating" )
+              << " extras" << std::endl;
+          ints.resize( valsperrow, SignalData::MISSING_VALUE );
+        }
         sbuffer.insert( sbuffer.end( ), ints.begin( ), ints.end( ) );
       }
 
@@ -395,7 +410,7 @@ namespace FormatConverter{
           offset[0] += count[0];
 
           H5::DataSpace memspace( 2, count );
-          Log::trace( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
+          Log::debug( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
           ds.write( ibuffer.data( ), H5::PredType::STD_I32LE, memspace, space );
           ibuffer.clear( );
           ibuffer.reserve( maxslabcnt );
@@ -408,7 +423,7 @@ namespace FormatConverter{
           offset[0] += count[0];
 
           H5::DataSpace memspace( 2, count );
-          Log::trace( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
+          Log::debug( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
           ds.write( sbuffer.data( ), H5::PredType::STD_I16LE, memspace, space );
           sbuffer.clear( );
           sbuffer.reserve( maxslabcnt );

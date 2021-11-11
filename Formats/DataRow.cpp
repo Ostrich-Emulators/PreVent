@@ -230,10 +230,12 @@ namespace FormatConverter{
   }
 
   void DataRow::rescale( int newscale ) {
-    int pow10 = std::pow( 10, newscale - scale );
-    for ( auto& val : data ) {
-      if ( val != SignalData::MISSING_VALUE ) {
-        val *= pow10;
+    if ( newscale != scale ) {
+      int pow10 = std::pow( 10, newscale - scale );
+      for ( auto& val : data ) {
+        if ( val != SignalData::MISSING_VALUE ) {
+          val *= pow10;
+        }
       }
     }
   }
