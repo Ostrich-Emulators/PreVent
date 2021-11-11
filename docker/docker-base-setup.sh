@@ -2,10 +2,10 @@
 	
 # Matio has an ubuntu package, but we build it ourselves because of 
 # inconsistencies in the packaging and CMAKE, and to avoid the dependency on HDF5 1.8 (we use 1.10)
-curl --silent --create-dirs --output /tmp/matio.tgz https://phoenixnap.dl.sourceforge.net/project/matio/matio/1.5.21/matio-1.5.21.tar.gz
-cd /tmp
-tar xfz matio.tgz
-pushd matio-1.5.21
+git clone git://git.code.sf.net/p/matio/matio /tmp/matio
+pushd /tmp/matio
+git submodule update --init
+./autogen.sh
 ./configure --prefix=/usr --with-hdf5=/usr/lib/x86_64-linux-gnu/hdf5/serial
 make
 make install
@@ -32,7 +32,7 @@ popd
 # and finally, we can build the format converter
 git clone https://github.com/Ostrich-Emulators/PreVent.git
 pushd PreVent
-git co XXVERSIONXX
+git checkout XXVERSIONXX
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr CMakeLists.txt
 make
 make install

@@ -503,6 +503,7 @@ namespace FormatConverter{
     magiclong = std::numeric_limits<unsigned long>::max( );
     currentTime = std::numeric_limits<dr_time>::min( );
     catchup = 0;
+    catchupEven = true;
     return 0;
   }
 
@@ -1033,9 +1034,9 @@ namespace FormatConverter{
             okval = ( val != 0x8000 );
           }
 
-          if ( "HR" == cfg.label ) {
-            Log::trace( ) << "HR value: " << val << " at " << currentTime << "; catchup: " << catchup << ( okval && catchupEven && catchup >= 0 ? " keeping" : " skipping" ) << std::endl;
-          }
+//          if ( "HR" == cfg.label ) {
+//            Log::trace( ) << "HR value: " << val << " at " << currentTime << "; catchup: " << catchup << ( okval && catchupEven && catchup >= 0 ? " keeping" : " skipping" ) << std::endl;
+//          }
 
           if ( okval && catchupEven && catchup >= 0 ) {
             auto sig = info->addVital( cfg.label, &added );

@@ -41,7 +41,7 @@ namespace FormatConverter{
 
   TimedData::~TimedData( ) { }
 
-  const std::set<std::string> DataRow::hiloskips = { SignalData::MISSING_VALUESTR, "32768" };
+  const std::set<std::string> DataRow::hiloskips = { "-32768", "32768" };
 
   void DataRow::intify( const std::string_view& _strval, size_t dotpos, int * val, int * scale ) {
     //Log::info( ) << _strval << "\t" << dotpos << "\t" << *val << "\t" << *scale << std::endl;

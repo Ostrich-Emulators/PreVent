@@ -28,17 +28,17 @@ docker build -t ry99/prevent --file .dockerfile-${VERSION} .
 docker build -t ry99/prevent-cnv --file .dockerfile-multiconvert-${VERSION} .
 docker build -t ry99/prevent-tools --file .dockerfile-tools-${VERSION} .
 
-IMAGEID=$(docker image ls|grep 'prevent ' | cut -c57-69)
+IMAGEID=$(docker image ls|grep 'prevent ' | awk '{print $3}')
 echo "prevent image: ${IMAGEID}"
 docker tag $IMAGEID "ry99/prevent:latest" 
 docker tag $IMAGEID "ry99/prevent:${VERSION}"
 
-IMAGEID=$(docker image ls|grep 'prevent-cnv' | cut -c57-69)
+IMAGEID=$(docker image ls|grep 'prevent-cnv' | awk '{print $3}')
 echo "prevent-cnv image: ${IMAGEID}"
 docker tag $IMAGEID "ry99/prevent-cnv:latest"
 docker tag $IMAGEID "ry99/prevent-cnv:${VERSION}"
 
-IMAGEID=$(docker image ls|grep 'prevent-tool' | cut -c57-69)
+IMAGEID=$(docker image ls|grep 'prevent-tool' | awk '{print $3}')
 echo "prevent-tools image: ${IMAGEID}"
 docker tag $IMAGEID "ry99/prevent-tools:latest"
 docker tag $IMAGEID "ry99/prevent-tools:${VERSION}"
