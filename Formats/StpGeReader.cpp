@@ -179,7 +179,9 @@ namespace FormatConverter{
   const StpGeReader::BlockConfig StpGeReader::CO2_IN = BlockConfig::vital( "CO2-IN", "mmHg" );
   const StpGeReader::BlockConfig StpGeReader::CO2_RR = BlockConfig::vital( "CO2-RR", "BrMin" );
   const StpGeReader::BlockConfig StpGeReader::O2_EXP = BlockConfig::div10( "O2-EXP", "%" );
-  const StpGeReader::BlockConfig StpGeReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" ); // </editor-fold>
+  const StpGeReader::BlockConfig StpGeReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" );
+  const StpGeReader::BlockConfig StpGeReader::RWOBVT = BlockConfig::vital( "rWOBVT", "J/L" );
+  // </editor-fold>
 
   // <editor-fold defaultstate="collapsed" desc="Wave Tracker">
 
@@ -626,7 +628,7 @@ namespace FormatConverter{
       if ( lasttime > -1 ) {
         if ( currentTime >= ( lasttime + 30000 ) ) {
           // if we have >30s break, just restart our counting
-          catchup = 0;//( currentTime - lasttime ) / 2000;
+          catchup = 0; //( currentTime - lasttime ) / 2000;
           catchupEven = true;
         }
         else if ( currentTime >= ( lasttime + 4000 ) ) {
@@ -822,6 +824,14 @@ namespace FormatConverter{
               break;
             case 0x2A5D:
               readDataBlock( info,{ SKIP6, INSP_TV } );
+              break;
+            case 0x3C5B:
+              Log::warn( ) << "skipping 0x3C5B" << std::endl;
+              readDataBlock( info,{ } );
+              break;
+            case 0x3C5A:
+              Log::warn( ) << "trying 0x3C5A" << std::endl;
+              readDataBlock( info,{ SKIP, RWOBVT } );
               break;
             default:
               int type = ( blocktypefmt >> 8 );
@@ -1034,9 +1044,9 @@ namespace FormatConverter{
             okval = ( val != 0x8000 );
           }
 
-//          if ( "HR" == cfg.label ) {
-//            Log::trace( ) << "HR value: " << val << " at " << currentTime << "; catchup: " << catchup << ( okval && catchupEven && catchup >= 0 ? " keeping" : " skipping" ) << std::endl;
-//          }
+          //          if ( "HR" == cfg.label ) {
+          //            Log::trace( ) << "HR value: " << val << " at " << currentTime << "; catchup: " << catchup << ( okval && catchupEven && catchup >= 0 ? " keeping" : " skipping" ) << std::endl;
+          //          }
 
           if ( okval && catchupEven && catchup >= 0 ) {
             auto sig = info->addVital( cfg.label, &added );

@@ -261,7 +261,9 @@ namespace FormatConverter {
     static const BlockConfig CO2_IN;
     static const BlockConfig CO2_RR;
     static const BlockConfig O2_EXP;
-    static const BlockConfig O2_INSP; // </editor-fold>
+    static const BlockConfig O2_INSP;
+    static const BlockConfig RWOBVT;
+    // </editor-fold>
 
     static const std::map<int, std::string> WAVELABELS;
 
