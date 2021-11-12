@@ -49,6 +49,7 @@ set(HDF5_USE_STATIC_LIBRARIES false)
   pkg_check_modules (MATIO REQUIRED matio>=1.5.21)
 endif()
 
+include_directories( /home/ryan/ivy-root/include )
 add_subdirectory(Formats)
 add_subdirectory(PreVentTools)
 add_subdirectory(FormatConverter)

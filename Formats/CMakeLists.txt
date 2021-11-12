@@ -62,7 +62,7 @@ add_custom_command(
   DEPENDS "releases.h.in"
 )
 
-add_library(formats SHARED AnonymizingSignalSet.cpp
+add_library(formats STATIC AnonymizingSignalSet.cpp
 Base64.cpp
 BasicSignalData.cpp
 BasicSignalSet.cpp

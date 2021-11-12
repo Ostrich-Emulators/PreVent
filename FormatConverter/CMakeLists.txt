@@ -8,6 +8,7 @@ endif()
 target_link_libraries(formatconverter
 	formats
 	${SQLITE_LIBRARIES}
+        pthread
 )
 
 target_include_directories(formatconverter

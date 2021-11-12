@@ -16,3 +16,4 @@ gmon.out
 callgrind*
 *.autonlab
 *.hdf5
+*.a
