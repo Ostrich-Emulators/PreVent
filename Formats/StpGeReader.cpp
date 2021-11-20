@@ -180,7 +180,9 @@ namespace FormatConverter{
   const StpGeReader::BlockConfig StpGeReader::CO2_RR = BlockConfig::vital( "CO2-RR", "BrMin" );
   const StpGeReader::BlockConfig StpGeReader::O2_EXP = BlockConfig::div10( "O2-EXP", "%" );
   const StpGeReader::BlockConfig StpGeReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" );
+
   const StpGeReader::BlockConfig StpGeReader::RWOBVT = BlockConfig::vital( "rWOBVT", "J/L" );
+  const StpGeReader::BlockConfig StpGeReader::RI_E = BlockConfig::vital( "rI:E", "" );
   // </editor-fold>
 
   // <editor-fold defaultstate="collapsed" desc="Wave Tracker">
@@ -826,12 +828,10 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, INSP_TV } );
               break;
             case 0x3C5B:
-              Log::warn( ) << "skipping 0x3C5B" << std::endl;
-              readDataBlock( info,{ } );
+              readDataBlock( info,{ SKIP6, RI_E } );
               break;
             case 0x3C5A:
-              Log::warn( ) << "trying 0x3C5A" << std::endl;
-              readDataBlock( info,{ SKIP, RWOBVT } );
+              readDataBlock( info,{ SKIP6, RWOBVT } );
               break;
             default:
               int type = ( blocktypefmt >> 8 );
@@ -1021,7 +1021,7 @@ namespace FormatConverter{
       for ( const auto& cfg : vitals ) {
         Log::trace( ) << " " << cfg.label;
       }
-      Log::trace( ) << " ]" << std::endl;
+      Log::trace( ) << " ] from byte " << std::dec << work.popped( ) << std::endl;
     }
 
     for ( const auto& cfg : vitals ) {
@@ -1033,6 +1033,7 @@ namespace FormatConverter{
 
         bool okval = false;
         bool added = false;
+        uint readstart = work.popped( );
         if ( cfg.unsign ) {
           unsigned int val;
           if ( 1 == cfg.readcount ) {
@@ -1044,6 +1045,20 @@ namespace FormatConverter{
             okval = ( val != 0x8000 );
           }
 
+          if ( Log::levelok( LogLevel::TRACE ) ) {
+            Log::trace( ) << cfg.label << "\t0x";
+            if ( 1 == cfg.readcount ) {
+              Log::trace( ) << std::setfill( '0' ) << std::setw( 2 ) << std::hex << (val & 0xFF);
+            }
+            else {
+              int one = ( val >> 8 );
+              int two = ( val & 0xFF );
+
+              Log::trace( ) << std::hex << std::setfill( '0' ) << std::setw( 2 ) << one
+                  << std::setfill( '0' ) << std::setw( 2 ) << two;
+            }
+            Log::trace( ) << " => " << std::dec << val << "\t(byte: " << readstart << ")" << std::endl;
+          }
           //          if ( "HR" == cfg.label ) {
           //            Log::trace( ) << "HR value: " << val << " at " << currentTime << "; catchup: " << catchup << ( okval && catchupEven && catchup >= 0 ? " keeping" : " skipping" ) << std::endl;
           //          }
@@ -1073,6 +1088,22 @@ namespace FormatConverter{
             val = popInt16( );
             okval = ( val > -32767 );
           }
+
+          if ( Log::levelok( LogLevel::TRACE ) ) {
+            Log::trace( ) << cfg.label << "\t0x";
+            if ( 1 == cfg.readcount ) {
+              Log::trace( ) << std::setfill( '0' ) << std::setw( 2 ) << std::hex << (val & 0xFF);
+            }
+            else {
+              int one = ( val >> 8 );
+              int two = ( val & 0xFF );
+
+              Log::trace( ) << std::hex << std::setfill( '0' ) << std::setw( 2 ) << one
+                  << std::setfill( '0' ) << std::setw( 2 ) << two;
+            }
+            Log::trace( ) << " => " << std::dec << val << "\t(byte: " << readstart << ")" << std::endl;
+          }
+
 
           if ( okval && catchupEven && catchup >= 0 ) {
             auto sig = info->addVital( cfg.label, &added );
