@@ -57,7 +57,8 @@ namespace FormatConverter {
     CircularBuffer<unsigned char> work;
   private:
     bool metadataonly;
-    zstr::ifstream * filestream;
+    std::ifstream filestream;
+    zstr::istream * zipstream;
   };
 }
 #endif /* STPBASE_H */

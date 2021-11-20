@@ -22,15 +22,18 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-namespace FormatConverter{
+namespace FormatConverter {
 
   StpReaderBase::StpReaderBase( const std::string& name ) : Reader( name ),
-      work( 1024 * 1024 ), metadataonly( false ) { }
+      work( 1024 * 1024 * 16 ), metadataonly( false ) {
+  }
 
   StpReaderBase::StpReaderBase( const StpReaderBase& orig ) : Reader( orig ),
-      work( orig.work.capacity( ) ), metadataonly( orig.metadataonly ) { }
+      work( orig.work.capacity( ) ), metadataonly( orig.metadataonly ) {
+  }
 
-  StpReaderBase::~StpReaderBase( ) { }
+  StpReaderBase::~StpReaderBase( ) {
+  }
 
   void StpReaderBase::setMetadataOnly( bool metasonly ) {
     metadataonly = metasonly;
@@ -55,26 +58,32 @@ namespace FormatConverter{
       return -1;
     }
 
-    //    zstr::ifstream doublereader( filename );
-    //    char * skipper = new char[1024 * 1024];
-    //    std::ofstream outy( "uncompressed.segs" );
-    //    do {
-    //      doublereader.read( skipper, 1024 * 1024 );
-    //      for ( size_t i = 0; i < 1024 * 1024; i++ ) {
-    //        outy << skipper[i];
-    //      }
-    //    }
-    //    while ( doublereader.gcount( ) > 0 );
-    //    outy.close( );
-    //    delete []skipper;
+//    zstr::ifstream doublereader( filename );
+//    char * skipper = new char[1024 * 1024];
+//    std::ofstream outy( "uncompressed.segs" );
+//    while ( true ) {
+//      doublereader.read( skipper, 1024 * 1024 );
+//      auto g = doublereader.gcount( );
+//      if ( 0 == g ) {
+//        break;
+//      }
+//      outy.write( skipper, g );
+//    }
+//
+//    outy.close( );
+//    delete []skipper;
 
-    filestream = new zstr::ifstream( filename );
+    filestream.open( filename, std::ifstream::in | std::ifstream::binary );
+    zipstream = new zstr::istream( filestream.rdbuf( ) );
     return 0;
   }
 
   void StpReaderBase::finish( ) {
-    if ( filestream ) {
-      delete filestream;
+    if ( zipstream ) {
+      delete zipstream;
+    }
+    if ( filestream.is_open( ) ) {
+      filestream.close( );
     }
   }
 
@@ -133,16 +142,61 @@ namespace FormatConverter{
 
   int StpReaderBase::readMore( ) {
     std::vector<unsigned char> decodebuffer;
-    decodebuffer.reserve( 1024 * 64 );
-    try {
-      filestream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
-    }
-    catch ( zstr::Exception& x ) {
-      Log::error( ) << x.what( ) << std::endl;
-      return -1;
+    decodebuffer.reserve( 1024 * 1024 * 4 );
+
+    bool readsome = false;
+    while ( !readsome ) {
+      try {
+        zipstream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
+        readsome = true;
+      }
+      catch ( zstr::Exception& x ) {
+        Log::debug( ) << x.what( ) << std::endl;
+
+        // we've gotten some sort of zlib error, so our plan is
+        // to skip ahead to the next compressed block, and see
+        // if we have better luck. But basically, we'll never
+        // classify a zlib error as an application error.
+
+        // try to find the next compressed block, by searching for the
+        // next set of zlib magic bytes
+
+        auto skipstart = filestream.tellg( );
+        char c;
+        bool found = false;
+        while ( !found && filestream.get( c ) ) {
+          // zlib magic bytes are:
+          // 78 01 - No Compression/low
+          // 78 5E - Custom Compression
+          // 78 9C - Default Compression
+          // 78 DA - Best Compression
+          if ( 0x78 == c ) {
+            short nextc = filestream.peek( );
+            found = ( 0x01 == nextc || 0x9C == nextc || 0xDA == nextc || 0x5E == nextc );
+          }
+        }
+
+        Log::warn( ) << "damaged segment detected...";
+        if ( found ) {
+          // we found another segment, so rewind to get the 0x78 byte back on the stream
+          filestream.seekg( -1, std::ios_base::cur );
+          found = true;
+
+          Log::warn( ) << "skipping to next segment" << std::endl;
+          auto skipped = filestream.tellg( ) - skipstart;
+          Log::debug( ) << "skipping to byte: " << filestream.tellg( ) << " (" << skipped << " bytes ahead)" << std::endl;
+
+          delete zipstream;
+          zipstream = new zstr::istream( filestream.rdbuf( ) );
+        }
+        else {
+          Log::warn( ) << "no additional segments found." << std::endl;
+          return 0;
+        }
+      }
     }
 
-    std::streamsize cnt = filestream->gcount( );
+    std::streamsize cnt = zipstream->gcount( );
     for ( int i = 0; i < cnt; i++ ) {
       work.push( decodebuffer[i] );
     }
