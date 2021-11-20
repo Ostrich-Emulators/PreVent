@@ -13,6 +13,7 @@
 #include "Log.h"
 
 #include <sys/stat.h>
+#include <filesystem>
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
 #include <fcntl.h>
@@ -60,7 +61,9 @@ namespace FormatConverter {
 
 //    zstr::ifstream doublereader( filename );
 //    char * skipper = new char[1024 * 1024];
-//    std::ofstream outy( "uncompressed.segs" );
+//    auto path = std::filesystem::path{ filename };
+//    path.replace_extension( "segs" );
+//    std::ofstream outy( path.filename( ) );
 //    while ( true ) {
 //      doublereader.read( skipper, 1024 * 1024 );
 //      auto g = doublereader.gcount( );

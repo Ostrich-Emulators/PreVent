@@ -20,7 +20,7 @@
 #include "config.h"
 #include "CircularBuffer.h"
 
-namespace FormatConverter{
+namespace FormatConverter {
 
   /**
    * Note: wave labels *can* change depending on what vitals are in the file
@@ -187,9 +187,11 @@ namespace FormatConverter{
 
   // <editor-fold defaultstate="collapsed" desc="Wave Tracker">
 
-  StpGeReader::WaveTracker::WaveTracker( ) { }
+  StpGeReader::WaveTracker::WaveTracker( ) {
+  }
 
-  StpGeReader::WaveTracker::~WaveTracker( ) { }
+  StpGeReader::WaveTracker::~WaveTracker( ) {
+  }
 
   void StpGeReader::WaveTracker::prune( ) {
 
@@ -492,11 +494,14 @@ namespace FormatConverter{
   }
   // </editor-fold>
 
-  StpGeReader::StpGeReader( const std::string& name ) : StpReaderBase( name ), firstread( true ) { }
+  StpGeReader::StpGeReader( const std::string& name ) : StpReaderBase( name ), firstread( true ) {
+  }
 
-  StpGeReader::StpGeReader( const StpGeReader& orig ) : StpReaderBase( orig ), firstread( orig.firstread ) { }
+  StpGeReader::StpGeReader( const StpGeReader& orig ) : StpReaderBase( orig ), firstread( orig.firstread ) {
+  }
 
-  StpGeReader::~StpGeReader( ) { }
+  StpGeReader::~StpGeReader( ) {
+  }
 
   int StpGeReader::prepare( const std::string& filename, SignalSet * data ) {
     int rslt = StpReaderBase::prepare( filename, data );
@@ -526,7 +531,7 @@ namespace FormatConverter{
     while ( 0 != cnt ) {
       if ( work.available( ) < 1024 * 768 ) {
         // we should never come close to filling up our work buffer
-        // so if we have, make sure the sure knows
+        // so if we have, make sure the user knows
         Log::error( ) << "work buffer is too full...something is going wrong" << std::endl;
         return ReadResult::ERROR;
       }
@@ -704,12 +709,19 @@ namespace FormatConverter{
           }
         }
         else {
+          auto blockstart = work.popped( );
           work.skip( 66 ); // skip to end of the block to read the block type and format
           unsigned int blocktypefmt = popUInt16( );
+          auto blockend = work.popped( );
           work.rewind( 68 ); // go back to the start of this block
-          //output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-          //  << blocktype << " " << blockfmt << " starting at " << std::dec << work.popped( ) << std::endl;
+          Log::trace( ) << "new block: [" << std::dec << blockstart << " - " << blockend << "]; type: "
+              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( blocktypefmt >> 8 ) << " "
+              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( blocktypefmt & 0xFF )
+              << std::endl;
           switch ( blocktypefmt ) {
+            case 0x0000:
+              readDataBlock( info,{ } ); // WARNING: not sure we should ignore this
+              break;
             case 0x0100:
               // sometimes our 68-byte block is only 66 bytes big! Luckily,
               // this only seems to happen when the blocktype is actually 0x0D,
@@ -828,10 +840,10 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, INSP_TV } );
               break;
             case 0x3C5B:
-              readDataBlock( info,{ SKIP6, RI_E } );
+              readDataBlock( info,{ SKIP6, RI_E } ); // WARNING: not sure about this
               break;
             case 0x3C5A:
-              readDataBlock( info,{ SKIP6, RWOBVT } );
+              readDataBlock( info,{ SKIP6, RWOBVT } ); // WARNING: not sure about this
               break;
             default:
               int type = ( blocktypefmt >> 8 );
@@ -865,7 +877,8 @@ namespace FormatConverter{
   void StpGeReader::unhandledBlockType( unsigned int type, unsigned int fmt ) const {
     std::stringstream ss;
     ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-        << type << " " << fmt << " starting at " << std::dec << work.popped( );
+        << type << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << fmt
+        << " starting at " << std::dec << work.popped( );
     throw std::runtime_error( ss.str( ) );
   }
 
@@ -1033,7 +1046,7 @@ namespace FormatConverter{
 
         bool okval = false;
         bool added = false;
-        uint readstart = work.popped( );
+        unsigned int readstart = work.popped( );
         if ( cfg.unsign ) {
           unsigned int val;
           if ( 1 == cfg.readcount ) {
@@ -1048,11 +1061,11 @@ namespace FormatConverter{
           if ( Log::levelok( LogLevel::TRACE ) ) {
             Log::trace( ) << cfg.label << "\t0x";
             if ( 1 == cfg.readcount ) {
-              Log::trace( ) << std::setfill( '0' ) << std::setw( 2 ) << std::hex << (val & 0xFF);
+              Log::trace( ) << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( val & 0xFF );
             }
             else {
-              int one = ( val >> 8 );
-              int two = ( val & 0xFF );
+              unsigned short one = ( val >> 8 );
+              unsigned short two = ( val & 0xFF );
 
               Log::trace( ) << std::hex << std::setfill( '0' ) << std::setw( 2 ) << one
                   << std::setfill( '0' ) << std::setw( 2 ) << two;
@@ -1092,11 +1105,11 @@ namespace FormatConverter{
           if ( Log::levelok( LogLevel::TRACE ) ) {
             Log::trace( ) << cfg.label << "\t0x";
             if ( 1 == cfg.readcount ) {
-              Log::trace( ) << std::setfill( '0' ) << std::setw( 2 ) << std::hex << (val & 0xFF);
+              Log::trace( ) << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( val & 0xFF );
             }
             else {
-              int one = ( val >> 8 );
-              int two = ( val & 0xFF );
+              short one = ( val >> 8 );
+              short two = ( val & 0xFF );
 
               Log::trace( ) << std::hex << std::setfill( '0' ) << std::setw( 2 ) << one
                   << std::setfill( '0' ) << std::setw( 2 ) << two;
@@ -1116,7 +1129,6 @@ namespace FormatConverter{
               sig->add( DataRow::from( currentTime, div10s( val, cfg.divBy10 ) ) );
             }
             else {
-
               sig->add( std::make_unique<DataRow>( currentTime, val ) );
             }
           }
