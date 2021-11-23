@@ -20,7 +20,7 @@
 #include "config.h"
 #include "CircularBuffer.h"
 
-namespace FormatConverter{
+namespace FormatConverter {
 
   /**
    * Note: wave labels *can* change depending on what vitals are in the file
@@ -187,9 +187,11 @@ namespace FormatConverter{
 
   // <editor-fold defaultstate="collapsed" desc="Wave Tracker">
 
-  StpGeReader::WaveTracker::WaveTracker( ) { }
+  StpGeReader::WaveTracker::WaveTracker( ) {
+  }
 
-  StpGeReader::WaveTracker::~WaveTracker( ) { }
+  StpGeReader::WaveTracker::~WaveTracker( ) {
+  }
 
   void StpGeReader::WaveTracker::prune( ) {
 
@@ -397,12 +399,6 @@ namespace FormatConverter{
     }
 
     int erasers = std::min( (int) sequencenums.size( ), 8 );
-    //    if ( mytime >= 1475072107000 ) {
-    //      std::cout << "flushing " << erasers << " values from seqnum " << sequencenums[0].first << "\t"
-    //              << sequencenums[0].second << " (" << mytime << ")...";
-    //
-    //    }
-
     dr_time startt = starttime( );
     for ( auto& w : wavevals ) {
       const int waveid = w.first;
@@ -469,9 +465,6 @@ namespace FormatConverter{
     }
 
     mytime += 2000;
-    //    if ( mytime >= 1475072107000 ) {
-    //      std::cout << "done" << std::endl;
-    //    }
   }
 
   unsigned short StpGeReader::WaveTracker::currentseq( ) const {
@@ -492,11 +485,14 @@ namespace FormatConverter{
   }
   // </editor-fold>
 
-  StpGeReader::StpGeReader( const std::string& name ) : StpReaderBase( name ), firstread( true ) { }
+  StpGeReader::StpGeReader( const std::string& name ) : StpReaderBase( name ), firstread( true ) {
+  }
 
-  StpGeReader::StpGeReader( const StpGeReader& orig ) : StpReaderBase( orig ), firstread( orig.firstread ) { }
+  StpGeReader::StpGeReader( const StpGeReader& orig ) : StpReaderBase( orig ), firstread( orig.firstread ) {
+  }
 
-  StpGeReader::~StpGeReader( ) { }
+  StpGeReader::~StpGeReader( ) {
+  }
 
   int StpGeReader::prepare( const std::string& filename, SignalSet * data ) {
     int rslt = StpReaderBase::prepare( filename, data );
@@ -547,12 +543,12 @@ namespace FormatConverter{
       while ( workHasFullSegment( &segsize ) && ChunkReadResult::OK == rslt ) {
         //output( ) << "next segment is " << std::dec << segsize << " bytes big" << std::endl;
 
-        size_t startpop = work.popped( );
+        auto startpop = work.popped( );
         rslt = processOneChunk( info, segsize );
-        size_t endpop = work.popped( );
+        auto endpop = work.popped( );
 
+        auto bytesread = endpop - startpop;
         if ( ChunkReadResult::OK == rslt ) {
-          size_t bytesread = endpop - startpop;
           //output( ) << "read " << bytesread << " bytes of segment" << std::endl;
           if ( bytesread < segsize ) {
             work.skip( segsize - bytesread );
@@ -561,6 +557,10 @@ namespace FormatConverter{
         }
         else if ( ChunkReadResult::UNKNOWN_BLOCKTYPE == rslt ) {
           return ReadResult::ERROR;
+        }
+        else if ( ChunkReadResult::HR_BLOCK_PROBLEM == rslt ) {
+          Log::warn( ) << "unexpected data in HR block...skipping to next segment" << std::endl;
+          work.skip( segsize - bytesread );
         }
         else {
           // something happened so rewind our to our mark
@@ -682,6 +682,7 @@ namespace FormatConverter{
       // offset is number of bytes from byte 64, but we want to track bytes
       // since we started reading (set our mark)
       size_t waveoffset = popUInt16( ) + 60; // offset is at pos 60 in the segment
+      Log::trace( ) << "waveoffset is at byte " << std::dec << ( work.popped( ) + waveoffset ) << std::endl;
       work.skip( 4 ); // don't know what these mean
       work.skip( 2 ); // don't know what these mean, either
 
@@ -718,7 +719,6 @@ namespace FormatConverter{
               << std::endl;
           switch ( blocktypefmt ) {
             case 0x0000:
-            //case 0x0800:
               readDataBlock( info,{ } ); // WARNING: not sure we should ignore this
               break;
             case 0x0100:
@@ -810,6 +810,7 @@ namespace FormatConverter{
               else {
                 readDataBlock( info,{ } );
               }
+              break;
             case 0x0D58:
               // FIXME: may be more data here that we shouldn't ignore
             case 0x0D59:
@@ -855,6 +856,13 @@ namespace FormatConverter{
             case 0x3C5A:
               readDataBlock( info,{ SKIP6, RWOBVT } ); // WARNING: not sure about this
               break;
+            case 0x8000:
+            case 0x070B:
+              // I don't think we should really ever see these, but we do.
+              // My understanding of the parsing just isn't good enough at this point
+              readDataBlock( info,{ } ); // WARNING: this doesn't seem right
+              break;
+
             default:
               int type = ( blocktypefmt >> 8 );
               int fmt = ( blocktypefmt & 0xFF );
@@ -868,7 +876,7 @@ namespace FormatConverter{
         work.skip( waveoffset - work.poppedSinceMark( ) );
       }
       else if ( work.poppedSinceMark( ) > waveoffset ) {
-        Log::error( ) << "we passed the wave start. that ain't right!" << std::endl;
+        Log::warn( ) << "we passed the wave start. that ain't right!" << std::endl;
         work.rewind( work.poppedSinceMark( ) - waveoffset );
       }
 

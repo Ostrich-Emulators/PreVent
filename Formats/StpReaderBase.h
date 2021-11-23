@@ -40,7 +40,6 @@ namespace FormatConverter {
       int segment_count;
     };
 
-
   protected:
     std::string popString( size_t length );
     std::string readString( size_t length );
@@ -59,6 +58,8 @@ namespace FormatConverter {
     bool metadataonly;
     std::ifstream filestream;
     zstr::istream * zipstream;
+
+    void inflate( const std::string& input, const std::string& output);
   };
 }
 #endif /* STPBASE_H */

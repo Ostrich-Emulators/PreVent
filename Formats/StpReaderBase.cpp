@@ -14,6 +14,8 @@
 
 #include <sys/stat.h>
 #include <filesystem>
+#include <cstdlib>
+#include <memory>
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
 #include <fcntl.h>
@@ -50,31 +52,15 @@ namespace FormatConverter {
       return rslt;
     }
 
-    // STP files are a concatenation of zlib-compressed segments, so we need to
-    // know when we're *really* done reading. Otherwise, the decoder will say
-    // it's at the end of the file once the first segment is fully read
-    struct stat filestat;
-    if ( stat( filename.c_str( ), &filestat ) == -1 ) {
-      perror( "stat failed" );
-      return -1;
-    }
+    // keep in mind that STP files are a concatenation of zlib-compressed segments,
+    // so you're not necessarily done when the zlib is inflated. there could be
+    // another segment after it
 
-//    zstr::ifstream doublereader( filename );
-//    char * skipper = new char[1024 * 1024];
-//    auto path = std::filesystem::path{ filename };
-//    path.replace_extension( "segs" );
-//    std::ofstream outy( path.filename( ) );
-//    while ( true ) {
-//      doublereader.read( skipper, 1024 * 1024 );
-//      auto g = doublereader.gcount( );
-//      if ( 0 == g ) {
-//        break;
-//      }
-//      outy.write( skipper, g );
-//    }
-//
-//    outy.close( );
-//    delete []skipper;
+    if ( nullptr != getenv( "STPGE_INFLATE" ) ) {
+      auto path = std::filesystem::path{ filename };
+      path.replace_extension( "segs" );
+      inflate( filename, path );
+    }
 
     filestream.open( filename, std::ifstream::in | std::ifstream::binary );
     zipstream = new zstr::istream( filestream.rdbuf( ) );
@@ -205,5 +191,73 @@ namespace FormatConverter {
     }
 
     return cnt;
+  }
+
+  void StpReaderBase::inflate( const std::string& input, const std::string& output ) {
+    if ( input == output ) {
+      Log::error( ) << "not inflating file into itself!" << std::endl;
+      return;
+    }
+
+    Log::info( ) << "inflating " << input << " to " << output << std::endl;
+    std::ifstream fs;
+    fs.open( input, std::ifstream::in | std::ifstream::binary );
+    auto zippy = new zstr::istream( fs.rdbuf( ) );
+
+    std::ofstream outy( output );
+
+    std::vector<char> decodebuffer;
+    decodebuffer.reserve( 1024 * 1024 * 4 );
+
+    // basically the same logic as readMore, but all at once and straight to a file
+    while ( !fs.eof( ) ) {
+      try {
+        zippy->read( decodebuffer.data( ), decodebuffer.capacity( ) );
+        auto g = zippy->gcount( );
+        if ( g > 0 ) {
+          outy.write( decodebuffer.data( ), g );
+          outy.flush( );
+        }
+        else {
+          break;
+        }
+      }
+      catch ( zstr::Exception& x ) {
+        auto skipstart = fs.tellg( );
+        char c;
+        bool found = false;
+        while ( !found && fs.get( c ) ) {
+          if ( 0x78 == c ) {
+            short nextc = fs.peek( );
+            //Log::debug( ) << "found 0x78 at " << std::dec << fs.tellg( ) << " => 0x" << std::hex << std::setw( 2 ) << std::setfill( '0' ) << nextc << std::endl;
+            found = ( 0x01 == nextc || 0x9C == nextc || 0xDA == nextc || 0x5E == nextc );
+            //Log::debug( ) << "found new compressed segment: " << found << std::endl;
+          }
+        }
+
+        Log::debug( ) << x.what( ) << std::endl;
+        Log::warn( ) << "damaged segment detected around byte " << std::dec << skipstart << "...";
+        if ( found ) {
+          // we found another segment, so rewind to get the 0x78 byte back on the stream
+          fs.seekg( -1, std::ios_base::cur );
+          found = true;
+
+          Log::warn( ) << "skipping to next segment" << std::endl;
+          auto skipped = fs.tellg( ) - skipstart;
+          Log::debug( ) << "skipping to byte: " << fs.tellg( ) << " (" << skipped << " bytes ahead)" << std::endl;
+
+          delete zippy;
+          zippy = new zstr::istream( fs.rdbuf( ) );
+        }
+        else {
+          Log::warn( ) << "no additional segments found" << std::endl;
+        }
+      }
+    }
+
+    outy.close( );
+    filestream.close( );
+    delete zippy;
+    Log::info( ) << "inflated" << std::endl;
   }
 }
