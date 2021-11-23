@@ -25,18 +25,15 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   StpReaderBase::StpReaderBase( const std::string& name ) : Reader( name ),
-      work( 1024 * 1024 * 16 ), metadataonly( false ) {
-  }
+      work( 1024 * 1024 * 16 ), metadataonly( false ) { }
 
   StpReaderBase::StpReaderBase( const StpReaderBase& orig ) : Reader( orig ),
-      work( orig.work.capacity( ) ), metadataonly( orig.metadataonly ) {
-  }
+      work( orig.work.capacity( ) ), metadataonly( orig.metadataonly ) { }
 
-  StpReaderBase::~StpReaderBase( ) {
-  }
+  StpReaderBase::~StpReaderBase( ) { }
 
   void StpReaderBase::setMetadataOnly( bool metasonly ) {
     metadataonly = metasonly;
@@ -56,7 +53,14 @@ namespace FormatConverter {
     // so you're not necessarily done when the zlib is inflated. there could be
     // another segment after it
 
+<<<<<<< Updated upstream
     if ( nullptr != getenv( "STPGE_INFLATE" ) ) {
+=======
+    // we'll scan through the file, and note any compressed segments
+    segments = indexFile( filename );
+
+    if ( !(segments.empty() || nullptr == getenv( "STPGE_INFLATE" ) ) ) {
+>>>>>>> Stashed changes
       auto path = std::filesystem::path{ filename };
       path.replace_extension( "segs" );
       inflate( filename, path );
@@ -64,6 +68,7 @@ namespace FormatConverter {
 
     filestream.open( filename, std::ifstream::in | std::ifstream::binary );
     zipstream = new zstr::istream( filestream.rdbuf( ) );
+
     return 0;
   }
 
@@ -193,6 +198,40 @@ namespace FormatConverter {
     return cnt;
   }
 
+  std::vector<size_t> StpReaderBase::indexFile( const std::string& filename ) {
+    auto vec = std::vector<size_t>{ };
+    auto fs = std::ifstream{ };
+
+    fs.open( filename, std::ifstream::in | std::ifstream::binary );
+    char c;
+    auto lastwas0x78 = false;
+    auto lastg = fs.tellg( );
+
+    while ( fs.get( c ) ) {
+      if ( lastwas0x78 && ( 0x01 == c || 0x9C == c || 0xDA == c || 0x5E == c ) ) {
+        vec.push_back( lastg );
+        Log::debug( ) << "compressed segment at:" << lastg << std::endl;
+      }
+
+      if ( c == 0x78 ) {
+        lastwas0x78 = true;
+      }
+      else {
+        lastwas0x78 = false;
+      }
+
+      if ( !( lastwas0x78 && 0 == lastg ) ) {
+        // not a compressed file, so we can't figure out segment indexes
+        Log::debug( ) << "cannot index a non-compressed STP file" << std::endl;
+        break;
+      }
+
+      lastg = fs.tellg( );
+    }
+    fs.close( );
+    return vec;
+  }
+
   void StpReaderBase::inflate( const std::string& input, const std::string& output ) {
     if ( input == output ) {
       Log::error( ) << "not inflating file into itself!" << std::endl;
@@ -256,7 +295,11 @@ namespace FormatConverter {
     }
 
     outy.close( );
+<<<<<<< Updated upstream
     filestream.close( );
+=======
+    fs.close( );
+>>>>>>> Stashed changes
     delete zippy;
     Log::info( ) << "inflated" << std::endl;
   }
