@@ -1,6 +1,6 @@
 4.3.7
   * (Tools) Improved reading speed from HDF5 files
-  * Improved native GE STP reader
+  * Improved native GE STP reader parsing; also now skips damaged segments
 
 4.3.6
   * Fixed negative numbers corruption bug

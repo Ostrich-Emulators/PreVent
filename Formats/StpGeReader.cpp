@@ -20,7 +20,7 @@
 #include "config.h"
 #include "CircularBuffer.h"
 
-namespace FormatConverter {
+namespace FormatConverter{
 
   /**
    * Note: wave labels *can* change depending on what vitals are in the file
@@ -52,14 +52,14 @@ namespace FormatConverter {
   const StpGeReader::BlockConfig StpGeReader::SKIP6 = BlockConfig::skip( 6 );
   const StpGeReader::BlockConfig StpGeReader::HR = BlockConfig::vital( "HR", "Bpm" );
   const StpGeReader::BlockConfig StpGeReader::PVC = BlockConfig::vital( "PVC", "Bpm" );
-  const StpGeReader::BlockConfig StpGeReader::STI = BlockConfig::div10( "ST-I", "mm", 1, false );
-  const StpGeReader::BlockConfig StpGeReader::STII = BlockConfig::div10( "ST-II", "mm", 1, false );
-  const StpGeReader::BlockConfig StpGeReader::STIII = BlockConfig::div10( "ST-III", "mm", 1, false );
+  const StpGeReader::BlockConfig StpGeReader::STI = BlockConfig::div10( "ST-I", "mm", 2, false );
+  const StpGeReader::BlockConfig StpGeReader::STII = BlockConfig::div10( "ST-II", "mm", 2, false );
+  const StpGeReader::BlockConfig StpGeReader::STIII = BlockConfig::div10( "ST-III", "mm", 2, false );
   const StpGeReader::BlockConfig StpGeReader::STAVR = BlockConfig::div10( "ST-AVR", "mm", 1, false );
   const StpGeReader::BlockConfig StpGeReader::STAVL = BlockConfig::div10( "ST-AVL", "mm", 1, false );
   const StpGeReader::BlockConfig StpGeReader::STAVF = BlockConfig::div10( "ST-AVF", "mm", 1, false );
   const StpGeReader::BlockConfig StpGeReader::STV = BlockConfig::div10( "ST-V", "mm", 1, false );
-  const StpGeReader::BlockConfig StpGeReader::STV1 = BlockConfig::div10( "ST-V1", "mm", 1, false );
+  const StpGeReader::BlockConfig StpGeReader::STV1 = BlockConfig::div10( "ST-V1", "mm", 2, false );
   const StpGeReader::BlockConfig StpGeReader::BT = BlockConfig::div10( "BT", "Deg C", 2 );
   const StpGeReader::BlockConfig StpGeReader::IT = BlockConfig::div10( "IT", "Deg C", 2 );
   const StpGeReader::BlockConfig StpGeReader::RESP = BlockConfig::vital( "RESP", "BrMin" );
@@ -187,11 +187,9 @@ namespace FormatConverter {
 
   // <editor-fold defaultstate="collapsed" desc="Wave Tracker">
 
-  StpGeReader::WaveTracker::WaveTracker( ) {
-  }
+  StpGeReader::WaveTracker::WaveTracker( ) { }
 
-  StpGeReader::WaveTracker::~WaveTracker( ) {
-  }
+  StpGeReader::WaveTracker::~WaveTracker( ) { }
 
   void StpGeReader::WaveTracker::prune( ) {
 
@@ -373,7 +371,7 @@ namespace FormatConverter {
           // the first signal of the miniloop, then none of the other signals
           // have incremented their miniloop yet, so we wouldn't want to
           // subtract 1 here.
-          // 
+          //
           // in practice, this doesn't seem to be an issue
           miniseen[waveid] = m.second - 1;
           break;
@@ -494,14 +492,11 @@ namespace FormatConverter {
   }
   // </editor-fold>
 
-  StpGeReader::StpGeReader( const std::string& name ) : StpReaderBase( name ), firstread( true ) {
-  }
+  StpGeReader::StpGeReader( const std::string& name ) : StpReaderBase( name ), firstread( true ) { }
 
-  StpGeReader::StpGeReader( const StpGeReader& orig ) : StpReaderBase( orig ), firstread( orig.firstread ) {
-  }
+  StpGeReader::StpGeReader( const StpGeReader& orig ) : StpReaderBase( orig ), firstread( orig.firstread ) { }
 
-  StpGeReader::~StpGeReader( ) {
-  }
+  StpGeReader::~StpGeReader( ) { }
 
   int StpGeReader::prepare( const std::string& filename, SignalSet * data ) {
     int rslt = StpReaderBase::prepare( filename, data );
@@ -697,11 +692,14 @@ namespace FormatConverter {
       // to be first. Our strategy is to keep looping until, if we do one more
       // loop, we'll pass our wave offset limit
 
+      std::set<unsigned int> seenblocks;
+
       while ( work.poppedSinceMark( ) + 66 <= waveoffset ) {
         //Log::info( ) << "psm: " << work.poppedSinceMark( ) << "\t" << work.popped( ) << "\twaveoffset: " << waveoffset << std::endl;
         if ( 0x013A == readUInt16( ) ) {
           work.skip( 2 ); // the int16 we just read
-          readDataBlock( info,{ SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF }, 62 );
+          //readDataBlock( info,{ SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF }, 62 );
+          readDataBlock( info,{ SKIP2, HR, PVC }, 62 );
 
           if ( 0x013A != popUInt16( ) ) {
             // we expected a "closing" 0x013A, so something is wrong
@@ -720,6 +718,7 @@ namespace FormatConverter {
               << std::endl;
           switch ( blocktypefmt ) {
             case 0x0000:
+            //case 0x0800:
               readDataBlock( info,{ } ); // WARNING: not sure we should ignore this
               break;
             case 0x0100:
@@ -800,8 +799,19 @@ namespace FormatConverter {
               readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
               break;
             case 0x0D56:
+              readDataBlock( info,{ SKIP6, STI, STII, STIII } ); // FIXME: may be more data here
+              break;
             case 0x0D57:
+              if ( 0 == seenblocks.count( blocktypefmt ) ) {
+                // we sometimes get more 0D57 segments at this time (not catchup)
+                // so we just ignore the subsequent occurrences
+                readDataBlock( info,{ SKIP6, STV1 } ); // FIXME: may be more data here
+              }
+              else {
+                readDataBlock( info,{ } );
+              }
             case 0x0D58:
+              // FIXME: may be more data here that we shouldn't ignore
             case 0x0D59:
               readDataBlock( info,{ } );
               break;
@@ -850,6 +860,7 @@ namespace FormatConverter {
               int fmt = ( blocktypefmt & 0xFF );
               unhandledBlockType( type, fmt );
           }
+          seenblocks.insert( blocktypefmt );
         }
       }
 
@@ -1108,6 +1119,8 @@ namespace FormatConverter {
               Log::trace( ) << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( val & 0xFF );
             }
             else {
+              // this is just for output, so I'm okay with
+              // possibly-error-producing signed shift
               short one = ( val >> 8 );
               short two = ( val & 0xFF );
 

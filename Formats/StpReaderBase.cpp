@@ -193,7 +193,7 @@ namespace FormatConverter {
           zipstream = new zstr::istream( filestream.rdbuf( ) );
         }
         else {
-          Log::warn( ) << "no additional segments found." << std::endl;
+          Log::warn( ) << "no additional segments found" << std::endl;
           return 0;
         }
       }
