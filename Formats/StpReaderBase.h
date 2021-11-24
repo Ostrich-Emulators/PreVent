@@ -58,14 +58,7 @@ namespace FormatConverter {
     bool metadataonly;
     std::ifstream filestream;
     zstr::istream * zipstream;
-    std::vector<size_t> segments;
 
-    /**
-     * Indexes the file, looking for compressed segments.
-     * @param input the file to index
-     * @return the compressed segment boundaries. If empty, the file is not compressed
-     */
-    std::vector<size_t> indexFile( const std::string& input );
     void inflate( const std::string& input, const std::string& output );
   };
 }

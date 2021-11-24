@@ -53,14 +53,7 @@ namespace FormatConverter{
     // so you're not necessarily done when the zlib is inflated. there could be
     // another segment after it
 
-<<<<<<< Updated upstream
     if ( nullptr != getenv( "STPGE_INFLATE" ) ) {
-=======
-    // we'll scan through the file, and note any compressed segments
-    segments = indexFile( filename );
-
-    if ( !(segments.empty() || nullptr == getenv( "STPGE_INFLATE" ) ) ) {
->>>>>>> Stashed changes
       auto path = std::filesystem::path{ filename };
       path.replace_extension( "segs" );
       inflate( filename, path );
@@ -136,7 +129,7 @@ namespace FormatConverter{
 
   int StpReaderBase::readMore( ) {
     std::vector<unsigned char> decodebuffer;
-    decodebuffer.reserve( 1024 * 1024 * 4 );
+    decodebuffer.reserve( 1024 * 1024 );
 
     bool readsome = false;
     while ( !readsome ) {
@@ -161,12 +154,12 @@ namespace FormatConverter{
         while ( !found && filestream.get( c ) ) {
           // zlib magic bytes are:
           // 78 01 - No Compression/low
-          // 78 5E - Custom Compression
+          // 78 5E - Custom Compression -- not supported by zstr, so ignored by us
           // 78 9C - Default Compression
           // 78 DA - Best Compression
           if ( 0x78 == c ) {
             short nextc = filestream.peek( );
-            found = ( 0x01 == nextc || 0x9C == nextc || 0xDA == nextc || 0x5E == nextc );
+            found = ( 0x01 == nextc || 0x9C == nextc || 0xDA == nextc );
           }
         }
 
@@ -196,40 +189,6 @@ namespace FormatConverter{
     }
 
     return cnt;
-  }
-
-  std::vector<size_t> StpReaderBase::indexFile( const std::string& filename ) {
-    auto vec = std::vector<size_t>{ };
-    auto fs = std::ifstream{ };
-
-    fs.open( filename, std::ifstream::in | std::ifstream::binary );
-    char c;
-    auto lastwas0x78 = false;
-    auto lastg = fs.tellg( );
-
-    while ( fs.get( c ) ) {
-      if ( lastwas0x78 && ( 0x01 == c || 0x9C == c || 0xDA == c || 0x5E == c ) ) {
-        vec.push_back( lastg );
-        Log::debug( ) << "compressed segment at:" << lastg << std::endl;
-      }
-
-      if ( c == 0x78 ) {
-        lastwas0x78 = true;
-      }
-      else {
-        lastwas0x78 = false;
-      }
-
-      if ( !( lastwas0x78 && 0 == lastg ) ) {
-        // not a compressed file, so we can't figure out segment indexes
-        Log::debug( ) << "cannot index a non-compressed STP file" << std::endl;
-        break;
-      }
-
-      lastg = fs.tellg( );
-    }
-    fs.close( );
-    return vec;
   }
 
   void StpReaderBase::inflate( const std::string& input, const std::string& output ) {
@@ -269,7 +228,9 @@ namespace FormatConverter{
           if ( 0x78 == c ) {
             short nextc = fs.peek( );
             //Log::debug( ) << "found 0x78 at " << std::dec << fs.tellg( ) << " => 0x" << std::hex << std::setw( 2 ) << std::setfill( '0' ) << nextc << std::endl;
-            found = ( 0x01 == nextc || 0x9C == nextc || 0xDA == nextc || 0x5E == nextc );
+            
+            // these are flags that zstr recognizes for zlib
+            found = ( 0x01 == nextc || 0x9C == nextc || 0xDA == nextc );
             //Log::debug( ) << "found new compressed segment: " << found << std::endl;
           }
         }
@@ -295,11 +256,7 @@ namespace FormatConverter{
     }
 
     outy.close( );
-<<<<<<< Updated upstream
-    filestream.close( );
-=======
     fs.close( );
->>>>>>> Stashed changes
     delete zippy;
     Log::info( ) << "inflated" << std::endl;
   }
