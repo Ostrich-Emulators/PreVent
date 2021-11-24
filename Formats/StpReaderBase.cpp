@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <cstdlib>
 #include <memory>
+#include <cassert>
 
 #if defined(MSDOS) || defined(OS2) || defined(WIN32) || defined(__CYGWIN__)
 #include <fcntl.h>
@@ -25,15 +26,18 @@
 #define SET_BINARY_MODE(file)
 #endif
 
-namespace FormatConverter{
+namespace FormatConverter {
 
   StpReaderBase::StpReaderBase( const std::string& name ) : Reader( name ),
-      work( 1024 * 1024 * 16 ), metadataonly( false ) { }
+      work( 1024 * 1024 * 16 ), metadataonly( false ) {
+  }
 
   StpReaderBase::StpReaderBase( const StpReaderBase& orig ) : Reader( orig ),
-      work( orig.work.capacity( ) ), metadataonly( orig.metadataonly ) { }
+      work( orig.work.capacity( ) ), metadataonly( orig.metadataonly ) {
+  }
 
-  StpReaderBase::~StpReaderBase( ) { }
+  StpReaderBase::~StpReaderBase( ) {
+  }
 
   void StpReaderBase::setMetadataOnly( bool metasonly ) {
     metadataonly = metasonly;
@@ -53,22 +57,31 @@ namespace FormatConverter{
     // so you're not necessarily done when the zlib is inflated. there could be
     // another segment after it
 
+    /* allocate inflate state */
+    zipdata.zalloc = Z_NULL;
+    zipdata.zfree = Z_NULL;
+    zipdata.opaque = Z_NULL;
+    zipdata.avail_in = 0;
+    zipdata.next_in = Z_NULL;
+    auto ret = inflateInit( &zipdata );
+    if ( ret != Z_OK ) {
+      Log::error( ) << "could not initialize compression handler" << std::endl;
+      return -1;
+    }
+
     if ( nullptr != getenv( "STPGE_INFLATE" ) ) {
       auto path = std::filesystem::path{ filename };
       path.replace_extension( "segs" );
-      inflate( filename, path );
+      inflate_f( filename, path );
     }
 
     filestream.open( filename, std::ifstream::in | std::ifstream::binary );
-    zipstream = new zstr::istream( filestream.rdbuf( ) );
-
     return 0;
   }
 
   void StpReaderBase::finish( ) {
-    if ( zipstream ) {
-      delete zipstream;
-    }
+    inflateEnd( &zipdata );
+
     if ( filestream.is_open( ) ) {
       filestream.close( );
     }
@@ -128,136 +141,226 @@ namespace FormatConverter{
   }
 
   int StpReaderBase::readMore( ) {
-    std::vector<unsigned char> decodebuffer;
-    decodebuffer.reserve( 1024 * 1024 );
+    if ( !filestream ) {
+      return 0;
+    }
 
-    bool readsome = false;
-    while ( !readsome ) {
-      try {
-        zipstream->read( (char*) ( &decodebuffer[0] ), decodebuffer.capacity( ) );
-        readsome = true;
-      }
-      catch ( zstr::Exception& x ) {
-        Log::debug( ) << x.what( ) << std::endl;
+    size_t INSIZE = 1024 * 128;
+    unsigned char * indata = new unsigned char[INSIZE];
 
-        // we've gotten some sort of zlib error, so our plan is
-        // to skip ahead to the next compressed block, and see
-        // if we have better luck. But basically, we'll never
-        // classify a zlib error as an application error.
+    size_t OUTSIZE = 1024 * 1024 * 8;
+    unsigned char * outdata = new unsigned char[OUTSIZE];
 
-        // try to find the next compressed block, by searching for the
-        // next set of zlib magic bytes
+    filestream.read( (char *) indata, INSIZE );
+    size_t read = filestream.gcount( );
 
-        auto skipstart = filestream.tellg( );
-        char c;
-        bool found = false;
-        while ( !found && filestream.get( c ) ) {
-          // zlib magic bytes are:
-          // 78 01 - No Compression/low
-          // 78 5E - Custom Compression -- not supported by zstr, so ignored by us
-          // 78 9C - Default Compression
-          // 78 DA - Best Compression
-          if ( 0x78 == c ) {
-            short nextc = filestream.peek( );
-            found = ( 0x01 == nextc || 0x9C == nextc || 0xDA == nextc );
+    auto atEOF = filestream.eof();
+
+    if ( read > 0 ) {
+      auto ok = inflate_b( indata, read, outdata, OUTSIZE );
+      if ( Z_OK == ok ) {
+        if ( read > 0 ) {
+          // put the extra data back in the stream
+          Log::trace( ) << "returning " << read << " bytes back to the stream" << std::endl;
+          if ( atEOF ) {
+            filestream.clear( );
+            filestream.seekg( -read, std::ios_base::end );
+          }
+          else {
+            filestream.seekg( -read, std::ios_base::cur );
           }
         }
 
-        Log::warn( ) << "damaged segment detected...";
-        if ( found ) {
-          // we found another segment, so rewind to get the 0x78 byte back on the stream
-          filestream.seekg( -1, std::ios_base::cur );
-          found = true;
-
-          Log::warn( ) << "skipping to next segment" << std::endl;
-          auto skipped = filestream.tellg( ) - skipstart;
-          Log::debug( ) << "skipping to byte: " << filestream.tellg( ) << " (" << skipped << " bytes ahead)" << std::endl;
-
-          delete zipstream;
-          zipstream = new zstr::istream( filestream.rdbuf( ) );
+        for ( size_t i = 0; i < OUTSIZE; i++ ) {
+          work.push( outdata[i] );
         }
-        else {
-          Log::warn( ) << "no additional segments found" << std::endl;
-          return 0;
+      }
+      else {
+        OUTSIZE = 0;
+        Log::warn( ) << "problem inflating data: " << zerr( ok ) << std::endl;
+
+        // we always inflate our indata array starting at the beginning
+        // in this case, that segment is damaged, so iterate through until
+        // we find another segment, and return everything after that to the
+        // stream so it can get picked up in a recursion.
+        auto found = -1;
+        for ( size_t i = 2; i < read - 1 && found < 0; i++ ) {
+          if ( 0x78 == indata[i] && ( 0x01 == indata[i + 1] || 0x9C == indata[i + 1] || 0xDA == indata[i + 1] ) ) {
+            found = i;
+          }
+        }
+
+        if ( found > 0 ) {
+          auto rewind = ( read - found );
+          if ( atEOF ) {
+            filestream.clear( );
+            filestream.seekg( -rewind, std::ios_base::end );
+          }
+          else {
+            filestream.seekg( -rewind, std::ios_base::cur );
+          }
+
+          delete [] indata;
+          delete [] outdata;
+          return readMore( );
         }
       }
     }
 
-    std::streamsize cnt = zipstream->gcount( );
-    for ( int i = 0; i < cnt; i++ ) {
-      work.push( decodebuffer[i] );
-    }
-
-    return cnt;
+    delete [] indata;
+    delete [] outdata;
+    return OUTSIZE;
   }
 
-  void StpReaderBase::inflate( const std::string& input, const std::string& output ) {
+  void StpReaderBase::inflate_f( const std::string& input, const std::string& output ) {
     if ( input == output ) {
       Log::error( ) << "not inflating file into itself!" << std::endl;
       return;
     }
 
+    // this is basically the same logic as readMore, but all at once
+    // and straight to a file
+
     Log::info( ) << "inflating " << input << " to " << output << std::endl;
-    std::ifstream fs;
-    fs.open( input, std::ifstream::in | std::ifstream::binary );
-    auto zippy = new zstr::istream( fs.rdbuf( ) );
-
     std::ofstream outy( output );
+    std::ifstream inny;
+    inny.open( input, std::ifstream::in | std::ifstream::binary );
 
-    std::vector<char> decodebuffer;
-    decodebuffer.reserve( 1024 * 1024 * 4 );
+    const size_t INSIZE = 1024 * 128;
+    unsigned char * indata = new unsigned char[INSIZE];
 
-    // basically the same logic as readMore, but all at once and straight to a file
-    while ( !fs.eof( ) ) {
-      try {
-        zippy->read( decodebuffer.data( ), decodebuffer.capacity( ) );
-        auto g = zippy->gcount( );
-        if ( g > 0 ) {
-          outy.write( decodebuffer.data( ), g );
-          outy.flush( );
-        }
-        else {
-          break;
-        }
-      }
-      catch ( zstr::Exception& x ) {
-        auto skipstart = fs.tellg( );
-        char c;
-        bool found = false;
-        while ( !found && fs.get( c ) ) {
-          if ( 0x78 == c ) {
-            short nextc = fs.peek( );
-            //Log::debug( ) << "found 0x78 at " << std::dec << fs.tellg( ) << " => 0x" << std::hex << std::setw( 2 ) << std::setfill( '0' ) << nextc << std::endl;
-            
-            // these are flags that zstr recognizes for zlib
-            found = ( 0x01 == nextc || 0x9C == nextc || 0xDA == nextc );
-            //Log::debug( ) << "found new compressed segment: " << found << std::endl;
+    const size_t OUTSIZE = 1024 * 1024 * 8;
+    unsigned char * outdata = new unsigned char[OUTSIZE];
+
+    while ( inny ) {
+      auto insize = INSIZE;
+      auto fileg = inny.tellg( );
+      inny.read( (char *) indata, insize );
+      size_t read = inny.gcount( );
+
+      auto atEOF = inny.eof();
+
+      Log::debug( ) << "read " << read << " of " << INSIZE << " bytes from file byte:" << fileg << std::endl;
+      if ( read > 0 ) {
+        auto outsize = OUTSIZE;
+        auto ok = inflate_b( indata, read, outdata, outsize );
+        if ( Z_OK == ok ) {
+          if ( read > 0 ) {
+            // put the extra data back in the stream
+            Log::trace( ) << "returning " << read << " bytes back to the stream" << std::endl;
+            if ( atEOF ) {
+              inny.clear( );
+              inny.seekg( -read, std::ios_base::end );
+            }
+            else {
+              inny.seekg( -read, std::ios_base::cur );
+            }
           }
-        }
 
-        Log::debug( ) << x.what( ) << std::endl;
-        Log::warn( ) << "damaged segment detected around byte " << std::dec << skipstart << "...";
-        if ( found ) {
-          // we found another segment, so rewind to get the 0x78 byte back on the stream
-          fs.seekg( -1, std::ios_base::cur );
-          found = true;
-
-          Log::warn( ) << "skipping to next segment" << std::endl;
-          auto skipped = fs.tellg( ) - skipstart;
-          Log::debug( ) << "skipping to byte: " << fs.tellg( ) << " (" << skipped << " bytes ahead)" << std::endl;
-
-          delete zippy;
-          zippy = new zstr::istream( fs.rdbuf( ) );
+          outy.write( (char *) outdata, outsize );
         }
         else {
-          Log::warn( ) << "no additional segments found" << std::endl;
+          Log::warn( ) << "problem inflating data: " << zerr( ok ) << std::endl;
+
+          // we always try to inflate our indata array starting at the beginning
+          // in this case, that segment is damaged, so iterate through until
+          // we find another segment, and return everything after that to the
+          // stream so it can get picked up on the next loop.
+          auto found = -1;
+          for ( size_t i = 2; i < read - 1 && found < 0; i++ ) {
+            if ( 0x78 == indata[i] && ( 0x01 == indata[i + 1] || 0x9C == indata[i + 1] || 0xDA == indata[i + 1] ) ) {
+              found = i;
+            }
+          }
+
+          if ( found > 0 ) {
+            auto rewind = ( read - found );
+            if ( atEOF ) {
+              inny.clear( );
+              inny.seekg( -rewind, std::ios_base::end );
+            }
+            else {
+              inny.seekg( -rewind, std::ios_base::cur );
+            }
+          }
         }
       }
     }
 
     outy.close( );
-    fs.close( );
-    delete zippy;
+    inny.close( );
+    delete [] indata;
+    delete [] outdata;
     Log::info( ) << "inflated" << std::endl;
+  }
+
+  int StpReaderBase::inflate_b( unsigned char * input, size_t& insize,
+      unsigned char * output, size_t& outsize ) {
+    // slightly modified from http://zlib.net/zpipe.c
+    zipdata.avail_in = insize;
+    if ( zipdata.avail_in == 0 ) {
+      return Z_STREAM_END;
+    }
+    zipdata.next_in = input;
+
+    inflateReset( &zipdata );
+
+    int ret;
+
+    /* decompress until deflate stream ends */
+    // we expect the output array to be big enough to hold an entire
+    // compressed segment
+    do {
+      // we expect to inflate all the data from input in one pass
+      zipdata.avail_out = outsize;
+      zipdata.next_out = output;
+      Log::debug( ) << "inflating..." << std::endl;
+      ret = inflate( &zipdata, Z_NO_FLUSH );
+      assert( ret != Z_STREAM_ERROR ); /* state not clobbered */
+      switch ( ret ) {
+        case Z_NEED_DICT:
+          ret = Z_DATA_ERROR; /* and fall through */
+        case Z_DATA_ERROR:
+        case Z_MEM_ERROR:
+          return ret;
+      }
+
+      Log::debug( ) << "inflated " << ( insize - zipdata.avail_in ) << " bytes to "
+          << ( outsize - zipdata.avail_out ) << " bytes with " << zipdata.avail_in << " left over. " << zerr( ret ) << std::endl;
+      /* done when inflate() says it's done */
+
+      insize = zipdata.avail_in;
+      outsize = ( outsize - zipdata.avail_out );
+
+      if ( 0 == insize ) {
+        // nothing left to convert, so say we're at the end (nervously)
+        ret = Z_STREAM_END;
+      }
+    }
+    while ( ret != Z_STREAM_END );
+
+    /* clean up and return */
+    return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
+  }
+
+  std::string StpReaderBase::zerr( int Z ) {
+    switch ( Z ) {
+      case Z_OK:
+        return "no error (ok)";
+      case Z_STREAM_END:
+        return "no error (end)";
+      case Z_ERRNO:
+        return "error reading input";
+      case Z_STREAM_ERROR:
+        return "invalid compression level";
+      case Z_DATA_ERROR:
+        return "invalid or incomplete deflate data";
+      case Z_MEM_ERROR:
+        return "out of memory";
+      case Z_VERSION_ERROR:
+        return "zlib version mismatch";
+      default:
+        return "unknown error: " + Z;
+    }
   }
 }
