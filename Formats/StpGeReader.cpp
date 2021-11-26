@@ -719,6 +719,7 @@ namespace FormatConverter {
               << std::endl;
           switch ( blocktypefmt ) {
             case 0x0000:
+              Log::warn( ) << "ignoring 0x0000 block type (could indicate parsing error)" << std::endl;
               readDataBlock( info,{ } ); // WARNING: not sure we should ignore this
               break;
             case 0x0100:
@@ -860,7 +861,15 @@ namespace FormatConverter {
             case 0x070B:
               // I don't think we should really ever see these, but we do.
               // My understanding of the parsing just isn't good enough at this point
-              readDataBlock( info,{ } ); // WARNING: this doesn't seem right
+            {
+              unsigned short type = ( blocktypefmt >> 8 );
+              unsigned short fmt = ( blocktypefmt & 0xFF );
+              Log::warn( ) << "ignoring 0x"
+                  << std::setfill( '0' ) << std::setw( 2 ) << std::hex << type
+                  << std::setfill( '0' ) << std::setw( 2 ) << std::hex << fmt
+                  << " block type (could indicate parsing error)" << std::endl;
+              readDataBlock( info,{ } );
+            }
               break;
 
             default:

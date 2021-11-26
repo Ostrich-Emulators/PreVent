@@ -177,7 +177,7 @@ namespace FormatConverter {
       }
       else {
         OUTSIZE = 0;
-        Log::warn( ) << "problem inflating data: " << zerr( ok ) << std::endl;
+        Log::warn( ) << "compression error: " << zerr( ok ) << std::endl;
 
         // we always inflate our indata array starting at the beginning
         // in this case, that segment is damaged, so iterate through until
