@@ -20,7 +20,7 @@
 #include "config.h"
 #include "CircularBuffer.h"
 
-namespace FormatConverter{
+namespace FormatConverter {
 
   /**
    * Note: wave labels *can* change depending on what vitals are in the file
@@ -52,14 +52,14 @@ namespace FormatConverter{
   const StpGeReader::BlockConfig StpGeReader::SKIP6 = BlockConfig::skip( 6 );
   const StpGeReader::BlockConfig StpGeReader::HR = BlockConfig::vital( "HR", "Bpm" );
   const StpGeReader::BlockConfig StpGeReader::PVC = BlockConfig::vital( "PVC", "Bpm" );
-  const StpGeReader::BlockConfig StpGeReader::STI = BlockConfig::div10( "ST-I", "mm", 1, false );
-  const StpGeReader::BlockConfig StpGeReader::STII = BlockConfig::div10( "ST-II", "mm", 1, false );
-  const StpGeReader::BlockConfig StpGeReader::STIII = BlockConfig::div10( "ST-III", "mm", 1, false );
+  const StpGeReader::BlockConfig StpGeReader::STI = BlockConfig::div10( "ST-I", "mm", 2, false );
+  const StpGeReader::BlockConfig StpGeReader::STII = BlockConfig::div10( "ST-II", "mm", 2, false );
+  const StpGeReader::BlockConfig StpGeReader::STIII = BlockConfig::div10( "ST-III", "mm", 2, false );
   const StpGeReader::BlockConfig StpGeReader::STAVR = BlockConfig::div10( "ST-AVR", "mm", 1, false );
   const StpGeReader::BlockConfig StpGeReader::STAVL = BlockConfig::div10( "ST-AVL", "mm", 1, false );
   const StpGeReader::BlockConfig StpGeReader::STAVF = BlockConfig::div10( "ST-AVF", "mm", 1, false );
   const StpGeReader::BlockConfig StpGeReader::STV = BlockConfig::div10( "ST-V", "mm", 1, false );
-  const StpGeReader::BlockConfig StpGeReader::STV1 = BlockConfig::div10( "ST-V1", "mm", 1, false );
+  const StpGeReader::BlockConfig StpGeReader::STV1 = BlockConfig::div10( "ST-V1", "mm", 2, false );
   const StpGeReader::BlockConfig StpGeReader::BT = BlockConfig::div10( "BT", "Deg C", 2 );
   const StpGeReader::BlockConfig StpGeReader::IT = BlockConfig::div10( "IT", "Deg C", 2 );
   const StpGeReader::BlockConfig StpGeReader::RESP = BlockConfig::vital( "RESP", "BrMin" );
@@ -179,13 +179,19 @@ namespace FormatConverter{
   const StpGeReader::BlockConfig StpGeReader::CO2_IN = BlockConfig::vital( "CO2-IN", "mmHg" );
   const StpGeReader::BlockConfig StpGeReader::CO2_RR = BlockConfig::vital( "CO2-RR", "BrMin" );
   const StpGeReader::BlockConfig StpGeReader::O2_EXP = BlockConfig::div10( "O2-EXP", "%" );
-  const StpGeReader::BlockConfig StpGeReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" ); // </editor-fold>
+  const StpGeReader::BlockConfig StpGeReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" );
+
+  const StpGeReader::BlockConfig StpGeReader::RWOBVT = BlockConfig::vital( "rWOBVT", "J/L" );
+  const StpGeReader::BlockConfig StpGeReader::RI_E = BlockConfig::vital( "rI:E", "" );
+  // </editor-fold>
 
   // <editor-fold defaultstate="collapsed" desc="Wave Tracker">
 
-  StpGeReader::WaveTracker::WaveTracker( ) { }
+  StpGeReader::WaveTracker::WaveTracker( ) {
+  }
 
-  StpGeReader::WaveTracker::~WaveTracker( ) { }
+  StpGeReader::WaveTracker::~WaveTracker( ) {
+  }
 
   void StpGeReader::WaveTracker::prune( ) {
 
@@ -367,7 +373,7 @@ namespace FormatConverter{
           // the first signal of the miniloop, then none of the other signals
           // have incremented their miniloop yet, so we wouldn't want to
           // subtract 1 here.
-          // 
+          //
           // in practice, this doesn't seem to be an issue
           miniseen[waveid] = m.second - 1;
           break;
@@ -393,12 +399,6 @@ namespace FormatConverter{
     }
 
     int erasers = std::min( (int) sequencenums.size( ), 8 );
-    //    if ( mytime >= 1475072107000 ) {
-    //      std::cout << "flushing " << erasers << " values from seqnum " << sequencenums[0].first << "\t"
-    //              << sequencenums[0].second << " (" << mytime << ")...";
-    //
-    //    }
-
     dr_time startt = starttime( );
     for ( auto& w : wavevals ) {
       const int waveid = w.first;
@@ -465,9 +465,6 @@ namespace FormatConverter{
     }
 
     mytime += 2000;
-    //    if ( mytime >= 1475072107000 ) {
-    //      std::cout << "done" << std::endl;
-    //    }
   }
 
   unsigned short StpGeReader::WaveTracker::currentseq( ) const {
@@ -488,11 +485,14 @@ namespace FormatConverter{
   }
   // </editor-fold>
 
-  StpGeReader::StpGeReader( const std::string& name ) : StpReaderBase( name ), firstread( true ) { }
+  StpGeReader::StpGeReader( const std::string& name ) : StpReaderBase( name ), firstread( true ) {
+  }
 
-  StpGeReader::StpGeReader( const StpGeReader& orig ) : StpReaderBase( orig ), firstread( orig.firstread ) { }
+  StpGeReader::StpGeReader( const StpGeReader& orig ) : StpReaderBase( orig ), firstread( orig.firstread ) {
+  }
 
-  StpGeReader::~StpGeReader( ) { }
+  StpGeReader::~StpGeReader( ) {
+  }
 
   int StpGeReader::prepare( const std::string& filename, SignalSet * data ) {
     int rslt = StpReaderBase::prepare( filename, data );
@@ -522,7 +522,7 @@ namespace FormatConverter{
     while ( 0 != cnt ) {
       if ( work.available( ) < 1024 * 768 ) {
         // we should never come close to filling up our work buffer
-        // so if we have, make sure the sure knows
+        // so if we have, make sure the user knows
         Log::error( ) << "work buffer is too full...something is going wrong" << std::endl;
         return ReadResult::ERROR;
       }
@@ -543,12 +543,12 @@ namespace FormatConverter{
       while ( workHasFullSegment( &segsize ) && ChunkReadResult::OK == rslt ) {
         //output( ) << "next segment is " << std::dec << segsize << " bytes big" << std::endl;
 
-        size_t startpop = work.popped( );
+        auto startpop = work.popped( );
         rslt = processOneChunk( info, segsize );
-        size_t endpop = work.popped( );
+        auto endpop = work.popped( );
 
+        auto bytesread = endpop - startpop;
         if ( ChunkReadResult::OK == rslt ) {
-          size_t bytesread = endpop - startpop;
           //output( ) << "read " << bytesread << " bytes of segment" << std::endl;
           if ( bytesread < segsize ) {
             work.skip( segsize - bytesread );
@@ -557,6 +557,10 @@ namespace FormatConverter{
         }
         else if ( ChunkReadResult::UNKNOWN_BLOCKTYPE == rslt ) {
           return ReadResult::ERROR;
+        }
+        else if ( ChunkReadResult::HR_BLOCK_PROBLEM == rslt ) {
+          Log::warn( ) << "unexpected data in HR block...skipping to next segment" << std::endl;
+          work.skip( segsize - bytesread );
         }
         else {
           // something happened so rewind our to our mark
@@ -626,7 +630,7 @@ namespace FormatConverter{
       if ( lasttime > -1 ) {
         if ( currentTime >= ( lasttime + 30000 ) ) {
           // if we have >30s break, just restart our counting
-          catchup = 0;//( currentTime - lasttime ) / 2000;
+          catchup = 0; //( currentTime - lasttime ) / 2000;
           catchupEven = true;
         }
         else if ( currentTime >= ( lasttime + 4000 ) ) {
@@ -678,6 +682,7 @@ namespace FormatConverter{
       // offset is number of bytes from byte 64, but we want to track bytes
       // since we started reading (set our mark)
       size_t waveoffset = popUInt16( ) + 60; // offset is at pos 60 in the segment
+      Log::trace( ) << "waveoffset is at byte " << std::dec << ( work.popped( ) + waveoffset ) << std::endl;
       work.skip( 4 ); // don't know what these mean
       work.skip( 2 ); // don't know what these mean, either
 
@@ -688,11 +693,14 @@ namespace FormatConverter{
       // to be first. Our strategy is to keep looping until, if we do one more
       // loop, we'll pass our wave offset limit
 
+      std::set<unsigned int> seenblocks;
+
       while ( work.poppedSinceMark( ) + 66 <= waveoffset ) {
         //Log::info( ) << "psm: " << work.poppedSinceMark( ) << "\t" << work.popped( ) << "\twaveoffset: " << waveoffset << std::endl;
         if ( 0x013A == readUInt16( ) ) {
           work.skip( 2 ); // the int16 we just read
-          readDataBlock( info,{ SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF }, 62 );
+          //readDataBlock( info,{ SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF }, 62 );
+          readDataBlock( info,{ SKIP2, HR, PVC }, 62 );
 
           if ( 0x013A != popUInt16( ) ) {
             // we expected a "closing" 0x013A, so something is wrong
@@ -700,12 +708,20 @@ namespace FormatConverter{
           }
         }
         else {
+          auto blockstart = work.popped( );
           work.skip( 66 ); // skip to end of the block to read the block type and format
           unsigned int blocktypefmt = popUInt16( );
+          auto blockend = work.popped( );
           work.rewind( 68 ); // go back to the start of this block
-          //output( ) << "new block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-          //  << blocktype << " " << blockfmt << " starting at " << std::dec << work.popped( ) << std::endl;
+          Log::trace( ) << "new block: [" << std::dec << blockstart << " - " << blockend << "]; type: "
+              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( blocktypefmt >> 8 ) << " "
+              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( blocktypefmt & 0xFF )
+              << std::endl;
           switch ( blocktypefmt ) {
+            case 0x0000:
+              Log::warn( ) << "ignoring 0x0000 block type (could indicate parsing error)" << std::endl;
+              readDataBlock( info,{ } ); // WARNING: not sure we should ignore this
+              break;
             case 0x0100:
               // sometimes our 68-byte block is only 66 bytes big! Luckily,
               // this only seems to happen when the blocktype is actually 0x0D,
@@ -784,8 +800,20 @@ namespace FormatConverter{
               readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
               break;
             case 0x0D56:
+              readDataBlock( info,{ SKIP6, STI, STII, STIII } ); // FIXME: may be more data here
+              break;
             case 0x0D57:
+              if ( 0 == seenblocks.count( blocktypefmt ) ) {
+                // we sometimes get more 0D57 segments at this time (not catchup)
+                // so we just ignore the subsequent occurrences
+                readDataBlock( info,{ SKIP6, STV1 } ); // FIXME: may be more data here
+              }
+              else {
+                readDataBlock( info,{ } );
+              }
+              break;
             case 0x0D58:
+              // FIXME: may be more data here that we shouldn't ignore
             case 0x0D59:
               readDataBlock( info,{ } );
               break;
@@ -823,11 +851,33 @@ namespace FormatConverter{
             case 0x2A5D:
               readDataBlock( info,{ SKIP6, INSP_TV } );
               break;
+            case 0x3C5B:
+              readDataBlock( info,{ SKIP6, RI_E } ); // WARNING: not sure about this
+              break;
+            case 0x3C5A:
+              readDataBlock( info,{ SKIP6, RWOBVT } ); // WARNING: not sure about this
+              break;
+            case 0x8000:
+            case 0x070B:
+              // I don't think we should really ever see these, but we do.
+              // My understanding of the parsing just isn't good enough at this point
+            {
+              unsigned short type = ( blocktypefmt >> 8 );
+              unsigned short fmt = ( blocktypefmt & 0xFF );
+              Log::warn( ) << "ignoring 0x"
+                  << std::setfill( '0' ) << std::setw( 2 ) << std::hex << type
+                  << std::setfill( '0' ) << std::setw( 2 ) << std::hex << fmt
+                  << " block type (could indicate parsing error)" << std::endl;
+              readDataBlock( info,{ } );
+            }
+              break;
+
             default:
               int type = ( blocktypefmt >> 8 );
               int fmt = ( blocktypefmt & 0xFF );
               unhandledBlockType( type, fmt );
           }
+          seenblocks.insert( blocktypefmt );
         }
       }
 
@@ -835,7 +885,7 @@ namespace FormatConverter{
         work.skip( waveoffset - work.poppedSinceMark( ) );
       }
       else if ( work.poppedSinceMark( ) > waveoffset ) {
-        Log::error( ) << "we passed the wave start. that ain't right!" << std::endl;
+        Log::warn( ) << "we passed the wave start. that ain't right!" << std::endl;
         work.rewind( work.poppedSinceMark( ) - waveoffset );
       }
 
@@ -855,7 +905,8 @@ namespace FormatConverter{
   void StpGeReader::unhandledBlockType( unsigned int type, unsigned int fmt ) const {
     std::stringstream ss;
     ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-        << type << " " << fmt << " starting at " << std::dec << work.popped( );
+        << type << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << fmt
+        << " starting at " << std::dec << work.popped( );
     throw std::runtime_error( ss.str( ) );
   }
 
@@ -1011,7 +1062,7 @@ namespace FormatConverter{
       for ( const auto& cfg : vitals ) {
         Log::trace( ) << " " << cfg.label;
       }
-      Log::trace( ) << " ]" << std::endl;
+      Log::trace( ) << " ] from byte " << std::dec << work.popped( ) << std::endl;
     }
 
     for ( const auto& cfg : vitals ) {
@@ -1023,6 +1074,7 @@ namespace FormatConverter{
 
         bool okval = false;
         bool added = false;
+        unsigned int readstart = work.popped( );
         if ( cfg.unsign ) {
           unsigned int val;
           if ( 1 == cfg.readcount ) {
@@ -1034,9 +1086,23 @@ namespace FormatConverter{
             okval = ( val != 0x8000 );
           }
 
-//          if ( "HR" == cfg.label ) {
-//            Log::trace( ) << "HR value: " << val << " at " << currentTime << "; catchup: " << catchup << ( okval && catchupEven && catchup >= 0 ? " keeping" : " skipping" ) << std::endl;
-//          }
+          if ( Log::levelok( LogLevel::TRACE ) ) {
+            Log::trace( ) << cfg.label << "\t0x";
+            if ( 1 == cfg.readcount ) {
+              Log::trace( ) << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( val & 0xFF );
+            }
+            else {
+              unsigned short one = ( val >> 8 );
+              unsigned short two = ( val & 0xFF );
+
+              Log::trace( ) << std::hex << std::setfill( '0' ) << std::setw( 2 ) << one
+                  << std::setfill( '0' ) << std::setw( 2 ) << two;
+            }
+            Log::trace( ) << " => " << std::dec << val << "\t(byte: " << readstart << ")" << std::endl;
+          }
+          //          if ( "HR" == cfg.label ) {
+          //            Log::trace( ) << "HR value: " << val << " at " << currentTime << "; catchup: " << catchup << ( okval && catchupEven && catchup >= 0 ? " keeping" : " skipping" ) << std::endl;
+          //          }
 
           if ( okval && catchupEven && catchup >= 0 ) {
             auto sig = info->addVital( cfg.label, &added );
@@ -1064,6 +1130,24 @@ namespace FormatConverter{
             okval = ( val > -32767 );
           }
 
+          if ( Log::levelok( LogLevel::TRACE ) ) {
+            Log::trace( ) << cfg.label << "\t0x";
+            if ( 1 == cfg.readcount ) {
+              Log::trace( ) << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( val & 0xFF );
+            }
+            else {
+              // this is just for output, so I'm okay with
+              // possibly-error-producing signed shift
+              short one = ( val >> 8 );
+              short two = ( val & 0xFF );
+
+              Log::trace( ) << std::hex << std::setfill( '0' ) << std::setw( 2 ) << one
+                  << std::setfill( '0' ) << std::setw( 2 ) << two;
+            }
+            Log::trace( ) << " => " << std::dec << val << "\t(byte: " << readstart << ")" << std::endl;
+          }
+
+
           if ( okval && catchupEven && catchup >= 0 ) {
             auto sig = info->addVital( cfg.label, &added );
             if ( added ) {
@@ -1075,7 +1159,6 @@ namespace FormatConverter{
               sig->add( DataRow::from( currentTime, div10s( val, cfg.divBy10 ) ) );
             }
             else {
-
               sig->add( std::make_unique<DataRow>( currentTime, val ) );
             }
           }

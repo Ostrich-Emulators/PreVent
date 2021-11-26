@@ -17,6 +17,8 @@
 #include <time.h>
 #include <stdio.h>
 
+#include <filesystem>
+
 //this should fetch current working directory regardless of platform
 #ifdef _WIN32
 #include <direct.h>
@@ -26,17 +28,20 @@
 #define GetCurrentDir getcwd
 #endif
 
-namespace FormatConverter{
+namespace FormatConverter {
   const std::string FileNamer::DEFAULT_PATTERN = "%d%i-p%p-%s.%t";
   const std::string FileNamer::FILENAME_PATTERN = "%i.%t";
 
-  FileNamer::FileNamer( const std::string& pat ) : pattern( pat ) { }
+  FileNamer::FileNamer( const std::string& pat ) : pattern( pat ) {
+  }
 
   FileNamer::FileNamer( const FileNamer& orig ) : pattern( orig.pattern ),
       conversions( orig.conversions.begin( ), orig.conversions.end( ) ),
-      lastname( orig.lastname ), inputfile( orig.inputfile ) { }
+      lastname( orig.lastname ), inputfile( orig.inputfile ) {
+  }
 
-  FileNamer::~FileNamer( ) { }
+  FileNamer::~FileNamer( ) {
+  }
 
   FileNamer& FileNamer::operator=(const FileNamer& orig ) {
     if ( this != &orig ) {
@@ -64,6 +69,9 @@ namespace FormatConverter{
   void FileNamer::inputfilename( const std::string& inny ) {
     inputfile = inny;
 
+    // FIXME: use filesystem paths in this function
+    // auto path = std::filesystem::path( inny );
+
     //Last modification date
     struct stat t_stat;
     stat( inputfile.c_str( ), &t_stat ); //reads metadata of input file
@@ -79,7 +87,17 @@ namespace FormatConverter{
     }
 
     // get rid of any leading directories
+#ifdef __CYGWIN__
+    // if cygwin, we have to handle both possibilities for a nice user experience
+    auto bpos = input.rfind( "\\" );
+    if ( std::string::npos == bpos ) {
+      bpos = input.rfind( "/" );
+    }
+    const size_t basepos = bpos;
+#else
     const size_t basepos = input.rfind( dirsep );
+#endif
+
     if ( std::string::npos != basepos ) {
       conversions["%i"] = input.substr( basepos + 1 );
       conversions["%d"] = input.substr( 0, basepos ) + dirsep;
@@ -216,8 +234,8 @@ namespace FormatConverter{
   }
 
   tm FileNamer::modtime( const dr_time& time ) {
-     time_t mytime = time / 1000;
-     return *( Options::asBool( OptionsKey::LOCALIZED_TIME )
+    time_t mytime = time / 1000;
+    return *( Options::asBool( OptionsKey::LOCALIZED_TIME )
         ? std::localtime( &mytime )
         : std::gmtime( &mytime ) );
   }

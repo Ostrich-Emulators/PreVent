@@ -16,7 +16,8 @@
 
 #include "Reader.h"
 #include "CircularBuffer.h"
-#include "zstr.hpp"
+#include <zlib.h>
+#include <fstream>
 
 namespace FormatConverter {
 
@@ -40,7 +41,6 @@ namespace FormatConverter {
       int segment_count;
     };
 
-
   protected:
     std::string popString( size_t length );
     std::string readString( size_t length );
@@ -57,7 +57,24 @@ namespace FormatConverter {
     CircularBuffer<unsigned char> work;
   private:
     bool metadataonly;
-    zstr::ifstream * filestream;
+    std::ifstream filestream;
+    z_stream zipdata;
+
+    void inflate_f( const std::string& input, const std::string& output );
+
+    /**
+     * Inflates the given input into the output.
+     * @param input the data to be inflated
+     * @param inputsize (in) the size of the input array; (out) the number
+     * of bytes after the end of the stream (put back on the next read)
+     * @param output the inflated data
+     * @param outsize (in) the size of the inflated array; (out) the size of the
+     * data (which will/should always be smaller)
+     * @return one of zlib's Z_ constants
+     */
+    int inflate_b( unsigned char * input, size_t& inputsize,
+        unsigned char * output, size_t& outsize );
+    static std::string zerr( int Z);
   };
 }
 #endif /* STPBASE_H */

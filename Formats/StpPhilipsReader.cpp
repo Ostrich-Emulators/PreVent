@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <filesystem>
 #include <expat.h>
+#include <cstring>
 
 namespace FormatConverter{
   const std::string StpPhilipsReader::DataParser::NUMERIC_ATTR = "NumericAttribute";
