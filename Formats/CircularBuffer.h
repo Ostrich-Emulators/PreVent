@@ -17,6 +17,7 @@
 #define CIRCULARBUFFER_H
 
 #include <vector>
+#include <memory>
 #include <stdexcept>
 
 namespace FormatConverter {

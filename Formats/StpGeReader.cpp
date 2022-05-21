@@ -18,7 +18,7 @@
 #include <sys/stat.h>
 #include <filesystem>
 #include "config.h"
-#include "CircularBuffer.h"
+#include "StpGeSegment.h"
 
 namespace FormatConverter {
 
@@ -618,6 +618,10 @@ namespace FormatConverter {
     work.mark( );
     size_t chunkstart = work.popped( );
     try {
+      auto vv = work.popvec(maxread);
+      StpGeSegment::GEParseError parseerr;
+      auto seg2 = StpGeSegment::index(vv, false, parseerr);
+      work.rewind(maxread);
       work.skip( 18 );
       Log::trace( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
       auto lasttime = currentTime;
@@ -713,7 +717,7 @@ namespace FormatConverter {
           unsigned int blocktypefmt = popUInt16( );
           auto blockend = work.popped( );
           work.rewind( 68 ); // go back to the start of this block
-          Log::trace( ) << "new block: [" << std::dec << blockstart << " - " << blockend << "]; type: "
+          Log::trace( ) << "new block: [" << std::dec << blockstart << " - " << blockend << "); type: "
               << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( blocktypefmt >> 8 ) << " "
               << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( blocktypefmt & 0xFF )
               << std::endl;
