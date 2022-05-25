@@ -35,7 +35,9 @@ namespace FormatConverter {
     enum GEParseError {
       NO_ERROR,
       UNKNOWN_VITALSTYPE,
-      VITALSBLOCK_OVERFLOW
+      VITALSBLOCK_OVERFLOW,
+      WAVE_INCONSISTENT_VALCOUNT,
+      WAVE_TOO_MANY_VALUES
     };
 
     virtual ~StpGeSegment( );
@@ -45,7 +47,7 @@ namespace FormatConverter {
       /**
        * Reads the header segment that starts at the start of the raw data
        */
-      static Header parse( std::vector<unsigned char>& rawdata );
+      static Header parse( const std::vector<unsigned char>& rawdata );
       Header( const Header& );
       const dr_time time;
       const std::string patient;
@@ -114,6 +116,8 @@ namespace FormatConverter {
       static const BlockConfig BC_STAVF;
       static const BlockConfig BC_STV;
       static const BlockConfig BC_STV1;
+      static const BlockConfig BC_STV2;
+      static const BlockConfig BC_STV3;
       static const BlockConfig BC_BT;
       static const BlockConfig BC_IT;
       static const BlockConfig BC_RESP;
@@ -251,13 +255,11 @@ namespace FormatConverter {
         NBP = 0x0A,
         SPO2 = 0x0B,
         TEMP = 0x0C,
-        //ST = 0x0D,
         CO2 = 0x0E,
         UAC = 0x10,
         PT = 0x14,
         NBP2 = 0x1D,
         VENT = 0x2A,
-        RWOBVT = 0x3C
       };
 
       /**
@@ -268,57 +270,69 @@ namespace FormatConverter {
        * @param errcode if any error was raised during parsing (0==no error)
        * @return the vitals information
        */
-      static VitalsBlock index( std::vector<unsigned char>& rawdata, unsigned long pos,
+      static VitalsBlock index( const std::vector<unsigned char>& rawdata, unsigned long pos,
           GEParseError& errcode );
       const Signal signal;
       const int mode;
+      const unsigned int datastart;
+      const std::vector<BlockConfig>& config;
+      int hex() const;
 
     private:
       static const std::map<Signal, std::map<int, std::vector<BlockConfig>>> LOOKUP;
 
-      VitalsBlock( Signal s, int mode, unsigned long start );
-      const unsigned long startpos;
+      VitalsBlock( Signal s, int mode, unsigned int start );
     };
 
-    class WavesBlock {
+    class WaveFA0DBlock {
     public:
+      class WaveFormIndex {
+      public:
+        WaveFormIndex( unsigned int w, unsigned int cnt, unsigned int datastart);
+        const unsigned int waveid;
+        const unsigned int valcount;
+        const unsigned int datastart;
+      };
+
       /**
        * Reads one vitals block that starts at the start
        * @param start where to start reading wave data. After this function, it points to the
        * point past where the wave block ends (start of the next wave block?)
        */
-      static WavesBlock index( std::vector<unsigned char>& rawdata, unsigned long &start,
-          GEParseError& errcode );
-    private:
-      static const std::map<int, std::string> WAVELABELS;
-
-      WavesBlock( int sequence, unsigned long start, unsigned long end );
-
-      static unsigned long findEndAndIndex( std::vector<unsigned char>& rawdata, unsigned long start,
-        unsigned long& indexstart);
-
+      static WaveFA0DBlock index( const std::vector<unsigned char>& rawdata, unsigned long &start,
+          const std::vector<VitalsBlock>& vitals, GEParseError& errcode );
+      const std::vector<WaveFormIndex> wavedata;
       const int sequence;
       const unsigned long startpos;
       const unsigned long endpos;
-      std::vector<int> waves;
+
+    private:
+      static const unsigned int READCOUNTS[];
+
+      WaveFA0DBlock( int sequence, unsigned long start, unsigned long end,
+          const std::vector<WaveFormIndex>& data );
     };
 
-    static std::unique_ptr<StpGeSegment> index( std::vector<unsigned char>& data, bool skipwaves,
+    static std::unique_ptr<StpGeSegment> index( const std::vector<unsigned char>& data, bool skipwaves,
         GEParseError& err );
+
+    const Header header;
+    const std::vector<VitalsBlock> vitals;
+    const std::vector<WaveFA0DBlock> waves;
+
+    static unsigned int readUInt( const std::vector<unsigned char>& rawdata, unsigned long pos );
+    static unsigned int readUInt2( const std::vector<unsigned char>& rawdata, unsigned long pos );
+    static unsigned long readUInt4( const std::vector<unsigned char>& rawdata, unsigned long pos );
+
+    static int readInt( const std::vector<unsigned char>& rawdata, unsigned long pos );
+    static int readInt2( const std::vector<unsigned char>& rawdata, unsigned long pos );
+    static long readInt4( const std::vector<unsigned char>& rawdata, unsigned long pos );
 
   private:
     StpGeSegment( Header h, const std::vector<VitalsBlock>& vitals = std::vector<VitalsBlock>( ),
-        const std::vector<WavesBlock>& waves = std::vector<WavesBlock>( ) );
+        const std::vector<WaveFA0DBlock>& waves = std::vector<WaveFA0DBlock>( ) );
     static const int HEADER_SIZE;
     static const int VITALS_SIZE;
-
-    static unsigned int readUInt( std::vector<unsigned char>& rawdata, unsigned long pos );
-    static unsigned int readUInt2( std::vector<unsigned char>& rawdata, unsigned long pos );
-    static unsigned long readUInt4( std::vector<unsigned char>& rawdata, unsigned long pos );
-
-    Header header;
-    std::vector<VitalsBlock> vitals;
-    std::vector<WavesBlock> waves;
   };
 }
 #endif /* STPGESEGMENT_H */

@@ -32,6 +32,8 @@ namespace FormatConverter{
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STAVF = BlockConfig::div10( "ST-AVF", "mm", 1, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV = BlockConfig::div10( "ST-V", "mm", 1, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV1 = BlockConfig::div10( "ST-V1", "mm", 2, false );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV2 = BlockConfig::div10( "ST-V2", "mm", 2, false );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV3 = BlockConfig::div10( "ST-V3", "mm", 2, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_BT = BlockConfig::div10( "BT", "Deg C", 2 );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_IT = BlockConfig::div10( "IT", "Deg C", 2 );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_RESP = BlockConfig::vital( "RESP", "BrMin" );
@@ -155,156 +157,143 @@ namespace FormatConverter{
 
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_RWOBVT = BlockConfig::vital( "rWOBVT", "J/L" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_RI_E = BlockConfig::vital( "rI:E", "" );
- 
-  const std::map<StpGeSegment::VitalsBlock::Signal, std::map<int, std::vector<StpGeSegment::VitalsBlock::BlockConfig>>> LOOKUP = {
-    { StpGeSegment::VitalsBlock::Signal::HR,{
+  //</editor-fold>
+
+  // <editor-fold defaultstate="collapsed" desc="block configs">
+  const std::map<StpGeSegment::VitalsBlock::Signal, std::map<int, std::vector<StpGeSegment::VitalsBlock::BlockConfig>>> StpGeSegment::VitalsBlock::LOOKUP = {
+    { Signal::HR,{
+        {0x18,
+          {BC_SKIP2, BC_SPO2_P, BC_SPO2_R } },
+        {0x22,
+          {BC_SKIP2, BC_RESP, BC_APNEA  } },
+        {0x36,
+          {BC_SKIP2, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP } },
         {0x3A,
-          { StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_HR, StpGeSegment::VitalsBlock::BC_PVC } },
+          { BC_SKIP2, BC_HR, BC_PVC } },
         {0x56,
-          { StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_STI, StpGeSegment::VitalsBlock::BC_STII, StpGeSegment::VitalsBlock::BC_STIII } },
+          { BC_SKIP2, BC_STI, BC_STII, BC_STIII } },
         {0x57,
-          { StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_STV1 } },
+          { BC_SKIP2, BC_STV1, BC_STV2, BC_STV3 } },
         {0x58,
           { } },
         {0x59,
-          { } } }
+          { } },
+        {0x5A,
+          {BC_SKIP2, BC_RWOBVT } },
+        {0x5B,
+          {BC_SKIP2, BC_RI_E } } }
     },
     { StpGeSegment::VitalsBlock::Signal::AR,{
         {0x4D,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_AR1_M, StpGeSegment::VitalsBlock::BC_AR1_S, StpGeSegment::VitalsBlock::BC_AR1_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_AR1_R } },
+          {BC_SKIP6, BC_AR1_M, BC_AR1_S, BC_AR1_D, BC_SKIP2, BC_AR1_R } },
         {0x4E,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_AR2_M, StpGeSegment::VitalsBlock::BC_AR2_S, StpGeSegment::VitalsBlock::BC_AR2_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_AR2_R } },
+          {BC_SKIP6, BC_AR2_M, BC_AR2_S, BC_AR2_D, BC_SKIP2, BC_AR2_R } },
         {0x4F,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_AR3_M, StpGeSegment::VitalsBlock::BC_AR3_S, StpGeSegment::VitalsBlock::BC_AR3_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_AR3_R } },
+          {BC_SKIP6, BC_AR3_M, BC_AR3_S, BC_AR3_D, BC_SKIP2, BC_AR3_R } },
         {0x50,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_AR4_M, StpGeSegment::VitalsBlock::BC_AR4_S, StpGeSegment::VitalsBlock::BC_AR4_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_AR4_R } } } 
+          {BC_SKIP6, BC_AR4_M, BC_AR4_S, BC_AR4_D, BC_SKIP2, BC_AR4_R } } }
     },
     { StpGeSegment::VitalsBlock::Signal::PA,{
         {0x4D,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_PA1_M, StpGeSegment::VitalsBlock::BC_PA1_S, StpGeSegment::VitalsBlock::BC_PA1_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_PA1_R } },
+          {BC_SKIP6, BC_PA1_M, BC_PA1_S, BC_PA1_D, BC_SKIP2, BC_PA1_R } },
         {0x4E,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_PA2_M, StpGeSegment::VitalsBlock::BC_PA2_S, StpGeSegment::VitalsBlock::BC_PA2_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_PA2_R } },
+          {BC_SKIP6, BC_PA2_M, BC_PA2_S, BC_PA2_D, BC_SKIP2, BC_PA2_R } },
         {0x4F,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_PA3_M, StpGeSegment::VitalsBlock::BC_PA3_S, StpGeSegment::VitalsBlock::BC_PA3_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_PA3_R } },
+          {BC_SKIP6, BC_PA3_M, BC_PA3_S, BC_PA3_D, BC_SKIP2, BC_PA3_R } },
         {0x50,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_PA4_M, StpGeSegment::VitalsBlock::BC_PA4_S, StpGeSegment::VitalsBlock::BC_PA4_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_PA4_R } } }
+          {BC_SKIP6, BC_PA4_M, BC_PA4_S, BC_PA4_D, BC_SKIP2, BC_PA4_R } } }
     },
     { StpGeSegment::VitalsBlock::Signal::LA,{
         {0x4D,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_CVP1 } },
+          {BC_SKIP6, BC_CVP1 } },
         {0x4E,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_CVP2 } },
+          {BC_SKIP6, BC_CVP2 } },
         {0x4F,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_CVP3 } },
+          {BC_SKIP6, BC_CVP3 } },
         {0x50,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_CVP4 } } }
+          {BC_SKIP6, BC_CVP4 } } }
     },
     { StpGeSegment::VitalsBlock::Signal::ICP,{
         {0x4D,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_ICP1 } },
+          {BC_SKIP6, BC_ICP1 } },
         {0x4E,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_ICP2 } },
+          {BC_SKIP6, BC_ICP2 } },
         {0x4F,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_ICP3 } },
+          {BC_SKIP6, BC_ICP3 } },
         {0x50,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_ICP4 } } }
+          {BC_SKIP6, BC_ICP4 } } }
     },
     { StpGeSegment::VitalsBlock::Signal::SP,{
         {0x4D,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_SP1 } } }
+          {BC_SKIP6, BC_SP1 } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::APNEA,{
-        {0x4D,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_RESP, StpGeSegment::VitalsBlock::BC_APNEA  } } }
-    },
+//    { StpGeSegment::VitalsBlock::Signal::APNEA,{
+//        {0x4D,
+//          {BC_SKIP6, BC_RESP, BC_APNEA  } } }
+//    },
     { StpGeSegment::VitalsBlock::Signal::BT,{
         {0x22,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_BT, StpGeSegment::VitalsBlock::BC_IT } } }
+          {BC_SKIP6, BC_BT, BC_IT } } }
     },
     { StpGeSegment::VitalsBlock::Signal::NBP,{
         {0x18,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_NBP_M, StpGeSegment::VitalsBlock::BC_NBP_S,StpGeSegment::VitalsBlock::BC_NBP_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_CUFF } } }
+          {BC_SKIP6, BC_NBP_M, BC_NBP_S,BC_NBP_D, BC_SKIP2, BC_CUFF } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::SPO2,{
-        {0x18,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_SPO2_P, StpGeSegment::VitalsBlock::BC_SPO2_R } } }
-    },
+//    { StpGeSegment::VitalsBlock::Signal::SPO2,{
+//        {0x18,
+//          {BC_SKIP6, BC_SPO2_P, BC_SPO2_R } } }
+//    },
     { StpGeSegment::VitalsBlock::Signal::TEMP,{
         {0x22,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_TMP_1, StpGeSegment::VitalsBlock::BC_TMP_2, StpGeSegment::VitalsBlock::BC_DELTA_TMP } },
+          {BC_SKIP6, BC_TMP_1, BC_TMP_2, BC_DELTA_TMP } },
         {0x23,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_TMP_1, StpGeSegment::VitalsBlock::BC_TMP_2, StpGeSegment::VitalsBlock::BC_DELTA_TMP } } }
+          {BC_SKIP6, BC_TMP_1, BC_TMP_2, BC_DELTA_TMP } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::CO2,{
-        {0x36,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_CO2_EX, StpGeSegment::VitalsBlock::BC_CO2_IN, StpGeSegment::VitalsBlock::BC_CO2_RR, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_O2_EXP, StpGeSegment::VitalsBlock::BC_O2_INSP } },
-        {0x4D,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_CO2_EX, StpGeSegment::VitalsBlock::BC_CO2_IN, StpGeSegment::VitalsBlock::BC_CO2_RR, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_O2_EXP, StpGeSegment::VitalsBlock::BC_O2_INSP } } }
-    },
+//    { StpGeSegment::VitalsBlock::Signal::CO2,{
+//        {0x4D,
+//          {BC_SKIP6, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP } } }
+//    },
     { StpGeSegment::VitalsBlock::Signal::UAC,{
         {0x4D,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_UAC1_M, StpGeSegment::VitalsBlock::BC_UAC1_S, StpGeSegment::VitalsBlock::BC_UAC1_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_UAC1_R } },
+          {BC_SKIP6, BC_UAC1_M, BC_UAC1_S, BC_UAC1_D, BC_SKIP2, BC_UAC1_R } },
         {0x4E,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_UAC2_M, StpGeSegment::VitalsBlock::BC_UAC2_S, StpGeSegment::VitalsBlock::BC_UAC2_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_UAC2_R } },
+          {BC_SKIP6, BC_UAC2_M, BC_UAC2_S, BC_UAC2_D, BC_SKIP2, BC_UAC2_R } },
         {0x4F,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_UAC3_M, StpGeSegment::VitalsBlock::BC_UAC3_S, StpGeSegment::VitalsBlock::BC_UAC3_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_UAC3_R } },
+          {BC_SKIP6, BC_UAC3_M, BC_UAC3_S, BC_UAC3_D, BC_SKIP2, BC_UAC3_R } },
         {0x50,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_UAC4_M, StpGeSegment::VitalsBlock::BC_UAC4_S, StpGeSegment::VitalsBlock::BC_UAC4_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_UAC4_R } } }
+          {BC_SKIP6, BC_UAC4_M, BC_UAC4_S, BC_UAC4_D, BC_SKIP2, BC_UAC4_R } } }
     },
     { StpGeSegment::VitalsBlock::Signal::PT,{
         {0xC2,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_PT_RR, StpGeSegment::VitalsBlock::BC_PEEP, StpGeSegment::VitalsBlock::BC_MV, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_Fi02, StpGeSegment::VitalsBlock::BC_TV, StpGeSegment::VitalsBlock::BC_PIP,StpGeSegment::VitalsBlock::BC_PPLAT, StpGeSegment::VitalsBlock::BC_MAWP, StpGeSegment::VitalsBlock::BC_SENS } } }
+          {BC_SKIP6, BC_PT_RR, BC_PEEP, BC_MV, BC_SKIP2, BC_Fi02, BC_TV, BC_PIP,BC_PPLAT, BC_MAWP, BC_SENS } } }
     },
     { StpGeSegment::VitalsBlock::Signal::NBP2,{
         {0x18,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_NBP_M, StpGeSegment::VitalsBlock::BC_NBP_S,StpGeSegment::VitalsBlock::BC_NBP_D, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_CUFF } } }
+          {BC_SKIP6, BC_NBP_M, BC_NBP_S,BC_NBP_D, BC_SKIP2, BC_CUFF } } }
     },
     { StpGeSegment::VitalsBlock::Signal::VENT,{
         {0x5C,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_APRV_LO, StpGeSegment::VitalsBlock::BC_APRV_HI, StpGeSegment::VitalsBlock::BC_APRV_LO_T, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_APRV_HI_T, StpGeSegment::VitalsBlock::BC_COMP, StpGeSegment::VitalsBlock::BC_RESIS, StpGeSegment::VitalsBlock::BC_MEAS_PEEP, StpGeSegment::VitalsBlock::BC_INTR_PEEP, StpGeSegment::VitalsBlock::BC_SPONT_R } },
+          {BC_SKIP6, BC_APRV_LO, BC_APRV_HI, BC_APRV_LO_T, BC_SKIP2, BC_APRV_HI_T, BC_COMP, BC_RESIS, BC_MEAS_PEEP, BC_INTR_PEEP, BC_SPONT_R } },
         {0x5D,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_INSP_TV } },
+          {BC_SKIP6, BC_INSP_TV } },
         {0xDB,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_VENT, StpGeSegment::VitalsBlock::BC_FLW_R, StpGeSegment::VitalsBlock::BC_SKIP4, StpGeSegment::VitalsBlock::BC_IN_HLD, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_PRS_SUP, StpGeSegment::VitalsBlock::BC_INSP_TM, StpGeSegment::VitalsBlock::BC_INSP_PC, StpGeSegment::VitalsBlock::BC_I_E } },
+          {BC_SKIP6, BC_VENT, BC_FLW_R, BC_SKIP4, BC_IN_HLD, BC_SKIP2, BC_PRS_SUP, BC_INSP_TM, BC_INSP_PC, BC_I_E } },
         {0xDC,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_HF_FLW, StpGeSegment::VitalsBlock::BC_HF_R, StpGeSegment::VitalsBlock::BC_HF_PRS, StpGeSegment::VitalsBlock::BC_SPONT_MV, StpGeSegment::VitalsBlock::BC_SKIP2, StpGeSegment::VitalsBlock::BC_SET_TV, StpGeSegment::VitalsBlock::BC_SET_PCP, StpGeSegment::VitalsBlock::BC_SET_IE, StpGeSegment::VitalsBlock::BC_B_FLW, StpGeSegment::VitalsBlock::BC_FLW_TRIG } } }
+          {BC_SKIP6, BC_HF_FLW, BC_HF_R, BC_HF_PRS, BC_SPONT_MV, BC_SKIP2, BC_SET_TV, BC_SET_PCP, BC_SET_IE, BC_B_FLW, BC_FLW_TRIG } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::RWOBVT,{
-        {0x5A,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_RWOBVT } },
-        {0x5B,
-          {StpGeSegment::VitalsBlock::BC_SKIP6, StpGeSegment::VitalsBlock::BC_RI_E } } }
-    }
+//    { StpGeSegment::VitalsBlock::Signal::RWOBVT,{
+//        {0x5A,
+//          {BC_SKIP6, BC_RWOBVT } },
+//        {0x5B,
+//          {BC_SKIP6, BC_RI_E } } }
+//    }
   };
   // </editor-fold>
 
-  // <editor-fold defaultstate="collapsed" desc="wave labels">
-  /**
-   * WARNING: wave labels can change depending on what vitals are in the file,
-   * but that is not yet implemented
-   **/
-  const std::map<int, std::string> StpGeSegment::WavesBlock::WAVELABELS = {
-    {0x07, "I" },
-    {0x08, "II" },
-    {0x09, "III" },
-    {0x0A, "V" },
-    {0x0B, "AVR" },
-    {0x0C, "AVF" },
-    {0x0D, "AVL" },
-    {0x17, "RR" },
-    {0x1B, "AR1" },
-    {0x1C, "ICP2" }, // may also be PA2
-    {0x1D, "CVP3" }, // may also be PA3
-    {0x1E, "CVP4" },
-    {0x27, "SPO2" },
-    {0x2A, "CO2" },
-    {0xC8, "VNT_PRES" },
-    {0xC9, "VNT_FLOW" },
-  };
-  // </editor-fold>
+  const unsigned int StpGeSegment::WaveFA0DBlock::READCOUNTS[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
 
   StpGeSegment::StpGeSegment( Header h, const std::vector<VitalsBlock>& vitals,
-      const std::vector<WavesBlock>& waves ) : header( h ), vitals( vitals ), waves( waves ) { }
+      const std::vector<WaveFA0DBlock>& waves ) : header( h ), vitals( vitals ), waves( waves ) { }
 
   StpGeSegment::~StpGeSegment( ) { }
 
@@ -314,7 +303,7 @@ namespace FormatConverter{
   StpGeSegment::Header::Header( const Header& o )
       : time( o.time ), patient( o.patient ), unity( o.unity ), magic( o.magic ) { }
 
-  StpGeSegment::Header StpGeSegment::Header::parse( std::vector<unsigned char>& data ) {
+  StpGeSegment::Header StpGeSegment::Header::parse( const std::vector<unsigned char>& data ) {
     auto magic = readUInt4(data, 0);
     auto timestart = 18;
     time_t time = ( ( data[timestart + 1] << 24 ) | ( data[timestart] << 16 )
@@ -334,19 +323,23 @@ namespace FormatConverter{
     return Header( magic, time, namevec );
   }
 
-  StpGeSegment::VitalsBlock::VitalsBlock( Signal s, int mode, unsigned long start )
-      : signal( s ), mode( mode ), startpos( start ) { }
+  StpGeSegment::VitalsBlock::VitalsBlock( Signal s, int mode, unsigned int start )
+      : signal( s ), mode( mode ), datastart( start ), config( LOOKUP.at( s ).at( mode ) ) { }
 
-  StpGeSegment::VitalsBlock StpGeSegment::VitalsBlock::index( std::vector<unsigned char>& data,
+  StpGeSegment::VitalsBlock StpGeSegment::VitalsBlock::index( const std::vector<unsigned char>& data,
       unsigned long pos, GEParseError& errcode ) {
     int sig = data[pos];
     int mode = data[pos + 1];
 
     auto sigs = std::vector{ HR, AR, PA, LA, CVP, ICP, SP, APNEA, BT, NBP, SPO2, TEMP,
-      CO2, UAC, PT, NBP2, VENT, RWOBVT };
+      CO2, UAC, PT, NBP2, VENT };
     for ( auto& x : sigs ) {
       if ( x == sig ) {
-        return VitalsBlock( x, mode, pos );
+        Log::trace( ) << "new block: [" << std::dec << pos << " - " << pos + VITALS_SIZE << "); type: "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << x << " "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << mode << std::endl;
+
+        return VitalsBlock( x, mode, pos + 2 );
       }
     }
 
@@ -357,53 +350,107 @@ namespace FormatConverter{
     throw std::runtime_error( ss.str( ) );
   }
 
-  StpGeSegment::WavesBlock::WavesBlock( int seq, unsigned long start, unsigned long end )
-      : sequence( seq ), startpos( start ), endpos( end ) { }
-
-  StpGeSegment::WavesBlock StpGeSegment::WavesBlock::index( std::vector<unsigned char>& data,
-      unsigned long& start, GEParseError& errcode ) {
-    // waves block always starts with 0x04, then a sequence number
-    auto seq = readUInt( data, start + 1 );
-    auto wstart = start;
-    auto idx = 0LU;
-    auto wend = findEndAndIndex( data, start, idx );
-    start = wend;
-
-    return WavesBlock( seq, wstart, wend );
+  int StpGeSegment::VitalsBlock::hex( ) const {
+    return (signal >> 8 | ( mode & 0xFF ) );
   }
 
-  unsigned long StpGeSegment::WavesBlock::findEndAndIndex( std::vector<unsigned char>& rawdata,
-      unsigned long start, unsigned long& indexstart ) {
-    // every waves block ends with 0xFA0D, plus some indexing data.
-    // find the 0xFA0D, and then skip until you find the 0x04 (next wave block)
+  StpGeSegment::WaveFA0DBlock::WaveFA0DBlock( int seq, unsigned long start, unsigned long end,
+      const std::vector<WaveFormIndex>& data ) : wavedata( data ), sequence( seq ),
+      startpos( start ), endpos( end ) { }
 
-    start++;
-    // search until we find an FA, then see if it's followed by a 0D
-    while ( rawdata.size( ) > start + 1 ) {
-      auto byte = readUInt( rawdata, start );
-      start++;
-      if ( 0xFA == byte ) {
-        auto byte2 = readUInt( rawdata, start );
-        if ( 0x0D == byte2 ) {
-          start++;
-          break;
-        }
-        if ( 0xFA != byte2 ) {
-          start++;
+  StpGeSegment::WaveFA0DBlock::WaveFA0DBlock::WaveFormIndex::WaveFormIndex( unsigned int waveid,
+      unsigned int vcnt, unsigned int start ) : waveid( waveid ), valcount( vcnt ),
+      datastart( start ) { }
+
+
+  StpGeSegment::WaveFA0DBlock StpGeSegment::WaveFA0DBlock::index( const std::vector<unsigned char>& data,
+      unsigned long& start, const std::vector<StpGeSegment::VitalsBlock>& vitals,
+      GEParseError& errcode ) {
+    // waves block always starts with 0x04, then a sequence number, then two 0x00 bytes
+    // followed by wave data. wave data comes in X-byte blocks of:
+    // <wave form id> <sample count> <data>
+    // wave data sections usually end with 0XFA0D followed by some indexing data whose
+    // size depends on the monitor model (either 33 or 49 bytes). However, sometimes, the wave
+    // sections end abruptly, so we have to ensure we don't walk past the end of the data array
+    Log::trace( ) << "indexing wave block from " << std::dec << start << std::endl;
+    auto wstart = start;
+    auto seq = readUInt( data, ++start );
+    start += 3; // (2) 0x00 bytes, and position read head over wave id
+
+    auto indexes = std::vector<WaveFormIndex>();
+    auto waveid = readUInt(data, start++);
+    auto countbyte = readUInt(data, start++);
+
+    while ( !( 0xFA == waveid && 0x0D == countbyte ) && start < data.size() ) {
+      Log::trace( ) << "wave bytes: 0x" << std::hex << std::setw( 2 ) << waveid << " "
+          << std::setw( 2 ) << countbyte << " at " << std::dec << ( start - 2 ) << std::endl;
+
+      // usually, we get 0x0B for the countbyte, but sometimes we get 0x3B. I don't
+      // know what that means, but the B part seems to be the only thing that matters
+      // so zero out the most significant bits
+      unsigned int shifty = ( countbyte & 0b00000111 );
+      if ( 0 == shifty || shifty > 7 ) {
+        errcode = GEParseError::WAVE_INCONSISTENT_VALCOUNT;
+        throw std::runtime_error( "Inconsistent wave information...file is corrupt?" );
+      }
+      unsigned int valstoread = READCOUNTS[shifty - 1];
+
+      if ( valstoread > 4 ) {
+        std::stringstream ss;
+        ss << "don't really think we want to read " << valstoread << " values for wave/count:"
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte;
+        std::string ex = ss.str( );
+        errcode = GEParseError::WAVE_TOO_MANY_VALUES;
+        throw std::runtime_error( ex );
+      }
+
+      auto dstart = start;
+      // skip the data bytes
+      start += valstoread * 2;
+      if ( start < data.size( ) ) {
+        indexes.push_back( WaveFormIndex( waveid, valstoread, dstart ) );
+
+        if ( start + 2 < data.size( ) ) {
+          waveid = readUInt( data, start++ );
+          countbyte = readUInt( data, start++ );
+
+          // Error correction code: we can get spurious 0x00s in the wave data on occasion
+          // if our waveid is 00, skip it and try again
+          if ( 0 == waveid && countbyte > 0x04 ) {
+            Log::warn( ) << "improper wave id detected...ECC code enabled" << std::endl;
+            waveid = countbyte;
+            countbyte = readUInt( data, start++ );
+          }
+          else if ( 0x04 == waveid ) {
+            start -= 2;
+            Log::warn( ) << "unexpected end of wave data at " << start << std::endl;
+            break;
+          }
         }
       }
     }
-    indexstart = start;
 
-    while ( rawdata.size( ) > start && 0x04 != readUInt( rawdata, start ) ) {
-      start++;
+    // hit the 0xFA0D byte (or an unexpected 0x04)...count forward to the next 0x04
+    while ( waveid != 0x04 && start + 1 < data.size( ) ) {
+      waveid = readUInt( data, ++start );
     }
 
-    return start;
- }
+    return WaveFA0DBlock( seq, wstart, start, indexes );
+  }
 
-  std::unique_ptr<StpGeSegment> StpGeSegment::index( std::vector<unsigned char>& data,
+  std::unique_ptr<StpGeSegment> StpGeSegment::index( const std::vector<unsigned char>& data,
       bool skipwaves, GEParseError& err ) {
+
+//    Log::error( ) << "indexing " << data.size( ) << " bytes" << std::endl;
+//    for ( auto i = 0U; i < data.size( ); i++ ) {
+//      if ( 0 == i % 32 ) {
+//        Log::error( ) << std::endl;
+//      }
+//      auto x = readUInt( data, i );
+//      Log::error( ) << std::setfill( '0' ) << std::setw( 2 ) << std::hex << x << " ";
+//    }
+//    Log::error( ) << std::endl;
     Header h = Header::parse( data );
 
     auto wavestart = 60LU + readUInt2( data, 58 );
@@ -420,37 +467,57 @@ namespace FormatConverter{
         vitals.push_back( v );
       }
       catch ( std::runtime_error& x ) {
+        Log::error( ) << x.what( ) << std::endl;
         err = UNKNOWN_VITALSTYPE;
       }
       vitstart += VITALS_SIZE + 2; // 2 blank bytes at the end of every segment
     }
 
-    auto waves = std::vector<WavesBlock>( );
+    auto waves = std::vector<WaveFA0DBlock>( );
     if ( !skipwaves ) {
-      while ( wavestart < data.size( ) ) {
-        WavesBlock w = WavesBlock::index( data, wavestart, err);
-        waves.push_back(w);
+      // +8 here because if we have a wave block, it will contain the 0x04, sequence, 2 0x00s,
+      // wave id, and byte counter, plus at least one value
+      try {
+        while ( wavestart + 8 < data.size( ) ) {
+          WaveFA0DBlock w = WaveFA0DBlock::index( data, wavestart, vitals, err );
+          waves.push_back( w );
+        }
+      }
+      catch ( std::runtime_error& x ) {
+        Log::error( ) << x.what( ) << std::endl;
       }
     }
 
     return std::unique_ptr<StpGeSegment>( new StpGeSegment( h, vitals, waves ) );
   }
 
-  unsigned int StpGeSegment::readUInt( std::vector<unsigned char>& rawdata, unsigned long start ) {
+  unsigned int StpGeSegment::readUInt( const std::vector<unsigned char>& rawdata, unsigned long start ) {
     return rawdata[start];
   }
 
-  unsigned int StpGeSegment::readUInt2( std::vector<unsigned char>& rawdata, unsigned long start ) {
+  unsigned int StpGeSegment::readUInt2( const std::vector<unsigned char>& rawdata, unsigned long start ) {
     unsigned char b1 = rawdata[start];
     unsigned char b2 = rawdata[start + 1];
     return ( b1 << 8 | b2 );
   }
 
-  unsigned long StpGeSegment::readUInt4( std::vector<unsigned char>& rawdata, unsigned long start ) {
+  unsigned long StpGeSegment::readUInt4( const std::vector<unsigned char>& rawdata, unsigned long start ) {
     unsigned char b0 = rawdata[start];
     unsigned char b1 = rawdata[start + 1];
     unsigned char b2 = rawdata[start + 2];
     unsigned char b3 = rawdata[start + 3];
     return ( b0 << 24 | b1 << 16 | b2 << 8 | b3 );
+  }
+
+  int StpGeSegment::readInt( const std::vector<unsigned char>& rawdata, unsigned long start ) {
+    return (char) rawdata[start];
+  }
+
+  int StpGeSegment::readInt2( const std::vector<unsigned char>& rawdata, unsigned long start ) {
+    unsigned char b1 = rawdata[start];
+    unsigned char b2 = rawdata[start + 1];
+
+    short val = ( b1 << 8 | b2 );
+    return val;
   }
 }

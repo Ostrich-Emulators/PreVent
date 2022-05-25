@@ -23,7 +23,8 @@
 namespace FormatConverter {
 
   /**
-   * Note: wave labels *can* change depending on what vitals are in the file
+   * WARNING: wave labels can change depending on what vitals are in the file, so
+   * it's best not to use this lookup directly. Use wavelabel() instead
    */
   const std::map<int, std::string> StpGeReader::WAVELABELS = {
     {0x07, "I" },
@@ -43,147 +44,6 @@ namespace FormatConverter {
     {0xC8, "VNT_PRES" },
     {0xC9, "VNT_FLOW" },
   };
-
-  // <editor-fold defaultstate="collapsed" desc="block configs">
-  const StpGeReader::BlockConfig StpGeReader::SKIP = BlockConfig::skip( );
-  const StpGeReader::BlockConfig StpGeReader::SKIP2 = BlockConfig::skip( 2 );
-  const StpGeReader::BlockConfig StpGeReader::SKIP4 = BlockConfig::skip( 4 );
-  const StpGeReader::BlockConfig StpGeReader::SKIP5 = BlockConfig::skip( 5 );
-  const StpGeReader::BlockConfig StpGeReader::SKIP6 = BlockConfig::skip( 6 );
-  const StpGeReader::BlockConfig StpGeReader::HR = BlockConfig::vital( "HR", "Bpm" );
-  const StpGeReader::BlockConfig StpGeReader::PVC = BlockConfig::vital( "PVC", "Bpm" );
-  const StpGeReader::BlockConfig StpGeReader::STI = BlockConfig::div10( "ST-I", "mm", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::STII = BlockConfig::div10( "ST-II", "mm", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::STIII = BlockConfig::div10( "ST-III", "mm", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::STAVR = BlockConfig::div10( "ST-AVR", "mm", 1, false );
-  const StpGeReader::BlockConfig StpGeReader::STAVL = BlockConfig::div10( "ST-AVL", "mm", 1, false );
-  const StpGeReader::BlockConfig StpGeReader::STAVF = BlockConfig::div10( "ST-AVF", "mm", 1, false );
-  const StpGeReader::BlockConfig StpGeReader::STV = BlockConfig::div10( "ST-V", "mm", 1, false );
-  const StpGeReader::BlockConfig StpGeReader::STV1 = BlockConfig::div10( "ST-V1", "mm", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::BT = BlockConfig::div10( "BT", "Deg C", 2 );
-  const StpGeReader::BlockConfig StpGeReader::IT = BlockConfig::div10( "IT", "Deg C", 2 );
-  const StpGeReader::BlockConfig StpGeReader::RESP = BlockConfig::vital( "RESP", "BrMin" );
-  const StpGeReader::BlockConfig StpGeReader::APNEA = BlockConfig::vital( "APNEA", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::NBP_M = BlockConfig::vital( "NBP-M", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::NBP_S = BlockConfig::vital( "NBP-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::NBP_D = BlockConfig::vital( "NBP-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::CUFF = BlockConfig::vital( "CUFF", "mmHg", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::AR1_M = BlockConfig::vital( "AR1-M", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR1_S = BlockConfig::vital( "AR1-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR1_D = BlockConfig::vital( "AR1-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR1_R = BlockConfig::vital( "AR1-R", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR2_M = BlockConfig::vital( "AR1-M", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR2_S = BlockConfig::vital( "AR1-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR2_D = BlockConfig::vital( "AR1-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR2_R = BlockConfig::vital( "AR1-R", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR3_M = BlockConfig::vital( "AR1-M", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR3_S = BlockConfig::vital( "AR1-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR3_D = BlockConfig::vital( "AR1-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR3_R = BlockConfig::vital( "AR1-R", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR4_M = BlockConfig::vital( "AR1-M", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR4_S = BlockConfig::vital( "AR1-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR4_D = BlockConfig::vital( "AR1-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::AR4_R = BlockConfig::vital( "AR1-R", "mmHg" );
-
-  const StpGeReader::BlockConfig StpGeReader::SPO2_P = BlockConfig::vital( "SPO2-%", "%" );
-  const StpGeReader::BlockConfig StpGeReader::SPO2_R = BlockConfig::vital( "SPO2-R", "Bpm" );
-  const StpGeReader::BlockConfig StpGeReader::VENT = BlockConfig::vital( "Vent Rate", "BrMin" );
-  const StpGeReader::BlockConfig StpGeReader::IN_HLD = BlockConfig::div10( "IN_HLD", "Sec", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::PRS_SUP = BlockConfig::vital( "PRS-SUP", "cmH2O" );
-  const StpGeReader::BlockConfig StpGeReader::INSP_TM = BlockConfig::div100( "INSP-TM", "Sec", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::INSP_PC = BlockConfig::vital( "INSP-PC", "%" );
-  const StpGeReader::BlockConfig StpGeReader::I_E = BlockConfig::div10( "I:E", "", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::SET_PCP = BlockConfig::vital( "SET-PCP", "cmH2O" );
-  const StpGeReader::BlockConfig StpGeReader::SET_IE = BlockConfig::div10( "SET-IE", "", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::APRV_LO_T = BlockConfig::div10( "APRV-LO-T", "Sec", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::APRV_HI_T = BlockConfig::div10( "APRV-HI-T", "Sec", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::APRV_LO = BlockConfig::vital( "APRV-LO", "cmH20", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::APRV_HI = BlockConfig::vital( "APRV-HI", "cmH20", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::RESIS = BlockConfig::div10( "RESIS", "cmH2O/L/Sec", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::MEAS_PEEP = BlockConfig::vital( "MEAS-PEEP", "cmH2O" );
-  const StpGeReader::BlockConfig StpGeReader::INTR_PEEP = BlockConfig::vital( "INTR-PEEP", "cmH2O", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::INSP_TV = BlockConfig::vital( "INSP-TV", "" );
-  const StpGeReader::BlockConfig StpGeReader::COMP = BlockConfig::vital( "COMP", "ml/cmH20" );
-
-  const StpGeReader::BlockConfig StpGeReader::SPONT_MV = BlockConfig::vital( "SPONT-MV", "L/Min", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::SPONT_R = BlockConfig::vital( "SPONT-R", "BrMin", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::SET_TV = BlockConfig::vital( "SET-TV", "ml", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::B_FLW = BlockConfig::vital( "B-FLW", "L/Min", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::FLW_R = BlockConfig::vital( "FLW-R", "cmH20", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::FLW_TRIG = BlockConfig::vital( "FLW-TRIG", "L/Min", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::HF_FLW = BlockConfig::vital( "HF-FLW", "L/Min", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::HF_R = BlockConfig::vital( "HF-R", "Sec", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::HF_PRS = BlockConfig::vital( "HF-PRS", "cmH2O", 2, false );
-  const StpGeReader::BlockConfig StpGeReader::TMP_1 = BlockConfig::div10( "TMP-1", "Deg C" );
-  const StpGeReader::BlockConfig StpGeReader::TMP_2 = BlockConfig::div10( "TMP-2", "Deg C" );
-  const StpGeReader::BlockConfig StpGeReader::DELTA_TMP = BlockConfig::div10( "DELTA-TMP", "Deg C" );
-  const StpGeReader::BlockConfig StpGeReader::LA1 = BlockConfig::vital( "LA1", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::CVP1 = BlockConfig::vital( "CVP1", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::CVP2 = BlockConfig::vital( "CVP2", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::CVP3 = BlockConfig::vital( "CVP3", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::CVP4 = BlockConfig::vital( "CVP4", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::CPP1 = BlockConfig::vital( "CPP1", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::ICP1 = BlockConfig::vital( "ICP1", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::CPP2 = BlockConfig::vital( "CPP2", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::ICP2 = BlockConfig::vital( "ICP2", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::CPP3 = BlockConfig::vital( "CPP3", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::ICP3 = BlockConfig::vital( "ICP3", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::CPP4 = BlockConfig::vital( "CPP4", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::ICP4 = BlockConfig::vital( "ICP4", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::SP1 = BlockConfig::vital( "SP1", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA1_S = BlockConfig::vital( "PA1-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA1_D = BlockConfig::vital( "PA1-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA1_R = BlockConfig::vital( "PA1-R", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA1_M = BlockConfig::vital( "PA1-M", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA2_S = BlockConfig::vital( "PA2-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA2_D = BlockConfig::vital( "PA2-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA2_R = BlockConfig::vital( "PA2-R", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA2_M = BlockConfig::vital( "PA2-M", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA3_S = BlockConfig::vital( "PA3-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA3_D = BlockConfig::vital( "PA3-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA3_R = BlockConfig::vital( "PA3-R", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA3_M = BlockConfig::vital( "PA3-M", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA4_S = BlockConfig::vital( "PA4-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA4_D = BlockConfig::vital( "PA4-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA4_R = BlockConfig::vital( "PA4-R", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::PA4_M = BlockConfig::vital( "PA4-M", "mmHg" );
-
-  const StpGeReader::BlockConfig StpGeReader::UAC1_S = BlockConfig::vital( "UAC1-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::UAC1_D = BlockConfig::vital( "UAC1-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::UAC1_R = BlockConfig::vital( "UAC1-R", "Bpm" );
-  const StpGeReader::BlockConfig StpGeReader::UAC1_M = BlockConfig::vital( "UAC1-M", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::UAC2_S = BlockConfig::vital( "UAC2-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::UAC2_D = BlockConfig::vital( "UAC2-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::UAC2_R = BlockConfig::vital( "UAC2-R", "Bpm" );
-  const StpGeReader::BlockConfig StpGeReader::UAC2_M = BlockConfig::vital( "UAC2-M", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::UAC3_S = BlockConfig::vital( "UAC3-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::UAC3_D = BlockConfig::vital( "UAC3-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::UAC3_R = BlockConfig::vital( "UAC3-R", "Bpm" );
-  const StpGeReader::BlockConfig StpGeReader::UAC3_M = BlockConfig::vital( "UAC3-M", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::UAC4_S = BlockConfig::vital( "UAC4-S", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::UAC4_D = BlockConfig::vital( "UAC4-D", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::UAC4_R = BlockConfig::vital( "UAC4-R", "Bpm" );
-  const StpGeReader::BlockConfig StpGeReader::UAC4_M = BlockConfig::vital( "UAC4-M", "mmHg" );
-
-  const StpGeReader::BlockConfig StpGeReader::PT_RR = BlockConfig::vital( "PT-RR", "BrMin" );
-  const StpGeReader::BlockConfig StpGeReader::PEEP = BlockConfig::vital( "PEEP", "cmH20" );
-  const StpGeReader::BlockConfig StpGeReader::MV = BlockConfig::div10( "MV", "L/min" );
-  const StpGeReader::BlockConfig StpGeReader::Fi02 = BlockConfig::vital( "Fi02", "%" );
-  const StpGeReader::BlockConfig StpGeReader::TV = BlockConfig::vital( "TV", "ml" );
-  const StpGeReader::BlockConfig StpGeReader::PIP = BlockConfig::vital( "PIP", "cmH20" );
-  const StpGeReader::BlockConfig StpGeReader::PPLAT = BlockConfig::vital( "PPLAT", "cmH20" );
-  const StpGeReader::BlockConfig StpGeReader::MAWP = BlockConfig::vital( "MAWP", "cmH20" );
-  const StpGeReader::BlockConfig StpGeReader::SENS = BlockConfig::div10( "SENS", "cmH20" );
-
-  const StpGeReader::BlockConfig StpGeReader::CO2_EX = BlockConfig::vital( "CO2-EX", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::CO2_IN = BlockConfig::vital( "CO2-IN", "mmHg" );
-  const StpGeReader::BlockConfig StpGeReader::CO2_RR = BlockConfig::vital( "CO2-RR", "BrMin" );
-  const StpGeReader::BlockConfig StpGeReader::O2_EXP = BlockConfig::div10( "O2-EXP", "%" );
-  const StpGeReader::BlockConfig StpGeReader::O2_INSP = BlockConfig::div10( "O2-INSP", "%" );
-
-  const StpGeReader::BlockConfig StpGeReader::RWOBVT = BlockConfig::vital( "rWOBVT", "J/L" );
-  const StpGeReader::BlockConfig StpGeReader::RI_E = BlockConfig::vital( "rI:E", "" );
-  // </editor-fold>
 
   // <editor-fold defaultstate="collapsed" desc="Wave Tracker">
 
@@ -507,6 +367,53 @@ namespace FormatConverter {
     return 0;
   }
 
+  bool StpGeReader::popToNextSegment(){
+    if( isunity() ){
+      // algorithm: search forward until we find a 0xC9, then check if the preceeding 13 bytes
+      // are all 0x00
+      auto zeros = 0;
+
+      while ( !work.empty( ) ) {
+        const unsigned int check = popUInt8( );
+        if ( 0xC9 == check && zeros >= 13 ) {
+          work.rewind( 14 ); // get the 13 0x00s and the 0xC9 back on the buffer
+//          for ( auto i = 0; i < 10080; i++ ) {
+//            auto x = popUInt8( );
+//            Log::error( ) << std::setfill( '0' ) << std::setw( 2 ) << std::hex << x << " ";
+//            if ( 0 == i % 32 ) {
+//              Log::error( ) << std::endl;
+//            }
+//          }
+//          Log::error( ) << std::endl;
+//          work.rewind( 10080 );
+
+          return true;
+        }
+
+        if ( 0 == check ) {
+          zeros++;
+        }
+        else {
+          zeros = 0;
+        }
+      }
+
+      return false;
+    }
+    else { // carescape
+      unsigned long check = 0;
+      while ( check != magiclong && !work.empty( ) ) {
+        while ( 0x7E != work.pop( ) ) {
+          // skip forward until we see another 0x7E
+        }
+        work.rewind( ); // get that 0x7E back in the buffer
+        check = popUInt64( );
+      }
+
+      return check == magiclong;
+    }
+  }
+
   ReadResult StpGeReader::fill( SignalSet * info, const ReadResult& lastrr ) {
     //output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
 
@@ -521,10 +428,23 @@ namespace FormatConverter {
 
     while ( 0 != cnt ) {
       if ( work.available( ) < 1024 * 768 ) {
-        // we should never come close to filling up our work buffer
-        // so if we have, make sure the user knows
-        Log::error( ) << "work buffer is too full...something is going wrong" << std::endl;
-        return ReadResult::ERROR;
+        // we should never come close to filling up our work buffer, so if we do,
+        // then we probably have some sort of corruption happening. see if we can find
+        // another segment marker, so discard until then.
+        Log::warn( ) << "work buffer is too full...attempting to recover" << std::endl;
+
+        auto popped = work.popped( );
+        if ( popToNextSegment( ) ) {
+          auto newpop = work.popped( );
+          Log::warn( ) << "skipping to " << std::dec << newpop
+              << " to avoid damaged segment at " << popped << std::endl;
+          Log::warn( ) << "work buffer has " << work.available() << " bytes available"<<std::endl;
+        }
+        else {
+          Log::error( ) << "unrecoverable file parsing problem discovered at "
+              << std::dec << popped << std::endl;
+          return ReadResult::ERROR;
+        }
       }
 
       if ( ReadResult::FIRST_READ == lastrr && std::numeric_limits<unsigned long>::max( ) == magiclong ) {
@@ -541,32 +461,16 @@ namespace FormatConverter {
       // read as many segments as we can before reading more data
       size_t segsize = 0;
       while ( workHasFullSegment( &segsize ) && ChunkReadResult::OK == rslt ) {
-        //output( ) << "next segment is " << std::dec << segsize << " bytes big" << std::endl;
+        auto workdata = work.popvec(segsize);
+        rslt = processOneChunk( info, workdata );
 
-        auto startpop = work.popped( );
-        rslt = processOneChunk( info, segsize );
-        auto endpop = work.popped( );
-
-        auto bytesread = endpop - startpop;
-        if ( ChunkReadResult::OK == rslt ) {
-          //output( ) << "read " << bytesread << " bytes of segment" << std::endl;
-          if ( bytesread < segsize ) {
-            work.skip( segsize - bytesread );
-            //output( ) << "skipping ahead " << ( segsize - bytesread ) << " bytes to next segment at " << ( startpop + segsize ) << std::endl;
-          }
-        }
-        else if ( ChunkReadResult::UNKNOWN_BLOCKTYPE == rslt ) {
+        if ( ChunkReadResult::DECODE_ERROR == rslt ) {
           return ReadResult::ERROR;
         }
-        else if ( ChunkReadResult::HR_BLOCK_PROBLEM == rslt ) {
-          Log::warn( ) << "unexpected data in HR block...skipping to next segment" << std::endl;
-          work.skip( segsize - bytesread );
-        }
-        else {
+        else if( ChunkReadResult::OK != rslt) {
           // something happened so rewind our to our mark
           //output( ) << "rewinding to start of segment (mark: " << ( work.popped( ) - work.poppedSinceMark( ) ) << ")" << std::endl;
           work.rewindToMark( );
-
 
           // if we're ending a file, flush all the wave data we can, but don't
           // write values that should go in the next file
@@ -589,14 +493,11 @@ namespace FormatConverter {
       }
     }
 
-    //output( ) << "file is exhausted" << std::endl;
-
-    // copy any data we have left in our filler set to the real set
-
     // if we still have stuff in our work buffer, process it
     if ( !work.empty( ) ) {
       //output( ) << "still have stuff in our work buffer!" << std::endl;
-      processOneChunk( info, work.size( ) );
+      auto workdata = work.popvec(work.size());
+      processOneChunk( info, workdata );
 
       // we're done with the file, so write all the wave data we have
       while ( !wavetracker.empty( ) ) {
@@ -612,20 +513,24 @@ namespace FormatConverter {
   }
 
   StpGeReader::ChunkReadResult StpGeReader::processOneChunk( SignalSet * info,
-      const size_t& maxread ) {
+      const std::vector<unsigned char>& chunkbytes ) {
     // we are guaranteed to have a complete segment in the work buffer
     // and the work buffer head is pointing to the start of the segment
     work.mark( );
     size_t chunkstart = work.popped( );
     try {
-      auto vv = work.popvec(maxread);
+      Log::trace( ) << "processing one chunk from byte " << work.popped( ) - chunkbytes.size() << std::endl;
       StpGeSegment::GEParseError parseerr;
-      auto seg2 = StpGeSegment::index(vv, false, parseerr);
-      work.rewind(maxread);
-      work.skip( 18 );
-      Log::trace( ) << "processing one chunk from byte " << work.popped( ) << std::endl;
+      auto segmentindex = StpGeSegment::index(chunkbytes, false, parseerr);
+      if ( StpGeSegment::GEParseError::NO_ERROR != parseerr ) {
+        if( StpGeSegment::UNKNOWN_VITALSTYPE == parseerr){
+          Log::warn( ) << "unknown vitals type discovered during indexing" << std::endl;
+        }
+        Log::warn( ) << "parsing error (" << parseerr << ") detected in file...continuing" << std::endl;
+      }
+
       auto lasttime = currentTime;
-      currentTime = popTime( );
+      currentTime = segmentindex->header.time;
       Log::trace( ) << "current time for chunk: " << currentTime << std::endl;
       if ( isRollover( currentTime, info ) ) {
         return ChunkReadResult::ROLLOVER;
@@ -662,13 +567,11 @@ namespace FormatConverter {
         }
       }
 
-      work.skip( 2 );
-      std::string patient = popString( 32 );
-      if ( !patient.empty( ) ) {
+      if ( !segmentindex->header.patient.empty( ) ) {
         if ( 0 == info->metadata( ).count( "Patient Name" ) ) {
-          info->setMeta( "Patient Name", patient );
+          info->setMeta( "Patient Name", segmentindex->header.patient );
         }
-        else if ( info->metadata( ).at( "Patient Name" ) != patient ) {
+        else if ( info->metadata( ).at( "Patient Name" ) != segmentindex->header.patient ) {
           //output( ) << "new patient! (was: " << info->metadata( ).at( "Patient Name" ) << "; is: " << patient << ")" << std::endl;
           return ChunkReadResult::NEW_PATIENT;
         }
@@ -682,370 +585,62 @@ namespace FormatConverter {
         return ChunkReadResult::OK;
       }
 
-      work.skip( 2 );
-      // offset is number of bytes from byte 64, but we want to track bytes
-      // since we started reading (set our mark)
-      size_t waveoffset = popUInt16( ) + 60; // offset is at pos 60 in the segment
-      Log::trace( ) << "waveoffset is at byte " << std::dec << ( work.popped( ) + waveoffset ) << std::endl;
-      work.skip( 4 ); // don't know what these mean
-      work.skip( 2 ); // don't know what these mean, either
-
-      // We have two types of blocks here: the 0x013A block, which is 62 bytes
-      // big and contains HR, PVC, and ST-* vitals, and all other blocks, which
-      // are 68 (but sometimes 66?!) bytes big and contain everything else. Both
-      // types are optional, but if the 0x013A block is present, it always seems
-      // to be first. Our strategy is to keep looping until, if we do one more
-      // loop, we'll pass our wave offset limit
-
       std::set<unsigned int> seenblocks;
-
-      while ( work.poppedSinceMark( ) + 66 <= waveoffset ) {
-        //Log::info( ) << "psm: " << work.poppedSinceMark( ) << "\t" << work.popped( ) << "\twaveoffset: " << waveoffset << std::endl;
-        if ( 0x013A == readUInt16( ) ) {
-          work.skip( 2 ); // the int16 we just read
-          //readDataBlock( info,{ SKIP2, HR, PVC, SKIP4, STI, STII, STIII, STV, SKIP5, STAVR, STAVL, STAVF }, 62 );
-          readDataBlock( info,{ SKIP2, HR, PVC }, 62 );
-
-          if ( 0x013A != popUInt16( ) ) {
-            // we expected a "closing" 0x013A, so something is wrong
-            return ChunkReadResult::HR_BLOCK_PROBLEM;
-          }
-        }
-        else {
-          auto blockstart = work.popped( );
-          work.skip( 66 ); // skip to end of the block to read the block type and format
-          unsigned int blocktypefmt = popUInt16( );
-          auto blockend = work.popped( );
-          work.rewind( 68 ); // go back to the start of this block
-          Log::trace( ) << "new block: [" << std::dec << blockstart << " - " << blockend << "); type: "
-              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( blocktypefmt >> 8 ) << " "
-              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << ( blocktypefmt & 0xFF )
-              << std::endl;
-          switch ( blocktypefmt ) {
-            case 0x0000:
-              Log::warn( ) << "ignoring 0x0000 block type (could indicate parsing error)" << std::endl;
-              readDataBlock( info,{ } ); // WARNING: not sure we should ignore this
-              break;
-            case 0x0100:
-              // sometimes our 68-byte block is only 66 bytes big! Luckily,
-              // this only seems to happen when the blocktype is actually 0x0D,
-              // which we ignore anyway. It seems to be followed by 0x0100,
-              // so just ignore this, too
-              readDataBlock( info,{ } );
-              break;
-            case 0x024D:
-              readDataBlock( info,{ SKIP6, AR1_M, AR1_S, AR1_D, SKIP2, AR1_R } );
-              break;
-            case 0x024E:
-              readDataBlock( info,{ SKIP6, AR2_M, AR2_S, AR2_D, SKIP2, AR2_R } );
-              break;
-            case 0x024F:
-              readDataBlock( info,{ SKIP6, AR3_M, AR3_S, AR3_D, SKIP2, AR3_R } );
-              break;
-            case 0x0250:
-              readDataBlock( info,{ SKIP6, AR4_M, AR4_S, AR4_D, SKIP2, AR4_R } );
-              break;
-            case 0x034D:
-              readDataBlock( info,{ SKIP6, PA1_M, PA1_S, PA1_D, SKIP2, PA1_R } );
-              break;
-            case 0x034E:
-              readDataBlock( info,{ SKIP6, PA2_M, PA2_S, PA2_D, SKIP2, PA2_R } );
-              break;
-            case 0x034F:
-              readDataBlock( info,{ SKIP6, PA3_M, PA3_S, PA3_D, SKIP2, PA3_R } );
-              break;
-            case 0x0350:
-              readDataBlock( info,{ SKIP6, PA4_M, PA4_S, PA4_D, SKIP2, PA4_R } );
-              break;
-            case 0x044D:
-              readDataBlock( info,{ SKIP6, LA1 } );
-              break;
-            case 0x054D:
-              readDataBlock( info,{ SKIP6, CVP1 } );
-              break;
-            case 0x054E:
-              readDataBlock( info,{ SKIP6, CVP2 } );
-              break;
-            case 0x054F:
-              readDataBlock( info,{ SKIP6, CVP3 } );
-              break;
-            case 0x0550:
-              readDataBlock( info,{ SKIP6, CVP4 } );
-              break;
-            case 0x064D:
-              readDataBlock( info,{ SKIP6, ICP1, CPP1 } );
-              break;
-            case 0x064E:
-              readDataBlock( info,{ SKIP6, ICP2, CPP2 } );
-              break;
-            case 0x064F:
-              readDataBlock( info,{ SKIP6, ICP3, CPP3 } );
-              break;
-            case 0x0650:
-              readDataBlock( info,{ SKIP6, ICP4, CPP4 } );
-              break;
-            case 0x074D:
-              readDataBlock( info,{ SKIP6, SP1 } );
-              break;
-            case 0x0822:
-              readDataBlock( info,{ SKIP6, RESP, APNEA } );
-              break;
-            case 0x0922:
-              readDataBlock( info,{ SKIP6, BT, IT } );
-              break;
-            case 0x0A18:
-              readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
-              break;
-            case 0x0B2D:
-              readDataBlock( info,{ SKIP6, SPO2_P, SPO2_R } );
-              break;
-            case 0x0C22:
-            case 0x0C23:
-              readDataBlock( info,{ SKIP6, TMP_1, TMP_2, DELTA_TMP } );
-              break;
-            case 0x0D56:
-              readDataBlock( info,{ SKIP6, STI, STII, STIII } ); // FIXME: may be more data here
-              break;
-            case 0x0D57:
-              if ( 0 == seenblocks.count( blocktypefmt ) ) {
-                // we sometimes get more 0D57 segments at this time (not catchup)
-                // so we just ignore the subsequent occurrences
-                readDataBlock( info,{ SKIP6, STV1 } ); // FIXME: may be more data here
-              }
-              else {
-                readDataBlock( info,{ } );
-              }
-              break;
-            case 0x0D58:
-              // FIXME: may be more data here that we shouldn't ignore
-            case 0x0D59:
-              readDataBlock( info,{ } );
-              break;
-            case 0x0E36:
-            case 0x0E4D:
-              readDataBlock( info,{ SKIP6, CO2_EX, CO2_IN, CO2_RR, SKIP2, O2_EXP, O2_INSP } );
-              break;
-            case 0x104D:
-              readDataBlock( info,{ SKIP6, UAC1_M, UAC1_S, UAC1_D, SKIP2, UAC1_R } );
-              break;
-            case 0x104E:
-              readDataBlock( info,{ SKIP6, UAC2_M, UAC2_S, UAC2_D, SKIP2, UAC2_R } );
-              break;
-            case 0x104F:
-              readDataBlock( info,{ SKIP6, UAC3_M, UAC3_S, UAC3_D, SKIP2, UAC3_R } );
-              break;
-            case 0x1050:
-              readDataBlock( info,{ SKIP6, UAC4_M, UAC4_S, UAC4_D, SKIP2, UAC4_R } );
-              break;
-            case 0x14C2:
-              readDataBlock( info,{ SKIP6, PT_RR, PEEP, MV, SKIP2, Fi02, TV, PIP, PPLAT, MAWP, SENS } );
-              break;
-            case 0x1D0A:
-              readDataBlock( info,{ SKIP6, NBP_M, NBP_S, NBP_D, SKIP2, CUFF } );
-              break;
-            case 0x2ADB:
-              readDataBlock( info,{ SKIP6, VENT, FLW_R, SKIP4, IN_HLD, SKIP2, PRS_SUP, INSP_TM, INSP_PC, I_E } );
-              break;
-            case 0x2ADC:
-              readDataBlock( info,{ SKIP6, HF_FLW, HF_R, HF_PRS, SPONT_MV, SKIP2, SET_TV, SET_PCP, SET_IE, B_FLW, FLW_TRIG } );
-              break;
-            case 0x2A5C:
-              readDataBlock( info,{ SKIP6, APRV_LO, APRV_HI, APRV_LO_T, SKIP2, APRV_HI_T, COMP, RESIS, MEAS_PEEP, INTR_PEEP, SPONT_R } );
-              break;
-            case 0x2A5D:
-              readDataBlock( info,{ SKIP6, INSP_TV } );
-              break;
-            case 0x3C5B:
-              readDataBlock( info,{ SKIP6, RI_E } ); // WARNING: not sure about this
-              break;
-            case 0x3C5A:
-              readDataBlock( info,{ SKIP6, RWOBVT } ); // WARNING: not sure about this
-              break;
-            case 0x8000:
-            case 0x070B:
-              // I don't think we should really ever see these, but we do.
-              // My understanding of the parsing just isn't good enough at this point
-            {
-              unsigned short type = ( blocktypefmt >> 8 );
-              unsigned short fmt = ( blocktypefmt & 0xFF );
-              Log::warn( ) << "ignoring 0x"
-                  << std::setfill( '0' ) << std::setw( 2 ) << std::hex << type
-                  << std::setfill( '0' ) << std::setw( 2 ) << std::hex << fmt
-                  << " block type (could indicate parsing error)" << std::endl;
-              readDataBlock( info,{ } );
-            }
-              break;
-
-            default:
-              int type = ( blocktypefmt >> 8 );
-              int fmt = ( blocktypefmt & 0xFF );
-              unhandledBlockType( type, fmt );
-          }
-          seenblocks.insert( blocktypefmt );
-        }
-      }
-
-      if ( work.poppedSinceMark( ) < waveoffset ) {
-        work.skip( waveoffset - work.poppedSinceMark( ) );
-      }
-      else if ( work.poppedSinceMark( ) > waveoffset ) {
-        Log::warn( ) << "we passed the wave start. that ain't right!" << std::endl;
-        work.rewind( work.poppedSinceMark( ) - waveoffset );
+      for ( const auto& vblock : segmentindex->vitals ) {
+        readDataBlock( chunkbytes, vblock, info );
+        seenblocks.insert( vblock.hex( ) );
       }
 
       // waves are always ok (?)
       //ChunkReadResult rslt = readWavesBlock( info );
       if ( !this->skipwaves( ) ) {
-        readWavesBlock( info, maxread );
+        readWavesBlock( chunkbytes, segmentindex, info );
       }
       return ChunkReadResult::OK;
     }
     catch ( const std::runtime_error & err ) {
       Log::error( ) << err.what( ) << " (chunk started at byte: " << chunkstart << ")" << std::endl;
-      return ChunkReadResult::UNKNOWN_BLOCKTYPE;
+      return ChunkReadResult::DECODE_ERROR;
     }
   }
 
-  void StpGeReader::unhandledBlockType( unsigned int type, unsigned int fmt ) const {
-    std::stringstream ss;
-    ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-        << type << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << fmt
-        << " starting at " << std::dec << work.popped( );
-    throw std::runtime_error( ss.str( ) );
-  }
-
-  dr_time StpGeReader::popTime( ) {
-    // time is in little-endian format
-    auto shorts = work.popvec( 4 );
-    time_t time = ( ( shorts[1] << 24 ) | ( shorts[0] << 16 ) | ( shorts[3] << 8 ) | shorts[2] );
-    return time * 1000;
-  }
-
-  StpGeReader::ChunkReadResult StpGeReader::readWavesBlock( SignalSet * info, const size_t& maxread ) {
-    if ( 0x04 == work.read( ) ) {
-      work.skip( ); // skip the 0x04
+  StpGeReader::ChunkReadResult StpGeReader::readWavesBlock( const std::vector<unsigned char>& workdata,
+      const std::unique_ptr<StpGeSegment>& index, SignalSet * info ) {
+    int fa0dloop = 0;
+    for( const auto& wblock : index->waves ){
       auto oldseq = wavetracker.currentseq( );
-      WaveSequenceResult wavecheck = wavetracker.newseq( popUInt8( ), currentTime );
+      WaveSequenceResult wavecheck = wavetracker.newseq( wblock.sequence, currentTime );
       if ( WaveSequenceResult::TIMEBREAK == wavecheck ) {
+        Log::trace( ) << "time break" << std::endl;
         while ( wavetracker.writable( ) ) {
-          Log::trace( ) << "time break at byte " << ( work.popped( ) - 1 ) << std::endl;
           wavetracker.flushone( info );
         }
       }
       else if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::SEQBREAK == wavecheck ) {
-        Log::trace( ) << "wave sequence check: " << wavecheck << " (old/new): " << oldseq << "/"
-            << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
+        Log::trace( ) << "wave sequence check: "
+            << ( WaveSequenceResult::DUPLICATE == wavecheck ? "DUPLICATE" : "BREAK" )
+            << " (old/new): " << oldseq << "/" << wavetracker.currentseq( ) << std::endl;
       }
-      // skip the other two bytes (don't know what they mean, if anything)
-      work.skip( 2 );
-    }
 
-    //size_t wavestart = work.popped( );
-    //output( ) << "waves section starts at: " << std::dec << wavestart << std::endl;
-
-    // FIXME: I think we should read all values until the next chunk start
-    // so we don't have to account for mysteriously appearing and disappearing
-    // wave signals!
-
-    static const unsigned int READCOUNTS[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
-
-    int fa0dloop = 0;
-    // we know we have at least one full segment in our work buffer,
-    // so keep reading until we hit the next segment...then write the appropriate number of values to the signalset
-    // and keep any overrun for the next loop
-    while ( work.poppedSinceMark( ) < maxread ) {
-      const unsigned int waveid = popUInt8( );
-      const unsigned int countbyte = popUInt8( );
-
-      // usually, we get 0x0B, but sometimes we get 0x3B. I don't know what
-      // that means, but the B part seems to be the only thing that matters
-      // so zero out the most significant bits
-      unsigned int shifty = ( countbyte & 0b00000111 );
-      if ( 0 == shifty || shifty > 7 ) {
-        throw std::runtime_error( "Inconsistent wave information...file is corrupt?" );
-      }
-      unsigned int valstoread = READCOUNTS[shifty - 1];
-      //      output( ) << "wave "
-      //          << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << "; count:"
-      //          << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-      //          << "; shift code is: "
-      //          << std::dec << shifty
-      //          << "..." << std::dec << valstoread << " vals to read" << std::endl;
-
-      if ( 0xFA == waveid && 0x0D == countbyte ) {
-        fa0dloop++;
-        //output( ) << "FA 0D section at byte: " << std::dec << ( work.popped( ) - 2 ) << " (loop " << fa0dloop << ")" << std::endl;
-        // skip through this section to get to the next waveform section
-
-        work.skip( isunity( ) ? 49 : 33 );
-        //work.rewind( 33 );
-        //        auto vec = work.popvec( 33 );
-        //        for ( auto& i : vec ) {
-        //          output( ) << "  " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << (unsigned int) i;
-        //        }
-        //        output( ) << std::endl;
-
-
-        if ( 0x04 == work.read( ) ) {
-          work.skip( ); // skip the 0x04
-          auto oldseq = wavetracker.currentseq( );
-          WaveSequenceResult wavecheck = wavetracker.newseq( popUInt8( ), currentTime );
-          if ( WaveSequenceResult::TIMEBREAK == wavecheck ) {
-            while ( wavetracker.writable( ) ) {
-              Log::trace( ) << "time break (2) at byte " << ( work.popped( ) - 1 ) << std::endl;
-              wavetracker.flushone( info );
-            }
-          }
-          else if ( WaveSequenceResult::DUPLICATE == wavecheck || WaveSequenceResult::SEQBREAK == wavecheck ) {
-            Log::trace( ) << "wave sequence check (2): " << wavecheck << " (old/new): " << oldseq << "/"
-                << wavetracker.currentseq( ) << " at byte " << ( work.popped( ) - 1 ) << std::endl;
-          }
-
-          // skip the other two bytes (don't know what they mean, if anything)
-          work.skip( 2 );
+      for ( const auto& waveindex : wblock.wavedata ) {
+        if ( 0 == StpGeReader::WAVELABELS.count( waveindex.waveid ) ) {
+          std::stringstream ss;
+          ss << "unknown wave id/count: "
+              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveindex.waveid << " "
+              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveindex.valcount;
+          std::string ex = ss.str( );
+          throw std::runtime_error( ex );
         }
-        //        output( ) << "  wave counts:";
-        //        for ( auto& e : wavevals ) {
-        //          output( ) << "\t" << e.first << "(" << e.second.size( ) << ")";
-        //        }
-        //        output( ) << std::endl;
-      }
-      else if ( valstoread > 4 ) {
-        std::stringstream ss;
-        ss << "don't really think we want to read " << valstoread << " values for wave/count:"
-            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
-            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-            << " starting at " << std::dec << work.popped( );
-        std::string ex = ss.str( );
-        throw std::runtime_error( ex );
-      }
-      else if ( 0 == StpGeReader::WAVELABELS.count( waveid ) ) {
-        std::stringstream ss;
-        ss << "unknown wave id/count: "
-            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid << " "
-            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-            << " starting at " << std::dec << work.popped( );
-        std::string ex = ss.str( );
-        throw std::runtime_error( ex );
-      }
-      else {
-        //        if ( 23 == waveid ) {
-        //          output( ) << "wave " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << waveid
-        //              << " reading " << valstoread << " values starting at " << std::dec << work.popped( ) << std::endl;
-        //        }
-        //if ( countbyte > 0x0C ) {
-        // we had a 0x3B or something
-        //          output( ) << "countbyte discrepancy! "
-        //              << std::setfill( '0' ) << std::setw( 2 ) << std::hex << countbyte
-        //              << " at byte " << std::dec << ( work.popped( ) - 1 ) << std::endl;
-        //}
-
-        std::vector<int> vals;
-        for ( size_t i = 0; i < valstoread; i++ ) {
-          vals.push_back( popInt16( ) );
+        else {
+          std::vector<int> vals;
+          for ( size_t i = 0; i < waveindex.valcount; i++ ) {
+            vals.push_back( StpGeSegment::readInt2( workdata, waveindex.datastart + i * 2 ) );
+          }
+          wavetracker.newvalues( waveindex.waveid, vals );
         }
-        wavetracker.newvalues( waveid, vals );
       }
+
+      fa0dloop++;
     }
 
     if ( 8 != fa0dloop ) {
@@ -1059,35 +654,37 @@ namespace FormatConverter {
     return ChunkReadResult::OK;
   }
 
-  void StpGeReader::readDataBlock( SignalSet * info, const std::vector<BlockConfig>& vitals, size_t blocksize ) {
-    size_t read = 0;
-    if ( Log::levelok( LogLevel::TRACE ) && vitals.size( ) > 0 ) {
+  void StpGeReader::readDataBlock( const std::vector<unsigned char>& workdata, 
+      const StpGeSegment::VitalsBlock& vblock, SignalSet * info ) {
+    if ( Log::levelok( LogLevel::TRACE ) && !vblock.config.empty() ) {
       Log::trace( ) << "read data block for vitals: [";
-      for ( const auto& cfg : vitals ) {
+      for ( const auto& cfg : vblock.config ) {
         Log::trace( ) << " " << cfg.label;
       }
-      Log::trace( ) << " ] from byte " << std::dec << work.popped( ) << std::endl;
+      Log::trace( ) << " ] from byte " << std::dec << vblock.datastart << std::endl;
     }
 
-    for ( const auto& cfg : vitals ) {
-      read += cfg.readcount;
+    // FIXME: rework reads so they use the workdata, not work directly
+    auto read = vblock.datastart;
+    for ( const auto& cfg : vblock.config ) {
       if ( cfg.isskip ) {
-        work.skip( cfg.readcount );
+        read += cfg.readcount;
       }
       else {
-
         bool okval = false;
         bool added = false;
-        unsigned int readstart = work.popped( );
+        unsigned int readstart = read;
         if ( cfg.unsign ) {
           unsigned int val;
           if ( 1 == cfg.readcount ) {
-            val = popUInt8( );
+            val = StpGeSegment::readUInt(workdata, read);
             okval = ( val != 0x80 );
+            read++;
           }
           else {
-            val = popUInt16( );
+            val = StpGeSegment::readUInt2(workdata, read);
             okval = ( val != 0x8000 );
+            read += 2;
           }
 
           if ( Log::levelok( LogLevel::TRACE ) ) {
@@ -1126,12 +723,14 @@ namespace FormatConverter {
         else {
           int val;
           if ( 1 == cfg.readcount ) {
-            val = popInt8( );
+            val = StpGeSegment::readInt(workdata, read);
             okval = ( val > -128 ); // compare signed ints
+            read++;
           }
           else {
-            val = popInt16( );
+            val = StpGeSegment::readInt2(workdata, read);
             okval = ( val > -32767 );
+            read += 2;
           }
 
           if ( Log::levelok( LogLevel::TRACE ) ) {
@@ -1169,17 +768,6 @@ namespace FormatConverter {
         }
       }
     }
-
-    //    if ( 0 == read ) {
-    //      output( ) << "  no reads specified for block " << std::dec << work.popped( ) << ":\t";
-    //      read = 18;
-    //      for ( size_t i = 0; i < read; i++ ) {
-    //        output( ) << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << popUInt8( );
-    //      }
-    //      output( ) << std::endl;
-    //    }
-
-    work.skip( blocksize - read );
   }
 
   std::string StpGeReader::div10s( int val, unsigned int multiple ) {
@@ -1299,6 +887,7 @@ namespace FormatConverter {
         }
       }
       else {
+        Log::error()<<"what?! work doesn't start on a segment boundary?!";
         ok = false;
       }
     }
@@ -1316,14 +905,14 @@ namespace FormatConverter {
     if ( 28 == waveid ) {
       // if we have PA2-X, then this is a PA2 wave
       for ( auto& v : info->vitals( ) ) {
-        if ( PA2_D.label == v->name( ) ) {
+        if ( StpGeSegment::VitalsBlock::BC_PA2_D.label == v->name( ) ) {
           return "PA2";
         }
       }
     }
     else if ( 29 == waveid ) {
       for ( auto& v : info->vitals( ) ) {
-        if ( PA3_D.label == v->name( ) ) {
+        if ( StpGeSegment::VitalsBlock::BC_PA3_D.label == v->name( ) ) {
           return "PA3";
         }
       }
