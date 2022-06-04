@@ -410,7 +410,7 @@ namespace FormatConverter{
           offset[0] += count[0];
 
           H5::DataSpace memspace( 2, count );
-          Log::debug( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
+          Log::trace( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
           ds.write( ibuffer.data( ), H5::PredType::STD_I32LE, memspace, space );
           ibuffer.clear( );
           ibuffer.reserve( maxslabcnt );
@@ -423,7 +423,7 @@ namespace FormatConverter{
           offset[0] += count[0];
 
           H5::DataSpace memspace( 2, count );
-          Log::debug( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
+          Log::trace( ) << "slab " << ( offset[0] - count[0] ) << std::endl;
           ds.write( sbuffer.data( ), H5::PredType::STD_I16LE, memspace, space );
           sbuffer.clear( );
           sbuffer.reserve( maxslabcnt );

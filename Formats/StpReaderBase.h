@@ -59,6 +59,7 @@ namespace FormatConverter {
     bool metadataonly;
     std::ifstream filestream;
     z_stream zipdata;
+    bool warnederror;
 
     void inflate_f( const std::string& input, const std::string& output );
 

@@ -35,10 +35,10 @@ namespace FormatConverter {
     {0x0C, "AVF" },
     {0x0D, "AVL" },
     {0x17, "RR" },
-    {0x1B, "AR1" },
-    {0x1C, "ICP2" }, // may also be PA2
-    {0x1D, "CVP3" }, // may also be PA3
-    {0x1E, "CVP4" },
+    {0x1B, "AR1" }, // or ICP, or PA, or FE
+    {0x1C, "AR2" }, // or ICP, or PA, or FE
+    {0x1D, "AR3" }, // or ICP, or PA, or FE
+    {0x1E, "AR4" }, // or ICP, or PA, or FE
     {0x27, "SPO2" },
     {0x2A, "CO2" },
     {0xC8, "VNT_PRES" },
@@ -902,18 +902,83 @@ namespace FormatConverter {
   std::string StpGeReader::wavelabel( int waveid, SignalSet * info ) {
     std::string name = StpGeReader::WAVELABELS.at( waveid );
 
+    if( 27 == waveid ){
+      // if we have PA2-X, then this is a PA2 wave
+      for ( auto& v : info->vitals( ) ) {
+        Log::warn( ) << "27 vital:  " << v->name( ) << std::endl;
+        if ( StpGeSegment::VitalsBlock::BC_AR1_D.label == v->name( ) ) {
+          return "AR1";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_ICP1.label == v->name( ) ) {
+          return "ICP1";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_CVP1.label == v->name( ) ) {
+          return "CVP1";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_PA1_D.label == v->name( ) ) {
+          return "PA1";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_FE1_D.label == v->name( ) ) {
+          return "FE1";
+        }
+      }
+    }
     if ( 28 == waveid ) {
       // if we have PA2-X, then this is a PA2 wave
       for ( auto& v : info->vitals( ) ) {
+        Log::warn( ) << "28 vital:  " << v->name( ) << std::endl;
+        if ( StpGeSegment::VitalsBlock::BC_AR2_D.label == v->name( ) ) {
+          return "AR2";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_ICP2.label == v->name( ) ) {
+          return "ICP2";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_CVP2.label == v->name( ) ) {
+          return "CVP2";
+        }
         if ( StpGeSegment::VitalsBlock::BC_PA2_D.label == v->name( ) ) {
           return "PA2";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_FE2_D.label == v->name( ) ) {
+          return "FE2";
         }
       }
     }
     else if ( 29 == waveid ) {
       for ( auto& v : info->vitals( ) ) {
+        if ( StpGeSegment::VitalsBlock::BC_AR3_D.label == v->name( ) ) {
+          return "AR3";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_ICP3.label == v->name( ) ) {
+          return "ICP3";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_CVP3.label == v->name( ) ) {
+          return "CVP3";
+        }
         if ( StpGeSegment::VitalsBlock::BC_PA3_D.label == v->name( ) ) {
           return "PA3";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_FE3_D.label == v->name( ) ) {
+          return "FE3";
+        }
+      }
+    }
+    else if ( 30 == waveid ) {
+      for ( auto& v : info->vitals( ) ) {
+        if ( StpGeSegment::VitalsBlock::BC_AR4_D.label == v->name( ) ) {
+          return "AR4";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_ICP4.label == v->name( ) ) {
+          return "ICP4";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_CVP4.label == v->name( ) ) {
+          return "CVP4";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_PA4_D.label == v->name( ) ) {
+          return "PA4";
+        }
+        if ( StpGeSegment::VitalsBlock::BC_FE4_D.label == v->name( ) ) {
+          return "FE4";
         }
       }
     }

@@ -126,6 +126,7 @@ namespace FormatConverter {
       static const BlockConfig BC_NBP_S;
       static const BlockConfig BC_NBP_D;
       static const BlockConfig BC_CUFF;
+
       static const BlockConfig BC_AR1_M;
       static const BlockConfig BC_AR1_S;
       static const BlockConfig BC_AR1_D;
@@ -172,20 +173,29 @@ namespace FormatConverter {
       static const BlockConfig BC_TMP_1;
       static const BlockConfig BC_TMP_2;
       static const BlockConfig BC_DELTA_TMP;
+
       static const BlockConfig BC_LA1;
+      static const BlockConfig BC_LA2;
+      static const BlockConfig BC_LA3;
+      static const BlockConfig BC_LA4;
+
       static const BlockConfig BC_CVP1;
       static const BlockConfig BC_CVP2;
       static const BlockConfig BC_CVP3;
       static const BlockConfig BC_CVP4;
+
       static const BlockConfig BC_ICP1;
-      static const BlockConfig BC_CPP1;
       static const BlockConfig BC_ICP2;
-      static const BlockConfig BC_CPP2;
       static const BlockConfig BC_ICP3;
-      static const BlockConfig BC_CPP3;
       static const BlockConfig BC_ICP4;
+
+      static const BlockConfig BC_CPP1;
+      static const BlockConfig BC_CPP2;
+      static const BlockConfig BC_CPP3;
       static const BlockConfig BC_CPP4;
+
       static const BlockConfig BC_SP1;
+
       static const BlockConfig BC_PA1_M;
       static const BlockConfig BC_PA1_S;
       static const BlockConfig BC_PA1_D;
@@ -202,6 +212,23 @@ namespace FormatConverter {
       static const BlockConfig BC_PA4_S;
       static const BlockConfig BC_PA4_D;
       static const BlockConfig BC_PA4_R;
+
+      static const BlockConfig BC_FE1_M;
+      static const BlockConfig BC_FE1_S;
+      static const BlockConfig BC_FE1_D;
+      static const BlockConfig BC_FE1_R;
+      static const BlockConfig BC_FE2_M;
+      static const BlockConfig BC_FE2_S;
+      static const BlockConfig BC_FE2_D;
+      static const BlockConfig BC_FE2_R;
+      static const BlockConfig BC_FE3_M;
+      static const BlockConfig BC_FE3_S;
+      static const BlockConfig BC_FE3_D;
+      static const BlockConfig BC_FE3_R;
+      static const BlockConfig BC_FE4_M;
+      static const BlockConfig BC_FE4_S;
+      static const BlockConfig BC_FE4_D;
+      static const BlockConfig BC_FE4_R;
 
       static const BlockConfig BC_UAC1_M;
       static const BlockConfig BC_UAC1_S;
@@ -242,24 +269,40 @@ namespace FormatConverter {
       static const BlockConfig BC_RI_E;
       // </editor-fold>
 
+      enum MajorMode {
+        STANDARD = 0x01
+      };
+
       enum Signal {
-        HR = 0x01,
-        AR = 0x02,
-        PA = 0x03,
-        LA = 0x04,
-        CVP = 0x05,
-        ICP = 0x06,
-        SP = 0x07,
-        APNEA = 0x08,
-        BT = 0x09,
-        NBP = 0x0A,
-        SPO2 = 0x0B,
-        TEMP = 0x0C,
-        CO2 = 0x0E,
-        UAC = 0x10,
-        PT = 0x14,
-        NBP2 = 0x1D,
-        VENT = 0x2A,
+        NBP = 0x18,
+        RESP = 0x22,
+        TEMP = 0x23,
+        SPO2 = 0x2D,
+        CO2 = 0x36,
+        HR = 0x3A,
+        MSDR1 = 0x4D,
+        MSDR2 = 0x4E,
+        MSDR3 = 0x4F,
+        MSDR4 = 0x50,
+        ST1 =  0x56,
+        STV = 0x57,
+        NONE1 = 0x58,
+        STAVL = 0x59,
+        RWOBVT = 0x5A,
+        RIE = 0x5B,
+        APRV = 0x5C,
+        // TV = 0x5D,
+        AR1 = 0x82,
+        AR2 = 0x83,
+        AR3 = 0x84,
+        AR4 = 0x85,
+        PA1 = 0xBC,
+        PA2 = 0xBD,
+        PA3 = 0xBE,
+        PA4 = 0xBF,
+        PEEP = 0xC2,
+        FLOW = 0xDB,
+        HF = 0xDC
       };
 
       /**
@@ -272,8 +315,9 @@ namespace FormatConverter {
        */
       static VitalsBlock index( const std::vector<unsigned char>& rawdata, unsigned long pos,
           GEParseError& errcode );
+      const MajorMode major;
       const Signal signal;
-      const int mode;
+      const int lead;
       const unsigned int datastart;
       const std::vector<BlockConfig>& config;
       int hex() const;
@@ -281,7 +325,8 @@ namespace FormatConverter {
     private:
       static const std::map<Signal, std::map<int, std::vector<BlockConfig>>> LOOKUP;
 
-      VitalsBlock( Signal s, int mode, unsigned int start );
+      VitalsBlock( MajorMode major, Signal code, int lead, unsigned int start,
+        const std::vector<BlockConfig>& cfg );
     };
 
     class WaveFA0DBlock {

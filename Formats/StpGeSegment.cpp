@@ -27,9 +27,9 @@ namespace FormatConverter{
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STI = BlockConfig::div10( "ST-I", "mm", 2, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STII = BlockConfig::div10( "ST-II", "mm", 2, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STIII = BlockConfig::div10( "ST-III", "mm", 2, false );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STAVR = BlockConfig::div10( "ST-AVR", "mm", 1, false );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STAVL = BlockConfig::div10( "ST-AVL", "mm", 1, false );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STAVF = BlockConfig::div10( "ST-AVF", "mm", 1, false );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STAVR = BlockConfig::div10( "ST-AVR", "mm", 2, false );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STAVL = BlockConfig::div10( "ST-AVL", "mm", 2, false );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STAVF = BlockConfig::div10( "ST-AVF", "mm", 2, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV = BlockConfig::div10( "ST-V", "mm", 1, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV1 = BlockConfig::div10( "ST-V1", "mm", 2, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV2 = BlockConfig::div10( "ST-V2", "mm", 2, false );
@@ -46,18 +46,18 @@ namespace FormatConverter{
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR1_S = BlockConfig::vital( "AR1-S", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR1_D = BlockConfig::vital( "AR1-D", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR1_R = BlockConfig::vital( "AR1-R", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR2_M = BlockConfig::vital( "AR1-M", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR2_S = BlockConfig::vital( "AR1-S", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR2_D = BlockConfig::vital( "AR1-D", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR2_R = BlockConfig::vital( "AR1-R", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR3_M = BlockConfig::vital( "AR1-M", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR3_S = BlockConfig::vital( "AR1-S", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR3_D = BlockConfig::vital( "AR1-D", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR3_R = BlockConfig::vital( "AR1-R", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR4_M = BlockConfig::vital( "AR1-M", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR4_S = BlockConfig::vital( "AR1-S", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR4_D = BlockConfig::vital( "AR1-D", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR4_R = BlockConfig::vital( "AR1-R", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR2_M = BlockConfig::vital( "AR2-M", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR2_S = BlockConfig::vital( "AR2-S", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR2_D = BlockConfig::vital( "AR2-D", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR2_R = BlockConfig::vital( "AR2-R", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR3_M = BlockConfig::vital( "AR3-M", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR3_S = BlockConfig::vital( "AR3-S", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR3_D = BlockConfig::vital( "AR3-D", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR3_R = BlockConfig::vital( "AR3-R", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR4_M = BlockConfig::vital( "AR4-M", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR4_S = BlockConfig::vital( "AR4-S", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR4_D = BlockConfig::vital( "AR4-D", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_AR4_R = BlockConfig::vital( "AR4-R", "mmHg" );
 
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_SPO2_P = BlockConfig::vital( "SPO2-%", "%" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_SPO2_R = BlockConfig::vital( "SPO2-R", "Bpm" );
@@ -92,19 +92,23 @@ namespace FormatConverter{
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_TMP_2 = BlockConfig::div10( "TMP-2", "Deg C" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_DELTA_TMP = BlockConfig::div10( "DELTA-TMP", "Deg C" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_LA1 = BlockConfig::vital( "LA1", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_LA2 = BlockConfig::vital( "LA2", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_LA3 = BlockConfig::vital( "LA3", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_LA4 = BlockConfig::vital( "LA4", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CVP1 = BlockConfig::vital( "CVP1", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CVP2 = BlockConfig::vital( "CVP2", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CVP3 = BlockConfig::vital( "CVP3", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CVP4 = BlockConfig::vital( "CVP4", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CPP1 = BlockConfig::vital( "CPP1", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_ICP1 = BlockConfig::vital( "ICP1", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CPP2 = BlockConfig::vital( "CPP2", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_ICP2 = BlockConfig::vital( "ICP2", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CPP3 = BlockConfig::vital( "CPP3", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_ICP3 = BlockConfig::vital( "ICP3", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CPP4 = BlockConfig::vital( "CPP4", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_ICP1 = BlockConfig::vital( "ICP1", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_ICP2 = BlockConfig::vital( "ICP2", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_ICP3 = BlockConfig::vital( "ICP3", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_ICP4 = BlockConfig::vital( "ICP4", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_SP1 = BlockConfig::vital( "SP1", "mmHg" );
+
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_PA1_S = BlockConfig::vital( "PA1-S", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_PA1_D = BlockConfig::vital( "PA1-D", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_PA1_R = BlockConfig::vital( "PA1-R", "mmHg" );
@@ -121,6 +125,23 @@ namespace FormatConverter{
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_PA4_D = BlockConfig::vital( "PA4-D", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_PA4_R = BlockConfig::vital( "PA4-R", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_PA4_M = BlockConfig::vital( "PA4-M", "mmHg" );
+
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE1_S = BlockConfig::vital( "FE1-S", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE1_D = BlockConfig::vital( "FE1-D", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE1_R = BlockConfig::vital( "FE1-R", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE1_M = BlockConfig::vital( "FE1-M", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE2_S = BlockConfig::vital( "FE2-S", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE2_D = BlockConfig::vital( "FE2-D", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE2_R = BlockConfig::vital( "FE2-R", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE2_M = BlockConfig::vital( "FE2-M", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE3_S = BlockConfig::vital( "FE3-S", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE3_D = BlockConfig::vital( "FE3-D", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE3_R = BlockConfig::vital( "FE3-R", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE3_M = BlockConfig::vital( "FE3-M", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE4_S = BlockConfig::vital( "FE4-S", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE4_D = BlockConfig::vital( "FE4-D", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE4_R = BlockConfig::vital( "FE4-R", "mmHg" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_FE4_M = BlockConfig::vital( "FE4-M", "mmHg" );
 
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_UAC1_S = BlockConfig::vital( "UAC1-S", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_UAC1_D = BlockConfig::vital( "UAC1-D", "mmHg" );
@@ -151,7 +172,7 @@ namespace FormatConverter{
 
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CO2_EX = BlockConfig::vital( "CO2-EX", "mmHg" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CO2_IN = BlockConfig::vital( "CO2-IN", "mmHg" );
-  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CO2_RR = BlockConfig::vital( "CO2-RR", "BrMin" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CO2_RR = BlockConfig::vital( "CO2-RR", "BrMin", 2, true );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_O2_EXP = BlockConfig::div10( "O2-EXP", "%" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_O2_INSP = BlockConfig::div10( "O2-INSP", "%" );
 
@@ -161,132 +182,113 @@ namespace FormatConverter{
 
   // <editor-fold defaultstate="collapsed" desc="block configs">
   const std::map<StpGeSegment::VitalsBlock::Signal, std::map<int, std::vector<StpGeSegment::VitalsBlock::BlockConfig>>> StpGeSegment::VitalsBlock::LOOKUP = {
+    { Signal::NBP,{
+      { 0x0A, { BC_SKIP2, BC_NBP_M, BC_NBP_S,BC_NBP_D, BC_SKIP2, BC_CUFF } } }
+    },
+    { Signal::RESP,{
+      { 0x08, { BC_SKIP2, BC_RESP, BC_APNEA } },
+      { 0x09, { BC_SKIP2, BC_BT, BC_IT } },
+      { 0x0C, { BC_SKIP2, BC_TMP_1, BC_TMP_2, BC_DELTA_TMP } } }
+    },
+    { Signal::TEMP,{
+      { 0x0C, { BC_SKIP2, BC_TMP_1, BC_TMP_2, BC_DELTA_TMP } } }
+    },
+    { Signal::SPO2,{
+      {0x0B, { BC_SKIP2, BC_SPO2_P, BC_SPO2_R } } }
+    },
+    { Signal::CO2,{
+      {0x0B, { BC_SKIP2, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP  } },
+      {0x0E, { BC_SKIP2, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP  } } }
+    },
     { Signal::HR,{
-        {0x18,
-          {BC_SKIP2, BC_SPO2_P, BC_SPO2_R } },
-        {0x22,
-          {BC_SKIP2, BC_RESP, BC_APNEA  } },
-        {0x36,
-          {BC_SKIP2, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP } },
-        {0x3A,
-          { BC_SKIP2, BC_HR, BC_PVC } },
-        {0x56,
-          { BC_SKIP2, BC_STI, BC_STII, BC_STIII } },
-        {0x57,
-          { BC_SKIP2, BC_STV1, BC_STV2, BC_STV3 } },
-        {0x58,
-          { } },
-        {0x59,
-          { } },
-        {0x5A,
-          {BC_SKIP2, BC_RWOBVT } },
-        {0x5B,
-          {BC_SKIP2, BC_RI_E } } }
+      {0x01, { BC_SKIP2, BC_HR, BC_PVC } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::AR,{
-        {0x4D,
-          {BC_SKIP6, BC_AR1_M, BC_AR1_S, BC_AR1_D, BC_SKIP2, BC_AR1_R } },
-        {0x4E,
-          {BC_SKIP6, BC_AR2_M, BC_AR2_S, BC_AR2_D, BC_SKIP2, BC_AR2_R } },
-        {0x4F,
-          {BC_SKIP6, BC_AR3_M, BC_AR3_S, BC_AR3_D, BC_SKIP2, BC_AR3_R } },
-        {0x50,
-          {BC_SKIP6, BC_AR4_M, BC_AR4_S, BC_AR4_D, BC_SKIP2, BC_AR4_R } } }
+    {Signal::MSDR1,{
+      {0x02, { BC_SKIP2, BC_AR1_M, BC_AR1_S, BC_AR1_D, BC_SKIP2, BC_AR1_R } },
+      {0x03, { BC_SKIP2, BC_PA1_M, BC_PA1_S, BC_PA1_D, BC_SKIP2, BC_PA1_R } },
+      {0x04, { BC_SKIP2, BC_LA1 } },
+      {0x05, { BC_SKIP2, BC_CVP1 } },
+      {0x06, { BC_SKIP2, BC_ICP1, BC_CPP1 } },
+      {0x07, { BC_SKIP2, BC_SP1 } },
+      {0x10, { BC_SKIP2, BC_UAC1_M, BC_UAC1_S, BC_UAC1_D, BC_SKIP2, BC_UAC1_R } },
+      {0x12, { BC_SKIP2, BC_FE1_M, BC_FE1_S, BC_FE1_D, BC_SKIP2, BC_FE1_R } },
+      {0x2A, { BC_SKIP2, BC_INSP_TV } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::PA,{
-        {0x4D,
-          {BC_SKIP6, BC_PA1_M, BC_PA1_S, BC_PA1_D, BC_SKIP2, BC_PA1_R } },
-        {0x4E,
-          {BC_SKIP6, BC_PA2_M, BC_PA2_S, BC_PA2_D, BC_SKIP2, BC_PA2_R } },
-        {0x4F,
-          {BC_SKIP6, BC_PA3_M, BC_PA3_S, BC_PA3_D, BC_SKIP2, BC_PA3_R } },
-        {0x50,
-          {BC_SKIP6, BC_PA4_M, BC_PA4_S, BC_PA4_D, BC_SKIP2, BC_PA4_R } } }
+    {Signal::MSDR2,{
+      {0x02, { BC_SKIP2, BC_AR2_M, BC_AR2_S, BC_AR2_D, BC_SKIP2, BC_AR2_R } },
+      {0x03, { BC_SKIP2, BC_PA2_M, BC_PA2_S, BC_PA2_D, BC_SKIP2, BC_PA2_R } },
+      {0x04, { BC_SKIP2, BC_LA2 } },
+      {0x05, { BC_SKIP2, BC_CVP2 } },
+      {0x06, { BC_SKIP2, BC_ICP2, BC_CPP2 } },
+      // {0x07, { BC_SKIP2, BC_SP2 } },
+      {0x10, { BC_SKIP2, BC_UAC2_M, BC_UAC2_S, BC_UAC2_D, BC_SKIP2, BC_UAC2_R } },
+      {0x12, { BC_SKIP2, BC_FE2_M, BC_FE2_S, BC_FE2_D, BC_SKIP2, BC_FE2_R } } }
+      // {0x2A, { BC_SKIP2, BC_INSP_TV } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::LA,{
-        {0x4D,
-          {BC_SKIP6, BC_CVP1 } },
-        {0x4E,
-          {BC_SKIP6, BC_CVP2 } },
-        {0x4F,
-          {BC_SKIP6, BC_CVP3 } },
-        {0x50,
-          {BC_SKIP6, BC_CVP4 } } }
+    {Signal::MSDR3,{
+      {0x02, { BC_SKIP2, BC_AR3_M, BC_AR3_S, BC_AR3_D, BC_SKIP2, BC_AR3_R } },
+      {0x03, { BC_SKIP2, BC_PA3_M, BC_PA3_S, BC_PA3_D, BC_SKIP2, BC_PA3_R } },
+      {0x04, { BC_SKIP2, BC_LA3 } },
+      {0x05, { BC_SKIP2, BC_CVP3 } },
+      {0x06, { BC_SKIP2, BC_ICP3, BC_CPP3 } },
+      // {0x07, { BC_SKIP2, BC_SP2 } },
+      {0x10, { BC_SKIP2, BC_UAC3_M, BC_UAC3_S, BC_UAC3_D, BC_SKIP2, BC_UAC3_R } },
+      {0x12, { BC_SKIP2, BC_FE3_M, BC_FE3_S, BC_FE3_D, BC_SKIP2, BC_FE3_R } } }
+      // {0x2A, { BC_SKIP2, BC_INSP_TV } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::ICP,{
-        {0x4D,
-          {BC_SKIP6, BC_ICP1 } },
-        {0x4E,
-          {BC_SKIP6, BC_ICP2 } },
-        {0x4F,
-          {BC_SKIP6, BC_ICP3 } },
-        {0x50,
-          {BC_SKIP6, BC_ICP4 } } }
+    {Signal::MSDR4,{
+      {0x02, { BC_SKIP2, BC_AR4_M, BC_AR4_S, BC_AR4_D, BC_SKIP2, BC_AR4_R } },
+      {0x03, { BC_SKIP2, BC_PA4_M, BC_PA4_S, BC_PA4_D, BC_SKIP2, BC_PA4_R } },
+      {0x04, { BC_SKIP2, BC_LA4 } },
+      {0x05, { BC_SKIP2, BC_CVP4 } },
+      {0x06, { BC_SKIP2, BC_ICP4, BC_CPP4 } },
+      // {0x07, { BC_SKIP2, BC_SP2 } },
+      {0x10, { BC_SKIP2, BC_UAC4_M, BC_UAC4_S, BC_UAC4_D, BC_SKIP2, BC_UAC4_R } },
+      {0x12, { BC_SKIP2, BC_FE4_M, BC_FE4_S, BC_FE4_D, BC_SKIP2, BC_FE4_R } } }
+      // {0x2A, { BC_SKIP2, BC_INSP_TV } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::SP,{
-        {0x4D,
-          {BC_SKIP6, BC_SP1 } } }
+    {Signal::ST1,{
+      {0x0D, { BC_SKIP2, BC_STI, BC_STII, BC_STIII } } }
     },
-//    { StpGeSegment::VitalsBlock::Signal::APNEA,{
-//        {0x4D,
-//          {BC_SKIP6, BC_RESP, BC_APNEA  } } }
-//    },
-    { StpGeSegment::VitalsBlock::Signal::BT,{
-        {0x22,
-          {BC_SKIP6, BC_BT, BC_IT } } }
+    {Signal::STV,{
+      {0x0D, { BC_SKIP2, BC_STV1, BC_STV2, BC_STV3 } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::NBP,{
-        {0x18,
-          {BC_SKIP6, BC_NBP_M, BC_NBP_S,BC_NBP_D, BC_SKIP2, BC_CUFF } } }
+    {Signal::NONE1,{
+      {0x0D, {} } }
     },
-//    { StpGeSegment::VitalsBlock::Signal::SPO2,{
-//        {0x18,
-//          {BC_SKIP6, BC_SPO2_P, BC_SPO2_R } } }
-//    },
-    { StpGeSegment::VitalsBlock::Signal::TEMP,{
-        {0x22,
-          {BC_SKIP6, BC_TMP_1, BC_TMP_2, BC_DELTA_TMP } },
-        {0x23,
-          {BC_SKIP6, BC_TMP_1, BC_TMP_2, BC_DELTA_TMP } } }
+    {Signal::STAVL,{
+      {0x0D, { BC_SKIP2, BC_STAVR, BC_STAVL, BC_STAVF } } }
     },
-//    { StpGeSegment::VitalsBlock::Signal::CO2,{
-//        {0x4D,
-//          {BC_SKIP6, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP } } }
-//    },
-    { StpGeSegment::VitalsBlock::Signal::UAC,{
-        {0x4D,
-          {BC_SKIP6, BC_UAC1_M, BC_UAC1_S, BC_UAC1_D, BC_SKIP2, BC_UAC1_R } },
-        {0x4E,
-          {BC_SKIP6, BC_UAC2_M, BC_UAC2_S, BC_UAC2_D, BC_SKIP2, BC_UAC2_R } },
-        {0x4F,
-          {BC_SKIP6, BC_UAC3_M, BC_UAC3_S, BC_UAC3_D, BC_SKIP2, BC_UAC3_R } },
-        {0x50,
-          {BC_SKIP6, BC_UAC4_M, BC_UAC4_S, BC_UAC4_D, BC_SKIP2, BC_UAC4_R } } }
+    {Signal::RWOBVT,{
+      {0x3C, { BC_SKIP2, BC_RWOBVT } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::PT,{
-        {0xC2,
-          {BC_SKIP6, BC_PT_RR, BC_PEEP, BC_MV, BC_SKIP2, BC_Fi02, BC_TV, BC_PIP,BC_PPLAT, BC_MAWP, BC_SENS } } }
+    {Signal::RIE,{
+      {0x3C, { BC_SKIP2, BC_RI_E } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::NBP2,{
-        {0x18,
-          {BC_SKIP6, BC_NBP_M, BC_NBP_S,BC_NBP_D, BC_SKIP2, BC_CUFF } } }
+    {Signal::APRV,{
+      {0x3C, { BC_SKIP2, BC_APRV_LO, BC_APRV_HI, BC_APRV_LO_T, BC_SKIP2, BC_APRV_HI_T, BC_COMP, BC_RESIS, BC_MEAS_PEEP, BC_INTR_PEEP, BC_SPONT_R } } }
     },
-    { StpGeSegment::VitalsBlock::Signal::VENT,{
-        {0x5C,
-          {BC_SKIP6, BC_APRV_LO, BC_APRV_HI, BC_APRV_LO_T, BC_SKIP2, BC_APRV_HI_T, BC_COMP, BC_RESIS, BC_MEAS_PEEP, BC_INTR_PEEP, BC_SPONT_R } },
-        {0x5D,
-          {BC_SKIP6, BC_INSP_TV } },
-        {0xDB,
-          {BC_SKIP6, BC_VENT, BC_FLW_R, BC_SKIP4, BC_IN_HLD, BC_SKIP2, BC_PRS_SUP, BC_INSP_TM, BC_INSP_PC, BC_I_E } },
-        {0xDC,
-          {BC_SKIP6, BC_HF_FLW, BC_HF_R, BC_HF_PRS, BC_SPONT_MV, BC_SKIP2, BC_SET_TV, BC_SET_PCP, BC_SET_IE, BC_B_FLW, BC_FLW_TRIG } } }
+    {Signal::AR1,{
+      {0x3C, { BC_SKIP2, BC_AR1_M, BC_AR1_S, BC_AR1_D, BC_SKIP2, BC_AR1_R } } }
     },
-//    { StpGeSegment::VitalsBlock::Signal::RWOBVT,{
-//        {0x5A,
-//          {BC_SKIP6, BC_RWOBVT } },
-//        {0x5B,
-//          {BC_SKIP6, BC_RI_E } } }
-//    }
+    {Signal::AR2,{
+      {0x3C, { BC_SKIP2, BC_AR2_M, BC_AR2_S, BC_AR2_D, BC_SKIP2, BC_AR2_R } } }
+    },
+    {Signal::AR3,{
+      {0x3C, { BC_SKIP2, BC_AR3_M, BC_AR3_S, BC_AR3_D, BC_SKIP2, BC_AR3_R } } }
+    },
+    {Signal::AR4,{
+      {0x3C, { BC_SKIP2, BC_AR4_M, BC_AR4_S, BC_AR4_D, BC_SKIP2, BC_AR4_R } } }
+    },
+    {Signal::PEEP,{
+      {0x3C, { BC_SKIP2, BC_PT_RR, BC_PEEP, BC_MV, BC_SKIP2, BC_Fi02, BC_TV, BC_PIP, BC_PPLAT, BC_MAWP, BC_SENS } } }
+    },
+    {Signal::FLOW,{
+      {0x2A, { BC_SKIP2, BC_VENT, BC_FLW_R, BC_SKIP4, BC_IN_HLD, BC_SKIP2, BC_PRS_SUP, BC_INSP_TM, BC_INSP_PC, BC_I_E } } }
+    },
+    {Signal::HF,{
+      {0x3C, { BC_SKIP2, BC_HF_FLW, BC_HF_R, BC_HF_PRS, BC_SPONT_MV, BC_SKIP2, BC_SET_TV, BC_SET_PCP, BC_SET_IE, BC_B_FLW, BC_FLW_TRIG } } }
+    }
   };
   // </editor-fold>
 
@@ -323,35 +325,61 @@ namespace FormatConverter{
     return Header( magic, time, namevec );
   }
 
-  StpGeSegment::VitalsBlock::VitalsBlock( Signal s, int mode, unsigned int start )
-      : signal( s ), mode( mode ), datastart( start ), config( LOOKUP.at( s ).at( mode ) ) { }
+  StpGeSegment::VitalsBlock::VitalsBlock( MajorMode major, Signal s, int leed, unsigned int start,
+      const std::vector<BlockConfig>& cfg ) : major( major), signal( s ), lead( leed ),
+      datastart( start ), config( cfg ) { }
 
   StpGeSegment::VitalsBlock StpGeSegment::VitalsBlock::index( const std::vector<unsigned char>& data,
       unsigned long pos, GEParseError& errcode ) {
-    int sig = data[pos];
-    int mode = data[pos + 1];
+    const int major = data[pos];
+    const int sigint = data[pos + 1];
+    const int lead = data[pos + 64];
 
-    auto sigs = std::vector{ HR, AR, PA, LA, CVP, ICP, SP, APNEA, BT, NBP, SPO2, TEMP,
-      CO2, UAC, PT, NBP2, VENT };
-    for ( auto& x : sigs ) {
-      if ( x == sig ) {
+    auto sigs = std::vector{ NBP, RESP, TEMP, SPO2, CO2, HR, MSDR1, MSDR2, MSDR3, MSDR4, ST1, STV,
+        NONE1, STAVL, RWOBVT, RIE, APRV, AR1, AR2, AR3, AR4, PEEP, FLOW, HF
+    };
+
+    if( major != MajorMode::STANDARD ) {
+      throw std::runtime_error( "unknown major mode: " + major );
+    }
+
+    for ( auto& signal : sigs ) {
+      if ( signal == sigint ) {
         Log::trace( ) << "new block: [" << std::dec << pos << " - " << pos + VITALS_SIZE << "); type: "
-            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << x << " "
-            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << mode << std::endl;
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << lead << " "
+            << std::setfill( '0' ) << std::setw( 2 ) << std::hex << signal << std::endl;
+        
+        if( 1 == LOOKUP.count(signal)){
+          const auto& leadmap = LOOKUP.at(signal);
 
-        return VitalsBlock( x, mode, pos + 2 );
+          if ( 0 == leadmap.count( lead ) ) {
+            if ( 1 == leadmap.size( ) ) {
+              for( auto& mm : leadmap ){
+                Log::warn( ) << "unrecognized lead: "
+                    << std::setfill( '0' ) << std::setw( 2 ) << std::hex << lead << "; using "
+                    << signal << ":"
+                    << std::setfill( '0' ) << std::setw( 2 ) << std::hex << mm.first<<" instead"
+                    << std::endl;
+                return VitalsBlock( MajorMode::STANDARD, signal, lead, pos + 2, mm.second );
+              }
+            }            
+          }
+          else {
+            return VitalsBlock( MajorMode::STANDARD, signal, lead, pos + 2, leadmap.at( lead ) );
+          }
+        }
       }
     }
 
     std::stringstream ss;
     ss << "unhandled block: " << std::setfill( '0' ) << std::setw( 2 ) << std::hex
-        << sig << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << mode
+        << lead << " " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << sigint
         << " starting at " << std::dec << pos;
     throw std::runtime_error( ss.str( ) );
   }
 
   int StpGeSegment::VitalsBlock::hex( ) const {
-    return (signal >> 8 | ( mode & 0xFF ) );
+    return (lead >> 8 | ( signal & 0xFF ) );
   }
 
   StpGeSegment::WaveFA0DBlock::WaveFA0DBlock( int seq, unsigned long start, unsigned long end,
@@ -372,7 +400,7 @@ namespace FormatConverter{
     // wave data sections usually end with 0XFA0D followed by some indexing data whose
     // size depends on the monitor model (either 33 or 49 bytes). However, sometimes, the wave
     // sections end abruptly, so we have to ensure we don't walk past the end of the data array
-    Log::trace( ) << "indexing wave block from " << std::dec << start << std::endl;
+    Log::trace( ) << "wave block at " << std::dec << start << std::endl;
     auto wstart = start;
     auto seq = readUInt( data, ++start );
     start += 3; // (2) 0x00 bytes, and position read head over wave id
@@ -382,8 +410,8 @@ namespace FormatConverter{
     auto countbyte = readUInt(data, start++);
 
     while ( !( 0xFA == waveid && 0x0D == countbyte ) && start < data.size() ) {
-      Log::trace( ) << "wave bytes: 0x" << std::hex << std::setw( 2 ) << waveid << " "
-          << std::setw( 2 ) << countbyte << " at " << std::dec << ( start - 2 ) << std::endl;
+      // Log::trace( ) << "wave bytes: 0x" << std::hex << std::setw( 2 ) << waveid << " "
+      //     << std::setw( 2 ) << countbyte << " at " << std::dec << ( start - 2 ) << std::endl;
 
       // usually, we get 0x0B for the countbyte, but sometimes we get 0x3B. I don't
       // know what that means, but the B part seems to be the only thing that matters

@@ -29,11 +29,12 @@
 namespace FormatConverter {
 
   StpReaderBase::StpReaderBase( const std::string& name ) : Reader( name ),
-      work( 1024 * 1024 * 16 ), metadataonly( false ) {
+      work( 1024 * 1024 * 16 ), metadataonly( false ), warnederror( false ) {
   }
 
   StpReaderBase::StpReaderBase( const StpReaderBase& orig ) : Reader( orig ),
-      work( orig.work.capacity( ) ), metadataonly( orig.metadataonly ) {
+      work( orig.work.capacity( ) ), metadataonly( orig.metadataonly ),
+      warnederror( orig.warnederror ) {
   }
 
   StpReaderBase::~StpReaderBase( ) {
@@ -174,10 +175,15 @@ namespace FormatConverter {
         for ( size_t i = 0; i < OUTSIZE; i++ ) {
           work.push( outdata[i] );
         }
+
+        warnederror = false;
       }
       else {
         OUTSIZE = 0;
-        Log::warn( ) << "compression error: " << zerr( ok ) << std::endl;
+        if( !warnederror ){
+          Log::warn( ) << "compression error: " << zerr( ok ) << std::endl;
+          warnederror = true;
+        }
 
         // we always inflate our indata array starting at the beginning
         // in this case, that segment is damaged, so iterate through until
@@ -325,7 +331,7 @@ namespace FormatConverter {
           return ret;
       }
 
-      Log::debug( ) << "inflated " << ( insize - zipdata.avail_in ) << " bytes to "
+      Log::trace( ) << "inflated " << ( insize - zipdata.avail_in ) << " bytes to "
           << ( outsize - zipdata.avail_out ) << " bytes with " << zipdata.avail_in << " left over. " << zerr( ret ) << std::endl;
       /* done when inflate() says it's done */
 
