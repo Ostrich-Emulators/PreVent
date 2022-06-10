@@ -186,8 +186,8 @@ namespace FormatConverter{
     }
     sqlite3_bind_int( stmt, 1, fileid );
     sqlite3_bind_int( stmt, 2, sid );
-    sqlite3_bind_int( stmt, 3, sig->startTime( ) );
-    sqlite3_bind_int( stmt, 4, sig->endTime( ) );
+    sqlite3_bind_int64( stmt, 3, sig->startTime( ) );
+    sqlite3_bind_int64( stmt, 4, sig->endTime( ) );
 
     rc = sqlite3_step( stmt );
     if ( rc != SQLITE_DONE ) {
@@ -227,8 +227,8 @@ namespace FormatConverter{
       sqlite3_bind_int( stmt, 1, fileid );
       for ( const auto& x : offsets ) {
         sqlite3_reset( stmt );
-        sqlite3_bind_int( stmt, 2, x.second );
-        sqlite3_bind_int( stmt, 3, x.first );
+        sqlite3_bind_int64( stmt, 2, x.second );
+        sqlite3_bind_int64( stmt, 3, x.first );
 
         rc = sqlite3_step( stmt );
         if ( rc != SQLITE_DONE ) {
@@ -281,8 +281,8 @@ namespace FormatConverter{
       sqlite3_bind_int( stmt, 3, pid );
     }
 
-    sqlite3_bind_int( stmt, 4, data->earliest( ) );
-    sqlite3_bind_int( stmt, 5, data->latest( ) );
+    sqlite3_bind_int64( stmt, 4, data->earliest( ) );
+    sqlite3_bind_int64( stmt, 5, data->latest( ) );
 
     rc = sqlite3_step( stmt );
     if ( rc != SQLITE_DONE ) {
