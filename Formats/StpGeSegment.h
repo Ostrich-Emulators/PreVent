@@ -118,6 +118,9 @@ namespace FormatConverter {
       static const BlockConfig BC_STV1;
       static const BlockConfig BC_STV2;
       static const BlockConfig BC_STV3;
+      static const BlockConfig BC_STV4;
+      static const BlockConfig BC_STV5;
+      static const BlockConfig BC_STV6;
       static const BlockConfig BC_BT;
       static const BlockConfig BC_IT;
       static const BlockConfig BC_RESP;
@@ -267,6 +270,7 @@ namespace FormatConverter {
       static const BlockConfig BC_CO2_RR;
       static const BlockConfig BC_O2_EXP;
       static const BlockConfig BC_O2_INSP;
+      static const BlockConfig BC_SVO2;
       static const BlockConfig BC_RWOBVT;
       static const BlockConfig BC_RI_E;
       // </editor-fold>
@@ -275,6 +279,8 @@ namespace FormatConverter {
         STANDARD = 0x01
       };
 
+      // WARNING: there's a vector in VitalsBlock::index that must be updated
+      // to match these values. Otherwise, new values will not be searched
       enum Signal {
         NBP = 0x18,
         RESP = 0x22,
@@ -288,7 +294,7 @@ namespace FormatConverter {
         MSDR4 = 0x50,
         ST1 =  0x56,
         STV = 0x57,
-        NONE1 = 0x58,
+        STV456 = 0x58,
         STAVL = 0x59,
         RWOBVT = 0x5A,
         RIE = 0x5B,
@@ -298,11 +304,12 @@ namespace FormatConverter {
         AR2 = 0x83,
         AR3 = 0x84,
         AR4 = 0x85,
-        PA1 = 0xBC,
-        PA2 = 0xBD,
-        PA3 = 0xBE,
-        PA4 = 0xBF,
+        //PA1 = 0xBC,
+        //PA2 = 0xBD,
+        SV = 0xBE,
+        //PA4 = 0xBF,
         PEEP = 0xC2,
+        SPO2M = 0xD0,
         FLOW = 0xDB,
         HF = 0xDC
       };
@@ -317,7 +324,7 @@ namespace FormatConverter {
        */
       static VitalsBlock index( const std::vector<unsigned char>& rawdata, unsigned long pos,
           GEParseError& errcode );
-      const MajorMode major;
+      const MajorMode majormode;
       const Signal signal;
       const int lead;
       const unsigned int datastart;
@@ -327,7 +334,7 @@ namespace FormatConverter {
     private:
       static const std::map<Signal, std::map<int, std::vector<BlockConfig>>> LOOKUP;
 
-      VitalsBlock( MajorMode major, Signal code, int lead, unsigned int start,
+      VitalsBlock( MajorMode mjr, Signal code, int lead, unsigned int start,
         const std::vector<BlockConfig>& cfg );
     };
 

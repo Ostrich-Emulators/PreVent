@@ -34,6 +34,9 @@ namespace FormatConverter{
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV1 = BlockConfig::div10( "ST-V1", "mm", 2, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV2 = BlockConfig::div10( "ST-V2", "mm", 2, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV3 = BlockConfig::div10( "ST-V3", "mm", 2, false );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV4 = BlockConfig::div10( "ST-V4", "mm", 2, false );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV5 = BlockConfig::div10( "ST-V5", "mm", 2, false );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_STV6 = BlockConfig::div10( "ST-V6", "mm", 2, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_BT = BlockConfig::div10( "BT", "Deg C", 2 );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_IT = BlockConfig::div10( "IT", "Deg C", 2 );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_RESP = BlockConfig::vital( "RESP", "BrMin" );
@@ -177,6 +180,7 @@ namespace FormatConverter{
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_CO2_RR = BlockConfig::vital( "CO2-RR", "BrMin", 2, true );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_O2_EXP = BlockConfig::div10( "O2-EXP", "%" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_O2_INSP = BlockConfig::div10( "O2-INSP", "%" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_SVO2 = BlockConfig::div10( "SvO2", "%" );
 
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_RWOBVT = BlockConfig::vital( "rWOBVT", "J/L" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_RI_E = BlockConfig::vital( "rI:E", "" );
@@ -199,8 +203,13 @@ namespace FormatConverter{
       {0x0B, { BC_SKIP2, BC_SPO2_P, BC_SPO2_R } } }
     },
     { Signal::CO2,{
-      {0x0B, { BC_SKIP2, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP  } },
-      {0x0E, { BC_SKIP2, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP  } } }
+      {0x00, { BC_SKIP2, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP  } } }
+      
+      // the lead code doesn't seem to matter for CO2 blocks, so ignore it
+      // {0x0B, { BC_SKIP2, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP  } },
+      // {0x0E, { BC_SKIP2, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP  } },
+      // {0x32, { BC_SKIP2, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP  } },
+      // {0xB3, { BC_SKIP2, BC_CO2_EX, BC_CO2_IN, BC_CO2_RR, BC_SKIP2, BC_O2_EXP, BC_O2_INSP  } } }
     },
     { Signal::HR,{
       {0x01, { BC_SKIP2, BC_HR, BC_PVC } } }
@@ -255,8 +264,8 @@ namespace FormatConverter{
     {Signal::STV,{
       {0x0D, { BC_SKIP2, BC_STV1, BC_STV2, BC_STV3 } } }
     },
-    {Signal::NONE1,{
-      {0x0D, {} } }
+    {Signal::STV456,{
+      {0x0D, { BC_SKIP2, BC_STV4, BC_STV5, BC_STV6 } } }
     },
     {Signal::STAVL,{
       {0x0D, { BC_SKIP2, BC_STAVR, BC_STAVL, BC_STAVF } } }
@@ -271,6 +280,7 @@ namespace FormatConverter{
       {0x3C, { BC_SKIP2, BC_APRV_LO, BC_APRV_HI, BC_APRV_LO_T, BC_SKIP2, BC_APRV_HI_T, BC_COMP, BC_RESIS, BC_MEAS_PEEP, BC_INTR_PEEP, BC_SPONT_R } } }
     },
     {Signal::AR1,{
+      {0x20, { BC_SKIP2, BC_AR1_M, BC_AR1_S, BC_AR1_D, BC_SKIP2, BC_AR1_R } },
       {0x3C, { BC_SKIP2, BC_AR1_M, BC_AR1_S, BC_AR1_D, BC_SKIP2, BC_AR1_R } } }
     },
     {Signal::AR2,{
@@ -282,8 +292,14 @@ namespace FormatConverter{
     {Signal::AR4,{
       {0x3C, { BC_SKIP2, BC_AR4_M, BC_AR4_S, BC_AR4_D, BC_SKIP2, BC_AR4_R } } }
     },
+    {Signal::SV,{
+      {0x0F, { BC_SKIP2, BC_SVO2 } } }
+    },
     {Signal::PEEP,{
       {0x3C, { BC_SKIP2, BC_PT_RR, BC_PEEP, BC_MV, BC_SKIP2, BC_Fi02, BC_TV, BC_PIP, BC_PPLAT, BC_MAWP, BC_SENS } } }
+    },
+    {Signal::SPO2M,{
+      {0x1C, { BC_SKIP2, BC_SPO2M_P, BC_SPO2M_R } } }
     },
     {Signal::FLOW,{
       {0x2A, { BC_SKIP2, BC_VENT, BC_FLW_R, BC_SKIP4, BC_IN_HLD, BC_SKIP2, BC_PRS_SUP, BC_INSP_TM, BC_INSP_PC, BC_I_E } } }
@@ -327,8 +343,8 @@ namespace FormatConverter{
     return Header( magic, time, namevec );
   }
 
-  StpGeSegment::VitalsBlock::VitalsBlock( MajorMode major, Signal s, int leed, unsigned int start,
-      const std::vector<BlockConfig>& cfg ) : major( major), signal( s ), lead( leed ),
+  StpGeSegment::VitalsBlock::VitalsBlock( MajorMode mjr, Signal s, int leed, unsigned int start,
+      const std::vector<BlockConfig>& cfg ) : majormode( mjr ), signal( s ), lead( leed ),
       datastart( start ), config( cfg ) { }
 
   StpGeSegment::VitalsBlock StpGeSegment::VitalsBlock::index( const std::vector<unsigned char>& data,
@@ -338,7 +354,7 @@ namespace FormatConverter{
     const int lead = data[pos + 64];
 
     auto sigs = std::vector{ NBP, RESP, TEMP, SPO2, CO2, HR, MSDR1, MSDR2, MSDR3, MSDR4, ST1, STV,
-        NONE1, STAVL, RWOBVT, RIE, APRV, AR1, AR2, AR3, AR4, PEEP, FLOW, HF
+        STV456, STAVL, RWOBVT, RIE, APRV, AR1, AR2, AR3, AR4, SV, PEEP, SPO2M, FLOW, HF
     };
 
     if( major != MajorMode::STANDARD ) {
@@ -357,14 +373,25 @@ namespace FormatConverter{
           if ( 0 == leadmap.count( lead ) ) {
             if ( 1 == leadmap.size( ) ) {
               for( auto& mm : leadmap ){
-                Log::warn( ) << "unrecognized lead: "
-                    << std::setfill( '0' ) << std::setw( 2 ) << std::hex << lead << "; using "
-                    << signal << ":"
-                    << std::setfill( '0' ) << std::setw( 2 ) << std::hex << mm.first<<" instead"
-                    << std::endl;
+                if( 0x00 == mm.first ){
+                  Log::debug( ) << "using default conversion for lead: "
+                      << std::setfill( '0' ) << std::setw( 2 ) << std::hex << lead << " "
+                      << std::setfill( '0' ) << std::setw( 2 ) << std::hex << signal << std::endl;
+                }
+                else {
+                  Log::warn( ) << "unrecognized lead: "
+                      << std::setfill( '0' ) << std::setw( 2 ) << std::hex << lead << "; using "
+                      << std::setfill( '0' ) << std::setw( 2 ) << std::hex << mm.first<<" "
+                      << signal << " instead" << std::endl;
+                }
                 return VitalsBlock( MajorMode::STANDARD, signal, lead, pos + 2, mm.second );
               }
-            }            
+            }
+            else {
+              Log::warn() << "no lead data for " << std::setfill( '0' ) << std::setw( 2 ) << std::hex << lead << " "
+                     << std::setfill( '0' ) << std::setw( 2 ) << std::hex << signal
+                     << ", but " << leadmap.size() << " others" << std::endl;
+            }
           }
           else {
             return VitalsBlock( MajorMode::STANDARD, signal, lead, pos + 2, leadmap.at( lead ) );

@@ -382,7 +382,7 @@ namespace FormatConverter{
       if ( useInts ) {
         auto ints = datarow->ints( );
         if ( ints.size( ) != valsperrow ) {
-          Log::warn( ) << "at time " << datarow->time << ", expected " << valsperrow
+          Log::warn( ) << "at time " << std::dec << datarow->time << ", expected " << valsperrow
               << " values, got " << ints.size( ) << "..."
               << ( ints.size( ) < valsperrow ? "adding" : "truncating" )
               << " extras" << std::endl;
@@ -394,7 +394,7 @@ namespace FormatConverter{
       else {
         std::vector<short> ints = datarow->shorts( );
         if ( ints.size( ) != valsperrow ) {
-          Log::warn( ) << "at time " << datarow->time << ", expected " << valsperrow
+          Log::warn( ) << "at time " << std::dec << datarow->time << ", expected " << valsperrow
               << " values, got " << ints.size( ) << "..."
               << ( ints.size( ) < valsperrow ? "adding" : "truncating" )
               << " extras" << std::endl;

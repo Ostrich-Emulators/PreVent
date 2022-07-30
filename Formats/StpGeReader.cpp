@@ -970,7 +970,6 @@ namespace FormatConverter {
     if ( 28 == waveid ) {
       // if we have PA2-X, then this is a PA2 wave
       for ( auto& v : info->vitals( ) ) {
-        // Log::warn( ) << "28 vital:  " << v->name( ) << std::endl;
         if ( StpGeSegment::VitalsBlock::BC_AR2_D.label == v->name( ) ) {
           return "AR2";
         }
