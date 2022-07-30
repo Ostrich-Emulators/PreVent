@@ -35,10 +35,10 @@ namespace FormatConverter {
     {0x0C, "AVF" },
     {0x0D, "AVL" },
     {0x17, "RR" },
-    {0x1B, "AR1" }, // or ICP, or PA, or FE
-    {0x1C, "AR2" }, // or ICP, or PA, or FE
-    {0x1D, "AR3" }, // or ICP, or PA, or FE
-    {0x1E, "AR4" }, // or ICP, or PA, or FE
+    {0x1B, "AR1" }, // or ICP, or PA, or FE...
+    {0x1C, "AR2" }, // or ICP, or PA, or FE...
+    {0x1D, "AR3" }, // or ICP, or PA, or FE...
+    {0x1E, "AR4" }, // or ICP, or PA, or FE...
     {0x27, "SPO2" },
     {0x2A, "CO2" },
     {0xC8, "VNT_PRES" },
@@ -47,6 +47,40 @@ namespace FormatConverter {
 
   // <editor-fold defaultstate="collapsed" desc="Wave Tracker">
 
+  StpGeReader::WaveTracker::SequenceData::SequenceData( unsigned short seq, dr_time t )
+      : sequence( seq ), time( t ) {
+  }
+
+  StpGeReader::WaveTracker::SequenceData::SequenceData( const SequenceData& other )
+      : sequence( other.sequence ), time( other.time ) {
+    for ( const auto& x : other.wavedata ) {
+      wavedata.insert({ x.first, std::vector<int>( x.second.begin( ), x.second.end( ) ) } );
+    }
+  }
+
+  StpGeReader::WaveTracker::SequenceData& StpGeReader::WaveTracker::SequenceData::operator=(const SequenceData& other ) {
+    if ( this != &other ) {
+      this->sequence = other.sequence;
+      this->time = other.time;
+      wavedata.clear( );
+      for ( const auto& x : other.wavedata ) {
+        wavedata.insert({ x.first, std::vector<int>( x.second.begin( ), x.second.end( ) ) } );
+      }
+    }
+
+    return *this;
+  }
+
+  StpGeReader::WaveTracker::SequenceData::~SequenceData( ) { }
+
+  void StpGeReader::WaveTracker::SequenceData::push( int waveid, const std::vector<int>& data ) {
+    if ( 0 == wavedata.count( waveid ) ) {
+      wavedata.insert({ waveid, std::vector<int>{} } );
+    }
+
+    wavedata.at(waveid).insert( wavedata.at(waveid).end( ), data.begin( ), data.end( ) );
+  }
+
   StpGeReader::WaveTracker::WaveTracker( ) {
   }
 
@@ -54,37 +88,20 @@ namespace FormatConverter {
   }
 
   void StpGeReader::WaveTracker::prune( ) {
-
-    std::vector<int> toremove;
-    for ( auto& m : wavevals ) {
-      if ( m.second.empty( ) ) {
-        toremove.push_back( m.first );
-      }
-    }
-
-    for ( int waveid : toremove ) {
-      wavevals.erase( waveid );
-      expectedValues.erase( waveid );
-    }
-
-    if ( !wavevals.empty( ) ) {
-      Log::error( ) << "NO sequence numbers, but wave vals? WRONG!" << std::endl;
-      for ( const auto& m : wavevals ) {
-        Log::error( ) << "\twave: " << m.first << "\t" << m.second.size( ) << std::endl;
-      }
-    }
   }
 
   StpGeReader::WaveSequenceResult StpGeReader::WaveTracker::newseq( const unsigned short& seqnum, dr_time time ) {
-    WaveSequenceResult rslt;
+    WaveSequenceResult rslt = WaveSequenceResult::NORMAL;
     if ( empty( ) ) {
-      rslt = WaveSequenceResult::NORMAL;
       prune( );
-      mytime = time;
+      Log::warn( ) << "starting tracker at " << std::dec << time << std::endl;
     }
     else {
       unsigned short currseq = currentseq( );
-      size_t timediff = time - starttime( );
+      size_t timediff = time - (--sequencedata.end())->time;
+
+      Log::warn( ) << "new seq at " << std::dec << starttime( ) << " (" << timediff << "): "
+          << std::setw( 2 ) << std::setfill( '0' ) << std::hex << currseq << std::dec << std::endl;
 
       // we get 4 sequence numbers per second, so they duplicate every 64 seconds
       // thus, if our times are out of whack by >=64 seconds, we're sure our
@@ -98,13 +115,14 @@ namespace FormatConverter {
         }
         else if ( seqnum == ( currseq + 1 ) ) {
           // sometimes, we get the right sequence number, but the time is off
-          if ( time - mytime >= 4000 ) { // 4s is arbitrary
+
+          if ( timediff >= 4000 ) { // 4s is arbitrary, but we commonly see 1s & 3s breaks
             // sequence is right, but the time is off, so figure out what
             // the time should be by reading what's in our chute
             size_t counter = 0;
-            auto it = sequencenums.rbegin( );
-            dr_time xtime = it->second;
-            while ( it++ != sequencenums.rend( ) && ++counter < 8 && it->second == xtime ) {
+            auto it = sequencedata.rbegin( );
+            dr_time xtime = it->time;
+            while ( it++ != sequencedata.rend( ) && ++counter < 8 && it->time == xtime ) {
               // everything is handled in the loop check
             }
             time = xtime;
@@ -133,8 +151,8 @@ namespace FormatConverter {
       }
     }
 
-    sequencenums.push_back( std::make_pair( seqnum, time ) );
-    miniseen.clear( );
+    sequencedata.push_back( SequenceData{ seqnum, time } );
+    miniseen.clear();
     return rslt;
   }
 
@@ -162,65 +180,69 @@ namespace FormatConverter {
       // just add phantom sequence numbers to fill up the current block and we're done
       // first, we need to figure out how many sequence numbers to add by counting
       // how many we have at the current time
-      const dr_time ctime = ( --sequencenums.end( ) )->second;
-      size_t count = std::count_if( sequencenums.begin( ), sequencenums.end( ),
-          [ctime]( std::pair<unsigned short, dr_time> p ) {
-            return (p.second == ctime );
+      const dr_time ctime = ( --sequencedata.end( ) )->time;
+      size_t count = std::count_if( sequencedata.begin( ), sequencedata.end( ),
+          [ctime]( const auto& p ) {
+            return (p.time == ctime );
           } );
       for ( size_t lim = 1; lim <= ( 8 - count ); lim++ ) {
-        sequencenums.push_back( std::make_pair( ( currseq + lim ) % 0xFF, ctime ) );
+        sequencedata.push_back( SequenceData{ (unsigned short)(( currseq + lim ) % 0xFF ), ctime } );
       }
 
       // fill in MISSING values into our datapoints, too
-      for ( auto& w : wavevals ) {
-        const int waveid = w.first;
-        std::vector<int>& datapoints = w.second;
-        size_t loops = 8 - count;
-        Log::trace( ) << "wave " << waveid << ": before filling: " << datapoints.size( );
-        // break is based on missing sequence numbers
-        size_t valsPerSeqNum = expectedValues[waveid] / 8; // 8 FA0D loops/sec
-        size_t valsToAdd = loops * valsPerSeqNum;
-        datapoints.resize( datapoints.size( ) + valsToAdd, SignalData::MISSING_VALUE );
-
-        Log::trace( ) << "; after filling: " << datapoints.size( ) << std::endl;
-      }
+//      for ( auto& w : wavevals ) {
+//        const int waveid = w.first;
+//        std::vector<int>& datapoints = w.second;
+//        size_t loops = 8 - count;
+//        Log::trace( ) << "wave " << waveid << ": before filling: " << datapoints.size( );
+//        // break is based on missing sequence numbers
+//        size_t valsPerSeqNum = expectedValues[waveid] / 8; // 8 FA0D loops/sec
+//        size_t valsToAdd = loops * valsPerSeqNum;
+//        datapoints.resize( datapoints.size( ) + valsToAdd, SignalData::MISSING_VALUE );
+//
+//        Log::trace( ) << "; after filling: " << datapoints.size( ) << std::endl;
+//      }
     }
     else {
-
       Log::trace( ) << "small break in sequence (" << seqdiff << " elements) current map:" << std::endl;
-      for ( const auto& m : sequencenums ) {
-        Log::trace( ) << "\t" << m.first << "\t" << m.second << std::endl;
+      for ( const auto& m : sequencedata ) {
+        Log::trace( ) << "\t" << m.sequence << "\t" << m.time << std::endl;
       }
 
       // we have a small sequence difference, so fill in phantom values
-      for ( auto& w : wavevals ) {
-        const int waveid = w.first;
-        std::vector<int>& datapoints = w.second;
-
-        Log::trace( ) << "wave " << waveid << ": before filling: " << datapoints.size( );
-        // break is based on missing sequence numbers
-        size_t valsPerSeqNum = expectedValues[waveid] / 8; // 8 FA0D loops/sec
-        size_t valsToAdd = seqdiff * valsPerSeqNum;
-        datapoints.resize( datapoints.size( ) + valsToAdd, SignalData::MISSING_VALUE );
-
-        Log::trace( ) << "; after filling: " << datapoints.size( ) << std::endl;
-      }
+//      for ( auto& w : wavevals ) {
+//        const int waveid = w.first;
+//        std::vector<int>& datapoints = w.second;
+//
+//        Log::trace( ) << "wave " << waveid << ": before filling: " << datapoints.size( );
+//        // break is based on missing sequence numbers
+//        size_t valsPerSeqNum = expectedValues[waveid] / 8; // 8 FA0D loops/sec
+//        size_t valsToAdd = seqdiff * valsPerSeqNum;
+//        datapoints.resize( datapoints.size( ) + valsToAdd, SignalData::MISSING_VALUE );
+//
+//        Log::trace( ) << "; after filling: " << datapoints.size( ) << std::endl;
+//      }
       for ( unsigned short i = 1; i <= seqdiff; i++ ) {
-        sequencenums.push_back( std::make_pair( ( currseq + i ) % 0xFF, time ) );
+        sequencedata.push_back( SequenceData{ (unsigned short)(( currseq + i ) % 0xFF), time } );
       }
 
       Log::trace( ) << "new map: " << std::endl;
-      for ( const auto& m : sequencenums ) {
-        Log::trace( ) << "\t" << m.first << "\t" << m.second << std::endl;
+      for ( const auto& m : sequencedata ) {
+        Log::trace( ) << "\t" << m.sequence << "\t" << m.time << std::endl;
       }
     }
   }
 
   void StpGeReader::WaveTracker::newvalues( int waveid, std::vector<int>& values ) {
+//    for( const auto& x: sequencedata) {
+//      Log::warn( ) << "sequencedata:" << x.sequence << " " << x.time << " "
+//          << x.wavedata.size( ) << " " << std::hex << &( x.wavedata ) << std::endl;
+//    }
+
     size_t valstoread = values.size( );
+    auto& seqdata = (--sequencedata.end());
     if ( 0 == expectedValues.count( waveid ) ) {
       expectedValues[waveid] = valstoread * 120;
-      wavevals[waveid].reserve( expectedValues[waveid] );
 
       // within an FA0D block, there are 15 "mini" blocks, and waves can just
       // start appearing. To keep everything in sync, we track which miniblock
@@ -241,44 +263,68 @@ namespace FormatConverter {
       }
     }
 
-    wavevals[waveid].insert( wavevals[waveid].end( ), values.begin( ), values.end( ) );
+    // FIXME: why do I have to assign this again here?
+    seqdata = (--sequencedata.end());
+    seqdata->push( waveid, values );
     miniseen[waveid]++;
   }
 
   bool StpGeReader::WaveTracker::writable( ) const {
-    return sequencenums.size( ) > 7;
+    return sequencedata.size( ) > 7;
   }
 
   bool StpGeReader::WaveTracker::empty( ) const {
-    return sequencenums.empty( );
+    return sequencedata.empty( );
   }
 
   void StpGeReader::WaveTracker::flushone( SignalSet * info ) {
+    Log::debug( ) << "flushone" << std::endl;
     if ( empty( ) ) {
       Log::debug( ) << "no wave data to flush" << std::endl;
     }
 
-    int erasers = std::min( (int) sequencenums.size( ), 8 );
-    dr_time startt = starttime( );
-    for ( auto& w : wavevals ) {
-      const int waveid = w.first;
-      std::vector<int>& datapoints = w.second;
 
-      if ( datapoints.size( ) > expectedValues[waveid] ) {
-        Log::trace( ) << "more values than needed (" << datapoints.size( ) << "/" << expectedValues[waveid]
-            << ") for waveid: " << waveid << std::endl;
+    // NOTE: there are 4 sequence ids/second, so we expect 8 sequencedata entries for a 2s block.
+    // Of course, we don't always get that many (any sometimes get many more)
+
+    const auto startt = starttime();
+    int erasers = std::min( (int) sequencedata.size( ), 8 );
+    auto loopcnt = 0;
+    auto wavesdata = std::map<int, std::vector<int>>{};
+    while ( loopcnt < erasers ) {
+      auto sd = sequencedata.begin( ) + loopcnt;
+      for ( auto& w : sd->wavedata ) {
+        const int waveid = w.first;
+        std::vector<int>& datapoints = w.second;
+        if ( 0 == wavesdata.count( waveid ) ) {
+          wavesdata.insert({ waveid, std::vector<int>() } );
+        }
+        auto& datavec = wavesdata.at( waveid );
+        datavec.insert( datavec.end( ), datapoints.begin( ), datapoints.end( ) );
       }
-      if ( datapoints.size( ) < expectedValues[waveid] ) {
-        Log::trace( ) << "filling in " << ( expectedValues[waveid] - datapoints.size( ) )
+
+      loopcnt++;
+    }
+
+    for ( auto& wd : wavesdata ) {
+      auto waveid = wd.first;
+      auto& datavec = wd.second;
+
+      if ( datavec.size( ) > expectedValues[waveid] ) {
+        Log::trace( ) << "more values than needed (" << std::dec << datavec.size( )
+            << "/" << expectedValues[waveid] << ") for waveid: " << waveid << std::endl;
+      }
+      if ( datavec.size( ) < expectedValues[waveid] ) {
+        Log::trace( ) << "filling in " << std::dec << ( expectedValues[waveid] - datavec.size( ) )
             << " for waveid: " << waveid << std::endl;
-        datapoints.resize( expectedValues[waveid], SignalData::MISSING_VALUE );
+        datavec.resize( expectedValues[waveid], SignalData::MISSING_VALUE );
       }
 
       // make sure we have at least one val above the error code limit (-32753)
       // while converting their values to a big string
       bool waveok = false;
       for ( size_t i = 0; i < expectedValues[waveid]; i++ ) {
-        if ( datapoints[i]> -32753 ) {
+        if ( datavec[i]> -32753 ) {
           waveok = true;
         }
       }
@@ -290,58 +336,56 @@ namespace FormatConverter {
           signal->setChunkIntervalAndSampleRate( 2000, expectedValues[waveid] );
         }
 
-        signal->add( std::make_unique<DataRow>( startt, datapoints ) );
+        signal->add( std::make_unique<DataRow>( startt, datavec ) );
       }
-
-      datapoints.erase( datapoints.begin( ), datapoints.begin( ) + expectedValues[waveid] );
     }
 
-    sequencenums.erase( sequencenums.begin( ), sequencenums.begin( ) + erasers );
+    sequencedata.erase( sequencedata.begin( ), sequencedata.begin( ) + erasers );
 
     // get ready for the next flush
     if ( empty( ) ) {
       prune( );
     }
     else {
-      Log::trace( ) << "still have " << sequencenums.size( ) << " seq numbers in the chute:" << std::endl;
+      Log::trace( ) << "still have " << sequencedata.size( ) << " seq numbers in the chute:" << std::endl;
       //      for ( auto& x : sequencenums ) {
       //        std::cout << "\tseqs: " << x.first << "\t" << x.second << std::endl;
       //      }
 
 
-      // if we have >7 sequence nums in our chute, and the first 8 all have the
-      // same time, then that's our time. else use our calculated time
-      if ( sequencenums.size( ) > 7 ) {
-        const dr_time ctime = vitalstarttime( );
-
-        size_t count = std::count_if( sequencenums.begin( ), sequencenums.end( ),
-            [ctime]( std::pair<unsigned short, dr_time> p ) {
-              return (p.second == ctime );
-            } );
-        if ( count > 7 ) {
-          mytime = ctime - 2000; // -2000 because we're about to increment it by 2000
-        }
-      }
+      //      // if we have >7 sequence nums in our chute, and the first 8 all have the
+      //      // same time, then that's our time. else use our calculated time
+      //      if ( sequencedata.size( ) > 7 ) {
+      //        const dr_time ctime = vitalstarttime( );
+      //
+      //        size_t count = std::count_if( sequencedata.begin( ), sequencedata.end( ),
+      //            [ctime](const auto& p ) {
+      //              return (p.time == ctime );
+      //            } );
+      //        if ( count > 7 ) {
+      //          mytime = ctime - 2000; // -2000 because we're about to increment it by 2000
+      //        }
+      //      }
     }
-
-    mytime += 2000;
+    //
+    //    mytime += 2000;
   }
 
   unsigned short StpGeReader::WaveTracker::currentseq( ) const {
     return ( empty( )
         ? 0
-        : ( --sequencenums.end( ) )->first );
+        : ( --sequencedata.end( ) )->sequence );
   }
 
   dr_time StpGeReader::WaveTracker::vitalstarttime( ) const {
     if ( empty( ) ) {
       return 0;
     }
-    return sequencenums.begin( )->second;
+    return sequencedata.begin( )->time;
   }
 
   const dr_time StpGeReader::WaveTracker::starttime( ) const {
-    return mytime;
+    return vitalstarttime();
   }
   // </editor-fold>
 
@@ -905,7 +949,7 @@ namespace FormatConverter {
     if( 27 == waveid ){
       // if we have PA2-X, then this is a PA2 wave
       for ( auto& v : info->vitals( ) ) {
-        Log::warn( ) << "27 vital:  " << v->name( ) << std::endl;
+        //Log::warn( ) << "27 vital:  " << v->name( ) << std::endl;
         if ( StpGeSegment::VitalsBlock::BC_AR1_D.label == v->name( ) ) {
           return "AR1";
         }
@@ -926,7 +970,7 @@ namespace FormatConverter {
     if ( 28 == waveid ) {
       // if we have PA2-X, then this is a PA2 wave
       for ( auto& v : info->vitals( ) ) {
-        Log::warn( ) << "28 vital:  " << v->name( ) << std::endl;
+        // Log::warn( ) << "28 vital:  " << v->name( ) << std::endl;
         if ( StpGeSegment::VitalsBlock::BC_AR2_D.label == v->name( ) ) {
           return "AR2";
         }

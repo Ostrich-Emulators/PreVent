@@ -245,7 +245,7 @@ namespace FormatConverter{
     hsize_t offset[] = { 0, 0 };
     hsize_t count[] = { 0, exc + 1 };
 
-    Log::trace( ) << "writing " << rows << " rows of data in slabs of " << maxslabcnt << std::endl;
+    Log::trace( ) << "writing " << std::dec << rows << " rows of data in slabs of " << maxslabcnt << std::endl;
 
     std::vector<short> sbuffer;
     std::vector<int> ibuffer;
@@ -360,7 +360,7 @@ namespace FormatConverter{
     hsize_t offset[] = { 0, 0 };
     hsize_t count[] = { 0, 1 };
 
-    Log::trace( ) << "writing " << rows * valsperrow << " values in slabs of " << maxslabcnt << std::endl;
+    Log::trace( ) << "writing " << std::dec << rows * valsperrow << " values in slabs of " << maxslabcnt << std::endl;
 
     std::vector<short> sbuffer;
     std::vector<int> ibuffer;
@@ -658,7 +658,7 @@ namespace FormatConverter{
       writeFileAttributes( file, dataptr->metadata( ), firstTime, lastTime );
 
       auto grp = ensureGroupExists( file, "VitalSigns" );
-      Log::debug( ) << "Writing " << dataptr->vitals( ).size( ) << " Vitals" << std::endl;
+      Log::debug( ) << "Writing " << std::dec <<  dataptr->vitals( ).size( ) << " Vitals" << std::endl;
       for ( auto& vits : dataptr->vitals( ) ) {
         if ( vits->empty( ) ) {
           Log::warn( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
@@ -671,7 +671,7 @@ namespace FormatConverter{
 
       if ( !this->skipwaves( ) ) {
         grp = ensureGroupExists( file, "Waveforms" );
-        Log::debug( ) << "Writing " << dataptr->waves( ).size( ) << " Waveforms" << std::endl;
+        Log::debug( ) << "Writing " << std::dec <<  dataptr->waves( ).size( ) << " Waveforms" << std::endl;
         for ( auto& wavs : dataptr->waves( ) ) {
           if ( wavs->empty( ) ) {
             Log::warn( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;
@@ -798,7 +798,7 @@ namespace FormatConverter{
 
     const auto SLABSIZE = std::min( ROWS, TimeRange::DEFAULT_CACHE_LIMIT );
 
-    Log::trace( ) << "writing " << ROWS << " times in slabs of " << SLABSIZE << std::endl;
+    Log::trace( ) << "writing " << std::dec << ROWS << " times in slabs of " << SLABSIZE << std::endl;
 
     hsize_t dims[] = { ROWS, 1 };
     H5::DataSpace space( 2, dims );

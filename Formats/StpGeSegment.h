@@ -146,6 +146,8 @@ namespace FormatConverter {
 
       static const BlockConfig BC_SPO2_P;
       static const BlockConfig BC_SPO2_R;
+      static const BlockConfig BC_SPO2M_P;
+      static const BlockConfig BC_SPO2M_R;
       static const BlockConfig BC_VENT;
       static const BlockConfig BC_IN_HLD;
       static const BlockConfig BC_PRS_SUP;

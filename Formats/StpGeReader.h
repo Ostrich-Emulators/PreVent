@@ -75,17 +75,30 @@ namespace FormatConverter {
       unsigned short currentseq( ) const;
       const dr_time starttime( ) const;
       dr_time vitalstarttime( ) const;
-
     private:
+
+      class SequenceData {
+      public:
+        SequenceData( unsigned short, dr_time );
+        SequenceData( const SequenceData&);
+        SequenceData& operator=( const SequenceData& );
+
+        ~SequenceData( );
+        unsigned short sequence;
+        dr_time time;
+
+        void push( int waveid, const std::vector<int>& data );
+        std::map<int, std::vector<int>> wavedata; // wave id, values
+      private:
+      };
+
       void prune( );
       void breaksync( WaveSequenceResult rslt,
           const unsigned short& seqnum, const dr_time& time );
 
-      std::vector<std::pair<unsigned short, dr_time>> sequencenums;
-      std::map<int, std::vector<int>> wavevals;
+      std::vector<SequenceData> sequencedata;
       std::map<int, size_t> expectedValues;
       std::map<int, size_t> miniseen;
-      dr_time mytime;
     };
 
     static const std::map<int, std::string> WAVELABELS;

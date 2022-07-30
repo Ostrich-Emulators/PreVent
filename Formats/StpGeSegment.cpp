@@ -61,6 +61,8 @@ namespace FormatConverter{
 
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_SPO2_P = BlockConfig::vital( "SPO2-%", "%" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_SPO2_R = BlockConfig::vital( "SPO2-R", "Bpm" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_SPO2M_P = BlockConfig::vital( "SPO2M-%", "%" );
+  const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_SPO2M_R = BlockConfig::vital( "SPO2M-R", "Bpm" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_VENT = BlockConfig::vital( "Vent Rate", "BrMin" );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_IN_HLD = BlockConfig::div10( "IN_HLD", "Sec", 2, false );
   const StpGeSegment::VitalsBlock::BlockConfig StpGeSegment::VitalsBlock::BC_PRS_SUP = BlockConfig::vital( "PRS-SUP", "cmH2O" );

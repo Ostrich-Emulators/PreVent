@@ -203,7 +203,7 @@ namespace FormatConverter{
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
 
         H5::DataSpace memspace( 1, count );
-        Log::debug( ) << "writing " << rowcount << " data points in a slab" << std::endl;
+        Log::debug( ) << "writing " << std::dec << rowcount << " data points in a slab" << std::endl;
         ds.write( buffer.data( ), CMPDTYPE, memspace, space );
         buffer.clear( );
         buffer.reserve( maxslabcnt );
@@ -276,7 +276,7 @@ namespace FormatConverter{
 
       // we have two values per row, so our buffer is actually 2X big
       if ( buffer.size( ) >= maxslabcnt ) {
-        Log::debug( ) << "writing " << buffer.size( ) << " data points in a slab" << std::endl;
+        Log::debug( ) << "writing " << std::dec << buffer.size( ) << " data points in a slab" << std::endl;
 
         count[0] = buffer.size( );
         space.selectHyperslab( H5S_SELECT_SET, count, offset );
