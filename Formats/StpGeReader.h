@@ -94,7 +94,8 @@ namespace FormatConverter {
 
       void prune( );
       void breaksync( WaveSequenceResult rslt,
-          const unsigned short& seqnum, const dr_time& time );
+          const unsigned short& currseq, const unsigned short& newseq,
+          const dr_time& currtime, const dr_time& newtime );
 
       std::vector<SequenceData> sequencedata;
       std::map<int, size_t> expectedValues;
