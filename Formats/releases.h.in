@@ -1,3 +1,6 @@
+4.3.8
+  * Improved native GE STP reader waveform parsing, damaged segment avoidance
+
 4.3.7
   * (Tools) Improved reading speed from HDF5 files
   * Improved native GE STP reader parsing; also now skips damaged segments
