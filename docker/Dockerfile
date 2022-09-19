@@ -22,7 +22,7 @@ RUN /tmp/docker-base-setup.sh XXVERSIONXX
 
 
 FROM ubuntu:22.04
-
+LABEL maintainer="Ry Bobko <ryan@ostrich-emulators.com>"
 RUN apt-get update
 RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y \
 	libzip4 \

@@ -26,19 +26,20 @@ PreVent Tools comprises two tools at this time: `formatconverter` is a command-l
 <!--https://ecotrust-canada.github.io/markdown-toc/-->
 # TOC
 - [PreVent Tools](#prevent-tools)
+- [TOC](#toc)
 - [Using/Building](#usingbuilding)
 - [Formatconverter](#formatconverter)
-  * [Features](#features)
-  * [Command-Line options](#command-line-options)
-    + [File Naming Format String](#file-naming-format-string)
-  * [HDF5 Native Format](#hdf5-native-format)
-    + [Events](#events)
-    + [Signals](#signals)
+  - [Features](#features)
+  - [Command-Line options](#command-line-options)
+    - [File Naming Format String](#file-naming-format-string)
+  - [HDF5 Native Format](#hdf5-native-format)
+    - [Events](#events)
+    - [Signals](#signals)
       - [Data](#data)
       - [Time](#time)
-    + [Calculated and Auxillary Data](#calculated-and-auxillary-data)
-  * [CSV Format](#csv-format)
-    + [CSV Metadata Format](#csv-metadata-format)
+    - [Calculated and Auxillary Data](#calculated-and-auxillary-data)
+  - [CSV Format](#csv-format)
+    - [CSV Metadata Format](#csv-metadata-format)
 
 
 # Using/Building
@@ -52,6 +53,7 @@ Dependencies to build these programs (ubuntu)
 * libhdf5-dev
 * libmatio-dev
 * libexpat-dev
+* libzip-dev
 * wfdb-10.6.0 (https://archive.physionet.org/physiotools/wfdb-linux-quick-start.shtml)
 * TDMSpp (https://github.com/Ostrich-Emulators/TDMSpp)
 * googletest 1.8.0 (for unit testing [optional]) (https://github.com/google/googletest)

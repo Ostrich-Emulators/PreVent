@@ -396,9 +396,8 @@ namespace FormatConverter{
 
     hsize_t offset = saver.timeidx * valsPerTime;
 
-    std::vector<int> buffer( valsPerTime );
-
     while ( offset < ROWS && !isRollover( saver.times[saver.timeidx], info ) ) {
+      std::vector<int> buffer;
       auto startrow = offset;
       auto endrow = startrow + valsPerTime;
       slabfill( dataset, startrow, endrow, buffer );
@@ -699,14 +698,14 @@ namespace FormatConverter{
 
     const hsize_t COLS = DIMS[1];
 
+    auto tsz = target.size( );
+    target.reserve( tsz + rowstoget * COLS );
     if ( H5::PredType::STD_I16LE == ds.getDataType( ) ) {
       auto shortbuff = std::vector<short>( rowstoget * COLS );
       _slabfill( ds, startrow, endrow, COLS, shortbuff.data( ) );
       target.insert( target.end( ), shortbuff.begin( ), shortbuff.end( ) );
     }
     else {
-      auto tsz = target.size( );
-      target.resize( tsz + rowstoget * COLS );
       _slabfill( ds, startrow, endrow, COLS, target.data( ) + tsz );
     }
 

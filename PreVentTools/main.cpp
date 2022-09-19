@@ -412,6 +412,12 @@ int main( int argc, char** argv ) {
     catter.cat( filesToCat );
   }
   else if ( dosplit ) {
+    if ( "" == outfilename ) {
+      Log::warn( ) << "using output pattern: " << FileNamer::DEFAULT_PATTERN
+          << "; override pattern with --output argument" << std::endl;
+      outfilename = FileNamer::DEFAULT_PATTERN;
+    }
+
     FileNamer namer = FileNamer::parse( outfilename );
     for ( int i = optind; i < argc; i++ ) {
       std::string input = argv[i];
