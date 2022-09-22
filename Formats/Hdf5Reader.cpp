@@ -185,7 +185,7 @@ namespace FormatConverter{
       for ( size_t i = 0; i < vgroup.getNumObjs( ); i++ ) {
         std::string vital = vgroup.getObjnameByIdx( i );
         H5::Group dataAndTimeGroup = vgroup.openGroup( vital );
-        readDataSet( dataAndTimeGroup, false, info );
+        initSignalAndTracker( dataAndTimeGroup, false, info );
       }
       vgroup.close( );
     }
@@ -203,7 +203,7 @@ namespace FormatConverter{
         for ( size_t i = 0; i < wgroup.getNumObjs( ); i++ ) {
           std::string wave = wgroup.getObjnameByIdx( i );
           H5::Group dataAndTimeGroup = wgroup.openGroup( wave );
-          readDataSet( dataAndTimeGroup, true, info );
+          initSignalAndTracker( dataAndTimeGroup, true, info );
         }
         wgroup.close( );
       }
@@ -216,8 +216,10 @@ namespace FormatConverter{
       }
     }
 
+    fillOneDuration( info );
+
     auto hasmore = false;
-    for ( auto& x : savers ) {
+    for ( auto& x : trackers ) {
       if ( !x.second.done( ) ) {
         hasmore = true;
       }
@@ -225,6 +227,48 @@ namespace FormatConverter{
 
     return (hasmore ? ReadResult::END_OF_DURATION
         : ReadResult::END_OF_FILE );
+  }
+
+  void Hdf5Reader::fillOneDuration( SignalSet * info ) {
+    dr_time earliest = std::numeric_limits<dr_time>::max( );
+    // get the earliest date from all the trackers
+    for ( const auto& t : trackers ) {
+      if ( t.second.currtime( ) < earliest ) {
+        earliest = t.second.currtime( );
+      }
+    }
+
+    // increment the time until we get a rollover (increment per second for simplicity)
+    auto latest = earliest + 1000;
+
+    while ( !this->splitter( ).isRollover( earliest, latest, this->localizingTime( ) ) ) {
+      latest += 1000;
+    }
+
+    // Log::warn( ) << "early/late: " << earliest << " / " << latest << std::endl;
+
+    // we now have our window to fill, so cycle through the data sets to fill info
+    for ( auto& entry : trackers ) {
+      auto& tracker = entry.second;
+      if ( tracker.done( ) ) {
+        continue;
+      }
+
+      // Log::warn( ) << tracker.path << " (" << tracker.label << ")\tct:" << tracker.done( ) << "; "
+      //   << tracker.currtime( ) << "; " << "latest:" << latest
+      //   << " (" << latest - tracker.currtime( ) << ")" << std::endl;
+      if ( tracker.currtime( ) < latest ) {
+        try {
+          H5::Group dataAndTimeGroup = file.openGroup( tracker.path );
+          // Log::warn( ) << "filling wave:" << tracker.label << std::endl;
+          readDataSet( dataAndTimeGroup, tracker, info );
+          dataAndTimeGroup.close( );
+        }
+        catch ( H5::FileIException& error ) {
+          Log::error( ) << tracker.path << " " << error.getDetailMsg( ) << std::endl;
+        }
+      }
+    }
   }
 
   std::vector<dr_time> Hdf5Reader::readTimes( H5::DataSet & dataset ) {
@@ -248,8 +292,8 @@ namespace FormatConverter{
     return times;
   }
 
-  void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
-      const bool& iswave, SignalSet * info ) {
+  std::string Hdf5Reader::initSignalAndTracker( H5::Group& dataAndTimeGroup, const bool& iswave,
+      SignalSet * info ) {
     std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
 
     auto signal = ( iswave
@@ -266,24 +310,45 @@ namespace FormatConverter{
       signal->setMeta( SignalData::READINGS_PER_CHUNK, valsPerChunk );
     }
 
+    const auto path = dataAndTimeGroup.getObjName( );
+    const auto label = metastr( dataAndTimeGroup, SignalData::LABEL );
+    const auto keyname = SignalTracker::keyname( label, iswave );
     H5::DataSet dataset = dataAndTimeGroup.openDataSet( "data" );
 
     copymetas( signal, dataset );
-    int scale = signal->scale( );
 
     H5::DataSet ds = dataAndTimeGroup.openDataSet( "time" );
     std::vector<dr_time> times = readTimes( ds );
     ds.close( );
 
-    if ( 0 == savers.count( dataAndTimeGroup.getObjName( ) ) ) {
-      savers.insert( std::make_pair( dataAndTimeGroup.getObjName( ), SignalSaver( times ) ) );
+    if ( 0 == trackers.count( keyname ) ) {
+      trackers.insert( std::make_pair( keyname, Hdf5Reader::SignalTracker( path, label, iswave,
+          times ) ) );
     }
 
-    if ( iswave ) {
-      fillWave( signal, info, dataset, savers[dataAndTimeGroup.getObjName( )], valsPerChunk, scale );
+    return keyname;
+  }
+
+  void Hdf5Reader::readDataSet( H5::Group& dataAndTimeGroup,
+      SignalTracker& saver, SignalSet * info ) {
+    std::string name = metastr( dataAndTimeGroup, SignalData::LABEL );
+
+    auto signal = ( saver.wave
+        ? info->addWave( name )
+        : info->addVital( name ) );
+    H5::DataSet dataset = dataAndTimeGroup.openDataSet( "data" );
+
+    const auto valsPerChunk = signal->metai( ).at( SignalData::READINGS_PER_CHUNK );
+    const auto scale = signal->scale( );
+    int timeinterval = dataAndTimeGroup.attrExists( SignalData::CHUNK_INTERVAL_MS )
+        ? metaint( dataAndTimeGroup, SignalData::CHUNK_INTERVAL_MS )
+        : 2000;
+
+    if ( saver.wave ) {
+      fillWave( signal, info, dataset, saver, valsPerChunk, scale );
     }
     else {
-      fillVital( signal, info, dataset, savers[dataAndTimeGroup.getObjName( )], timeinterval, valsPerChunk, scale );
+      fillVital( signal, info, dataset, saver, timeinterval, valsPerChunk, scale );
     }
 
     auto auxdata = readAuxData( dataAndTimeGroup );
@@ -343,7 +408,7 @@ namespace FormatConverter{
   }
 
   void Hdf5Reader::fillVital( SignalData * signal, SignalSet * info, H5::DataSet& dataset,
-      SignalSaver& saver, int timeinterval, int valsPerTime, int scale ) const {
+      SignalTracker& saver, int timeinterval, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
     hsize_t DIMS[2] = { };
     dataspace.getSimpleExtentDims( DIMS );
@@ -387,7 +452,7 @@ namespace FormatConverter{
   }
 
   void Hdf5Reader::fillWave( SignalData * signal, SignalSet * info, H5::DataSet& dataset,
-      SignalSaver& saver, int valsPerTime, int scale ) const {
+      SignalTracker& saver, int valsPerTime, int scale ) const {
     H5::DataSpace dataspace = dataset.getSpace( );
     hsize_t DIMS[2] = { };
     dataspace.getSimpleExtentDims( DIMS );
@@ -777,10 +842,19 @@ namespace FormatConverter{
     return range;
   }
 
-  Hdf5Reader::SignalSaver::SignalSaver( std::vector<dr_time> _times, hsize_t lastrow )
-      : times( _times ), timeidx( lastrow ) { }
+  Hdf5Reader::SignalTracker::SignalTracker( const std::string& path, const std::string& lbl, bool w,
+      std::vector<dr_time> _times, hsize_t lastrow ) : wave( w ), times( _times ),
+      timeidx( lastrow ), label( lbl ), path( path ) { }
 
-  bool Hdf5Reader::SignalSaver::done( ) const {
+  bool Hdf5Reader::SignalTracker::done( ) const {
     return ( timeidx >= times.size( ) );
+  }
+
+  dr_time Hdf5Reader::SignalTracker::currtime( ) const {
+    return times[done( ) ? times.size( ) - 1 : timeidx];
+  }
+
+  std::string Hdf5Reader::SignalTracker::keyname( const std::string& s, bool wave ) {
+    return (wave ? "wave-" : "vital-" )+s;
   }
 }

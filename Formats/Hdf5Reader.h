@@ -52,13 +52,20 @@ namespace FormatConverter {
   private:
     Hdf5Reader( const Hdf5Reader& );
 
-    class SignalSaver {
+    class SignalTracker {
     public:
+      bool wave;
       std::vector<dr_time> times;
       hsize_t timeidx;
+      std::string label;
+      std::string path;
 
-      SignalSaver( std::vector<dr_time> timesleft = std::vector<dr_time>{ }, hsize_t lastrowread = 0 );
-      bool done() const;
+      SignalTracker( const std::string& path, const std::string& label, bool iswave,
+          std::vector<dr_time> timesleft = std::vector<dr_time>{ }, hsize_t lastrowread = 0 );
+      bool done( ) const;
+      dr_time currtime( ) const;
+
+      static std::string keyname( const std::string& name, bool iswave );
     };
 
 
@@ -75,13 +82,20 @@ namespace FormatConverter {
     static void copymetas( SignalData * signal, H5::H5Object& dataset,
         bool includeIgnorables = false );
     void fillVital( SignalData * signal, SignalSet * info, H5::DataSet& dataset,
-        SignalSaver& saver, int valsPerTime, int timeinterval, int scale ) const;
+        SignalTracker& saver, int valsPerTime, int timeinterval, int scale ) const;
     void fillWave( SignalData * signal, SignalSet * info, H5::DataSet& dataset,
-        SignalSaver& saver, int valsPerTime, int scale ) const;
+        SignalTracker& saver, int valsPerTime, int scale ) const;
     std::map<std::string, std::vector<TimedData>> readAuxData( H5::Group& auxparent );
-    void readDataSet( H5::Group& dataAndTimeGroup, const bool& iswave,
+    void readDataSet( H5::Group& dataAndTimeGroup, SignalTracker& saver, SignalSet * info );
+    std::string initSignalAndTracker( H5::Group& dataAndTimeGroup, const bool& iswave,
         SignalSet * info );
     std::vector<dr_time> readTimes( H5::DataSet& times );
+
+    /**
+     * Fills the SignalSet with one duration's worth of data from all trackers
+     * @param info
+     */
+    void fillOneDuration( SignalSet * info );
 
     /**
      * Gets a single number representing the major/minor/revision nuumbers for
@@ -102,23 +116,6 @@ namespace FormatConverter {
      */
     static hsize_t getIndexForTime( H5::DataSet& haystack, dr_time needle, bool leftmost );
     static dr_time getTimeAtIndex( H5::DataSet& haystack, hsize_t index );
-
-//    /**
-//     * Reads (as ints) the given dataset from start (inclusive) to end (exclusive)
-//     * @param data
-//     * @param startidx the first row of data to retrieve
-//     * @param endidx the index after the last row to retrieve
-//     * @return
-//     */
-//    static std::vector<int> slabreadi( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
-//    /**
-//     * Reads (as shorts) the given dataset from start (inclusive) to end (exclusive)
-//     * @param data
-//     * @param startidx the first row of data to retrieve
-//     * @param endidx the index after the last row to retrieve
-//     * @return
-//     */
-//    static std::vector<int> slabreads( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
 
     /**
      * Fills the given vector with the given data range.
@@ -151,7 +148,7 @@ namespace FormatConverter {
     static std::vector<dr_time> slabreadt_small( H5::DataSet& data, hsize_t startidx, hsize_t endidx );
 
     H5::H5File file;
-    std::map<std::string, SignalSaver> savers;
+    std::map<std::string, SignalTracker> trackers;
   };
 }
 #endif /* HDF5READER_H */

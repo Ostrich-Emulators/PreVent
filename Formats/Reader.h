@@ -77,7 +77,7 @@ namespace FormatConverter {
         std::tm * tm );
 
     /**
-     * Decides if now is in a new day from then.  If then is 0, this function
+     * Decides if now is in a new day from the last data point. If that is 0, this function
      * always returns false
      * @param then the old time
      * @param now the time to check
