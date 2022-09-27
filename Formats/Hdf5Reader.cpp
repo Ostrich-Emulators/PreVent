@@ -15,6 +15,8 @@
 #include "BasicSignalData.h"
 #include "OffsetTimeSignalSet.h"
 #include "Log.h"
+#include "FileNamer.h"
+#include "TimeParser.h"
 
 namespace FormatConverter{
   const std::set<std::string> Hdf5Reader::IGNORABLE_PROPS{ "Duration", "End Date/Time",
@@ -233,19 +235,24 @@ namespace FormatConverter{
     dr_time earliest = std::numeric_limits<dr_time>::max( );
     // get the earliest date from all the trackers
     for ( const auto& t : trackers ) {
-      if ( t.second.currtime( ) < earliest ) {
+      Log::warn( ) << std::setw( 20 ) << t.first << " current time: "
+          << TimeParser::format( t.second.currtime( ) )
+          << ( t.second.done( ) ? "\tDONE" : "\tnot done" ) <<std::endl;
+      if ( t.second.currtime( ) < earliest && !t.second.done() ) {
         earliest = t.second.currtime( );
       }
     }
 
     // increment the time until we get a rollover (increment per second for simplicity)
-    auto latest = earliest + 1000;
+    auto rolltime = earliest + 1000;
 
-    while ( !this->splitter( ).isRollover( earliest, latest, this->localizingTime( ) ) ) {
-      latest += 1000;
+    while ( !this->splitter( ).isRollover( earliest, rolltime, this->localizingTime( ) ) ) {
+      rolltime += 1000;
     }
 
-    // Log::warn( ) << "early/late: " << earliest << " / " << latest << std::endl;
+    Log::warn( ) << "duration limits: "
+        << TimeParser::format( earliest ) << " to " << TimeParser::format( rolltime )
+        << std::endl;
 
     // we now have our window to fill, so cycle through the data sets to fill info
     for ( auto& entry : trackers ) {
@@ -254,10 +261,12 @@ namespace FormatConverter{
         continue;
       }
 
-      // Log::warn( ) << tracker.path << " (" << tracker.label << ")\tct:" << tracker.done( ) << "; "
-      //   << tracker.currtime( ) << "; " << "latest:" << latest
-      //   << " (" << latest - tracker.currtime( ) << ")" << std::endl;
-      if ( tracker.currtime( ) < latest ) {
+      if ( tracker.currtime( ) < rolltime && !tracker.done( ) ) {
+        Log::warn( ) << std::setw( 20 ) << tracker.path << "\t"
+            << TimeParser::format( tracker.currtime( ) )
+            << " (" << ( rolltime - tracker.currtime( ) ) / 1000 << "s)\t"
+            << ( tracker.done( ) ? "DONE" : "not done" )
+            << "\tincluded" << std::endl;
         try {
           H5::Group dataAndTimeGroup = file.openGroup( tracker.path );
           // Log::warn( ) << "filling wave:" << tracker.label << std::endl;
@@ -267,6 +276,14 @@ namespace FormatConverter{
         catch ( H5::FileIException& error ) {
           Log::error( ) << tracker.path << " " << error.getDetailMsg( ) << std::endl;
         }
+      }
+      else {
+        Log::warn( ) << std::setw( 20 ) << tracker.path << "\t"
+            << TimeParser::format( tracker.currtime( ) )
+            << " (" << ( rolltime - tracker.currtime( ) ) / 1000 << "s)\t"
+            << ( tracker.done( ) ? "DONE" : "not done" )
+            << "\tNOT INCLUDED" << std::endl;
+
       }
     }
   }

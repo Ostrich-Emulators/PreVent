@@ -127,8 +127,8 @@ namespace FormatConverter {
     conversions["%s"] = getDateSuffix( &EARLY, "" );
     conversions["%e"] = getDateSuffix( &LATE, "" );
 
-    conversions["%T"] = HHmmdd( &EARLY );
-    conversions["%E"] = HHmmdd( &LATE );
+    conversions["%T"] = HHmmss( &EARLY );
+    conversions["%E"] = HHmmss( &LATE );
 
     //Current Date
     time_t tim;
@@ -222,7 +222,7 @@ namespace FormatConverter {
     return ss.str( );
   }
 
-  std::string FileNamer::HHmmdd( const tm * time ) {
+  std::string FileNamer::HHmmss( const tm * time ) {
     std::stringstream ss;
     if ( time->tm_hour < 10 ) ss << 0;
     ss << time->tm_hour << "_";

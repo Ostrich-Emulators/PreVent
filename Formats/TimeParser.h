@@ -34,6 +34,9 @@ namespace FormatConverter {
      */
     static time_t parse( const std::string& timestr, bool islocal = false );
 
+    static std::string format( dr_time time, const std::string& fmt = "%Y/%m/%d %H:%M:%S",
+        bool islocal = false );
+
   private:
 
     TimeParser( );

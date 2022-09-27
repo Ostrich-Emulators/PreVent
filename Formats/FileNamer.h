@@ -73,7 +73,7 @@ namespace FormatConverter {
     static std::string getDateSuffix( const tm * date, const std::string& sep = "-" );
 
     static std::string YYYYMMDD( const tm * time );
-    static std::string HHmmdd( const tm * time );
+    static std::string HHmmss( const tm * time );
 
   private:
     FileNamer( const std::string& pat );

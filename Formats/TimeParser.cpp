@@ -58,4 +58,12 @@ namespace FormatConverter{
     Log::error( ) << "could not parse time: " << timestr << std::endl;
     return 0;
   }
+
+  std::string TimeParser::format( dr_time time, const std::string& fmt, bool islocal ) {
+    auto mytime = time / 1000;
+    auto tm = islocal ? std::localtime( &mytime ) : std::gmtime( &mytime );
+    std::ostringstream os;
+    os << std::put_time(tm, fmt.c_str());
+    return os.str();
+  }
 }
