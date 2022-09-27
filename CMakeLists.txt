@@ -32,6 +32,7 @@ find_package(HDF5 REQUIRED COMPONENTS C CXX)
 find_package(Git REQUIRED)
 find_package(tdmspp-osem 2.1 REQUIRED)
 find_package(EXPAT REQUIRED expat2>=2)
+find_package(ZLIB REQUIRED)
 
 if(MSVC)
   # find dlls somehow

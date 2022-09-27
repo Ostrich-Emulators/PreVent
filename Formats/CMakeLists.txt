@@ -2,7 +2,7 @@
 # the hdf5c++ wrapper has some incompatibility with cmake, I think
 #set(CMAKE_CXX_COMPILER ${HDF5_CXX_COMPILER_EXECUTABLE})
 
-set(LIBVERSION 4.3.8)
+set(LIBVERSION 4.3.9)
 project(formatconverter VERSION ${LIBVERSION} LANGUAGES CXX)
 
 pkg_check_modules( ZIP REQUIRED libzip )
@@ -134,6 +134,7 @@ target_link_libraries(formats
 	${HDF5_LIBRARIES}
 	${WFDB_LIBRARIES}
 	${ZIP_LINK_LIBRARIES}
+  ${ZLIB_LIBRARIES}
 	# need this because MATIO says it links to -lhdf5, but
 	# the HDF5 package uses a full path to find the library
 	"-L/usr/lib/x86_64-linux-gnu/hdf5/serial"

@@ -235,9 +235,9 @@ namespace FormatConverter{
     dr_time earliest = std::numeric_limits<dr_time>::max( );
     // get the earliest date from all the trackers
     for ( const auto& t : trackers ) {
-      Log::warn( ) << std::setw( 20 ) << t.first << " current time: "
-          << TimeParser::format( t.second.currtime( ) )
-          << ( t.second.done( ) ? "\tDONE" : "\tnot done" ) <<std::endl;
+      // Log::warn( ) << std::setw( 20 ) << t.first << " current time: "
+      //     << TimeParser::format( t.second.currtime( ) )
+      //     << ( t.second.done( ) ? "\tDONE" : "\tnot done" ) <<std::endl;
       if ( t.second.currtime( ) < earliest && !t.second.done() ) {
         earliest = t.second.currtime( );
       }
@@ -250,9 +250,9 @@ namespace FormatConverter{
       rolltime += 1000;
     }
 
-    Log::warn( ) << "duration limits: "
-        << TimeParser::format( earliest ) << " to " << TimeParser::format( rolltime )
-        << std::endl;
+    // Log::warn( ) << "duration limits: "
+    //     << TimeParser::format( earliest ) << " to " << TimeParser::format( rolltime )
+    //     << std::endl;
 
     // we now have our window to fill, so cycle through the data sets to fill info
     for ( auto& entry : trackers ) {
@@ -262,11 +262,11 @@ namespace FormatConverter{
       }
 
       if ( tracker.currtime( ) < rolltime && !tracker.done( ) ) {
-        Log::warn( ) << std::setw( 20 ) << tracker.path << "\t"
-            << TimeParser::format( tracker.currtime( ) )
-            << " (" << ( rolltime - tracker.currtime( ) ) / 1000 << "s)\t"
-            << ( tracker.done( ) ? "DONE" : "not done" )
-            << "\tincluded" << std::endl;
+        // Log::warn( ) << std::setw( 20 ) << tracker.path << "\t"
+        //     << TimeParser::format( tracker.currtime( ) )
+        //     << " (" << ( rolltime - tracker.currtime( ) ) / 1000 << "s)\t"
+        //     << ( tracker.done( ) ? "DONE" : "not done" )
+        //     << "\tincluded" << std::endl;
         try {
           H5::Group dataAndTimeGroup = file.openGroup( tracker.path );
           // Log::warn( ) << "filling wave:" << tracker.label << std::endl;
@@ -277,14 +277,14 @@ namespace FormatConverter{
           Log::error( ) << tracker.path << " " << error.getDetailMsg( ) << std::endl;
         }
       }
-      else {
-        Log::warn( ) << std::setw( 20 ) << tracker.path << "\t"
-            << TimeParser::format( tracker.currtime( ) )
-            << " (" << ( rolltime - tracker.currtime( ) ) / 1000 << "s)\t"
-            << ( tracker.done( ) ? "DONE" : "not done" )
-            << "\tNOT INCLUDED" << std::endl;
+      // else {
+      //   Log::warn( ) << std::setw( 20 ) << tracker.path << "\t"
+      //       << TimeParser::format( tracker.currtime( ) )
+      //       << " (" << ( rolltime - tracker.currtime( ) ) / 1000 << "s)\t"
+      //       << ( tracker.done( ) ? "DONE" : "not done" )
+      //       << "\tNOT INCLUDED" << std::endl;
 
-      }
+      // }
     }
   }
 

@@ -1,3 +1,6 @@
+4.3.9
+  * Fixed HDF5 Reader for files with late starters/early finishers
+
 4.3.8
   * Improved native GE STP reader waveform parsing, damaged segment avoidance
 
