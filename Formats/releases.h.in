@@ -1,3 +1,6 @@
+4.4.0
+  * Added CSV2 Reader
+
 4.3.9
   * Fixed HDF5 Reader for files with late starters/early finishers
 

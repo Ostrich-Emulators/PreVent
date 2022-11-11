@@ -362,6 +362,9 @@ int main( int argc, char** argv ) {
       case FormatConverter::CSV:
         fromstr = "csv";
         break;
+      case FormatConverter::CSV2:
+        fromstr = "csv2";
+        break;
       case FormatConverter::CPCXML:
         fromstr = "cpcxml";
         break;

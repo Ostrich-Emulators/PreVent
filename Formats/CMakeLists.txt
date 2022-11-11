@@ -106,6 +106,7 @@ NullSignalData.cpp
 Log.cpp
 AutonWriter.cpp
 CsvReader.cpp
+Csv2Reader.cpp
 SplitLogic.cpp
 DWCxReader.cpp
 generated/config.h
@@ -192,6 +193,7 @@ NullSignalData.h
 Log.h
 AutonWriter.h
 CsvReader.h
+Csv2Reader.h
 SplitLogic.h
 DWCxReader.h
 generated/releases.h

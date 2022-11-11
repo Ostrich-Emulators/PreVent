@@ -13,7 +13,8 @@
 
 namespace FormatConverter{
 
-  CsvReader::CsvReader( ) : Reader( "CSV" ) { }
+  CsvReader::CsvReader( const std::string& name, bool firstHeader, int timef, int fc )
+      : Reader( "CSV" ), firstLineIsHeader( firstHeader ), timefield( timef ), fieldcount( fc ) { }
 
   CsvReader::~CsvReader( ) { }
 
@@ -40,9 +41,17 @@ namespace FormatConverter{
       Log::trace( ) << "no meta file: " << metainput << std::endl;
     }
 
-    std::string firstline;
-    std::getline( datafile, firstline );
-    headings = SignalUtils::splitcsv( firstline );
+    if ( this->firstLineIsHeader ) {
+      std::string firstline;
+      std::getline( datafile, firstline );
+      headings = SignalUtils::splitcsv( firstline );
+      fieldcount = headings.size( );
+    }
+
+    if ( timefield > fieldcount - 1 ) {
+      timefield = 0;
+    }
+
     return 0;
   }
 
@@ -50,6 +59,7 @@ namespace FormatConverter{
     loadMetas( data );
 
     auto line = std::string{ };
+    auto firstline = true;
     while ( datafile.good( ) ) {
       auto pos = datafile.tellg( );
       std::getline( datafile, line );
@@ -58,14 +68,27 @@ namespace FormatConverter{
         dr_time rowtime;
         auto vals = linevalues( line, rowtime );
 
+        if ( firstline ) {
+          firstline = false;
+          this->setMetas( vals, data );
+        }
+
         if ( isRollover( rowtime, data ) ) {
           datafile.seekg( pos );
           return ReadResult::END_OF_DURATION;
         }
+        else if ( isNewPatient( vals, data ) ) {
+          datafile.seekg( pos );
+          return ReadResult::END_OF_PATIENT;
+        }
 
-        for ( size_t i = 1; i < vals.size( ); i++ ) {
-          if ( !vals[i].empty( ) ) {
-            auto signal = data->addVital( headings[i] );
+        for ( size_t i = 0; i < vals.size( ); i++ ) {
+          if ( this->includeFieldValue( i, vals ) ) {
+            auto first=true;
+            auto signal = data->addVital( this->headerForField( i, vals ), &first );
+            if( first){
+              signal->setChunkIntervalAndSampleRate( 1, 1 );
+            }
             signal->add( DataRow::one( rowtime, vals[i] ) );
           }
         }
@@ -108,13 +131,32 @@ namespace FormatConverter{
 
   std::vector<std::string> CsvReader::linevalues( const std::string& csvline, dr_time& timer ) {
     auto strings = SignalUtils::splitcsv( csvline );
-    strings.resize( headings.size( ), "" );
 
-    auto timestr = strings[0];
+    strings.resize( fieldcount, "" );
+
+    auto timestr = strings[timefield];
     timer = converttime( timestr );
 
     return strings;
   }
+
+  std::string CsvReader::headerForField( int field, const std::vector<std::string>& linevals ) const {
+    return headings[field];
+  }
+
+  bool CsvReader::includeFieldValue( int field, const std::vector<std::string>& vals ) const {
+    return !( headings.empty( ) || isTimeField( field ) || vals[field].empty( ) );
+  }
+
+  bool CsvReader::isNewPatient( const std::vector<std::string>& linevals, SignalSet * info ) const {
+    return false;
+  }
+
+  bool CsvReader::isTimeField( int field ) const {
+    return field == timefield;
+  }
+
+  void CsvReader::setMetas( const std::vector<std::string>& linevals, SignalSet * data ) { }
 
   void CsvReader::loadMetas( SignalSet * info ) {
 
