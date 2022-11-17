@@ -127,6 +127,10 @@ namespace FormatConverter{
   ReadResult Hdf5Reader::fill( SignalSet * info, const ReadResult& lastread ) {
     H5::Group root = file.openGroup( "/" );
 
+    if ( ReadResult::FIRST_READ == lastread ) {
+      trackers.clear( );
+    }
+
     for ( int i = 0; i < root.getNumAttrs( ); i++ ) {
       H5::Attribute a = root.openAttribute( i );
       auto key = a.getName( );
@@ -233,26 +237,31 @@ namespace FormatConverter{
 
   void Hdf5Reader::fillOneDuration( SignalSet * info ) {
     dr_time earliest = std::numeric_limits<dr_time>::max( );
+    dr_time latest = std::numeric_limits<dr_time>::min( );
     // get the earliest date from all the trackers
     for ( const auto& t : trackers ) {
-      // Log::warn( ) << std::setw( 20 ) << t.first << " current time: "
-      //     << TimeParser::format( t.second.currtime( ) )
-      //     << ( t.second.done( ) ? "\tDONE" : "\tnot done" ) <<std::endl;
-      if ( t.second.currtime( ) < earliest && !t.second.done() ) {
+      Log::warn( ) << std::setw( 20 ) << t.first << " current time: "
+          << TimeParser::format( t.second.currtime( ) )
+          << ( t.second.done( ) ? "\tDONE" : "\tnot done" ) << std::endl;
+      if ( t.second.currtime( ) < earliest && !t.second.done( ) ) {
         earliest = t.second.currtime( );
+      }
+      if ( *t.second.times.rbegin( ) > latest ) {
+        latest = *t.second.times.rbegin( );
       }
     }
 
     // increment the time until we get a rollover (increment per second for simplicity)
     auto rolltime = earliest + 1000;
 
-    while ( !this->splitter( ).isRollover( earliest, rolltime, this->localizingTime( ) ) ) {
+    while ( rolltime < latest &&
+        !this->splitter( ).isRollover( earliest, rolltime, this->localizingTime( ) ) ) {
       rolltime += 1000;
     }
 
-    // Log::warn( ) << "duration limits: "
-    //     << TimeParser::format( earliest ) << " to " << TimeParser::format( rolltime )
-    //     << std::endl;
+    Log::warn( ) << "duration limits: "
+        << TimeParser::format( earliest ) << " to " << TimeParser::format( rolltime )
+        << std::endl;
 
     // we now have our window to fill, so cycle through the data sets to fill info
     for ( auto& entry : trackers ) {
@@ -262,11 +271,11 @@ namespace FormatConverter{
       }
 
       if ( tracker.currtime( ) < rolltime && !tracker.done( ) ) {
-        // Log::warn( ) << std::setw( 20 ) << tracker.path << "\t"
-        //     << TimeParser::format( tracker.currtime( ) )
-        //     << " (" << ( rolltime - tracker.currtime( ) ) / 1000 << "s)\t"
-        //     << ( tracker.done( ) ? "DONE" : "not done" )
-        //     << "\tincluded" << std::endl;
+        Log::warn( ) << std::setw( 20 ) << tracker.path << "\t"
+            << TimeParser::format( tracker.currtime( ) )
+            << " (" << ( rolltime - tracker.currtime( ) ) / 1000 << "s)\t"
+            << ( tracker.done( ) ? "DONE" : "not done" )
+            << "\tincluded" << std::endl;
         try {
           H5::Group dataAndTimeGroup = file.openGroup( tracker.path );
           // Log::warn( ) << "filling wave:" << tracker.label << std::endl;
@@ -285,6 +294,16 @@ namespace FormatConverter{
       //       << "\tNOT INCLUDED" << std::endl;
 
       // }
+    }
+
+    auto removers = std::vector<std::string>{ };
+    for ( auto& entry : trackers ) {
+      if ( entry.second.done( ) ) {
+        removers.push_back( entry.first );
+      }
+    }
+    for ( const auto& x : removers ) {
+      trackers.erase( x );
     }
   }
 
@@ -342,6 +361,10 @@ namespace FormatConverter{
       trackers.insert( std::make_pair( keyname, Hdf5Reader::SignalTracker( path, label, iswave,
           times ) ) );
     }
+    else {
+      auto t = trackers.at( keyname ).times;
+      t.insert( t.end( ), times.begin( ), times.end( ) );
+    }
 
     return keyname;
   }
@@ -378,7 +401,7 @@ namespace FormatConverter{
     dataset.close( );
   }
 
-  std::map<std::string, std::vector<TimedData>> Hdf5Reader::readAuxData( H5::Group& auxparent ) {
+  std::map<std::string, std::vector < TimedData >> Hdf5Reader::readAuxData( H5::Group & auxparent ) {
     std::map<std::string, std::vector < TimedData>> datamap;
     if ( auxparent.exists( "Auxillary_Data" ) ) {
       H5::Group auxdata = auxparent.openGroup( "Auxillary_Data" );
@@ -572,7 +595,7 @@ namespace FormatConverter{
     return aval;
   }
 
-  unsigned int Hdf5Reader::layoutVersion( const H5::H5File& file ) {
+  unsigned int Hdf5Reader::layoutVersion( const H5::H5File & file ) {
     unsigned int rev = 0;
     if ( file.attrExists( "Layout Version" ) ) {
       auto attr = file.openAttribute( "Layout Version" );

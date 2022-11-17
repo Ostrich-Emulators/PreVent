@@ -70,6 +70,7 @@ namespace FormatConverter{
     // even though that will write extra temp files
     Hdf5Reader rdr;
     auto alldata = std::unique_ptr<SignalSet>{ std::make_unique<BasicSignalSet>( ) };
+    rdr.splitter( SplitLogic::nobreaks( ) );
 
     Log::debug( ) << "files to cat:";
     for ( auto x : filesToCat ) {

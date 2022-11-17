@@ -453,7 +453,7 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::autochunk( hsize_t* dims, int rank, int bytesperelement, hsize_t* rslts ) {
-    // goal: keep chunksize betwee 16kb and 1M (2^4 to 2^10 kb)
+    // goal: keep chunksize between 16kb and 1M (2^4 to 2^10 kb)
     // with smaller chunks for smaller datasets
 
     const hsize_t KB = 1024;
@@ -503,7 +503,7 @@ namespace FormatConverter{
       return;
     }
 
-    // we have a dataset over 256MB, so only chunk every column
+    // we have a dataset over 128MB, so only chunk every column
     rslts[0] = MB / bytesperelement; // per element, because every column is chunked
     for ( int i = 1; i < rank; i++ ) {
       rslts[i] = 1;
