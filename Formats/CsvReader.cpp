@@ -84,9 +84,9 @@ namespace FormatConverter{
 
         for ( size_t i = 0; i < vals.size( ); i++ ) {
           if ( this->includeFieldValue( i, vals ) ) {
-            auto first=true;
+            auto first = true;
             auto signal = data->addVital( this->headerForField( i, vals ), &first );
-            if( first){
+            if ( first ) {
               signal->setChunkIntervalAndSampleRate( 1, 1 );
             }
             signal->add( DataRow::one( rowtime, vals[i] ) );

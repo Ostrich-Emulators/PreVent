@@ -39,7 +39,7 @@ namespace FormatConverter {
     virtual ~CsvReader( );
 
   protected:
-    int prepare( const std::string& input, SignalSet * info ) override;
+    virtual int prepare( const std::string& input, SignalSet * info ) override;
     ReadResult fill( SignalSet * data, const ReadResult& lastfill ) override;
 
     virtual dr_time converttime( const std::string& timeline );

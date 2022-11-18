@@ -30,11 +30,15 @@ namespace FormatConverter {
     virtual ~Csv2Reader( );
 
   protected:
+    int prepare( const std::string& input, SignalSet * info ) override;
     dr_time converttime( const std::string& timeline ) override;
     std::string headerForField( int field, const std::vector<std::string>& linevals ) const override;
     bool includeFieldValue( int field, const std::vector<std::string>& linevals ) const override;
     bool isNewPatient( const std::vector<std::string>& linevals, SignalSet * info ) const override;
     void setMetas( const std::vector<std::string>& linevals, SignalSet * data ) override;
+
+  private:
+    std::map<std::string,std::string> headerlkp;
   };
 }
 

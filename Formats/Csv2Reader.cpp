@@ -17,8 +17,42 @@ namespace FormatConverter{
 
   Csv2Reader::~Csv2Reader( ) { }
 
+  int Csv2Reader::prepare( const std::string& input, SignalSet * info ) {
+    auto prep = CsvReader::prepare( input, info );
+    if ( 0 == prep ) {
+      auto headerinput = std::filesystem::path{ input };
+      headerinput.replace_filename( "DWC_Parameter-Alerts_Plus_3rdParty_JI.csv" );
+      auto inputfile = std::fstream{ headerinput };
+      if ( inputfile.good( ) ) {
+        Log::debug( ) << "loading header info from file: " << headerinput << std::endl;
+        auto line = std::string{ };
+        while ( std::getline( inputfile, line ) ) {
+          if ( !SignalUtils::trim( line ).empty( ) ) {
+            auto strings = SignalUtils::splitcsv( line );
+            auto code = SignalUtils::trim( strings[0] );
+            auto label = SignalUtils::trim( strings[1] );
+            auto subcode = code;
+            if ( strings.size( ) > 2 ) {
+              subcode = SignalUtils::trim( strings[2] );
+            }
+
+            headerlkp.insert( std::make_pair( code + subcode, label ) );
+          }
+        }
+      }
+      else {
+        Log::trace( ) << "no header file: " << headerinput << std::endl;
+      }
+
+    }
+
+    return prep;
+  }
+
   std::string Csv2Reader::headerForField( int field, const std::vector<std::string>& linevals ) const {
-    return linevals[2];
+    return ( 0 == headerlkp.count( linevals[1] + linevals[2] )
+        ? linevals[2]
+        : headerlkp.at( linevals[1] + linevals[2] ) );
   }
 
   bool Csv2Reader::includeFieldValue( int field, const std::vector<std::string>& vals ) const {

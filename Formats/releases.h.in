@@ -1,5 +1,6 @@
-4.4.0
+4.3.10
   * Added CSV2 Reader
+  * (Tools) Added HDF5 file concatenation
 
 4.3.9
   * Fixed HDF5 Reader for files with late starters/early finishers
