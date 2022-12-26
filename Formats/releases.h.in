@@ -1,5 +1,6 @@
 4.3.10
   * Added CSV2 Reader
+  * Added %M filename pattern option for Patient MRN 
   * Changed HDF5 Layout to 4.1.2 (Dates are fully ISO-8601 compliant)
   * (Tools) Added HDF5 file concatenation
 

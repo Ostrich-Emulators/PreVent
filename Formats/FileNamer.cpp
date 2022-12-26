@@ -28,20 +28,17 @@
 #define GetCurrentDir getcwd
 #endif
 
-namespace FormatConverter {
+namespace FormatConverter{
   const std::string FileNamer::DEFAULT_PATTERN = "%d%i-p%p-%s.%t";
   const std::string FileNamer::FILENAME_PATTERN = "%i.%t";
 
-  FileNamer::FileNamer( const std::string& pat ) : pattern( pat ) {
-  }
+  FileNamer::FileNamer( const std::string& pat ) : pattern( pat ) { }
 
   FileNamer::FileNamer( const FileNamer& orig ) : pattern( orig.pattern ),
       conversions( orig.conversions.begin( ), orig.conversions.end( ) ),
-      lastname( orig.lastname ), inputfile( orig.inputfile ) {
-  }
+      lastname( orig.lastname ), inputfile( orig.inputfile ) { }
 
-  FileNamer::~FileNamer( ) {
-  }
+  FileNamer::~FileNamer( ) { }
 
   FileNamer& FileNamer::operator=(const FileNamer& orig ) {
     if ( this != &orig ) {
@@ -130,6 +127,10 @@ namespace FormatConverter {
     conversions["%T"] = HHmmss( &EARLY );
     conversions["%E"] = HHmmss( &LATE );
 
+    conversions["%M"] = 0 == data->metadata( ).count( "MRN" )
+        ? ""
+        : data->metadata( ).at( "MRN" );
+
     //Current Date
     time_t tim;
     time( &tim );
@@ -158,7 +159,8 @@ namespace FormatConverter {
       "%m",
       "%S",
       "%T",
-      "%E"
+      "%E",
+      "%M"
     };
 
     for ( auto x : replacements ) {
