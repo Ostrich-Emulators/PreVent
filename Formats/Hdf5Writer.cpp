@@ -32,7 +32,7 @@
 #include "Log.h"
 
 namespace FormatConverter{
-  const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.1";
+  const std::string Hdf5Writer::LAYOUT_VERSION = "4.1.2";
 
   Hdf5Writer::Hdf5Writer( ) : Writer( "hdf5" ) { }
 
@@ -105,18 +105,8 @@ namespace FormatConverter{
       writeAttribute( loc, SignalData::ENDTIME, end );
     }
 
-    char buf[sizeof "2011-10-08T07:07:09Z   "];
-    strftime( buf, sizeof buf, "%FT%T%Z",
-        localt
-        ? localtime( &stime )
-        : gmtime( &stime ) );
-    writeAttribute( loc, "Start Date/Time", buf );
-
-    strftime( buf, sizeof buf, "%FT%T%Z",
-        localt
-        ? localtime( &etime )
-        : gmtime( &etime ) );
-    writeAttribute( loc, "End Date/Time", buf );
+    writeAttribute( loc, "Start Date/Time", iso8601(start, localt));
+    writeAttribute( loc, "End Date/Time", iso8601(end, localt));
 
     time_t xx( etime - stime );
     tm * t = gmtime( &xx );
@@ -453,7 +443,7 @@ namespace FormatConverter{
   }
 
   void Hdf5Writer::autochunk( hsize_t* dims, int rank, int bytesperelement, hsize_t* rslts ) {
-    // goal: keep chunksize betwee 16kb and 1M (2^4 to 2^10 kb)
+    // goal: keep chunksize between 16kb and 1M (2^4 to 2^10 kb)
     // with smaller chunks for smaller datasets
 
     const hsize_t KB = 1024;
@@ -503,7 +493,7 @@ namespace FormatConverter{
       return;
     }
 
-    // we have a dataset over 256MB, so only chunk every column
+    // we have a dataset over 128MB, so only chunk every column
     rslts[0] = MB / bytesperelement; // per element, because every column is chunked
     for ( int i = 1; i < rank; i++ ) {
       rslts[i] = 1;
@@ -658,7 +648,7 @@ namespace FormatConverter{
       writeFileAttributes( file, dataptr->metadata( ), firstTime, lastTime );
 
       auto grp = ensureGroupExists( file, "VitalSigns" );
-      Log::debug( ) << "Writing " << std::dec <<  dataptr->vitals( ).size( ) << " Vitals" << std::endl;
+      Log::debug( ) << "Writing " << std::dec << dataptr->vitals( ).size( ) << " Vitals" << std::endl;
       for ( auto& vits : dataptr->vitals( ) ) {
         if ( vits->empty( ) ) {
           Log::warn( ) << "Skipping Vital: " << vits->name( ) << "(no data)" << std::endl;
@@ -671,7 +661,7 @@ namespace FormatConverter{
 
       if ( !this->skipwaves( ) ) {
         grp = ensureGroupExists( file, "Waveforms" );
-        Log::debug( ) << "Writing " << std::dec <<  dataptr->waves( ).size( ) << " Waveforms" << std::endl;
+        Log::debug( ) << "Writing " << std::dec << dataptr->waves( ).size( ) << " Waveforms" << std::endl;
         for ( auto& wavs : dataptr->waves( ) ) {
           if ( wavs->empty( ) ) {
             Log::warn( ) << "Skipping Wave: " << wavs->name( ) << "(no data)" << std::endl;

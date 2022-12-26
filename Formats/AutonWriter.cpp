@@ -103,7 +103,7 @@ namespace FormatConverter{
     auto data = nlohmann::json{ };
     data["time"]["origin"] = dataptr->earliest( );
     data["time"]["units"] = "ms";
-    data["time"]["tz"] = "GMT";
+    data["time"]["tz"] = "UTC";
     Hdf5Writer::writeAttribute( globalmetas, "data", data.dump( 2, ' ', true ) );
 
 

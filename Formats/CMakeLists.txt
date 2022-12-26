@@ -2,7 +2,7 @@
 # the hdf5c++ wrapper has some incompatibility with cmake, I think
 #set(CMAKE_CXX_COMPILER ${HDF5_CXX_COMPILER_EXECUTABLE})
 
-set(LIBVERSION 4.3.9)
+set(LIBVERSION 4.3.10)
 project(formatconverter VERSION ${LIBVERSION} LANGUAGES CXX)
 
 pkg_check_modules( ZIP REQUIRED libzip )
@@ -106,6 +106,7 @@ NullSignalData.cpp
 Log.cpp
 AutonWriter.cpp
 CsvReader.cpp
+Csv2Reader.cpp
 SplitLogic.cpp
 DWCxReader.cpp
 generated/config.h
@@ -192,6 +193,7 @@ NullSignalData.h
 Log.h
 AutonWriter.h
 CsvReader.h
+Csv2Reader.h
 SplitLogic.h
 DWCxReader.h
 generated/releases.h

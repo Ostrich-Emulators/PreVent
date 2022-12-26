@@ -66,7 +66,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-w or --skip-waves"
       << std::endl << "\t-m or --tmpdir <directory>"
       << std::endl << "\t-R or --release (show release information and exit)"
-      << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, stpp, cpcxml, stpjson, tdms, medi, dwc, zl, csv, dwcx"
+      << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, stpp, cpcxml, stpjson, tdms, medi, dwc, zl, csv, csv2, dwcx"
       << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv, au"
       << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
       << std::endl << "\tthe --pattern option recognizes these format specifiers:"
@@ -83,6 +83,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t  %T - time of first data point (24hr clock)"
       << std::endl << "\t  %E - time of last data point (24hr clock)"
       << std::endl << "\t  %o - output file ordinal"
+      << std::endl << "\t  %M - value of the MRN metadata attribute"
       << std::endl << "\t  %t - the --to option's extension (e.g., hdf5, csv)"
       << std::endl << "\t  %S - same as %d%i-p%p-%s.%t"
       << std::endl << "\t  all dates are output in YYYYMMDD format"
@@ -361,6 +362,9 @@ int main( int argc, char** argv ) {
         break;
       case FormatConverter::CSV:
         fromstr = "csv";
+        break;
+      case FormatConverter::CSV2:
+        fromstr = "csv2";
         break;
       case FormatConverter::CPCXML:
         fromstr = "cpcxml";

@@ -16,12 +16,12 @@
 namespace FormatConverter{
 
   BasicSignalSet::BasicSignalSet( ) {
-    setMeta( SignalData::TIMEZONE, "GMT" );
+    setMeta( SignalData::TIMEZONE, "UTC" );
     setMeta( SignalData::BUILD_NUM, GIT_BUILD );
   }
 
   BasicSignalSet::BasicSignalSet( const BasicSignalSet& ) {
-    setMeta( SignalData::TIMEZONE, "GMT" );
+    setMeta( SignalData::TIMEZONE, "UTC" );
     setMeta( SignalData::BUILD_NUM, GIT_BUILD );
   }
 
@@ -137,7 +137,7 @@ namespace FormatConverter{
     aux.clear( );
     if ( !signalDataOnly ) {
       metamap.clear( );
-      metamap[SignalData::TIMEZONE] = "GMT";
+      metamap[SignalData::TIMEZONE] = "UTC";
       metamap[SignalData::BUILD_NUM] = GIT_BUILD;
 
       segs.clear( );
@@ -197,8 +197,6 @@ namespace FormatConverter{
   }
 
   void BasicSignalSet::complete( ) {
-    // nothing to do
-
     // for each vital/wave, write the min/max values as attributes
     Log::debug( ) << "completing signal set" << std::endl;
 

@@ -53,6 +53,9 @@ namespace FormatConverter{
     if ( "csv" == fmt ) {
       return CSV;
     }
+    if ( "csv2" == fmt ) {
+      return CSV2;
+    }
     if ( "cpcxml" == fmt ) {
       return CPCXML;
     }
@@ -104,11 +107,15 @@ namespace FormatConverter{
         return Format::STPP;
       }
       else if ( "stp" == suffix ) {
-        Log::info( ) << "\"stp\" interpreted as \"stpge\", use \"stpp\" for Philips version" << std::endl;
+        Log::info( ) << "\"stp\" interpreted as \"stpge\"; use \"stpp\" for Philips version" << std::endl;
         return Format::STPGE;
       }
       else if ( "csv" == suffix ) {
+        Log::info( ) << "\"csv\" expects all vitals on one line; use \"csv2\" for one vital per line" << std::endl;
         return Format::CSV;
+      }
+      else if ( "csv2" == suffix ) {
+        return Format::CSV2;
       }
       else if ( "json" == suffix ) {
         return Format::STPJSON;

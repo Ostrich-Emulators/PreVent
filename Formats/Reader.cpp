@@ -12,6 +12,7 @@
 #include "TdmsReader.h"
 #include "StpGeReader.h"
 #include "StpPhilipsReader.h"
+#include "Csv2Reader.h"
 #include "DwcReader.h"
 #include "Options.h"
 #include "Log.h"
@@ -60,6 +61,8 @@ namespace FormatConverter{
         return std::make_unique<DwcReader>( );
       case FormatConverter::CSV:
         return std::make_unique<CsvReader>( );
+      case FormatConverter::CSV2:
+        return std::make_unique<Csv2Reader>( );
       case FormatConverter::DWCX:
         return std::make_unique<DWCxReader>( );
       default:
