@@ -47,7 +47,7 @@ namespace FormatConverter{
     setUom( "Uncalib" );
 
     setMeta( SignalData::MSM, SignalData::MISSING_VALUE );
-    setMeta( SignalData::TIMEZONE, "GMT" );
+    setMeta( SignalData::TIMEZONE, "UTC" );
     setMeta( "Note on Scale", "To get from a scaled value back to the real value, divide by 10^<scale>" );
   }
 

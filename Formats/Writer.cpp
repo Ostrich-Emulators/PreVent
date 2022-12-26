@@ -199,4 +199,43 @@ namespace FormatConverter{
   bool Writer::skipwaves( ) const {
     return Options::asBool( OptionsKey::SKIP_WAVES );
   }
+
+  std::string Writer::iso8601( const dr_time& time, bool islocal ) {
+    auto timet = ( time / 1000 );
+    auto tm = islocal
+        ? localtime( &timet )
+        : gmtime( &timet );
+    char sbuf[sizeof "2011-10-08T07:07:09"];
+    strftime( sbuf, sizeof sbuf, "%FT%T", tm );
+    auto timestr = std::string{ sbuf };
+
+    // add timezone info for iso-8601
+    if ( tm->tm_gmtoff ) {
+      auto negative = tm->tm_gmtoff < 0;
+      auto off = std::abs( tm->tm_gmtoff );
+      timestr += ( negative
+          ? '-'
+          : '+' );
+
+
+      int hrs = off / 3600;
+      int mins = ( off - ( hrs * 3600 ) ) / 60;
+
+      if ( hrs < 10 && hrs > -10 ) {
+        timestr += '0';
+      }
+      timestr += std::to_string( hrs ) + ":";
+
+      if ( mins < 10 && mins>-10 ) {
+        timestr += '0';
+      }
+
+      timestr += std::to_string( mins );
+    }
+    else {
+      timestr += 'Z';
+    }
+
+    return timestr;
+  }
 }

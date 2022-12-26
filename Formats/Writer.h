@@ -8,6 +8,7 @@
 #include <ostream>
 #include <sstream>
 
+#include "dr_time.h"
 #include "Formats.h"
 #include "ConversionListener.h"
 
@@ -31,6 +32,14 @@ namespace FormatConverter {
     const std::string& ext( ) const;
 
     virtual std::vector<std::string> write( Reader * from, SignalSet * data, bool * iserror = nullptr );
+
+    /**
+     * convert a time to an ISO-8601-compliant date-time string
+     * @param time the time to convert
+     * @param islocal is it a local time?
+     * @return an ISO-8601 datetime string
+     */
+    static std::string iso8601( const dr_time& time, bool islocal = false );
 
   protected:
     Writer( const std::string& extension );
