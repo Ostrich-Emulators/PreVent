@@ -36,7 +36,8 @@ namespace FormatConverter{
 
   FileNamer::FileNamer( const FileNamer& orig ) : pattern( orig.pattern ),
       conversions( orig.conversions.begin( ), orig.conversions.end( ) ),
-      lastname( orig.lastname ), inputfile( orig.inputfile ) { }
+      lastname( orig.lastname ), inputfile( orig.inputfile ),
+      dupesOk( orig.dupesOk ) { }
 
   FileNamer::~FileNamer( ) { }
 
@@ -47,6 +48,7 @@ namespace FormatConverter{
       conversions.insert( orig.conversions.begin( ), orig.conversions.end( ) );
       lastname = orig.lastname;
       inputfile = orig.inputfile;
+      dupesOk = orig.dupesOk;
     }
     return *this;
   }
@@ -54,13 +56,17 @@ namespace FormatConverter{
   FileNamer FileNamer::parse( const std::string& pattern ) {
     std::string expand = pattern;
     size_t pos = expand.find( "%S" );
-    while ( pos != std::string::npos ) //initially sorts through file for all standard form flags and expands them
-    {
+    //initially sorts through file for all standard form flags and expands them
+    while ( pos != std::string::npos ) {
       Log::trace( ) << "replacing %S with %i-p%p-%s.%t" << std::endl;
       expand.replace( pos, 2, "%i-p%p-%s.%t" );
       pos = expand.find( "%S", pos + 1 );
     }
     return FileNamer( expand );
+  }
+
+  void FileNamer::allowDuplicates( bool allow ) {
+    dupesOk = allow;
   }
 
   void FileNamer::inputfilename( const std::string& inny ) {
@@ -170,6 +176,14 @@ namespace FormatConverter{
         lastname.replace( pos, 2, conversions[x] );
         pos = lastname.find( x, pos + 1 );
       }
+    }
+
+    if ( oldnames.count( lastname ) > 0 && !dupesOk) {
+      throw std::runtime_error( "Duplicate filename generated. Try using %o in --pattern" );
+    }
+
+    if ( !dupesOk ) {
+      oldnames.insert( lastname );
     }
 
     return lastname;

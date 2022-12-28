@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <map>
+#include <set>
 #include "dr_time.h"
 
 namespace FormatConverter {
@@ -39,12 +40,15 @@ namespace FormatConverter {
     void inputfilename( const std::string& input );
     std::string inputfilename( ) const;
 
+    void allowDuplicates( bool allow = true );
+
     /**
      * Provides a filename (including directory) for the given SignalData and
      * output file ordinal (and patient ordinal, if set)
      * @param data
      * @param outputnum
-     * @return
+     * @return the filename
+     * @throws an runtime_error if the generated filename is a repeat and dupesOk is false
      */
     std::string filename( SignalSet * data );
 
@@ -81,6 +85,8 @@ namespace FormatConverter {
     std::map<std::string, std::string> conversions;
     std::string lastname;
     std::string inputfile;
+    bool dupesOk;
+    std::set<std::string> oldnames;
 
     static tm modtime( const dr_time& time );
   };

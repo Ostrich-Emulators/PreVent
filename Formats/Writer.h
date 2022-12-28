@@ -63,7 +63,7 @@ namespace FormatConverter {
     virtual std::vector<std::string> closeDataSet( ) = 0;
 
     /**
-     * Drains the give ReadInfo's data. This function can be used for incrementally
+     * Drains the given SignalSet's data. This function can be used for incrementally
      * writing input data, or essentially ignored until closeDataSet is called.
      * @param info The data to drain
      * @return 0 (success) -1 (error)

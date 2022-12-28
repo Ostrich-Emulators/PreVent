@@ -122,22 +122,31 @@ namespace FormatConverter{
       }
 
       if ( ReadResult::END_OF_DURATION == retcode || ReadResult::END_OF_PATIENT == retcode ) {
-        std::vector<std::string> files = closeDataSet( );
-        for ( auto& outfile : files ) {
-          for ( auto& l : listeners ) {
-            l->onFileCompleted( outfile, data );
+        try {
+          std::vector<std::string> files = closeDataSet( );
+          for ( auto& outfile : files ) {
+            for ( auto& l : listeners ) {
+              l->onFileCompleted( outfile, data );
+            }
+          }
+
+          if ( files.empty( ) ) {
+            Log::warn( ) << "refusing to write empty data file!" << std::endl;
+          }
+          else {
+            list.insert( list.end( ), files.begin( ), files.end( ) );
+          }
+
+          if ( ReadResult::END_OF_PATIENT == retcode ) {
+            patientno++;
           }
         }
-
-        if ( files.empty( ) ) {
-          Log::warn( ) << "refusing to write empty data file!" << std::endl;
-        }
-        else {
-          list.insert( list.end( ), files.begin( ), files.end( ) );
-        }
-
-        if ( ReadResult::END_OF_PATIENT == retcode ) {
-          patientno++;
+        catch ( std::exception& err ) {
+          Log::error( ) << err.what( ) << std::endl;
+          if ( nullptr != iserror ) {
+            *iserror = true;
+          }
+          return list;
         }
 
         data->reset( true );

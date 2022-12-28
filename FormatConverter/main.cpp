@@ -66,6 +66,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-w or --skip-waves"
       << std::endl << "\t-m or --tmpdir <directory>"
       << std::endl << "\t-R or --release (show release information and exit)"
+      << std::endl << "\t-d or --allow-duplicate-filenames"
       << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, stpp, cpcxml, stpjson, tdms, medi, dwc, zl, csv, csv2, dwcx"
       << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv, au"
       << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
@@ -190,6 +191,7 @@ struct option longopts[] = {
   { "time-step", no_argument, NULL, 'T' },
   { "skip-waves", no_argument, NULL, 'w' },
   { "tmpdir", required_argument, NULL, 'm' },
+  { "allow-duplicate-filenames", no_argument, NULL, 'd' },
   { "split", required_argument, NULL, 'x' },
   { 0, 0, 0, 0 }
 };
@@ -212,10 +214,11 @@ int main( int argc, char** argv ) {
   bool stopatone = false;
   auto compression = Writer::DEFAULT_COMPRESSION;
   auto split = std::string{ "midnight" };
+  auto allowdupenames = false;
 
   settmpdir( std::filesystem::temp_directory_path( ) );
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:q::v::anl1CTZ:S:Rwm:x:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:q::v::anl1CdTZ:S:Rwm:x:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -248,6 +251,9 @@ int main( int argc, char** argv ) {
         }
         Log::setlevel( static_cast<LogLevel> ( loglevel ) );
 
+        break;
+      case 'd':
+        allowdupenames = true;
         break;
       case 'T':
         Options::set( OptionsKey::INDEXED_TIME );
@@ -417,6 +423,7 @@ int main( int argc, char** argv ) {
     to->compression( compression );
     to->stopAfterFirstFile( stopatone );
     FileNamer namer = FileNamer::parse( pattern );
+    namer.allowDuplicates( allowdupenames );
     namer.tofmt( to->ext( ) );
     to->filenamer( namer );
 
@@ -460,6 +467,10 @@ int main( int argc, char** argv ) {
         << " from " << fromstr
         << " to " << tostr << std::endl;
 
+    if ( allowdupenames ) {
+      Log::warn( ) << "allowing generation of duplicate filenames (possible data loss)" << std::endl;
+    }
+
     if ( from->prepare( input, data.get( ) ) < 0 ) {
       Log::error( ) << "could not prepare file for reading" << std::endl;
       returncode = -2;
@@ -471,15 +482,21 @@ int main( int argc, char** argv ) {
       from->finish( );
 
       if ( iserr ) {
+        Log::error( ) << "Cannot continue after error" << std::endl;
         returncode = -3;
-      }
 
-      for ( const auto& f : files ) {
-        Log::info( ) << " written to " << f << std::endl;
+        for ( const auto& f : files ) {
+          Log::info( ) << " (incomplete dataset) written to " << f << std::endl;
+        }
       }
+      else {
+        for ( const auto& f : files ) {
+          Log::info( ) << " written to " << f << std::endl;
+        }
 
-      if ( db ) {
-        db->onConversionCompleted( argv[i], files );
+        if ( db ) {
+          db->onConversionCompleted( argv[i], files );
+        }
       }
     }
   }

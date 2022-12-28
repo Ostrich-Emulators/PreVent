@@ -1,6 +1,8 @@
 4.3.10
+  * System will exit if a duplicate filename is produced (prevents data loss)
   * Added CSV2 Reader
-  * Added %M filename pattern option for Patient MRN 
+  * Added %M filename pattern option for Patient MRN
+  * Added --allow-duplicate-filenames option
   * Changed HDF5 Layout to 4.1.2 (Dates are fully ISO-8601 compliant)
   * (Tools) Added HDF5 file concatenation
 

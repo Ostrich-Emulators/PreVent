@@ -66,6 +66,10 @@ namespace FormatConverter {
     virtual const std::map<long, dr_time>& offsets( ) const = 0;
     virtual void addOffset( long seg, dr_time time ) = 0;
     virtual void clearOffsets( ) = 0;
+    /**
+     * "Completes" the input phase. This is called after all the data has been read by the Reader,
+     * but before it is sent to the Writer
+     */
     virtual void complete( ) = 0;
     virtual void addAuxillaryData( const std::string& name, const TimedData& data ) = 0;
     virtual std::map<std::string, std::vector<TimedData>> auxdata( ) = 0;
