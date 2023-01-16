@@ -28,19 +28,20 @@ namespace FormatConverter {
     /**
      * Constructs a new instance.
      * @param name
-     * @param firstlineIsHeader
+     * @param onevital Does this CSV have one vital per line, or mulitple vitals?
      * @param timef which field contains the timestamp? Note that if this is bigger than the
      *   fieldcount, 0 will be used instead
      * @param fieldcount sets the field count. Note that this will be calculated (and overwritten)
      *   in the prepare call if firstLineIsHeader is true.
      */
-    CsvReader( const std::string& name = "CSV", bool firstlineIsHeader = true, int timef = 0,
+    CsvReader( const std::string& name = "CSV", bool onevital = false, int timef = 0,
         int fieldcount = -1 );
     virtual ~CsvReader( );
 
   protected:
     virtual int prepare( const std::string& input, SignalSet * info ) override;
     ReadResult fill( SignalSet * data, const ReadResult& lastfill ) override;
+    virtual bool isFirstLineHeader( const std::string& firstline );
 
     virtual dr_time converttime( const std::string& timeline );
     virtual std::string headerForField( int field, const std::vector<std::string>& linevals ) const;
@@ -60,7 +61,8 @@ namespace FormatConverter {
     virtual std::vector<std::string> linevalues( const std::string& csvline, dr_time & timer );
     void loadMetas( SignalSet * info );
 
-    const bool firstLineIsHeader;
+    const bool oneVitalPerLine;
+    bool firstLineIsHeader;
     std::ifstream datafile;
     std::vector<std::string> metadata;
     std::vector<std::string> headings;

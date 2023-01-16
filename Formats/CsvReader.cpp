@@ -13,8 +13,8 @@
 
 namespace FormatConverter{
 
-  CsvReader::CsvReader( const std::string& name, bool firstHeader, int timef, int fc )
-      : Reader( "CSV" ), firstLineIsHeader( firstHeader ), timefield( timef ), fieldcount( fc ) { }
+  CsvReader::CsvReader( const std::string& name, bool onevital, int timef, int fc )
+      : Reader( "CSV" ), oneVitalPerLine( onevital ), timefield( timef ), fieldcount( fc ) { }
 
   CsvReader::~CsvReader( ) { }
 
@@ -41,11 +41,20 @@ namespace FormatConverter{
       Log::trace( ) << "no meta file: " << metainput << std::endl;
     }
 
-    if ( this->firstLineIsHeader ) {
-      std::string firstline;
-      std::getline( datafile, firstline );
+    // figure out if the first CSV line is a header line, or a data line
+    // if it's a data line, we need to put the file reader back to the
+    // beginning of the line before starting the read process
+    const auto pos = datafile.tellg( );
+    std::string firstline;
+    std::getline( datafile, firstline );
+    firstLineIsHeader = isFirstLineHeader( firstline );
+    if ( firstLineIsHeader ) {
       headings = SignalUtils::splitcsv( firstline );
       fieldcount = headings.size( );
+    }
+    else {
+      // reset read head to start of line
+      datafile.seekg( pos, datafile.beg );
     }
 
     if ( timefield > fieldcount - 1 ) {
@@ -53,6 +62,10 @@ namespace FormatConverter{
     }
 
     return 0;
+  }
+
+  bool CsvReader::isFirstLineHeader( const std::string& firstline ) {
+    return true;
   }
 
   ReadResult CsvReader::fill( SignalSet * data, const ReadResult& lastfill ) {
@@ -73,7 +86,7 @@ namespace FormatConverter{
           this->setMetas( vals, data );
         }
 
-        if ( isRollover( rowtime, data ) ) {
+        if ( this->isRollover( rowtime, data ) ) {
           datafile.seekg( pos );
           return ReadResult::END_OF_DURATION;
         }
@@ -84,8 +97,9 @@ namespace FormatConverter{
 
         for ( size_t i = 0; i < vals.size( ); i++ ) {
           if ( this->includeFieldValue( i, vals ) ) {
+            const auto head = this->headerForField( i, vals );
             auto first = true;
-            auto signal = data->addVital( this->headerForField( i, vals ), &first );
+            auto signal = data->addVital( head, &first );
             if ( first ) {
               signal->setChunkIntervalAndSampleRate( 1, 1 );
             }
@@ -170,14 +184,16 @@ namespace FormatConverter{
     }
 
     // now set data for individual vitals
-    for ( size_t i = 1; i < headings.size( ); i++ ) {
-      auto signal = info->addVital( headings[i] );
-      signal->setChunkIntervalAndSampleRate( 1, 1 );
-      for ( auto&line : metadata ) {
-        auto check = "/VitalSigns/" + headings[i] + "|";
-        if ( 0 == line.find( check ) ) {
-          auto pieces = SignalUtils::splitcsv( line, '|' );
-          signal->setMeta( pieces[1], pieces[2] );
+    if ( !oneVitalPerLine ) {
+      for ( size_t i = 1; i < headings.size( ); i++ ) {
+        auto signal = info->addVital( headings[i] );
+        signal->setChunkIntervalAndSampleRate( 1, 1 );
+        for ( auto&line : metadata ) {
+          auto check = "/VitalSigns/" + headings[i] + "|";
+          if ( 0 == line.find( check ) ) {
+            auto pieces = SignalUtils::splitcsv( line, '|' );
+            signal->setMeta( pieces[1], pieces[2] );
+          }
         }
       }
     }

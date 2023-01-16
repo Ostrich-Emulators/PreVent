@@ -13,7 +13,7 @@
 
 namespace FormatConverter{
 
-  Csv2Reader::Csv2Reader( ) : CsvReader( "CSV2", true, 4, 5 ) { }
+  Csv2Reader::Csv2Reader( ) : CsvReader( "CSV2", true, 4, 5 ), tzmod( 0 ) { }
 
   Csv2Reader::~Csv2Reader( ) { }
 
@@ -71,6 +71,10 @@ namespace FormatConverter{
     return false;
   }
 
+  bool Csv2Reader::isFirstLineHeader( const std::string& firstline ) {
+    return firstline.find( "MRN" ) != std::string::npos;
+  }
+
   void Csv2Reader::setMetas( const std::vector<std::string>& linevals, SignalSet * data ) {
     auto valmrn = linevals.at( 0 );
     valmrn.erase( std::remove( valmrn.begin( ), valmrn.end( ), '\"' ), valmrn.end( ) );
@@ -98,22 +102,33 @@ namespace FormatConverter{
 
     // we need to handle timezone and ms data separately (strptime2 doesn't)
     auto mytimestr = timer;
-    auto tzidx = timer.rfind( ' ' );
-    auto tzmod = 0;
-    if ( std::string::npos != tzidx ) {
-      mytimestr = timer.substr( 0, tzidx );
 
-      auto tzstr = timer.substr( tzidx + 1 );
-      auto tzcolon = tzstr.find( ':' );
-      auto tzh = tzstr.substr( 1, tzcolon - 1 );
-      auto tzm = tzstr.substr( tzcolon + 1 );
+    const auto spacecount = std::count( timer.begin( ), timer.end( ), ' ' );
+    if ( 2 == spacecount ) {
+      // we have a time string line "2022-03-26 00:00:00 -4:00"
+      if ( 0 == tzmod ) {
+        auto tzidx = timer.rfind( ' ' );
+        if ( std::string::npos != tzidx ) {
+          mytimestr = timer.substr( 0, tzidx );
 
-      tzmod = -std::stoi( tzh ) * 60 * 60 - std::stoi( tzm )*60;
+          auto tzstr = timer.substr( tzidx + 1 );
+          auto tzcolon = tzstr.find( ':' );
+          auto tzh = tzstr.substr( 1, tzcolon - 1 );
+          auto tzm = tzstr.substr( tzcolon + 1 );
 
-      if ( '-' == tzstr[0] ) {
-        tzmod = 0 - tzmod;
+          tzmod = -std::stoi( tzh ) * 60 * 60 - std::stoi( tzm )*60;
+
+          if ( '-' == tzstr[0] ) {
+            tzmod = 0 - tzmod;
+          }
+        }
       }
     }
+    else if ( 1 != spacecount ) {
+      // what on earth do we have here?
+      throw new std::runtime_error( "Unparseable date: " + timer );
+    }
+    //else we don't have a timezone, but can do without it
 
     auto msmod = 0;
     if ( std::string::npos != mytimestr.find( '.' ) ) {
@@ -123,7 +138,6 @@ namespace FormatConverter{
 
       mytimestr = mytimestr.substr( 0, idx );
     }
-
 
     tm mytime = { 0, };
 

@@ -36,9 +36,10 @@ namespace FormatConverter {
     bool includeFieldValue( int field, const std::vector<std::string>& linevals ) const override;
     bool isNewPatient( const std::vector<std::string>& linevals, SignalSet * info ) const override;
     void setMetas( const std::vector<std::string>& linevals, SignalSet * data ) override;
-
+    virtual bool isFirstLineHeader(const std::string& firstline) override;
   private:
     std::map<std::string,std::string> headerlkp;
+    int tzmod;
   };
 }
 
