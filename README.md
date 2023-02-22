@@ -141,7 +141,7 @@ Because each input file can generate multiple output files, it is necessary to s
 **%T** - time of first data point (24hr clock)\
 **%E** - time of last data point (24hr clock)\
 **%o** - output file ordinal\
-**%M** - value of the MRN metadata attribute
+**%M** - value of the MRN metadata attribute\
 **%t** - the --to option's extension (e.g., hdf5, wfdb)\
 **%S** - same as `%d%i-p%p-%s.%t`
 
