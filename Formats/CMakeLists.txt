@@ -2,7 +2,7 @@
 # the hdf5c++ wrapper has some incompatibility with cmake, I think
 #set(CMAKE_CXX_COMPILER ${HDF5_CXX_COMPILER_EXECUTABLE})
 
-set(LIBVERSION 4.3.10)
+set(LIBVERSION 4.3.11)
 project(formatconverter VERSION ${LIBVERSION} LANGUAGES CXX)
 
 pkg_check_modules( ZIP REQUIRED libzip )

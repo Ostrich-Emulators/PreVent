@@ -114,18 +114,30 @@ namespace FormatConverter{
   }
 
   int WfdbReader::prepare( const std::string& headername, SignalSet * info ) {
-    int rslt = Reader::prepare( headername, info );
-    if ( 0 != rslt ) {
-      return rslt;
-    }
-
     if ( std::string::npos != headername.find( ' ' ) ) {
       Log::error( ) << "WFDB-based paths cannot contain spaces" << std::endl;
       return -1;
     }
 
+    // we want the .hea file, but will accept just the directory name containing the .hea
+    // check which more we're working with
+    auto dirOrFilePath = SignalUtils::canonicalizePath( headername );
+    std::filesystem::path heapath;
+    if ( std::filesystem::is_directory( dirOrFilePath ) ) {
+      dirOrFilePath /= dirOrFilePath.filename( );
+      heapath = dirOrFilePath.replace_extension( ".hea" );
+    }
+    else {
+      heapath = std::filesystem::path( headername );
+    }
+
+    int rslt = Reader::prepare( headername, info );
+    if ( 0 != rslt ) {
+      return rslt;
+    }
+
     auto headerpath = SignalUtils::canonicalizePath( headername );
-    auto path = ". " + headerpath.parent_path( ).string( );
+    auto path = ". " + heapath.parent_path( ).string( );
     Log::debug( ) << "wfdb path: " << path << std::endl;
     setwfdb( path.data( ) );
 

@@ -20,6 +20,7 @@
 #include <string>
 #include <memory>
 #include <istream>
+#include <vector>
 #include "zstr.hpp"
 
 namespace FormatConverter {
