@@ -138,10 +138,11 @@ Because each input file can generate multiple output files, it is necessary to s
 **%D** - date of conversion\
 **%s** - date of first data point\
 **%e** - date of last data point\
+**%T** - time of first data point (24hr clock)\
+**%E** - time of last data point (24hr clock)\
 **%o** - output file ordinal\
+**%M** - value of the MRN metadata attribute\
 **%t** - the --to option's extension (e.g., hdf5, wfdb)\
-**%T** - the time of the first data point\
-**%E** - the time of the last data point\
 **%S** - same as `%d%i-p%p-%s.%t`
 
 The default output filename pattern is `%d%i.%t`, that is, the output filename is the input file name with a different extension. Note that some specifiers are similar to command-line options; these are separate concepts.
