@@ -185,7 +185,10 @@ namespace FormatConverter{
 
         dataset->setMeta( "wfdb-gain", siginfo[signalidx].gain );
         dataset->setMeta( "wfdb-spf", siginfo[signalidx].spf );
+        dataset->setMeta( "wfdb-baseline", siginfo[signalidx].baseline );
+        dataset->setMeta( "wfdb-adczero", siginfo[signalidx].adczero);
         dataset->setMeta( "wfdb-adcres", siginfo[signalidx].adcres );
+        dataset->setMeta( "wfdb-initval", siginfo[signalidx].initval);
         framecount += siginfo[signalidx].spf;
 
         if ( 16 == siginfo[signalidx].fmt ) {

@@ -641,6 +641,8 @@ namespace FormatConverter{
       H5::DataSet data = group.openDataSet( "data" );
       H5::DataSet globaltimes = group.openDataSet( "/Events/Global_Times" );
 
+      copymetas( signal, data);
+
       const int scale = metaint( data, SignalData::SCALE );
 
       const int readingsperperiod = metaint( data, SignalData::READINGS_PER_CHUNK );

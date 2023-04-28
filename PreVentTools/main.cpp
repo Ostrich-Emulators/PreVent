@@ -63,8 +63,9 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-e or --end <time>\tstop output immediately before this UTC time (many time formats supported)"
       << std::endl << "\t-f or --for <s>\toutput this many seconds of data from the start of file (or --start)"
       << std::endl << "\t-a or --anonymize, --anon, or --anonymous"
-      << std::endl << "\t-p or --path\tsets the path for --set-attr and --attrs"
+      << std::endl << "\t-p or --path\tsets the path for --set-attr, --attrs, and --print"
       << std::endl << "\t-d or --print\tprints data from the path given with --path"
+      << std::endl << "\t-~ or --interpret\tattempts to interpret raw (integer) values into real (decimal) values (for WFDB)"
       << std::endl << "\t-A or --attrs\tprints all attributes in the file"
       << std::endl << "\t-V or --vitals\tprints a list of vital signs in this file"
       << std::endl << "\t-W or --waves\tprints a list of waveforms in this file"
@@ -100,6 +101,7 @@ struct option longopts[] = {
   { "append", required_argument, NULL, 'P' },
   { "stp-metas", no_argument, NULL, 'Q' },
   { "quiet", no_argument, NULL, 'q' },
+  { "interpret", no_argument, NULL, '~' },
   { "verbose", optional_argument, NULL, 'v' },
   { 0, 0, 0, 0 }
 };
@@ -170,8 +172,9 @@ int main( int argc, char** argv ) {
   bool dobsi = false;
   auto loglevel = static_cast<int> ( LogLevel::INFO );
   auto dosplit = false;
+  auto decimalizeprint = false;
 
-  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aq::v::S:dp:WVDP:Qbx", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":o:CAc:s:e:f:aq::v::S:dp:WVDP:Qbx~", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'o':
         outfilename = optarg;
@@ -196,6 +199,9 @@ int main( int argc, char** argv ) {
         break;
       case 'D':
         calc = true;
+        break;
+      case '~':
+        decimalizeprint = true;
         break;
       case 'P':
         appendfiles.push_back( optarg );
@@ -533,7 +539,7 @@ int main( int argc, char** argv ) {
       std::ostream& outstream = ( outfilename.empty( )
           ? Log::out( )
           : *( new std::ofstream( outfilename ) ) );
-      auto signal = std::unique_ptr<SignalData>{ std::make_unique<OutputSignalData>( outstream ) };
+      auto signal = std::unique_ptr<SignalData>{ std::make_unique<OutputSignalData>( outstream, decimalizeprint ) };
 
       auto fmt = FormatConverter::Formats::guess( input );
       if ( Format::UNRECOGNIZED == fmt ) {
@@ -626,7 +632,7 @@ int main( int argc, char** argv ) {
   else {
     // something to acknowledge the program did something
     // (even if the user didn't ask us to do anything)
-    Log::debug( ) << "yup...that's a file" << std::endl;
+    Log::info( ) << "yup...that's a file" << std::endl;
   }
 
   return 0;

@@ -1,3 +1,7 @@
+4.3.11
+  * Improved native GE STP reader: check for duplicate waveform data
+  * (Tools) Added --interpret option to --print command
+
 4.3.10
   * System will exit if a duplicate filename is produced (prevents data loss)
   * Added CSV2 Reader

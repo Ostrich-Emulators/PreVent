@@ -25,13 +25,18 @@ namespace FormatConverter {
    */
   class OutputSignalData : public BasicSignalData {
   public:
-    OutputSignalData(std::ostream& out);
-    virtual ~OutputSignalData();
+    OutputSignalData( std::ostream& out, bool interpret );
+    virtual ~OutputSignalData( );
 
-    virtual bool add(std::unique_ptr<DataRow> row) override;
+    virtual bool add( std::unique_ptr<DataRow> row ) override;
 
   private:
     std::ostream& output;
+    bool dointerpret;
+
+    bool first;
+    double baseline;
+    double gain;
   };
 }
 
