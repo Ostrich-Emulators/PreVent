@@ -60,6 +60,13 @@ namespace FormatConverter {
       WaveSequenceResult newseq( const unsigned short& seqnum, dr_time time );
       void newvalues( int waveid, std::vector<int>& values );
       void reset( );
+
+      /**
+       * inspects the wave data and remove sequence ids that duplicate data
+       * (even if the sequence ids are different)
+       */
+      void filterDuplicates();
+
       /**
        * Have we seen at least 8 FA0D loops?
        * @return

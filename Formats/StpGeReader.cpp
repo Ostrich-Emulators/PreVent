@@ -90,6 +90,55 @@ namespace FormatConverter {
   void StpGeReader::WaveTracker::prune( ) {
   }
 
+  void StpGeReader::WaveTracker::filterDuplicates(){
+    // filter outs sequences that contain duplicate data
+    // this is harder that you think because a waveform might be a constant number
+    // which would look like a endless duplicate...we will inspect all the waveforms
+    // values in a given sequence, and if we find *any* duplicate waveform, we'll 
+    // assume the whole sequence is duplicated. To help avoid false positives, we'll
+    // only check waveforms that are not a single repeated number
+    if( sequencedata.size()<2){
+      return;
+    }
+
+    std::map<int, std::vector<int>> lastvals;
+    auto first=true;
+    auto removers=std::set<unsigned short>{};
+    for( const auto& seqdat: sequencedata){
+      auto isdupe = false;
+      if( first ){
+        // skip the first element, since it obviously 
+        // can't be a duplicate (nothing to compare it to)
+        first = false;
+      }
+      else if( !isdupe){
+        // check the current values vs the last values
+        for( const auto& needle : seqdat.wavedata){
+          if( !isdupe && !std::all_of(needle.second.begin(), needle.second.end(), 
+          [haystack = needle.second](int i){return haystack.at(0)==i;})){
+            // not all one number, so check this value
+
+            if( 1==lastvals.count(needle.first) && lastvals.at(needle.first)==needle.second){
+              Log::warn()<<"Duplicate waveform (0x"<<
+                std::setw(2)<<std::setfill('0')<<std::hex
+                <<needle.first<<") detected at sequence id: "
+                <<seqdat.sequence<<"...skipping whole sequence"<< std::endl;
+              isdupe=true;
+              removers.insert(seqdat.sequence);
+            }
+          }
+        }
+      }
+      lastvals = seqdat.wavedata;
+    }
+
+    if(!removers.empty()){
+      sequencedata.erase(std::remove_if( sequencedata.begin(), sequencedata.end(), 
+        [removers](auto vec){return removers.count(vec.sequence)>0;}),
+        sequencedata.end());
+    }
+  }
+
   StpGeReader::WaveSequenceResult StpGeReader::WaveTracker::newseq( const unsigned short& seqnum, dr_time time ) {
     WaveSequenceResult rslt = WaveSequenceResult::NORMAL;
     if ( empty( ) ) {
@@ -208,10 +257,19 @@ namespace FormatConverter {
   }
 
   void StpGeReader::WaveTracker::newvalues( int waveid, std::vector<int>& values ) {
-//    for( const auto& x: sequencedata) {
-//      Log::warn( ) << "sequencedata:" << x.sequence << " " << x.time << " "
-//          << x.wavedata.size( ) << " " << std::hex << &( x.wavedata ) << std::endl;
-//    }
+    // for( const auto& x: sequencedata) {
+    //   Log::debug( ) << "sequencedata: " << x.sequence << " " << x.time << " "
+    //       << x.wavedata.size( ) << " " << std::hex << &( x.wavedata ) << std::endl;
+    // }
+    if( Log::levelok(LogLevel::TRACE)){
+      Log::trace( ) << "adding new values to wavetracker/seq::"
+       << std::setw( 2 ) << std::setfill( '0' ) << std::hex  << this->currentseq() << " "
+       << std::dec<<waveid<<"(0x" << std::setw( 2 ) << std::setfill( '0' ) << std::hex << waveid << ")";
+      for( const auto& x : values){
+        Log::trace()<<" "<<std::dec<<x;
+      }
+      Log::trace()<<std::endl;
+    }
 
     size_t valstoread = values.size( );
     auto& seqdata = (--sequencedata.end());
@@ -256,7 +314,6 @@ namespace FormatConverter {
     if ( empty( ) ) {
       Log::debug( ) << "no wave data to flush" << std::endl;
     }
-
 
     // NOTE: there are 4 sequence ids/second, so we expect 8 sequencedata entries for a 2s block.
     // Of course, we don't always get that many (any sometimes get many more)
@@ -482,6 +539,7 @@ namespace FormatConverter {
 
           // if we're ending a file, flush all the wave data we can, but don't
           // write values that should go in the next file
+          wavetracker.filterDuplicates();
           while ( !wavetracker.empty( ) && wavetracker.starttime( ) <= currentTime ) {
             //output( ) << "flushing wave data for end-of-day" << std::endl;
             wavetracker.flushone( info );
@@ -508,6 +566,7 @@ namespace FormatConverter {
       processOneChunk( info, workdata );
 
       // we're done with the file, so write all the wave data we have
+      wavetracker.filterDuplicates();
       while ( !wavetracker.empty( ) ) {
         wavetracker.flushone( info );
       }
@@ -539,7 +598,7 @@ namespace FormatConverter {
 
       auto lasttime = currentTime;
       currentTime = segmentindex->header.time;
-      Log::trace( ) << "current time for chunk: " << currentTime << std::endl;
+      Log::trace( ) << "current time for chunk: " << std::dec << currentTime << std::endl;
       if ( isRollover( currentTime, info ) ) {
         return ChunkReadResult::ROLLOVER;
       }
@@ -620,6 +679,7 @@ namespace FormatConverter {
       WaveSequenceResult wavecheck = wavetracker.newseq( wblock.sequence, currentTime );
       if ( WaveSequenceResult::TIMEBREAK == wavecheck ) {
         Log::trace( ) << "time break" << std::endl;
+        wavetracker.filterDuplicates();
         while ( wavetracker.writable( ) ) {
           wavetracker.flushone( info );
         }
@@ -657,6 +717,7 @@ namespace FormatConverter {
       Log::trace( ) << "got " << fa0dloop << " loops instead of 8 at pos: " << work.popped( ) << std::endl;
     }
 
+    wavetracker.filterDuplicates();
     while ( wavetracker.writable( ) ) {
       wavetracker.flushone( info );
     }
