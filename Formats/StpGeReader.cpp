@@ -102,7 +102,7 @@ namespace FormatConverter {
     }
 
     std::map<int, std::vector<int>> lastvals;
-    auto first=true;
+    auto first = true;
     auto removers=std::set<unsigned short>{};
     for( const auto& seqdat: sequencedata){
       auto isdupe = false;
@@ -111,20 +111,25 @@ namespace FormatConverter {
         // can't be a duplicate (nothing to compare it to)
         first = false;
       }
-      else if( !isdupe){
+      else if ( !isdupe ) {
         // check the current values vs the last values
-        for( const auto& needle : seqdat.wavedata){
-          if( !isdupe && !std::all_of(needle.second.begin(), needle.second.end(), 
-          [haystack = needle.second](int i){return haystack.at(0)==i;})){
+        for ( const auto& needle : seqdat.wavedata ) {
+          if ( !isdupe && !std::all_of( needle.second.begin( ), needle.second.end( ),
+              [haystack = needle.second](int i){ return haystack.at( 0 ) == i; } ) ) {
             // not all one number, so check this value
 
-            if( 1==lastvals.count(needle.first) && lastvals.at(needle.first)==needle.second){
-              Log::warn()<<"Duplicate waveform (0x"<<
-                std::setw(2)<<std::setfill('0')<<std::hex
-                <<needle.first<<") detected at sequence id: "
-                <<seqdat.sequence<<"...skipping whole sequence"<< std::endl;
-              isdupe=true;
-              removers.insert(seqdat.sequence);
+            if ( 1 == lastvals.count( needle.first ) && lastvals.at( needle.first ) == needle.second ) {
+              if ( !dupewarned ) {
+                Log::warn( ) << "Duplicate waveform detected" << std::endl;
+                dupewarned = true;
+              }
+
+              Log::trace( ) << "Duplicate waveform (0x" <<
+                  std::setw( 2 ) << std::setfill( '0' ) << std::hex
+                  << needle.first << ") detected at sequence id: "
+                  << seqdat.sequence << "...skipping whole sequence" << std::endl;
+              isdupe = true;
+              removers.insert( seqdat.sequence );
             }
           }
         }
@@ -205,6 +210,10 @@ namespace FormatConverter {
     sequencedata.push_back( SequenceData{ seqnum, time } );
     miniseen.clear();
     return rslt;
+  }
+
+  void StpGeReader::WaveTracker::resetDupeWarn( ) {
+    dupewarned = false;
   }
 
   void StpGeReader::WaveTracker::breaksync( StpGeReader::WaveSequenceResult rslt,
@@ -474,7 +483,7 @@ namespace FormatConverter {
 
   ReadResult StpGeReader::fill( SignalSet * info, const ReadResult& lastrr ) {
     //output( ) << "initial reading from input stream (popped:" << work.popped( ) << ")" << std::endl;
-
+    wavetracker.resetDupeWarn();
     int cnt = readMore( );
     if ( cnt < 0 ) {
       return ReadResult::ERROR;

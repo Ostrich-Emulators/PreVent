@@ -59,7 +59,7 @@ namespace FormatConverter {
 
       WaveSequenceResult newseq( const unsigned short& seqnum, dr_time time );
       void newvalues( int waveid, std::vector<int>& values );
-      void reset( );
+      void resetDupeWarn( );
 
       /**
        * inspects the wave data and remove sequence ids that duplicate data
@@ -108,6 +108,7 @@ namespace FormatConverter {
       std::vector<SequenceData> sequencedata;
       std::map<int, size_t> expectedValues;
       std::map<int, size_t> miniseen;
+      bool dupewarned;
     };
 
     static const std::map<int, std::string> WAVELABELS;
