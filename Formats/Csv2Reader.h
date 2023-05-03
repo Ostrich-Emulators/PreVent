@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-/* 
+/*
  * File:   CsvReader.h
  * Author: ryan
  *
@@ -21,27 +21,29 @@
 #include <fstream>
 #include "dr_time.h"
 
-namespace FormatConverter {
+namespace FormatConverter
+{
 
-  class Csv2Reader : public CsvReader {
+  class Csv2Reader : public CsvReader
+  {
   public:
-    Csv2Reader( );
+    Csv2Reader();
 
-    virtual ~Csv2Reader( );
+    virtual ~Csv2Reader();
 
   protected:
-    int prepare( const std::string& input, SignalSet * info ) override;
-    dr_time converttime( const std::string& timeline ) override;
-    std::string headerForField( int field, const std::vector<std::string>& linevals ) const override;
-    bool includeFieldValue( int field, const std::vector<std::string>& linevals ) const override;
-    bool isNewPatient( const std::vector<std::string>& linevals, SignalSet * info ) const override;
-    void setMetas( const std::vector<std::string>& linevals, SignalSet * data ) override;
-    virtual bool isFirstLineHeader(const std::string& firstline) override;
+    int prepare(const std::string &input, SignalSet *info) override;
+    dr_time converttime(const std::string &timeline) override;
+    std::string headerForField(int field, const std::vector<std::string> &linevals) const override;
+    bool includeFieldValue(int field, const std::vector<std::string> &linevals) const override;
+    bool isNewPatient(const std::vector<std::string> &linevals, SignalSet *info) const override;
+    void setMetas(const std::vector<std::string> &linevals, SignalSet *data) override;
+    virtual bool isFirstLineHeader(const std::string &firstline) override;
+
   private:
-    std::map<std::string,std::string> headerlkp;
+    std::map<std::string, std::string> headerlkp;
     int tzmod;
   };
 }
 
 #endif /* CSVREADER2_H */
-
