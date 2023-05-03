@@ -1,4 +1,5 @@
 4.3.11
+  * Added whole-directory option for WFDB reader
   * Improved native GE STP reader: check for duplicate waveform data
   * (Tools) Added --interpret option to --print command
 

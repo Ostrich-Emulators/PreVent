@@ -51,6 +51,14 @@ namespace FormatConverter {
 
     bool isTimeField( int field ) const;
 
+    virtual dr_time converttime( const std::string& timeline );
+    virtual std::string headerForField( int field, const std::vector<std::string>& linevals ) const;
+    virtual bool includeFieldValue( int field, const std::vector<std::string>& linevals ) const;
+    virtual bool isNewPatient( const std::vector<std::string>& linevals, SignalSet * info ) const;
+    virtual void setMetas( const std::vector<std::string>& linevals, SignalSet * data );
+
+    bool isTimeField( int field ) const;
+
   private:
     /**
      * split the line into the given number of values, and decode the time field into the timer

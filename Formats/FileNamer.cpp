@@ -36,8 +36,7 @@ namespace FormatConverter{
 
   FileNamer::FileNamer( const FileNamer& orig ) : pattern( orig.pattern ),
       conversions( orig.conversions.begin( ), orig.conversions.end( ) ),
-      lastname( orig.lastname ), inputfile( orig.inputfile ),
-      dupesOk( orig.dupesOk ) { }
+      lastname( orig.lastname ), inputfile( orig.inputfile ), dupesOk( orig.dupesOk ) { }
 
   FileNamer::~FileNamer( ) { }
 
