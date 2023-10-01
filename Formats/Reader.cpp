@@ -26,10 +26,12 @@
 namespace FormatConverter{
 
   Reader::Reader( const std::string& name ) : rdrname( name ), onefile( false ),
-      local_time( false ), timemod( TimeModifier::passthru( ) ), splitmod( SplitLogic::midnight( ) ) { }
+      local_time( false ), timemod( TimeModifier::passthru( ) ), splitmod( SplitLogic::midnight( ) ),
+      skipUntil( 0 ) { }
 
   Reader::Reader( const Reader& r ) : rdrname( "x" ), onefile( r.onefile ),
-      local_time( r.local_time ), timemod( r.timemod ), splitmod( r.splitmod ) { }
+      local_time( r.local_time ), timemod( r.timemod ), splitmod( r.splitmod ),
+      skipUntil( 0 ) { }
 
   Reader::~Reader( ) { }
 
@@ -107,6 +109,18 @@ namespace FormatConverter{
 
   bool Reader::isRollover( const dr_time& now, SignalSet * data ) const {
     return splitmod.isRollover( data, now, this->localizingTime( ) );
+  }
+
+  void Reader::skipToTime( const dr_time& t ) {
+    skipUntil = t;
+  }
+
+  const dr_time& Reader::skipToTime( ) const {
+    return skipUntil;
+  }
+
+  bool Reader::isUsableDate( const dr_time& now ) const {
+    return skipUntil <= now;
   }
 
   bool Reader::splice( const std::string& inputfile, const std::string& path,

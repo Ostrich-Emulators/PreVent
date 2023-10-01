@@ -85,6 +85,8 @@ namespace FormatConverter {
      */
     virtual std::unique_ptr<SignalData> _createSignalData( const std::string& name,
         bool iswave = false, void * data = nullptr ) = 0;
+
+    virtual bool empty( ) const = 0;
   };
 }
 #endif /* SIGNALSET_H */

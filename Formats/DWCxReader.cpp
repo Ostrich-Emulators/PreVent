@@ -69,6 +69,10 @@ namespace FormatConverter{
         dr_time rowtime;
         auto vals = linevalues( line, rowtime );
 
+        if ( !isUsableDate( rowtime ) ) {
+          continue;
+        }
+
         if ( isRollover( rowtime, data ) ) {
           datafile.seekg( pos );
           return ReadResult::END_OF_DURATION;

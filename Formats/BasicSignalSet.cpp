@@ -82,6 +82,13 @@ namespace FormatConverter{
     return last;
   }
 
+  bool BasicSignalSet::empty( ) const {
+    // check as little as we can, so only check for wave data if we don't have vitals data
+    return SignalUtils::hasdata( vitals() )
+        ? false
+        : !SignalUtils::hasdata( waves() );
+  }
+
   std::unique_ptr<SignalData> BasicSignalSet::_createSignalData( const std::string& name,
       bool iswave, void * extra ) {
     return std::unique_ptr<SignalData>{ std::make_unique<BasicSignalData>( name, iswave ) };

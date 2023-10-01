@@ -45,7 +45,7 @@ namespace FormatConverter {
     static StpMetadata metaFromSignalSet( const std::unique_ptr<SignalSet>& );
 
     enum ChunkReadResult {
-      OK, ROLLOVER, NEW_PATIENT, DECODE_ERROR
+      OK, ROLLOVER, NEW_PATIENT, DECODE_ERROR, SKIP
     };
 
     enum WaveSequenceResult {

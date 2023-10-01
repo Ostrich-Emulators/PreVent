@@ -86,6 +86,10 @@ namespace FormatConverter{
           this->setMetas( vals, data );
         }
 
+        if( !isUsableDate(rowtime)){
+          continue;
+        }
+
         if ( this->isRollover( rowtime, data ) ) {
           datafile.seekg( pos );
           return ReadResult::END_OF_DURATION;

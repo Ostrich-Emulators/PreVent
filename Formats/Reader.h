@@ -72,9 +72,25 @@ namespace FormatConverter {
     const TimeModifier& timeModifier( ) const;
     void splitter( const SplitLogic& l );
     const SplitLogic& splitter( ) const;
-
+    virtual void skipToTime( const dr_time& );
+    const dr_time& skipToTime() const;
+    
+    /**
+     * Converts the given input string to a time object, according to the given format
+     * @param input
+     * @param format
+     * @param tm
+     * @return true, if the conversion worked
+     */
     static bool strptime2( const std::string& input, const std::string& format,
         std::tm * tm );
+
+    /**
+     * We can skip data based on date...should we?
+     * @param now the time to check
+     * @return true, if the date should not be skipped
+     */
+    virtual bool isUsableDate( const dr_time& now ) const;
 
     /**
      * Decides if now is in a new day from the last data point. If that is 0, this function
@@ -123,7 +139,6 @@ namespace FormatConverter {
     Reader( const Reader& );
 
     bool skipwaves( ) const;
-
     virtual dr_time modtime( const dr_time& time );
 
   private:
@@ -132,6 +147,7 @@ namespace FormatConverter {
     bool local_time;
     TimeModifier timemod;
     SplitLogic splitmod;
+    dr_time skipUntil;
   };
 }
 #endif /* READER_H */

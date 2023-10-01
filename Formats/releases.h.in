@@ -1,3 +1,7 @@
+4.3.12
+  * Added --skip-to-date option
+  * Fixed WFDB Reader for FLAC files
+
 4.3.11
   * Added whole-directory option for WFDB reader
   * Improved native GE STP reader: check for duplicate waveform data

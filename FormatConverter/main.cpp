@@ -57,6 +57,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-l or --localtime"
       << std::endl << "\t-Z or --offset <time string (MM/DD/YYYY) or seconds since 01/01/1970>"
       << std::endl << "\t-S or --opening-date <time string (MM/DD/YYYY) or seconds since 01/01/1970>"
+      << std::endl << "\t-D or --skip-to-date <time string (MM/DD/YYYYTHH:MM:SS)>"
       << std::endl << "\t-p or --pattern <naming pattern>"
       << std::endl << "\t-x or --split <m[idnight]|0-24[h]>"
       << std::endl << "\t-n or --no-break or --one-file (convenience for --split 0)"
@@ -91,6 +92,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\tthe --no-break option will ignore end of day/end of patient events, and name the output file(s) from the input file (or pattern)"
       << std::endl << "\tthe --offset option will shift dates by the desired amount"
       << std::endl << "\tthe --opening-date option will shift dates so that the first time in the output is the given date"
+      << std::endl << "\tthe --skip-to-date option skip data collection until the given date is found. Not all readers support this option"
       << std::endl << "\tif file is -, stdin is read for input"
       << std::endl << std::endl;
   exit( 1 );
@@ -193,6 +195,7 @@ struct option longopts[] = {
   { "tmpdir", required_argument, NULL, 'm' },
   { "allow-duplicate-filenames", no_argument, NULL, 'd' },
   { "split", required_argument, NULL, 'x' },
+  { "skip-to-date", required_argument, NULL, 'D' },
   { 0, 0, 0, 0 }
 };
 
@@ -205,6 +208,7 @@ int main( int argc, char** argv ) {
   std::string sqlitedb;
   std::string pattern = FileNamer::DEFAULT_PATTERN;
   std::string offsetstr;
+  std::string skipstr;
   bool offsetIsDesiredDate = false;
   Options::set( OptionsKey::ANONYMIZE, false );
   Options::set( OptionsKey::INDEXED_TIME, false );
@@ -218,7 +222,7 @@ int main( int argc, char** argv ) {
 
   settmpdir( std::filesystem::temp_directory_path( ) );
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:q::v::anl1CdTZ:S:Rwm:x:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:q::v::anl1CdTZ:S:Rwm:x:D:", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -284,6 +288,9 @@ int main( int argc, char** argv ) {
       case 'C':
         Options::set( OptionsKey::NOCACHE );
         break;
+      case 'D':
+        skipstr = optarg;
+        break;
       case 'R':
         intro( argv[0] );
         Log::info( ) << releases_h_in << std::endl;
@@ -326,6 +333,19 @@ int main( int argc, char** argv ) {
   const std::string argument( argv[optind] );
   if ( "-" == argument ) {
     fromstr = "zl";
+  }
+
+  if ( "" != skipstr ) {
+    auto offset = static_cast<dr_time> ( TimeParser::parse( skipstr,
+        Options::asBool( OptionsKey::LOCALIZED_TIME ) ) * 1000 );
+
+    if ( 0 == offset ) {
+      helpAndExit( argv[0], "unparseable date:" + skipstr );
+    }
+    else {
+      Log::info( ) << "skipping data until " << skipstr << " (" << offset << ")" << std::endl;
+      Options::set( OptionsKey::SKIP_UNTIL_DATETIME, offset );
+    }
   }
 
   auto splitlogic = resolveSplitDurationAndNamingPattern( argv[0], split, pattern );
@@ -428,6 +448,7 @@ int main( int argc, char** argv ) {
     to->filenamer( namer );
 
     from->localizeTime( Options::asBool( OptionsKey::LOCALIZED_TIME ) );
+    from->skipToTime(Options::asTime(OptionsKey::SKIP_UNTIL_DATETIME));
     from->timeModifier( timemod );
     from->splitter( splitlogic );
   }
@@ -503,5 +524,3 @@ int main( int argc, char** argv ) {
 
   return returncode;
 }
-
-

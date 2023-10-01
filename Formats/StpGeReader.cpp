@@ -541,6 +541,10 @@ namespace FormatConverter {
         if ( ChunkReadResult::DECODE_ERROR == rslt ) {
           return ReadResult::ERROR;
         }
+        else if ( ChunkReadResult::SKIP == rslt ) {
+          // skip this chunk, but process the next one
+          return ChunkReadResult::OK;
+        }
         else if( ChunkReadResult::OK != rslt) {
           // something happened so rewind our to our mark
           //output( ) << "rewinding to start of segment (mark: " << ( work.popped( ) - work.poppedSinceMark( ) ) << ")" << std::endl;
@@ -608,6 +612,11 @@ namespace FormatConverter {
       auto lasttime = currentTime;
       currentTime = segmentindex->header.time;
       Log::trace( ) << "current time for chunk: " << std::dec << currentTime << std::endl;
+
+      if( !isUsableDate(currentTime)){
+        return ChunkReadResult::SKIP;
+      }
+
       if ( isRollover( currentTime, info ) ) {
         return ChunkReadResult::ROLLOVER;
       }

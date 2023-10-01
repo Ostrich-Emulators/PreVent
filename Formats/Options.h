@@ -16,6 +16,7 @@
 
 #include <string>
 #include <map>
+#include "dr_time.h"
 
 namespace FormatConverter {
 
@@ -27,16 +28,21 @@ namespace FormatConverter {
     NO_BREAK,
     SKIP_WAVES,
     TMPDIR,
+    SKIP_UNTIL_DATETIME
   };
 
   class Options {
   public:
     virtual ~Options( );
 
+    static bool isset( OptionsKey key );
+
     static void set( OptionsKey key, const std::string& val );
     static void set( OptionsKey key, bool val = true );
+    static void set( OptionsKey key, const dr_time& time );
     static std::string get( OptionsKey key );
     static bool asBool( OptionsKey key );
+    static dr_time asTime( OptionsKey key );
 
   private:
     Options( );

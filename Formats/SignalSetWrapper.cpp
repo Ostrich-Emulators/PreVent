@@ -57,6 +57,10 @@ namespace FormatConverter{
     return set->latest( tc );
   }
 
+  bool SignalSetWrapper::empty( ) const {
+    return set->empty( );
+  }
+
   const std::map<long, dr_time>& SignalSetWrapper::offsets( ) const {
     return set->offsets( );
 
@@ -86,16 +90,16 @@ namespace FormatConverter{
     set->complete( );
   }
 
-  void SignalSetWrapper::addAuxillaryData( const std::string& name, const TimedData& data  ) {
+  void SignalSetWrapper::addAuxillaryData( const std::string& name, const TimedData& data ) {
     set->addAuxillaryData( name, data );
   }
 
   std::map<std::string, std::vector<TimedData>> SignalSetWrapper::auxdata( ) {
-    return set->auxdata();
+    return set->auxdata( );
   }
 
   std::unique_ptr<SignalData> SignalSetWrapper::_createSignalData( const std::string& name,
-        bool iswave , void * extra ){
+      bool iswave, void * extra ) {
     return set->_createSignalData( name, iswave, extra );
   }
 }

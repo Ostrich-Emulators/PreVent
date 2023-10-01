@@ -155,6 +155,10 @@ namespace FormatConverter{
         dr_time csvtime;
         auto vitvals = linevalues( csvline, csvtime );
 
+        if ( isUsableDate( csvtime ) ) {
+          continue;
+        }
+
         if ( lastcsvtime > 0 && isRollover( csvtime, info ) ) {
           // "unread" the last line for the next call to fill()
           numerics.seekg( offset );

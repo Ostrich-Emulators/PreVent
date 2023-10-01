@@ -339,6 +339,11 @@ namespace FormatConverter{
       }
 
       curtime += interval;
+
+      if ( !isUsableDate( curtime ) ) {
+        continue;
+      }
+
       if ( isRollover( curtime, info ) ) {
         rslt = ReadResult::END_OF_DURATION;
         break;
@@ -389,6 +394,11 @@ namespace FormatConverter{
       }
 
       curtime += interval;
+
+      if ( !isUsableDate( curtime ) ) {
+        continue;
+      }
+
       if ( isRollover( curtime, info ) ) {
         rslt = ReadResult::END_OF_DURATION;
         break;

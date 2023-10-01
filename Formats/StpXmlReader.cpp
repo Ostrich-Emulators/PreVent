@@ -85,6 +85,11 @@ namespace FormatConverter{
         currvstime = time( attributes[0 == attributes.count( "CollectionTime" ) ? "Time" : "CollectionTime"], true, &oktime );
       }
 
+      if ( !isUsableDate( currvstime ) ) {
+        Log::debug( ) << "skipping data point for time: " << currvstime << std::endl;
+        oktime = false;
+      }
+
       skipvital = !oktime;
       if ( skipvital ) {
         currvstime = savetime;
@@ -111,6 +116,11 @@ namespace FormatConverter{
       }
       else {
         currwavetime = time( attributes[0 == attributes.count( "CollectionTime" ) ? "Time" : "CollectionTime"], true, &oktime );
+      }
+
+      if ( !isUsableDate( currwavetime ) ) {
+        Log::debug( ) << "skipping data point for time:" << currvstime << std::endl;
+        oktime = false;
       }
 
       skipthiswave = ( this->skipwaves( ) || !oktime );
@@ -200,7 +210,9 @@ namespace FormatConverter{
             ? ""
             : filler->metadata( ).at( "Patient Name" ) );
         if ( text != pname ) {
-          setResult( ReadResult::END_OF_PATIENT );
+          if ( !filler->empty( ) ) {
+            setResult( ReadResult::END_OF_PATIENT );
+          }
           // we've cut over to a new set of data, so
           // save the data we parse now to a different SignalSet
           startSaving( 0 );

@@ -20,7 +20,10 @@ namespace FormatConverter{
 
     // timestamp
     if ( timestr.find_first_not_of( "-0123456789" ) == std::string::npos ) {
-      return std::stol( timestr );
+      // don't confuse YYYY-MM-DD with a timestamp
+      if ( '-' != timestr[4] ) {
+        return std::stol( timestr );
+      }
     }
 
     // check a variety of formats

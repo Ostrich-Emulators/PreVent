@@ -71,6 +71,8 @@ namespace FormatConverter {
     virtual std::unique_ptr<SignalData> _createSignalData( const std::string& name,
         bool iswave = false, void * extra = nullptr ) override;
 
+    virtual bool empty() const;
+
   private:
     SignalSet * set;
     bool iOwnThisPointer;

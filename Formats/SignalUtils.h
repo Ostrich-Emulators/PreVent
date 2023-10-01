@@ -86,11 +86,11 @@ namespace FormatConverter {
      * @param latest the latest date in the SignalData
      * @return the earliest date
      */
-    static dr_time firstlast( const std::map<std::string, SignalData *> map,
+    static dr_time firstlast( const std::map<std::string, SignalData *>& map,
         dr_time * first = nullptr, dr_time * last = nullptr );
-    static dr_time firstlast( const std::vector<SignalData *> map,
+    static dr_time firstlast( const std::vector<SignalData *>& vec,
         dr_time * first = nullptr, dr_time * last = nullptr );
-
+    static bool hasdata( const std::vector<SignalData *>& vec );
 
     /**
      * Converts the given val to a string, and removes any trailing 0s (to make the

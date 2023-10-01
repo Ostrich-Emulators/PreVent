@@ -46,7 +46,7 @@ namespace FormatConverter{
     return totrim;
   }
 
-  dr_time SignalUtils::firstlast( const std::map<std::string, SignalData *> map,
+  dr_time SignalUtils::firstlast( const std::map<std::string, SignalData *>& map,
       dr_time * first, dr_time * last ) {
 
     dr_time earliest = std::numeric_limits<dr_time>::max( );
@@ -75,7 +75,7 @@ namespace FormatConverter{
     return earliest;
   }
 
-  dr_time SignalUtils::firstlast( const std::vector<SignalData *> signals,
+  dr_time SignalUtils::firstlast( const std::vector<SignalData *>& signals,
       dr_time * first, dr_time * last ) {
 
     dr_time earliest = std::numeric_limits<dr_time>::max( );
@@ -102,6 +102,11 @@ namespace FormatConverter{
     }
 
     return earliest;
+  }
+
+  bool SignalUtils::hasdata( const std::vector<SignalData *>& vec ) {
+    auto time = SignalUtils::firstlast( vec );
+    return time != std::numeric_limits<dr_time>::max( );
   }
 
   std::vector<std::vector<int>> SignalUtils::syncDatas( std::vector<SignalData *> data ) {
