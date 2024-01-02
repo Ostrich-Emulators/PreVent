@@ -26,7 +26,7 @@
 
 namespace FormatConverter{
 
-  WfdbReader::WfdbReader( ) : Reader( "WFDB" ) { }
+  WfdbReader::WfdbReader( bool force ) : Reader( "WFDB" ), forcelib( force ) { }
 
   WfdbReader::WfdbReader( const std::string& name ) : Reader( name ), extra_ms( 0 ),
       basetimeset( false ), framecount( 0 ) { }
@@ -186,9 +186,9 @@ namespace FormatConverter{
         dataset->setMeta( "wfdb-gain", siginfo[signalidx].gain );
         dataset->setMeta( "wfdb-spf", siginfo[signalidx].spf );
         dataset->setMeta( "wfdb-baseline", siginfo[signalidx].baseline );
-        dataset->setMeta( "wfdb-adczero", siginfo[signalidx].adczero);
+        dataset->setMeta( "wfdb-adczero", siginfo[signalidx].adczero );
         dataset->setMeta( "wfdb-adcres", siginfo[signalidx].adcres );
-        dataset->setMeta( "wfdb-initval", siginfo[signalidx].initval);
+        dataset->setMeta( "wfdb-initval", siginfo[signalidx].initval );
         framecount += siginfo[signalidx].spf;
 
         if ( 16 == siginfo[signalidx].fmt ) {
@@ -196,7 +196,7 @@ namespace FormatConverter{
         }
       }
 
-      usenative = ( nativeok == sigcount );
+      usenative = nativeok == sigcount && !forcelib;
 
       if ( usenative ) {
         for ( auto f : sigfiles ) {

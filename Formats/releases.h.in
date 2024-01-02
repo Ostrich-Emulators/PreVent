@@ -1,5 +1,6 @@
 4.3.12
   * Added --skip-to-date option
+  * Added --experimental command line option to enable experimental features
   * Fixed WFDB Reader for FLAC files
 
 4.3.11

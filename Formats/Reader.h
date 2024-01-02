@@ -33,7 +33,13 @@ namespace FormatConverter {
     Reader( const std::string& name );
     virtual ~Reader( );
 
-    static std::unique_ptr<Reader> get( const Format& fmt );
+    /**
+     * Gets a reader appropriate for this format
+     * @param fmt the format
+     * @param experimentals the value of the --experimental flag from the command line
+     * @return the reader
+     */
+    static std::unique_ptr<Reader> get( const Format& fmt, const std::string& experimentals = "" );
 
     /**
      * Prepares for reading a new input file/stream.
@@ -73,8 +79,8 @@ namespace FormatConverter {
     void splitter( const SplitLogic& l );
     const SplitLogic& splitter( ) const;
     virtual void skipToTime( const dr_time& );
-    const dr_time& skipToTime() const;
-    
+    const dr_time& skipToTime( ) const;
+
     /**
      * Converts the given input string to a time object, according to the given format
      * @param input

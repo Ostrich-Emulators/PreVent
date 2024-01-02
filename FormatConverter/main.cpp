@@ -68,6 +68,7 @@ void helpAndExit( char * progname, std::string msg = "" ) {
       << std::endl << "\t-m or --tmpdir <directory>"
       << std::endl << "\t-R or --release (show release information and exit)"
       << std::endl << "\t-d or --allow-duplicate-filenames"
+      << std::endl << "\t-X or --experimental"
       << std::endl << "\tValid input formats: wfdb, hdf5, stpxml, stpge, stpp, cpcxml, stpjson, tdms, medi, dwc, zl, csv, csv2, dwcx"
       << std::endl << "\tValid output formats: wfdb, hdf5, mat, csv, au"
       << std::endl << "\tthe --sqlite option will create/add metadata to a sqlite database"
@@ -196,6 +197,7 @@ struct option longopts[] = {
   { "allow-duplicate-filenames", no_argument, NULL, 'd' },
   { "split", required_argument, NULL, 'x' },
   { "skip-to-date", required_argument, NULL, 'D' },
+  { "experimental", optional_argument, NULL, 'X' },
   { 0, 0, 0, 0 }
 };
 
@@ -209,6 +211,7 @@ int main( int argc, char** argv ) {
   std::string pattern = FileNamer::DEFAULT_PATTERN;
   std::string offsetstr;
   std::string skipstr;
+  std::string experimentalstr;
   bool offsetIsDesiredDate = false;
   Options::set( OptionsKey::ANONYMIZE, false );
   Options::set( OptionsKey::INDEXED_TIME, false );
@@ -222,7 +225,7 @@ int main( int argc, char** argv ) {
 
   settmpdir( std::filesystem::temp_directory_path( ) );
 
-  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:q::v::anl1CdTZ:S:Rwm:x:D:", longopts, NULL ) ) != -1 ) {
+  while ( ( c = getopt_long( argc, argv, ":f:t:o:z:p:s:q::v::anl1CdTZ:S:Rwm:x:D:X::", longopts, NULL ) ) != -1 ) {
     switch ( c ) {
       case 'f':
         fromstr = optarg;
@@ -306,6 +309,9 @@ int main( int argc, char** argv ) {
         break;
       case 'x':
         split = std::string( optarg );
+        break;
+      case 'X':
+        experimentalstr = nullptr == optarg ? "Y" : std::string( optarg );
         break;
       case 'n':
         split = "0";
@@ -438,7 +444,7 @@ int main( int argc, char** argv ) {
   std::unique_ptr<Reader> from;
   std::unique_ptr<Writer> to;
   try {
-    from = Reader::get( fromfmt );
+    from = Reader::get( fromfmt, experimentalstr );
     to = Writer::get( tofmt );
     to->compression( compression );
     to->stopAfterFirstFile( stopatone );
@@ -448,7 +454,7 @@ int main( int argc, char** argv ) {
     to->filenamer( namer );
 
     from->localizeTime( Options::asBool( OptionsKey::LOCALIZED_TIME ) );
-    from->skipToTime(Options::asTime(OptionsKey::SKIP_UNTIL_DATETIME));
+    from->skipToTime( Options::asTime( OptionsKey::SKIP_UNTIL_DATETIME ) );
     from->timeModifier( timemod );
     from->splitter( splitlogic );
   }

@@ -39,10 +39,10 @@ namespace FormatConverter{
     return rdrname;
   }
 
-  std::unique_ptr<Reader> Reader::get( const Format& fmt ) {
+  std::unique_ptr<Reader> Reader::get( const Format& fmt, const std::string& experimentalstr ) {
     switch ( fmt ) {
       case FormatConverter::WFDB:
-        return std::make_unique<WfdbReader>( );
+        return std::make_unique<WfdbReader>( "" == experimentalstr );
       case FormatConverter::DSZL:
         return std::make_unique<ZlReader2>( );
       case FormatConverter::STPGE:
