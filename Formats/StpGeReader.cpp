@@ -543,7 +543,7 @@ namespace FormatConverter {
         }
         else if ( ChunkReadResult::SKIP == rslt ) {
           // skip this chunk, but process the next one
-          return ChunkReadResult::OK;
+          return ReadResult::NORMAL;
         }
         else if( ChunkReadResult::OK != rslt) {
           // something happened so rewind our to our mark

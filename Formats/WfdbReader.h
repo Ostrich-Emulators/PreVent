@@ -22,7 +22,7 @@ namespace FormatConverter {
 
   class WfdbReader : public Reader {
   public:
-    WfdbReader( );
+    WfdbReader( bool forcelib = true );
 
     virtual ~WfdbReader( );
 
@@ -50,6 +50,7 @@ namespace FormatConverter {
     std::vector<FILE *> sigfiles;
 
   private:
+    bool forcelib;
     bool usenative;
     ReadResult fill_wfdblib( SignalSet * data, const ReadResult& lastfill );
     ReadResult fill_nativeread( SignalSet * data, const ReadResult& lastfill );
